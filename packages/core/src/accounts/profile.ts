@@ -84,7 +84,7 @@ export async function changePassword(
   const [user] = await ctx.db.select().from(schema.users).where(eq(schema.users.id, userId));
   if (!user) throw new DomainError('not_found', 'User not found');
   if (!(await verifyPassword(user.passwordHash, input.currentPassword))) {
-    throw new DomainError('invalid_credentials', 'Wrong password');
+    throw new DomainError('wrong_password', 'Wrong password');
   }
   await ctx.db
     .update(schema.users)

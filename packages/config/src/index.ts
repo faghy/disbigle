@@ -11,6 +11,8 @@ const configSchema = z.object({
   SESSION_SECRET: z.string().min(32),
   REGISTRATION_MODE: z.enum(['open', 'approval', 'invite', 'closed']).default('open'),
   MEDIA_DIR: z.string().default('./storage/media'),
+  INSTANCE_TITLE: z.string().default('Disbigle'),
+  INSTANCE_DESCRIPTION: z.string().default(''),
 });
 
 export type Config = z.infer<typeof configSchema>;

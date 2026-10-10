@@ -1,7 +1,9 @@
-import type { CoreContext } from '@disbigle/core';
+import { type CoreContext, LocalMediaStorage, type MediaStorage } from '@disbigle/core';
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Redis } from 'ioredis';
@@ -11,6 +13,7 @@ import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { meRoutes } from './routes/me.ts';
+import { mediaRoutes } from './routes/media.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { publicRoutes } from './routes/public.ts';
 import { statusRoutes } from './routes/statuses.ts';
@@ -26,12 +29,18 @@ export interface AppOptions {
   /** Receives domain events for WebSocket clients. */
   hub?: StreamingHub;
   trustProxy?: boolean;
+  /** Where uploads are stored; local MEDIA_DIR by default. */
+  storage?: MediaStorage;
+  /** Serve MEDIA_DIR under /media (development; use the web server in production). */
+  serveMedia?: boolean;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
 }
 
 export async function buildApp(options: AppOptions) {
   const { ctx, redis, hub, logger = false, trustProxy = false, disableRateLimit = false } = options;
+  const storage = options.storage ?? new LocalMediaStorage(ctx.config.MEDIA_DIR);
+  const mediaCtx = { ...ctx, storage };
   const app = Fastify({ logger, trustProxy, bodyLimit: 1024 * 1024 });
 
   app.setErrorHandler(errorHandler);
@@ -51,6 +60,19 @@ export async function buildApp(options: AppOptions) {
   }
   await app.register(authPlugin, { ctx });
   await app.register(websocket, { options: { maxPayload: 4096 } });
+  await app.register(multipart);
+  if (options.serveMedia) {
+    const { mkdir } = await import('node:fs/promises');
+    const { resolve } = await import('node:path');
+    const root = resolve(ctx.config.MEDIA_DIR);
+    await mkdir(root, { recursive: true });
+    await app.register(fastifyStatic, {
+      root,
+      prefix: '/media/',
+      decorateReply: false,
+      index: false,
+    });
+  }
 
   app.get('/health', async () => ({ status: 'ok' }));
 
@@ -65,6 +87,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(followRequestRoutes, { ctx, prefix: '/follow_requests' });
       await api.register(aspectRoutes, { ctx, prefix: '/aspects' });
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });
+      await api.register(mediaRoutes, { ctx: mediaCtx, prefix: '/media' });
       if (hub) await api.register(streamingRoutes, { hub, prefix: '/streaming' });
     },
     { prefix: '/api/v1' },

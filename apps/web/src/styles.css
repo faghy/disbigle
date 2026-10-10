@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Neutral palette with a single accent colour; values switch with the
+ * system colour scheme. Utilities such as `bg-surface` or `text-accent` read these variables.
+ */
+:root {
+  --bg: oklch(98.5% 0.002 286);
+  --surface: oklch(100% 0 0);
+  --surface-muted: oklch(96.5% 0.004 286);
+  --fg: oklch(21% 0.006 286);
+  --fg-muted: oklch(48% 0.012 286);
+  --border: oklch(91% 0.005 286);
+  --border-strong: oklch(80% 0.008 286);
+  --accent: oklch(52% 0.22 285);
+  --accent-hover: oklch(46% 0.22 285);
+  --accent-soft: oklch(95% 0.03 285);
+  --accent-fg: oklch(99% 0 0);
+  --danger: oklch(52% 0.2 25);
+  --danger-soft: oklch(96% 0.03 25);
+  --success: oklch(50% 0.13 155);
+  --success-soft: oklch(96% 0.04 155);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(16% 0.006 286);
+    --surface: oklch(20.5% 0.007 286);
+    --surface-muted: oklch(24% 0.008 286);
+    --fg: oklch(95% 0.003 286);
+    --fg-muted: oklch(72% 0.012 286);
+    --border: oklch(30% 0.01 286);
+    --border-strong: oklch(40% 0.012 286);
+    --accent: oklch(72% 0.16 285);
+    --accent-hover: oklch(78% 0.14 285);
+    --accent-soft: oklch(28% 0.06 285);
+    --accent-fg: oklch(18% 0.03 285);
+    --danger: oklch(72% 0.17 25);
+    --danger-soft: oklch(27% 0.06 25);
+    --success: oklch(76% 0.14 155);
+    --success-soft: oklch(26% 0.05 155);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--fg);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+  }
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@utility input-base {
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface);
+  color: var(--fg);
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
+
+  &::placeholder {
+    color: var(--fg-muted);
+    opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 30%, transparent);
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: user preference must win over components */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: user preference must win over components */
+    animation-duration: 0.01ms !important;
+  }
+}

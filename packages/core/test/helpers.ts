@@ -14,6 +14,8 @@ export const testConfig: Config = {
   SESSION_SECRET: 'test-secret-test-secret-test-secret-test',
   REGISTRATION_MODE: 'open',
   MEDIA_DIR: '/tmp/disbigle-test-media',
+  INSTANCE_TITLE: 'Disbigle Test',
+  INSTANCE_DESCRIPTION: '',
 };
 
 /** Provides a fresh migrated database per test file. Call at the top level of a test file. */

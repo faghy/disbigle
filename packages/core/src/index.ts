@@ -13,6 +13,8 @@ export * from './crypto/passwords.ts';
 export * from './crypto/tokens.ts';
 export * from './errors.ts';
 export * from './events.ts';
+export * from './media/storage.ts';
+export * from './media/upload.ts';
 export * from './social/aspects.ts';
 export * from './social/content.ts';
 export * from './social/notification-list.ts';

@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "Caricamento…",
+    "or": "oppure",
+    "cancel": "Annulla"
+  },
+  "languages": {
+    "en": "English",
+    "it": "Italiano"
+  },
+  "nav": {
+    "skipToContent": "Vai al contenuto",
+    "main": "Principale",
+    "home": "Home",
+    "settings": "Impostazioni",
+    "signIn": "Accedi",
+    "register": "Crea un account",
+    "accountMenu": "Menu dell'account",
+    "viewProfile": "Vedi profilo",
+    "signOut": "Esci"
+  },
+  "footer": {
+    "tagline": "Disbigle · un social network federato",
+    "language": "Lingua"
+  },
+  "landing": {
+    "tagline": "Un angolo accogliente del fediverso, aperto a Mastodon, diaspora* e oltre.",
+    "register": "Crea un account",
+    "signIn": "Accedi"
+  },
+  "home": {
+    "welcome": "Ciao, {{name}}",
+    "timelinePlaceholder": "Qui comparirà la tua timeline."
+  },
+  "login": {
+    "title": "Accedi",
+    "subtitle": "Bentornato su Disbigle.",
+    "login": "Email o nome utente",
+    "password": "Password",
+    "submit": "Accedi",
+    "passkey": "Accedi con una passkey",
+    "noAccount": "Sei nuovo?",
+    "createAccount": "Crea un account",
+    "mfaTitle": "Verifica in due passaggi",
+    "mfaTotpHelp": "Inserisci il codice a 6 cifre della tua app di autenticazione.",
+    "mfaRecoveryHelp": "Inserisci uno dei codici di recupero che hai salvato quando hai attivato la verifica in due passaggi.",
+    "totpCode": "Codice di autenticazione",
+    "recoveryCode": "Codice di recupero",
+    "verify": "Verifica",
+    "useRecoveryCode": "Usa invece un codice di recupero",
+    "useTotp": "Usa invece l'app di autenticazione",
+    "mfaPasskey": "Usa una passkey",
+    "codeInvalid": "Inserisci il codice mostrato dall'app (almeno 6 caratteri).",
+    "mfaExpired": "L'accesso è scaduto. Inserisci di nuovo la password.",
+    "back": "Torna all'accesso"
+  },
+  "register": {
+    "title": "Crea il tuo account",
+    "subtitle": "Unisciti a {{domain}} e collegati a tutto il fediverso.",
+    "approvalNotice": "I nuovi account su questo server vengono esaminati da un moderatore prima di poter essere usati.",
+    "username": "Nome utente",
+    "usernameHint": "Lettere, cifre e trattini bassi. Il tuo indirizzo sarà @nomeutente@{{domain}}.",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "Almeno 10 caratteri.",
+    "inviteCode": "Codice di invito",
+    "reason": "Perché vuoi iscriverti?",
+    "reasonHint": "Aiuta i moderatori a valutare la tua richiesta.",
+    "agreement": "Accetto le regole e l'informativa sulla privacy di {{domain}}",
+    "submit": "Crea l'account",
+    "haveAccount": "Hai già un account?",
+    "signIn": "Accedi",
+    "pendingTitle": "Ci siamo quasi",
+    "pendingBody": "Abbiamo ricevuto la tua richiesta. Potrai accedere non appena un moderatore avrà approvato il tuo account.",
+    "closedTitle": "Le iscrizioni sono chiuse",
+    "closedBody": "Al momento {{domain}} non accetta nuovi account."
+  },
+  "profile": {
+    "bot": "Bot",
+    "locked": "Approva i follower",
+    "joined": "Iscritto dal {{date}}",
+    "edit": "Modifica profilo",
+    "notFound": "Qui non esiste nessun account chiamato @{{username}}."
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "nav": "Sezioni delle impostazioni",
+    "save": "Salva le modifiche",
+    "saved": "Modifiche salvate.",
+    "profile": {
+      "tab": "Profilo",
+      "title": "Profilo",
+      "description": "Come ti vedono gli altri, qui e in tutto il fediverso.",
+      "displayName": "Nome visualizzato",
+      "bio": "Biografia",
+      "bioHint": "Testo semplice. Gli a capo vengono mantenuti.",
+      "fields": "Campi aggiuntivi",
+      "fieldsHint": "Fino a {{max}} voci mostrate sul profilo, come un sito web o i tuoi pronomi.",
+      "noFields": "Ancora nessun campo aggiuntivo.",
+      "fieldName": "Etichetta {{number}}",
+      "fieldValue": "Contenuto {{number}}",
+      "addField": "Aggiungi campo",
+      "removeField": "Rimuovi",
+      "removeFieldLabel": "Rimuovi il campo {{number}}",
+      "options": "Opzioni",
+      "locked": "Approva manualmente i follower",
+      "lockedHint": "Scegli tu chi può seguirti.",
+      "discoverable": "Mostra il mio profilo nelle directory e nei suggerimenti",
+      "discoverableHint": "Gli altri potranno trovarti più facilmente.",
+      "bot": "Questo è un account automatico",
+      "botHint": "Indica che l'account è un bot e potrebbe non essere seguito da una persona."
+    },
+    "account": {
+      "tab": "Account",
+      "title": "Account",
+      "description": "Lingua e password.",
+      "language": "Lingua dell'interfaccia",
+      "languageLabel": "Lingua",
+      "password": "Cambia password",
+      "passwordHint": "Resterai collegato qui; tutte le altre sessioni verranno chiuse.",
+      "currentPassword": "Password attuale",
+      "newPassword": "Nuova password",
+      "confirmPassword": "Conferma la nuova password",
+      "changePassword": "Cambia password",
+      "passwordChanged": "La password è stata cambiata."
+    },
+    "security": {
+      "tab": "Sicurezza",
+      "title": "Sicurezza",
+      "description": "Verifica in due passaggi e passkey proteggono il tuo account.",
+      "password": "Password attuale",
+      "totp": {
+        "title": "Verifica in due passaggi",
+        "description": "Dopo la password viene chiesto un codice generato da un'app di autenticazione.",
+        "on": "Attiva",
+        "off": "Disattiva",
+        "enable": "Configura la verifica in due passaggi",
+        "step1": "Inquadra il codice QR con un'app di autenticazione oppure inserisci la chiave a mano.",
+        "step2": "Scrivi il codice a 6 cifre mostrato dall'app per completare.",
+        "qrAlt": "Codice QR per aggiungere Disbigle alla tua app di autenticazione",
+        "manual": "Non riesci a inquadrarlo? Usa questa chiave:",
+        "code": "Codice dell'app",
+        "confirm": "Attiva",
+        "disableTitle": "Disattiva la verifica in due passaggi",
+        "disableDescription": "Il tuo account sarà protetto solo dalla password.",
+        "disable": "Disattiva"
+      },
+      "recovery": {
+        "title": "Codici di recupero",
+        "description": "Crea una nuova serie di codici. Quelli vecchi smetteranno di funzionare.",
+        "regenerate": "Genera nuovi codici",
+        "saveTitle": "Salva i codici di recupero",
+        "saveDescription": "Ogni codice funziona una sola volta, se perdi l'accesso all'app di autenticazione. Non verranno mostrati di nuovo.",
+        "copy": "Copia",
+        "copied": "Copiati",
+        "download": "Scarica",
+        "done": "Li ho salvati"
+      },
+      "passkeys": {
+        "title": "Passkey",
+        "description": "Accedi con impronta, volto, blocco schermo o una chiave di sicurezza invece della password.",
+        "empty": "Non hai ancora nessuna passkey.",
+        "created": "Aggiunta il {{date}}",
+        "lastUsed": "ultimo uso {{date}}",
+        "neverUsed": "mai usata",
+        "delete": "Rimuovi",
+        "deleteLabel": "Rimuovi la passkey {{name}}",
+        "confirmDelete": "Conferma la rimozione",
+        "confirmDeleteLabel": "Conferma la rimozione della passkey {{name}}",
+        "name": "Nome della passkey",
+        "nameHint": "Per esempio \"Portatile\" o \"Telefono\".",
+        "add": "Aggiungi una passkey",
+        "added": "Passkey aggiunta."
+      }
+    }
+  },
+  "validation": {
+    "required": "Campo obbligatorio.",
+    "passwordMismatch": "Le password non coincidono.",
+    "fields": {
+      "username": "Usa da 1 a 30 lettere, cifre o trattini bassi.",
+      "email": "Inserisci un indirizzo email valido.",
+      "password": "Usa almeno 10 caratteri.",
+      "newPassword": "Usa almeno 10 caratteri.",
+      "agreement": "Per continuare devi accettare le regole.",
+      "inviteCode": "Inserisci un codice di invito valido.",
+      "displayName": "Usa al massimo 100 caratteri.",
+      "note": "Usa al massimo 5000 caratteri.",
+      "locale": "Scegli una lingua supportata."
+    }
+  },
+  "errors": {
+    "bad_request": "Impossibile elaborare la richiesta.",
+    "validation_failed": "Alcuni campi non sono validi.",
+    "unauthorized": "Accedi per continuare.",
+    "forbidden": "Non hai il permesso di farlo.",
+    "not_found": "Non trovato.",
+    "conflict": "L'operazione è in conflitto con lo stato attuale. Ricarica e riprova.",
+    "rate_limited": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "invalid_credentials": "Login o password errati.",
+    "mfa_required": "È richiesto un secondo passaggio di verifica.",
+    "invalid_mfa_code": "Il codice non è valido.",
+    "username_taken": "Questo nome utente è già in uso.",
+    "email_taken": "Questo indirizzo email è già registrato.",
+    "registrations_closed": "Le iscrizioni su questo server sono chiuse.",
+    "invalid_invite": "Il codice di invito non è valido o è scaduto.",
+    "account_pending_approval": "Il tuo account è in attesa di approvazione da parte di un moderatore.",
+    "account_disabled": "Questo account è stato disattivato.",
+    "internal_error": "Si è verificato un errore sul server. Riprova.",
+    "network_error": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
+    "unknown_error": "Qualcosa è andato storto. Riprova.",
+    "wrong_password": "Password errata.",
+    "webauthn_cancelled": "La richiesta della passkey è stata annullata o è scaduta.",
+    "webauthn_already_registered": "Questo dispositivo ha già una passkey per il tuo account.",
+    "webauthn_unsupported": "Questo browser non supporta le passkey.",
+    "too_many_attempts": "Troppi tentativi. Accedi di nuovo."
+  },
+  "notFound": {
+    "title": "Pagina non trovata",
+    "description": "La pagina che cerchi non esiste o è stata spostata.",
+    "home": "Vai alla home"
+  },
+  "errorPage": {
+    "title": "Qualcosa è andato storto",
+    "retry": "Riprova"
+  }
+}

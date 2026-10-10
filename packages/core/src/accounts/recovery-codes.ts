@@ -34,7 +34,7 @@ export async function regenerateRecoveryCodes(ctx: CoreContext, userId: string, 
   if (!user.totpEnabledAt)
     throw new DomainError('bad_request', 'Two-factor authentication is not enabled');
   if (!(await verifyPassword(user.passwordHash, password))) {
-    throw new DomainError('invalid_credentials', 'Wrong password');
+    throw new DomainError('wrong_password', 'Wrong password');
   }
   return generateRecoveryCodes(ctx, userId);
 }

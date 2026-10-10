@@ -20,6 +20,7 @@ const app = await buildApp({
   hub,
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
   trustProxy: process.env.TRUST_PROXY === 'true',
+  serveMedia: config.NODE_ENV !== 'production' || process.env.SERVE_MEDIA === 'true',
 });
 
 const shutdown = async () => {

@@ -54,6 +54,8 @@ export interface CurrentUser {
 export interface InstanceInfo {
   domain: string;
   title: string;
+  description: string;
+  /** Effective mode: a brand-new instance reports `open` so its first user can sign up as admin. */
   registrationMode: 'open' | 'approval' | 'invite' | 'closed';
   version: string;
 }

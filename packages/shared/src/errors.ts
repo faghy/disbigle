@@ -10,6 +10,8 @@ export const errorCodes = [
   'invalid_credentials',
   'mfa_required',
   'invalid_mfa_code',
+  'too_many_attempts',
+  'wrong_password',
   'username_taken',
   'email_taken',
   'registrations_closed',

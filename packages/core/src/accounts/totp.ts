@@ -62,7 +62,7 @@ export async function disableTotp(
 ): Promise<void> {
   const { user } = await getUserWithHandle(ctx, userId);
   if (!(await verifyPassword(user.passwordHash, password))) {
-    throw new DomainError('invalid_credentials', 'Wrong password');
+    throw new DomainError('wrong_password', 'Wrong password');
   }
   await ctx.db
     .update(schema.users)

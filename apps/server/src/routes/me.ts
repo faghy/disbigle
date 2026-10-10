@@ -101,7 +101,11 @@ export async function meRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext
   });
 
   app.delete<{ Params: { id: string } }>('/passkeys/:id', async (request) => {
-    await deletePasskey(ctx, requireUser(request).userId, z.uuid().parse(request.params.id));
+    await deletePasskey(
+      ctx,
+      requireUser(request).userId,
+      parse(z.object({ id: z.uuid() }), request.params).id,
+    );
     return { status: 'ok' };
   });
 }

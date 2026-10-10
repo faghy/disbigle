@@ -14,6 +14,8 @@ const statusByCode: Record<ErrorCode, number> = {
   invalid_credentials: 401,
   mfa_required: 401,
   invalid_mfa_code: 401,
+  too_many_attempts: 429,
+  wrong_password: 403,
   username_taken: 409,
   email_taken: 409,
   registrations_closed: 403,

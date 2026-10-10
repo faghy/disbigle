@@ -1,0 +1,227 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "or": "or",
+    "cancel": "Cancel"
+  },
+  "languages": {
+    "en": "English",
+    "it": "Italiano"
+  },
+  "nav": {
+    "skipToContent": "Skip to content",
+    "main": "Main",
+    "home": "Home",
+    "settings": "Settings",
+    "signIn": "Sign in",
+    "register": "Create account",
+    "accountMenu": "Account menu",
+    "viewProfile": "View profile",
+    "signOut": "Sign out"
+  },
+  "footer": {
+    "tagline": "Disbigle · a federated social network",
+    "language": "Language"
+  },
+  "landing": {
+    "tagline": "A friendly corner of the fediverse, open to Mastodon, diaspora* and beyond.",
+    "register": "Create account",
+    "signIn": "Sign in"
+  },
+  "home": {
+    "welcome": "Hi, {{name}}",
+    "timelinePlaceholder": "Your timeline will appear here."
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Welcome back to Disbigle.",
+    "login": "Email or username",
+    "password": "Password",
+    "submit": "Sign in",
+    "passkey": "Sign in with a passkey",
+    "noAccount": "New here?",
+    "createAccount": "Create an account",
+    "mfaTitle": "Two-step verification",
+    "mfaTotpHelp": "Enter the 6-digit code from your authenticator app.",
+    "mfaRecoveryHelp": "Enter one of the recovery codes you saved when you enabled two-step verification.",
+    "totpCode": "Authentication code",
+    "recoveryCode": "Recovery code",
+    "verify": "Verify",
+    "useRecoveryCode": "Use a recovery code instead",
+    "useTotp": "Use your authenticator app instead",
+    "mfaPasskey": "Use a passkey",
+    "codeInvalid": "Enter the code shown by your app (at least 6 characters).",
+    "mfaExpired": "Your sign-in expired. Please enter your password again.",
+    "back": "Back to sign in"
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Join {{domain}} and connect with the whole fediverse.",
+    "approvalNotice": "New accounts on this server are reviewed by a moderator before they can be used.",
+    "username": "Username",
+    "usernameHint": "Letters, digits and underscores. Your address will be @username@{{domain}}.",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 10 characters.",
+    "inviteCode": "Invitation code",
+    "reason": "Why do you want to join?",
+    "reasonHint": "This helps the moderators review your request.",
+    "agreement": "I accept the rules and the privacy policy of {{domain}}",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "pendingTitle": "Almost there",
+    "pendingBody": "Your request has been received. You will be able to sign in as soon as a moderator approves your account.",
+    "closedTitle": "Registrations are closed",
+    "closedBody": "{{domain}} is not accepting new accounts at the moment."
+  },
+  "profile": {
+    "bot": "Bot",
+    "locked": "Approves followers",
+    "joined": "Joined {{date}}",
+    "edit": "Edit profile",
+    "notFound": "There is no account called @{{username}} here."
+  },
+  "settings": {
+    "title": "Settings",
+    "nav": "Settings sections",
+    "save": "Save changes",
+    "saved": "Your changes have been saved.",
+    "profile": {
+      "tab": "Profile",
+      "title": "Profile",
+      "description": "How other people see you, here and across the fediverse.",
+      "displayName": "Display name",
+      "bio": "Bio",
+      "bioHint": "Plain text. Line breaks are kept.",
+      "fields": "Extra fields",
+      "fieldsHint": "Up to {{max}} items shown on your profile, such as a website or your pronouns.",
+      "noFields": "No extra fields yet.",
+      "fieldName": "Label {{number}}",
+      "fieldValue": "Content {{number}}",
+      "addField": "Add field",
+      "removeField": "Remove",
+      "removeFieldLabel": "Remove field {{number}}",
+      "options": "Options",
+      "locked": "Approve followers manually",
+      "lockedHint": "You choose who can follow you.",
+      "discoverable": "Show my profile in directories and suggestions",
+      "discoverableHint": "Other people can find you more easily.",
+      "bot": "This is an automated account",
+      "botHint": "Marks the account as a bot that may not be monitored."
+    },
+    "account": {
+      "tab": "Account",
+      "title": "Account",
+      "description": "Language and password.",
+      "language": "Interface language",
+      "languageLabel": "Language",
+      "password": "Change password",
+      "passwordHint": "You will stay signed in here; all your other sessions will be signed out.",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "changePassword": "Change password",
+      "passwordChanged": "Your password has been changed."
+    },
+    "security": {
+      "tab": "Security",
+      "title": "Security",
+      "description": "Two-step verification and passkeys keep your account safe.",
+      "password": "Current password",
+      "totp": {
+        "title": "Two-step verification",
+        "description": "Ask for a code from an authenticator app after your password.",
+        "on": "On",
+        "off": "Off",
+        "enable": "Set up two-step verification",
+        "step1": "Scan the QR code with an authenticator app, or enter the key by hand.",
+        "step2": "Type the 6-digit code the app shows to finish.",
+        "qrAlt": "QR code to add Disbigle to your authenticator app",
+        "manual": "Can't scan? Use this key:",
+        "code": "Code from the app",
+        "confirm": "Turn on",
+        "disableTitle": "Turn off two-step verification",
+        "disableDescription": "Your account will be protected by your password only.",
+        "disable": "Turn off"
+      },
+      "recovery": {
+        "title": "Recovery codes",
+        "description": "Create a new set of codes. The old ones will stop working.",
+        "regenerate": "Generate new codes",
+        "saveTitle": "Save your recovery codes",
+        "saveDescription": "Each code works once, if you lose access to your authenticator app. They will not be shown again.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "download": "Download",
+        "done": "I have saved them"
+      },
+      "passkeys": {
+        "title": "Passkeys",
+        "description": "Sign in with your fingerprint, face, screen lock or a security key instead of a password.",
+        "empty": "You have no passkeys yet.",
+        "created": "Added {{date}}",
+        "lastUsed": "last used {{date}}",
+        "neverUsed": "never used",
+        "delete": "Remove",
+        "deleteLabel": "Remove passkey {{name}}",
+        "confirmDelete": "Confirm removal",
+        "confirmDeleteLabel": "Confirm removal of passkey {{name}}",
+        "name": "Passkey name",
+        "nameHint": "For example \"Laptop\" or \"Phone\".",
+        "add": "Add a passkey",
+        "added": "Passkey added."
+      }
+    }
+  },
+  "validation": {
+    "required": "This field is required.",
+    "passwordMismatch": "The passwords do not match.",
+    "fields": {
+      "username": "Use 1 to 30 letters, digits or underscores.",
+      "email": "Enter a valid email address.",
+      "password": "Use at least 10 characters.",
+      "newPassword": "Use at least 10 characters.",
+      "agreement": "You must accept the rules to continue.",
+      "inviteCode": "Enter a valid invitation code.",
+      "displayName": "Use at most 100 characters.",
+      "note": "Use at most 5000 characters.",
+      "locale": "Choose a supported language."
+    }
+  },
+  "errors": {
+    "bad_request": "The request could not be processed.",
+    "validation_failed": "Some fields are invalid.",
+    "unauthorized": "Please sign in to continue.",
+    "forbidden": "You are not allowed to do that.",
+    "not_found": "Not found.",
+    "conflict": "That conflicts with the current state. Reload and try again.",
+    "rate_limited": "Too many attempts. Wait a few minutes and try again.",
+    "invalid_credentials": "Wrong login or password.",
+    "mfa_required": "A second verification step is required.",
+    "invalid_mfa_code": "That code is not valid.",
+    "username_taken": "This username is already taken.",
+    "email_taken": "This email address is already registered.",
+    "registrations_closed": "Registrations are closed on this server.",
+    "invalid_invite": "The invitation code is invalid or has expired.",
+    "account_pending_approval": "Your account is waiting for a moderator's approval.",
+    "account_disabled": "This account has been disabled.",
+    "internal_error": "Something went wrong on our side. Please try again.",
+    "network_error": "Cannot reach the server. Check your connection and try again.",
+    "unknown_error": "Something went wrong. Please try again.",
+    "wrong_password": "Wrong password.",
+    "webauthn_cancelled": "The passkey request was cancelled or timed out.",
+    "webauthn_already_registered": "This device already has a passkey for your account.",
+    "webauthn_unsupported": "This browser does not support passkeys.",
+    "too_many_attempts": "Too many attempts. Sign in again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has moved.",
+    "home": "Go to the home page"
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "retry": "Try again"
+  }
+}

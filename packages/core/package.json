@@ -20,7 +20,8 @@
     "marked": "^18.1.0",
     "otplib": "^13.5.0",
     "qrcode": "^1.5.4",
-    "sanitize-html": "^2.18.0"
+    "sanitize-html": "^2.18.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",

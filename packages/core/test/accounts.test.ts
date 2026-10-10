@@ -218,13 +218,13 @@ describe('two-factor authentication', () => {
     for (let i = 0; i < 5; i++) {
       await expectCode(verifySecondFactor(ctx(), pending.token, 'aaaaa-bbbbb'), 'invalid_mfa_code');
     }
-    await expectCode(verifySecondFactor(ctx(), pending.token, 'aaaaa-bbbbb'), 'rate_limited');
+    await expectCode(verifySecondFactor(ctx(), pending.token, 'aaaaa-bbbbb'), 'too_many_attempts');
     expect(await resolveSession(ctx(), pending.token)).toBeNull();
   });
 
   it('can be disabled with the password', async () => {
     const { input, userId } = await enrolledUser();
-    await expectCode(disableTotp(ctx(), userId, 'wrong'), 'invalid_credentials');
+    await expectCode(disableTotp(ctx(), userId, 'wrong'), 'wrong_password');
     await disableTotp(ctx(), userId, input.password);
     expect((await login(ctx(), { login: input.username, password: input.password })).status).toBe(
       'ok',

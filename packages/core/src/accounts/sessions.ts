@@ -133,7 +133,7 @@ export async function verifySecondFactor(
   await ctx.kv.set(attemptsKey, String(attempts), MFA_PENDING_TTL_MS / 1000);
   if (attempts > MAX_MFA_ATTEMPTS) {
     await revokeSession(ctx, token);
-    throw new DomainError('rate_limited', 'Too many attempts, sign in again');
+    throw new DomainError('too_many_attempts', 'Too many attempts, sign in again');
   }
 
   const normalized = code.replace(/[\s-]/g, '');
