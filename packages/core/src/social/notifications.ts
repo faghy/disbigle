@@ -1,6 +1,6 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { NotificationType } from '@disbigle/shared';
-import { and, eq, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 
 const { notifications, actors, mutes, blocks } = schema;
@@ -52,19 +52,22 @@ export async function createNotification(
 export async function listNotificationRows(
   ctx: CoreContext,
   actorId: string,
-  options: { maxId?: string | undefined; limit: number },
+  options: { maxId?: string | undefined; minId?: string | undefined; limit: number },
 ) {
-  return ctx.db
+  const rows = await ctx.db
     .select()
     .from(notifications)
     .where(
       and(
         eq(notifications.actorId, actorId),
         options.maxId ? lt(notifications.id, options.maxId) : undefined,
+        options.minId ? gt(notifications.id, options.minId) : undefined,
       ),
     )
-    .orderBy(sql`${notifications.id} desc`)
+    .orderBy(options.minId ? notifications.id : sql`${notifications.id} desc`)
     .limit(options.limit);
+  if (options.minId) rows.reverse();
+  return rows;
 }
 
 export async function countUnreadNotifications(ctx: CoreContext, actorId: string): Promise<number> {
@@ -80,4 +83,21 @@ export async function markNotificationsRead(ctx: CoreContext, actorId: string): 
     .update(notifications)
     .set({ readAt: new Date() })
     .where(and(eq(notifications.actorId, actorId), isNull(notifications.readAt)));
+}
+
+/** Removes the follow-request notification once the request has been answered. */
+export async function clearFollowRequestNotification(
+  ctx: CoreContext,
+  targetActorId: string,
+  requesterId: string,
+) {
+  await ctx.db
+    .delete(notifications)
+    .where(
+      and(
+        eq(notifications.actorId, targetActorId),
+        eq(notifications.fromActorId, requesterId),
+        eq(notifications.type, 'follow_request'),
+      ),
+    );
 }

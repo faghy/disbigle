@@ -1,11 +1,15 @@
 import {
+  ACCEPTED_MEDIA_TYPES,
   type CoreContext,
   DomainError,
+  findActorByHandle,
   findLocalActorByUsername,
-  serializeAccount,
+  getAccountWithCounts,
+  MAX_IMAGE_BYTES,
+  MAX_VIDEO_BYTES,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
-import type { InstanceInfo } from '@disbigle/shared';
+import { type InstanceInfo, MAX_POST_LENGTH } from '@disbigle/shared';
 import type { FastifyInstance } from 'fastify';
 
 export const VERSION = '0.1.0';
@@ -19,12 +23,23 @@ export async function publicRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       description: ctx.config.INSTANCE_DESCRIPTION,
       registrationMode: anyUser ? ctx.config.REGISTRATION_MODE : 'open',
       version: VERSION,
+      limits: {
+        maxPostLength: MAX_POST_LENGTH,
+        maxMediaAttachments: 4,
+        maxImageBytes: MAX_IMAGE_BYTES,
+        maxVideoBytes: MAX_VIDEO_BYTES,
+        acceptedMediaTypes: ACCEPTED_MEDIA_TYPES,
+      },
     };
   });
 
   app.get<{ Params: { username: string } }>('/accounts/lookup/:username', async (request) => {
-    const actor = await findLocalActorByUsername(ctx, request.params.username);
+    // `alice` (local) or `alice@example.org` (remote, if already known to this server).
+    const [username = '', domain = null] = request.params.username.replace(/^@/, '').split('@');
+    const actor = domain
+      ? await findActorByHandle(ctx, username, domain)
+      : await findLocalActorByUsername(ctx, username);
     if (!actor || actor.suspendedAt) throw new DomainError('not_found', 'Account not found');
-    return serializeAccount(actor);
+    return getAccountWithCounts(ctx, actor);
   });
 }

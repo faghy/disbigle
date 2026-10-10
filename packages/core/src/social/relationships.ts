@@ -1,9 +1,9 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { Relationship } from '@disbigle/shared';
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
-import { createNotification } from './notifications.ts';
+import { clearFollowRequestNotification, createNotification } from './notifications.ts';
 
 const { actors, follows, followRequests, blocks, mutes, aspects, aspectMemberships } = schema;
 
@@ -134,6 +134,7 @@ export async function acceptFollowRequest(
     .returning({ apUri: followRequests.apUri });
   const request = removed[0];
   if (!request) throw new DomainError('not_found', 'Follow request not found');
+  await clearFollowRequestNotification(ctx, targetActorId, requesterId);
   await insertFollow(ctx, requesterId, targetActorId, request.apUri);
   return getRelationship(ctx, targetActorId, requesterId);
 }
@@ -155,6 +156,7 @@ export async function rejectFollowRequest(
     .where(and(eq(follows.actorId, requesterId), eq(follows.targetActorId, targetActorId)))
     .returning({ apUri: follows.apUri });
   const row = removed[0] ?? unfollowed[0];
+  await clearFollowRequestNotification(ctx, targetActorId, requesterId);
   if (row)
     await emit(ctx, {
       type: 'follow.rejected',
@@ -314,24 +316,36 @@ export async function getRelationships(
   }));
 }
 
-export async function listFollowers(ctx: CoreContext, actorId: string, limit = 40) {
+/** Newest first; `offset` pages through the list. */
+export async function listFollowers(
+  ctx: CoreContext,
+  actorId: string,
+  options: { limit?: number; offset?: number } = {},
+) {
   return ctx.db
     .select({ actor: actors })
     .from(follows)
     .innerJoin(actors, eq(actors.id, follows.actorId))
-    .where(eq(follows.targetActorId, actorId))
-    .orderBy(follows.createdAt)
-    .limit(limit)
+    .where(and(eq(follows.targetActorId, actorId), isNull(actors.suspendedAt)))
+    .orderBy(sql`${follows.id} desc`)
+    .limit(Math.min(options.limit ?? 40, 80))
+    .offset(options.offset ?? 0)
     .then((rows) => rows.map((r) => r.actor));
 }
 
-export async function listFollowing(ctx: CoreContext, actorId: string, limit = 40) {
+/** Newest first; `offset` pages through the list. */
+export async function listFollowing(
+  ctx: CoreContext,
+  actorId: string,
+  options: { limit?: number; offset?: number } = {},
+) {
   return ctx.db
     .select({ actor: actors })
     .from(follows)
     .innerJoin(actors, eq(actors.id, follows.targetActorId))
-    .where(eq(follows.actorId, actorId))
-    .orderBy(follows.createdAt)
-    .limit(limit)
+    .where(and(eq(follows.actorId, actorId), isNull(actors.suspendedAt)))
+    .orderBy(sql`${follows.id} desc`)
+    .limit(Math.min(options.limit ?? 40, 80))
+    .offset(options.offset ?? 0)
     .then((rows) => rows.map((r) => r.actor));
 }

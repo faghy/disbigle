@@ -15,8 +15,8 @@ export async function listNotifications(
   actorId: string,
   query: PaginationQuery = {},
 ): Promise<Notification[]> {
-  const { maxId, limit } = paginationQuerySchema.parse(query);
-  const rows = await listNotificationRows(ctx, actorId, { maxId, limit });
+  const { maxId, minId, limit } = paginationQuerySchema.parse(query);
+  const rows = await listNotificationRows(ctx, actorId, { maxId, minId, limit });
   return serializeNotifications(ctx, actorId, rows);
 }
 

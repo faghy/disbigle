@@ -5,6 +5,7 @@ import {
   type CoreContext,
   DomainError,
   follow,
+  getAccountWithCounts,
   getRelationships,
   listFollowers,
   listFollowing,
@@ -26,6 +27,10 @@ import { parse } from '../http.ts';
 import { requireUser } from '../plugins/auth.ts';
 
 const idParams = z.object({ id: z.uuid() });
+const pageQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(80).default(40),
+  offset: z.coerce.number().int().min(0).max(100_000).default(0),
+});
 
 export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
   const loadActor = async (id: string) => {
@@ -43,7 +48,7 @@ export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCo
   });
 
   app.get('/:id', async (request) =>
-    serializeAccount(await loadActor(parse(idParams, request.params).id)),
+    getAccountWithCounts(ctx, await loadActor(parse(idParams, request.params).id)),
   );
 
   app.get('/:id/statuses', async (request) => {
@@ -64,12 +69,14 @@ export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCo
 
   app.get('/:id/followers', async (request) => {
     const { id } = parse(idParams, request.params);
-    return (await listFollowers(ctx, (await loadActor(id)).id)).map(serializeAccount);
+    const page = parse(pageQuery, request.query);
+    return (await listFollowers(ctx, (await loadActor(id)).id, page)).map(serializeAccount);
   });
 
   app.get('/:id/following', async (request) => {
     const { id } = parse(idParams, request.params);
-    return (await listFollowing(ctx, (await loadActor(id)).id)).map(serializeAccount);
+    const page = parse(pageQuery, request.query);
+    return (await listFollowing(ctx, (await loadActor(id)).id, page)).map(serializeAccount);
   });
 
   const actions = { follow, unfollow, block, unblock, mute, unmute } as const;

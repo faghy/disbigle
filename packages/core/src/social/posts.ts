@@ -155,6 +155,7 @@ export async function createPost(
     resolveMention: (username, domain) =>
       mentioned.get(`${username.toLowerCase()}@${domain ?? ''}`)?.apUrl ?? null,
     tagUrl: (tag) => `${base}/tags/${encodeURIComponent(tag)}`,
+    localOrigin: new URL(base).origin,
   });
   const tagNames = extractTags(input.content);
 

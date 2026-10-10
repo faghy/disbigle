@@ -71,6 +71,31 @@ describe('media API', () => {
   });
 });
 
+describe('profile images', () => {
+  it('crops and stores an avatar, then removes it', async () => {
+    const client = new Client(app);
+    await client.post('/api/v1/auth/register', newUser());
+    const jpeg = await sharp({
+      create: { width: 800, height: 300, channels: 3, background: '#00aa00' },
+    })
+      .jpeg()
+      .toBuffer();
+    const body = multipart({}, { name: 'me.jpg', type: 'image/jpeg', data: jpeg });
+    const response = await app().inject({
+      method: 'POST',
+      url: '/api/v1/me/avatar',
+      payload: body.payload,
+      headers: { 'content-type': body.contentType, cookie: client.cookieHeader ?? '' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().account.avatarUrl).toMatch(
+      /^https:\/\/disbigle\.test\/media\/.+avatar-.+\.webp$/,
+    );
+    const removed = await client.delete('/api/v1/me/avatar');
+    expect(removed.json().account.avatarUrl).toBeNull();
+  });
+});
+
 describe('instance info', () => {
   it('reports the configured title', async () => {
     expect((await new Client(app).get('/api/v1/instance')).json()).toMatchObject({

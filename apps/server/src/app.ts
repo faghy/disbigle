@@ -92,7 +92,7 @@ export async function buildApp(options: AppOptions) {
     async (api) => {
       await api.register(publicRoutes, { ctx });
       await api.register(authRoutes, { ctx, prefix: '/auth' });
-      await api.register(meRoutes, { ctx, prefix: '/me' });
+      await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });
       await api.register(statusRoutes, { ctx, prefix: '/statuses' });
       await api.register(timelineRoutes, { ctx, prefix: '/timelines' });
       await api.register(accountRoutes, { ctx, prefix: '/accounts' });

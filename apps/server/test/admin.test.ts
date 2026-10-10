@@ -76,7 +76,10 @@ describe('moderation', () => {
     expect((await admin.get(`/api/v1/accounts/${userAccount.id}`)).statusCode).toBe(200);
 
     // Domain blocks (admins only). The unsuspended user signs in again first.
-    await pendingClient.post('/api/v1/auth/login', { login: pending.user.username, password: pending.user.password });
+    await pendingClient.post('/api/v1/auth/login', {
+      login: pending.user.username,
+      password: pending.user.password,
+    });
     expect(
       (
         await pendingClient.post('/api/v1/admin/domain_blocks', {

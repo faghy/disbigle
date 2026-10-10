@@ -43,6 +43,8 @@ export interface RenderOptions {
   /** Resolves a mention to the profile URL of a known account; unresolved mentions stay plain text. */
   resolveMention: (username: string, domain: string | null) => string | null;
   tagUrl: (tag: string) => string;
+  /** Origin of this instance: links to it open in the same tab (no target="_blank"). */
+  localOrigin?: string;
 }
 
 const allowedTags = [
@@ -114,6 +116,10 @@ export function renderMarkdown(source: string, options: RenderOptions): string {
     },
   };
 
+  const isInternal = (href: string | undefined) =>
+    !!href &&
+    !!options.localOrigin &&
+    (href === options.localOrigin || href.startsWith(`${options.localOrigin}/`));
   const marked = new Marked({ gfm: true, breaks: true, async: false });
   marked.use({
     extensions: [mention, hashtag],
@@ -132,11 +138,9 @@ export function renderMarkdown(source: string, options: RenderOptions): string {
     transformTags: {
       a: (tagName, attribs) => ({
         tagName,
-        attribs: {
-          ...attribs,
-          rel: attribs.rel === 'tag' ? 'tag' : 'nofollow noopener noreferrer',
-          target: '_blank',
-        },
+        attribs: isInternal(attribs.href)
+          ? { ...attribs }
+          : { ...attribs, rel: 'nofollow noopener noreferrer', target: '_blank' },
       }),
     },
   }).trim();

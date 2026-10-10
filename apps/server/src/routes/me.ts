@@ -4,14 +4,19 @@ import {
   type CoreContext,
   changePassword,
   confirmTotpSetup,
+  DomainError,
   deletePasskey,
   disableTotp,
   finishPasskeyRegistration,
   getCurrentUser,
   listPasskeys,
+  MAX_IMAGE_BYTES,
+  type MediaStorage,
   type RegistrationResponseJSON,
   regenerateRecoveryCodes,
+  removeProfileImage,
   updateProfile,
+  updateProfileImage,
   updateSettings,
 } from '@disbigle/core';
 import {
@@ -37,7 +42,34 @@ const passkeyRegisterSchema = z.object({
 });
 
 /** Routes for the signed-in user's own account. */
-export async function meRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
+export async function meRoutes(
+  app: FastifyInstance,
+  { ctx, mediaCtx }: { ctx: CoreContext; mediaCtx: CoreContext & { storage: MediaStorage } },
+) {
+  for (const kind of ['avatar', 'header'] as const) {
+    app.post(
+      `/${kind}`,
+      { config: { rateLimit: { max: 20, timeWindow: '1 hour' } } },
+      async (request) => {
+        const session = requireUser(request);
+        const file = await request.file({ limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } });
+        if (!file) throw new DomainError('bad_request', 'No file uploaded');
+        const data = await file.toBuffer();
+        if (file.file.truncated) throw new DomainError('bad_request', 'Image is too large');
+        await updateProfileImage(mediaCtx, session.actorId, kind, {
+          data,
+          mimeType: file.mimetype,
+        });
+        return getCurrentUser(ctx, session.userId);
+      },
+    );
+    app.delete(`/${kind}`, async (request) => {
+      const session = requireUser(request);
+      await removeProfileImage(mediaCtx, session.actorId, kind);
+      return getCurrentUser(ctx, session.userId);
+    });
+  }
+
   app.get('/', async (request) => getCurrentUser(ctx, requireUser(request).userId));
 
   app.patch('/profile', async (request) => {

@@ -62,14 +62,7 @@ export class StreamingHub {
     try {
       if (event.type === 'post.created') await this.onPostCreated(event.postId);
       else if (event.type === 'post.deleted') {
-        for (const c of this.connections) {
-          if (c.streams.size > 0)
-            this.send(c, {
-              event: 'delete',
-              stream: [...c.streams][0] ?? 'user',
-              payload: event.postId,
-            });
-        }
+        await this.onPostDeleted(event);
       } else if (event.type === 'notification.created') {
         await this.onNotification(event.notificationId, event.recipientActorId);
       }
@@ -141,6 +134,37 @@ export class StreamingHub {
       const status = await statusFor(c.actorId);
       if (!status) continue;
       for (const stream of targets) this.send(c, { event: 'update', stream, payload: status });
+    }
+  }
+
+  /** Tells only the clients that could have seen the post that it is gone. */
+  private async onPostDeleted(
+    event: Extract<DomainEvent, { type: 'post.deleted' }>,
+  ): Promise<void> {
+    const isPublic = event.visibility === 'public' || event.visibility === 'unlisted';
+    const allowed = new Set<string>([event.actorId, ...event.audienceActorIds]);
+    if (event.visibility === 'followers') {
+      const connected = [...this.connections]
+        .map((c) => c.actorId)
+        .filter((id): id is string => !!id);
+      if (connected.length > 0) {
+        const rows = await this.ctx.db
+          .select({ id: schema.follows.actorId })
+          .from(schema.follows)
+          .where(
+            and(
+              eq(schema.follows.targetActorId, event.actorId),
+              inArray(schema.follows.actorId, connected),
+            ),
+          );
+        for (const row of rows) allowed.add(row.id);
+      }
+    }
+    for (const c of this.connections) {
+      if (c.streams.size === 0) continue;
+      if (!isPublic && !(c.actorId && allowed.has(c.actorId))) continue;
+      const stream = c.streams.has('user') ? 'user' : ([...c.streams][0] ?? 'user');
+      this.send(c, { event: 'delete', stream, payload: event.postId });
     }
   }
 

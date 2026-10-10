@@ -39,6 +39,10 @@ export interface Account {
   local: boolean;
   url: string | null;
   createdAt: string;
+  /** Present on single-account endpoints (profile pages). */
+  followersCount?: number;
+  followingCount?: number;
+  statusesCount?: number;
 }
 
 /** The signed-in user: their account plus private settings. */
@@ -58,4 +62,11 @@ export interface InstanceInfo {
   /** Effective mode: a brand-new instance reports `open` so its first user can sign up as admin. */
   registrationMode: 'open' | 'approval' | 'invite' | 'closed';
   version: string;
+  limits: {
+    maxPostLength: number;
+    maxMediaAttachments: number;
+    maxImageBytes: number;
+    maxVideoBytes: number;
+    acceptedMediaTypes: string[];
+  };
 }

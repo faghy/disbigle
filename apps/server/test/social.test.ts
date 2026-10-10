@@ -167,4 +167,41 @@ describe('streaming', () => {
     expect(messages.filter((m) => m.error === 'invalid_stream')).toHaveLength(1);
     expect(messages.filter((m) => m.event === 'update')).toHaveLength(1);
   });
+
+  it('only tells clients that could see a private post about its deletion', async () => {
+    const author = await signedIn();
+    const friend = await signedIn();
+    const stranger = await signedIn();
+    const aspects = (await author.client.get('/api/v1/aspects')).json();
+    await author.client.put(`/api/v1/accounts/${friend.account.id}/aspects`, {
+      aspectIds: [aspects[0].id],
+    });
+    const post = (
+      await author.client.post('/api/v1/statuses', {
+        content: 'secret',
+        visibility: 'limited',
+        aspectIds: [aspects[0].id],
+      })
+    ).json();
+
+    const listen = async (cookie: string | undefined) => {
+      const received: string[] = [];
+      const ws = await app().injectWS('/api/v1/streaming?stream=user', {
+        headers: { cookie: cookie ?? '' },
+      });
+      ws.on('message', (data: Buffer) => {
+        const message = JSON.parse(data.toString());
+        if (message.event === 'delete') received.push(message.payload);
+      });
+      return { ws, received };
+    };
+    const friendSocket = await listen(friend.client.cookieHeader);
+    const strangerSocket = await listen(stranger.client.cookieHeader);
+    await author.client.delete(`/api/v1/statuses/${post.id}`);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    friendSocket.ws.terminate();
+    strangerSocket.ws.terminate();
+    expect(friendSocket.received).toEqual([post.id]);
+    expect(strangerSocket.received).toEqual([]);
+  });
 });

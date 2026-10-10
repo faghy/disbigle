@@ -2,13 +2,25 @@ import { schema, uuidv7 } from '@disbigle/db';
 import type { MediaAttachment } from '@disbigle/shared';
 import { and, eq, isNull, lt } from 'drizzle-orm';
 import sharp, { type Metadata, type Sharp } from 'sharp';
-import type { CoreContext } from '../context.ts';
+import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { serializeMedia } from '../social/statuses.ts';
 import type { MediaStorage } from './storage.ts';
 
 export const MAX_IMAGE_BYTES = 16 * 1024 * 1024;
 export const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
+export const ACCEPTED_MEDIA_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'video/mp4',
+  'video/webm',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/mp4',
+];
 const MAX_IMAGE_SIDE = 2560;
 const PREVIEW_SIDE = 640;
 
@@ -169,4 +181,66 @@ export async function cleanupUnattachedMedia(
     if (media.previewPath) await ctx.storage.delete(media.previewPath);
   }
   return stale.length;
+}
+
+const profileImageSizes = {
+  avatar: { width: 400, height: 400 },
+  header: { width: 1500, height: 500 },
+} as const;
+
+/**
+ * Replaces the avatar or header image of a local account. The image is cropped to the
+ * expected aspect ratio, re-encoded (metadata stripped) and stored as WebP.
+ */
+export async function updateProfileImage(
+  ctx: CoreContext & { storage: MediaStorage },
+  actorId: string,
+  kind: 'avatar' | 'header',
+  input: { data: Buffer; mimeType: string },
+): Promise<string> {
+  if (!imageFormats[input.mimeType]) throw new DomainError('bad_request', 'Unsupported file type');
+  if (input.data.length > MAX_IMAGE_BYTES)
+    throw new DomainError('bad_request', 'Image is too large');
+  const size = profileImageSizes[kind];
+  let output: Buffer;
+  try {
+    output = await sharp(input.data, { failOn: 'error' })
+      .rotate()
+      .resize({ ...size, fit: 'cover', position: 'attention' })
+      .webp({ quality: 85 })
+      .toBuffer();
+  } catch {
+    throw new DomainError('bad_request', 'The file is not a valid image');
+  }
+  const path = datedPath(`${kind}-${uuidv7()}`, 'webp');
+  await ctx.storage.put(path, output);
+  const url = `${ctx.config.PUBLIC_URL}/media/${path}`;
+  const [previous] = await ctx.db.select().from(schema.actors).where(eq(schema.actors.id, actorId));
+  await ctx.db
+    .update(schema.actors)
+    .set(
+      kind === 'avatar'
+        ? { avatarUrl: url, updatedAt: new Date() }
+        : { headerUrl: url, updatedAt: new Date() },
+    )
+    .where(eq(schema.actors.id, actorId));
+  const old = kind === 'avatar' ? previous?.avatarUrl : previous?.headerUrl;
+  const prefix = `${ctx.config.PUBLIC_URL}/media/`;
+  if (old?.startsWith(prefix))
+    await ctx.storage.delete(old.slice(prefix.length)).catch(() => undefined);
+  await emit(ctx, { type: 'profile.updated', actorId });
+  return url;
+}
+
+/** Removes the avatar or header image. */
+export async function removeProfileImage(
+  ctx: CoreContext & { storage: MediaStorage },
+  actorId: string,
+  kind: 'avatar' | 'header',
+): Promise<void> {
+  await ctx.db
+    .update(schema.actors)
+    .set(kind === 'avatar' ? { avatarUrl: null } : { headerUrl: null })
+    .where(eq(schema.actors.id, actorId));
+  await emit(ctx, { type: 'profile.updated', actorId });
 }

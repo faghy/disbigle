@@ -12,7 +12,7 @@ import { eq, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { hashPassword, verifyPassword } from '../crypto/passwords.ts';
 import { DomainError } from '../errors.ts';
-import { serializeAccount } from './serialize.ts';
+import { getAccountWithCounts, serializeAccount } from './serialize.ts';
 import { revokeOtherSessions } from './sessions.ts';
 
 export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<CurrentUser> {
@@ -27,7 +27,7 @@ export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<
     .where(eq(schema.users.id, userId));
   if (!row) throw new DomainError('not_found', 'User not found');
   return {
-    account: serializeAccount(row.actor),
+    account: await getAccountWithCounts(ctx, row.actor),
     email: row.user.email,
     role: row.user.role,
     locale: row.user.locale,
