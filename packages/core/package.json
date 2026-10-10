@@ -1,0 +1,26 @@
+{
+  "name": "@disbigle/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@disbigle/config": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "@disbigle/shared": "workspace:*",
+    "@node-rs/argon2": "^2.0.2",
+    "@simplewebauthn/server": "^13.2.2",
+    "drizzle-orm": "^0.45.4",
+    "otplib": "^13.5.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6"
+  }
+}
