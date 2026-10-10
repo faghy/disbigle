@@ -15,6 +15,13 @@
       "when": 1791672866381,
       "tag": "0001_social",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791673807889,
+      "tag": "0002_federation",
+      "breakpoints": true
     }
   ]
 }

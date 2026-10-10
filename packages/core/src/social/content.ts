@@ -3,7 +3,7 @@ import sanitizeHtml from 'sanitize-html';
 
 /** `@user` or `@user@domain`, not preceded by a word character (so emails don't match). */
 const MENTION_RE =
-  /(?<![\w/@])@([a-zA-Z0-9_]{1,30})(?:@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|localhost(?::\d+)?))?/g;
+  /(?<![\w/@])@([a-zA-Z0-9_]{1,30})(?:@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?::\d{1,5})?|localhost(?::\d{1,5})?))?/g;
 /** `#tag`: letters, digits and underscores, at least one non-digit. */
 const TAG_RE = /(?<![\w/&#])#([\p{L}\p{N}_]*[\p{L}_][\p{L}\p{N}_]*)/gu;
 
@@ -85,7 +85,9 @@ export function renderMarkdown(source: string, options: RenderOptions): string {
     start: (src) => src.match(/(?<![\w/@])@[a-zA-Z0-9_]/)?.index,
     tokenizer(src) {
       const match =
-        /^@([a-zA-Z0-9_]{1,30})(?:@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|localhost(?::\d+)?))?/.exec(src);
+        /^@([a-zA-Z0-9_]{1,30})(?:@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+(?::\d{1,5})?|localhost(?::\d{1,5})?))?/.exec(
+          src,
+        );
       if (!match) return undefined;
       return { type: 'mention', raw: match[0], username: match[1], domain: match[2] ?? null };
     },

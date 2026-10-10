@@ -5,6 +5,8 @@ import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
+import { fedifyPlugin } from '@fedify/fastify';
+import type { Federation } from '@fedify/fedify';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Redis } from 'ioredis';
 import { errorHandler } from './http.ts';
@@ -16,6 +18,7 @@ import { meRoutes } from './routes/me.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { publicRoutes } from './routes/public.ts';
+import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
 import { timelineRoutes } from './routes/timelines.ts';
@@ -33,6 +36,8 @@ export interface AppOptions {
   storage?: MediaStorage;
   /** Serve MEDIA_DIR under /media (development; use the web server in production). */
   serveMedia?: boolean;
+  /** ActivityPub federation; when set, its endpoints (actors, inboxes, WebFinger, NodeInfo) are served. */
+  federation?: Federation<CoreContext>;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
 }
@@ -48,6 +53,12 @@ export async function buildApp(options: AppOptions) {
     reply.status(404).send({ error: 'not_found', message: 'Route not found' }),
   );
 
+  if (options.federation) {
+    await app.register(fedifyPlugin, {
+      federation: options.federation,
+      contextDataFactory: () => ctx,
+    });
+  }
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cookie);
   if (!disableRateLimit) {
@@ -88,6 +99,13 @@ export async function buildApp(options: AppOptions) {
       await api.register(aspectRoutes, { ctx, prefix: '/aspects' });
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });
       await api.register(mediaRoutes, { ctx: mediaCtx, prefix: '/media' });
+      if (options.federation) {
+        await api.register(searchRoutes, {
+          ctx,
+          federation: options.federation,
+          prefix: '/search',
+        });
+      }
       if (hub) await api.register(streamingRoutes, { hub, prefix: '/streaming' });
     },
     { prefix: '/api/v1' },

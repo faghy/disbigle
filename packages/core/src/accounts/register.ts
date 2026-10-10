@@ -2,7 +2,7 @@ import { schema, uuidv7 } from '@disbigle/db';
 import { type RegisterRequest, registerRequestSchema } from '@disbigle/shared';
 import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
-import { generateActorKeyPair } from '../crypto/keys.ts';
+import { generateActorKeyPair, generateEd25519KeyPair } from '../crypto/keys.ts';
 import { hashPassword } from '../crypto/passwords.ts';
 import { diasporaGuid } from '../crypto/tokens.ts';
 import { DomainError } from '../errors.ts';
@@ -83,9 +83,10 @@ export async function registerUser(
   if (existingUser)
     throw new DomainError('email_taken', 'This email address is already registered');
 
-  const [passwordHash, keys] = await Promise.all([
+  const [passwordHash, keys, edKeys] = await Promise.all([
     hashPassword(input.password),
     generateActorKeyPair(ctx.rsaKeyBits ?? 4096),
+    generateEd25519KeyPair(),
   ]);
   const guid = diasporaGuid();
   const actorId = uuidv7();
@@ -131,6 +132,8 @@ export async function registerUser(
         email: input.email,
         passwordHash,
         privateKeyPem: keys.privateKeyPem,
+        ed25519PrivateKeyPem: edKeys.privateKeyPem,
+        ed25519PublicKeyPem: edKeys.publicKeyPem,
         role: isFirstUser ? 'admin' : 'user',
         locale: input.locale,
         approved,

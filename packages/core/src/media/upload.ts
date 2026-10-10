@@ -70,14 +70,12 @@ export async function uploadMedia(
     } catch {
       throw new DomainError('bad_request', 'The file is not a valid image');
     }
-    const resized = image
-      .rotate()
-      .resize({
-        width: MAX_IMAGE_SIDE,
-        height: MAX_IMAGE_SIDE,
-        fit: 'inside',
-        withoutEnlargement: true,
-      });
+    const resized = image.rotate().resize({
+      width: MAX_IMAGE_SIDE,
+      height: MAX_IMAGE_SIDE,
+      fit: 'inside',
+      withoutEnlargement: true,
+    });
     const output = await (format === 'jpeg'
       ? resized.jpeg({ quality: 85, mozjpeg: true })
       : format === 'png'

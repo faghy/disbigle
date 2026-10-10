@@ -1,0 +1,17 @@
+{
+  "name": "@disbigle/diaspora",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.12",
+    "node-html-parser": "^9.0.4"
+  }
+}

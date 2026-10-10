@@ -101,6 +101,9 @@ export const users = pgTable(
     email: text('email').notNull(),
     passwordHash: text('password_hash').notNull(),
     privateKeyPem: text('private_key_pem').notNull(),
+    /** Ed25519 key pair (PKCS#8 / SPKI PEM) for Object Integrity Proofs (FEP-8b32). */
+    ed25519PrivateKeyPem: text('ed25519_private_key_pem'),
+    ed25519PublicKeyPem: text('ed25519_public_key_pem'),
     role: userRoleEnum('role').notNull().default('user'),
     locale: text('locale').notNull().default('en'),
     approved: boolean('approved').notNull().default(true),
@@ -304,6 +307,8 @@ export const posts = pgTable(
     language: text('language'),
     inReplyToId: uuid('in_reply_to_id'),
     inReplyToActorId: uuid('in_reply_to_actor_id'),
+    /** Federated id of the parent when the parent is not (yet) stored locally. */
+    inReplyToUri: text('in_reply_to_uri'),
     /** First post of the thread; equals `id` for a thread root. */
     threadRootId: uuid('thread_root_id'),
     reblogOfId: uuid('reblog_of_id'),

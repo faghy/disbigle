@@ -4,11 +4,18 @@ import { Client, newUser, useTestApp } from './helpers.ts';
 
 const app = useTestApp();
 
-function multipart(fields: Record<string, string>, file: { name: string; type: string; data: Buffer }) {
+function multipart(
+  fields: Record<string, string>,
+  file: { name: string; type: string; data: Buffer },
+) {
   const boundary = '----disbigle-test';
   const parts: Buffer[] = [];
   for (const [name, value] of Object.entries(fields)) {
-    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`));
+    parts.push(
+      Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`,
+      ),
+    );
   }
   parts.push(
     Buffer.from(
@@ -17,18 +24,26 @@ function multipart(fields: Record<string, string>, file: { name: string; type: s
     file.data,
     Buffer.from(`\r\n--${boundary}--\r\n`),
   );
-  return { payload: Buffer.concat(parts), contentType: `multipart/form-data; boundary=${boundary}` };
+  return {
+    payload: Buffer.concat(parts),
+    contentType: `multipart/form-data; boundary=${boundary}`,
+  };
 }
 
 describe('media API', () => {
   it('uploads an image with alt text and posts it', async () => {
     const client = new Client(app);
     await client.post('/api/v1/auth/register', newUser());
-    const png = await sharp({ create: { width: 64, height: 32, channels: 3, background: '#ff0000' } })
+    const png = await sharp({
+      create: { width: 64, height: 32, channels: 3, background: '#ff0000' },
+    })
       .png()
       .toBuffer();
     // Fields before the file, as browsers send them when the form lists them first.
-    const body = multipart({ description: 'Red' }, { name: 'red.png', type: 'image/png', data: png });
+    const body = multipart(
+      { description: 'Red' },
+      { name: 'red.png', type: 'image/png', data: png },
+    );
     const response = await app().inject({
       method: 'POST',
       url: '/api/v1/media',
@@ -58,6 +73,8 @@ describe('media API', () => {
 
 describe('instance info', () => {
   it('reports the configured title', async () => {
-    expect((await new Client(app).get('/api/v1/instance')).json()).toMatchObject({ title: 'Disbigle Test' });
+    expect((await new Client(app).get('/api/v1/instance')).json()).toMatchObject({
+      title: 'Disbigle Test',
+    });
   });
 });

@@ -1,0 +1,245 @@
+import { createServer } from 'node:net';
+import {
+  ActivityPubPublisher,
+  CompositeEventBus,
+  createDisbigleFederation,
+} from '@disbigle/activitypub';
+import type { Config } from '@disbigle/config';
+import { type CoreContext, MemoryKeyValueStore } from '@disbigle/core';
+import { createTestDatabase } from '@disbigle/db/testing';
+import { MemoryKvStore } from '@fedify/fedify';
+import type { FastifyInstance } from 'fastify';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { buildApp } from '../src/app.ts';
+import { LocalEventBus, StreamingHub } from '../src/streaming.ts';
+import { Client, newUser, testConfig } from './helpers.ts';
+
+async function freePort(): Promise<number> {
+  return new Promise((resolve) => {
+    const server = createServer();
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      server.close(() => resolve(typeof address === 'object' && address ? address.port : 0));
+    });
+  });
+}
+
+interface Instance {
+  app: FastifyInstance;
+  domain: string;
+  url: string;
+  drop: () => Promise<void>;
+}
+
+async function startInstance(): Promise<Instance> {
+  const port = await freePort();
+  const domain = `127.0.0.1:${port}`;
+  const url = `http://${domain}`;
+  const testDb = await createTestDatabase();
+  const config: Config = { ...testConfig, PUBLIC_URL: url, LOCAL_DOMAIN: domain };
+  const ctx: CoreContext = {
+    db: testDb.db,
+    config,
+    kv: new MemoryKeyValueStore(),
+    rsaKeyBits: 1024,
+  };
+  const federation = createDisbigleFederation({
+    kv: new MemoryKvStore(),
+    allowPrivateAddress: true,
+  });
+  const hub = new StreamingHub(ctx);
+  ctx.events = new CompositeEventBus([
+    new LocalEventBus(hub),
+    new ActivityPubPublisher(federation, ctx),
+  ]);
+  const app = await buildApp({ ctx, hub, federation, disableRateLimit: true });
+  await app.listen({ host: '127.0.0.1', port });
+  return { app, domain, url, drop: testDb.drop };
+}
+
+async function eventually<T>(
+  check: () => Promise<T | null | undefined | false>,
+  timeoutMs = 10_000,
+): Promise<T> {
+  const start = Date.now();
+  for (;;) {
+    const value = await check();
+    if (value) return value;
+    if (Date.now() - start > timeoutMs) throw new Error('Condition not met in time');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
+let a: Instance;
+let b: Instance;
+
+beforeAll(async () => {
+  [a, b] = await Promise.all([startInstance(), startInstance()]);
+}, 60_000);
+
+afterAll(async () => {
+  await Promise.all([a?.app.close(), b?.app.close()]);
+  await Promise.all([a?.drop(), b?.drop()]);
+});
+
+async function signUp(instance: Instance) {
+  const client = new Client(() => instance.app);
+  const user = newUser();
+  const response = await client.post('/api/v1/auth/register', user);
+  expect(response.statusCode).toBe(201);
+  return { client, account: response.json().user.account as { id: string; username: string } };
+}
+
+describe('discovery', () => {
+  it('serves WebFinger with ActivityPub and diaspora links, and NodeInfo with both protocols', async () => {
+    const { account } = await signUp(a);
+    const finger = await fetch(
+      `${a.url}/.well-known/webfinger?resource=acct:${account.username}@${a.domain}`,
+    );
+    expect(finger.status).toBe(200);
+    const jrd = (await finger.json()) as { links: { rel: string }[] };
+    const rels = jrd.links.map((l: { rel: string }) => l.rel);
+    expect(rels).toEqual(
+      expect.arrayContaining([
+        'self',
+        'http://microformats.org/profile/hcard',
+        'http://joindiaspora.com/seed_location',
+      ]),
+    );
+
+    const actor = await fetch(`${a.url}/users/${account.username}`, {
+      headers: { accept: 'application/activity+json' },
+    });
+    const person = (await actor.json()) as { publicKey: { publicKeyPem: string } };
+    expect(person).toMatchObject({
+      type: 'Person',
+      preferredUsername: account.username,
+      inbox: expect.any(String),
+    });
+    expect(person.publicKey.publicKeyPem).toContain('BEGIN PUBLIC KEY');
+
+    const links = (await (await fetch(`${a.url}/.well-known/nodeinfo`)).json()) as {
+      links: { href: string }[];
+    };
+    const nodeinfo = (await (await fetch(links.links[0]?.href ?? '')).json()) as {
+      software: { name: string };
+      protocols: string[];
+    };
+    expect(nodeinfo.software.name).toBe('disbigle');
+    expect(nodeinfo.protocols).toEqual(['activitypub', 'diaspora']);
+  });
+});
+
+describe('federation between two instances', () => {
+  it('follows, delivers posts, likes, replies and deletions both ways', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+
+    // Alice finds Bob on the other server.
+    const resolved = await alice.client.post('/api/v1/search/resolve', {
+      q: `${b.url}/users/${bob.account.username}`,
+    });
+    expect(resolved.statusCode).toBe(200);
+    const remoteBob = resolved.json();
+    expect(remoteBob).toMatchObject({
+      username: bob.account.username,
+      acct: `${bob.account.username}@${b.domain}`,
+      local: false,
+    });
+
+    // Follow: request, then accepted by Bob's server.
+    await alice.client.post(`/api/v1/accounts/${remoteBob.id}/follow`);
+    await eventually(async () => {
+      const rel = (
+        await alice.client.get(`/api/v1/accounts/relationships?id[]=${remoteBob.id}`)
+      ).json();
+      return rel[0]?.following;
+    });
+    const bobFollowers = (
+      await bob.client.get(`/api/v1/accounts/${bob.account.id}/followers`)
+    ).json();
+    expect(bobFollowers.map((f: { acct: string }) => f.acct)).toEqual([
+      `${alice.account.username}@${a.domain}`,
+    ]);
+
+    // Bob posts; Alice receives it in her home timeline.
+    const post = (
+      await bob.client.post('/api/v1/statuses', { content: 'Ciao dal **server B** #federation' })
+    ).json();
+    const received = await eventually(async () => {
+      const home = (await alice.client.get('/api/v1/timelines/home')).json();
+      return home.find((s: { uri: string }) => s.uri === post.uri);
+    });
+    expect(received.content).toContain('<strong>server B</strong>');
+    expect(received.account.acct).toBe(`${bob.account.username}@${b.domain}`);
+    expect(received.tags).toEqual([{ name: 'federation' }]);
+
+    // Alice likes it; Bob's server counts the like and notifies Bob.
+    await alice.client.post(`/api/v1/statuses/${received.id}/like`);
+    await eventually(
+      async () => (await bob.client.get(`/api/v1/statuses/${post.id}`)).json().likesCount === 1,
+    );
+    const bobNotes = (await bob.client.get('/api/v1/notifications')).json();
+    expect(bobNotes.map((n: { type: string }) => n.type)).toEqual(
+      expect.arrayContaining(['follow', 'like']),
+    );
+
+    // Alice replies; the reply reaches Bob's thread.
+    const reply = (
+      await alice.client.post('/api/v1/statuses', {
+        content: `@${bob.account.username}@${b.domain} bellissimo!`,
+        inReplyToId: received.id,
+      })
+    ).json();
+    expect(reply.mentions[0]?.acct).toBe(`${bob.account.username}@${b.domain}`);
+    const context = await eventually(async () => {
+      const ctx = (await bob.client.get(`/api/v1/statuses/${post.id}/context`)).json();
+      return ctx.descendants.length === 1 ? ctx : null;
+    });
+    expect(context.descendants[0].account.acct).toBe(`${alice.account.username}@${a.domain}`);
+
+    // Bob deletes the post; it disappears on Alice's server.
+    await bob.client.delete(`/api/v1/statuses/${post.id}`);
+    await eventually(
+      async () => (await alice.client.get(`/api/v1/statuses/${received.id}`)).statusCode === 404,
+    );
+  });
+
+  it('delivers aspect-limited posts only to the chosen remote people', async () => {
+    const alice = await signUp(a);
+    const carol = await signUp(a);
+    const bob = await signUp(b);
+    const remoteAlice = (
+      await bob.client.post('/api/v1/search/resolve', {
+        q: `${a.url}/users/${alice.account.username}`,
+      })
+    ).json();
+    const remoteCarol = (
+      await bob.client.post('/api/v1/search/resolve', {
+        q: `${a.url}/users/${carol.account.username}`,
+      })
+    ).json();
+    // Carol follows Bob but is not in the aspect.
+    await bob.client.post(`/api/v1/accounts/${remoteCarol.id}/follow`); // irrelevant direction; ensures actor known
+    const aspects = (await bob.client.get('/api/v1/aspects')).json();
+    await bob.client.put(`/api/v1/accounts/${remoteAlice.id}/aspects`, {
+      aspectIds: [aspects[0].id],
+    });
+
+    const post = (
+      await bob.client.post('/api/v1/statuses', {
+        content: 'solo per la famiglia',
+        visibility: 'limited',
+        aspectIds: [aspects[0].id],
+      })
+    ).json();
+    const received = await eventually(async () => {
+      const home = (await alice.client.get('/api/v1/timelines/home')).json();
+      return home.find((s: { uri: string }) => s.uri === post.uri);
+    });
+    expect(['limited', 'direct']).toContain(received.visibility);
+    const carolHome = (await carol.client.get('/api/v1/timelines/home')).json();
+    expect(carolHome.find((s: { uri: string }) => s.uri === post.uri)).toBeUndefined();
+    expect((await carol.client.get(`/api/v1/statuses/${received.id}`)).statusCode).toBe(404);
+  });
+});

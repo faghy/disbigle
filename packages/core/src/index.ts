@@ -13,6 +13,7 @@ export * from './crypto/passwords.ts';
 export * from './crypto/tokens.ts';
 export * from './errors.ts';
 export * from './events.ts';
+export * from './federation/remote.ts';
 export * from './media/storage.ts';
 export * from './media/upload.ts';
 export * from './social/aspects.ts';

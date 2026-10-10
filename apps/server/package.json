@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@disbigle/activitypub": "workspace:*",
     "@disbigle/config": "workspace:*",
     "@disbigle/core": "workspace:*",
     "@disbigle/db": "workspace:*",
@@ -23,13 +24,17 @@
     "@fastify/rate-limit": "^11.2.1",
     "@fastify/static": "^10.1.6",
     "@fastify/websocket": "^11.3.4",
+    "@fedify/fastify": "^2.4.2",
+    "@fedify/fedify": "^2.4.2",
+    "@fedify/redis": "^2.4.2",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "fastify-plugin": "^5.1.0",
-    "ioredis": "^6.0.0",
+    "ioredis": "^5.11.1",
     "zod": "^4.3.3"
   },
   "devDependencies": {
+    "@logtape/logtape": "^2.4.0",
     "otplib": "^13.5.0",
     "sharp": "^0.35.5"
   }

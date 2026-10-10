@@ -14,3 +14,15 @@ export async function generateActorKeyPair(
   });
   return { publicKeyPem: publicKey, privateKeyPem: privateKey };
 }
+
+/** Ed25519 key pair for Object Integrity Proofs (FEP-8b32). */
+export async function generateEd25519KeyPair(): Promise<{
+  publicKeyPem: string;
+  privateKeyPem: string;
+}> {
+  const { publicKey, privateKey } = await generateKeyPairAsync('ed25519', {
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+  return { publicKeyPem: publicKey, privateKeyPem: privateKey };
+}

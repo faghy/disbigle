@@ -1,0 +1,27 @@
+{
+  "name": "@disbigle/activitypub",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@disbigle/config": "workspace:*",
+    "@disbigle/core": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "@disbigle/shared": "workspace:*",
+    "@fedify/fedify": "^2.4.2",
+    "@fedify/redis": "^2.4.2",
+    "@fedify/vocab": "^2.4.2",
+    "drizzle-orm": "^0.45.4",
+    "temporal-polyfill": "^1.0.5"
+  },
+  "devDependencies": {
+    "@fedify/testing": "^2.4.2"
+  }
+}

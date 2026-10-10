@@ -1,14 +1,32 @@
 /** Something that happened in the domain, for streaming, federation and background work. */
 export type DomainEvent =
   | { type: 'post.created'; postId: string; actorId: string }
-  | { type: 'post.deleted'; postId: string; actorId: string; apUri: string | null }
+  | {
+      type: 'post.deleted';
+      postId: string;
+      actorId: string;
+      apUri: string | null;
+      diasporaGuid: string | null;
+      /** Explicit recipients at deletion time (followers are resolved by the receiver). */
+      audienceActorIds: string[];
+      visibility: 'public' | 'unlisted' | 'followers' | 'limited' | 'direct';
+      reblogOfId: string | null;
+    }
   | { type: 'notification.created'; notificationId: string; recipientActorId: string }
-  | { type: 'follow.created'; followId: string; actorId: string; targetActorId: string }
-  | { type: 'follow.requested'; actorId: string; targetActorId: string }
-  | { type: 'follow.removed'; actorId: string; targetActorId: string }
-  | { type: 'like.created'; likeId: string; actorId: string; postId: string }
-  | { type: 'like.removed'; actorId: string; postId: string }
-  | { type: 'profile.updated'; actorId: string };
+  | {
+      type: 'follow.created';
+      followId: string;
+      actorId: string;
+      targetActorId: string;
+      apUri: string | null;
+    }
+  | { type: 'follow.requested'; actorId: string; targetActorId: string; apUri: string | null }
+  | { type: 'follow.removed'; actorId: string; targetActorId: string; apUri: string | null }
+  | { type: 'follow.rejected'; actorId: string; targetActorId: string; apUri: string | null }
+  | { type: 'like.created'; likeId: string; actorId: string; postId: string; apUri: string | null }
+  | { type: 'like.removed'; actorId: string; postId: string; apUri: string | null }
+  | { type: 'profile.updated'; actorId: string }
+  | { type: 'block.created'; actorId: string; targetActorId: string };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

@@ -9,7 +9,7 @@ import {
   updateSettingsRequestSchema,
 } from '@disbigle/shared';
 import { eq, sql } from 'drizzle-orm';
-import type { CoreContext } from '../context.ts';
+import { type CoreContext, emit } from '../context.ts';
 import { hashPassword, verifyPassword } from '../crypto/passwords.ts';
 import { DomainError } from '../errors.ts';
 import { serializeAccount } from './serialize.ts';
@@ -56,6 +56,7 @@ export async function updateProfile(
     .where(eq(schema.actors.id, actorId))
     .returning();
   if (!actor) throw new DomainError('not_found', 'Account not found');
+  await emit(ctx, { type: 'profile.updated', actorId });
   return serializeAccount(actor);
 }
 

@@ -27,14 +27,19 @@ async function isBlockedEitherWay(ctx: CoreContext, a: string, b: string): Promi
   return Boolean(row);
 }
 
-/** Follows an account, or sends a follow request when the account is locked. */
+/**
+ * Follows an account. Locked accounts and every remote account get a follow request first:
+ * a remote follow only becomes a follow when the other server accepts it.
+ * `options.apUri` is the id of an incoming Follow activity (remote follower).
+ */
 export async function follow(
   ctx: CoreContext,
   actorId: string,
   targetActorId: string,
+  options: { apUri?: string } = {},
 ): Promise<Relationship> {
   if (actorId === targetActorId) throw new DomainError('bad_request', 'You cannot follow yourself');
-  const target = await getActor(ctx, targetActorId);
+  const [actor, target] = await Promise.all([getActor(ctx, actorId), getActor(ctx, targetActorId)]);
   if (await isBlockedEitherWay(ctx, actorId, targetActorId)) {
     throw new DomainError('forbidden', 'You cannot follow this account');
   }
@@ -44,10 +49,12 @@ export async function follow(
     .from(follows)
     .where(and(eq(follows.actorId, actorId), eq(follows.targetActorId, targetActorId)));
   if (!existing) {
-    if (target.locked) {
+    const id = uuidv7();
+    const apUri = options.apUri ?? (actor.domain === null ? `${actor.apUri}#follows/${id}` : null);
+    if (target.locked || target.domain !== null) {
       const inserted = await ctx.db
         .insert(followRequests)
-        .values({ id: uuidv7(), actorId, targetActorId })
+        .values({ id, actorId, targetActorId, apUri })
         .onConflictDoNothing()
         .returning({ id: followRequests.id });
       if (inserted.length > 0) {
@@ -56,27 +63,33 @@ export async function follow(
           type: 'follow_request',
           fromActorId: actorId,
         });
-        await emit(ctx, { type: 'follow.requested', actorId, targetActorId });
+        await emit(ctx, { type: 'follow.requested', actorId, targetActorId, apUri });
       }
     } else {
-      await insertFollow(ctx, actorId, targetActorId);
+      await insertFollow(ctx, actorId, targetActorId, apUri);
     }
   }
   return getRelationship(ctx, actorId, targetActorId);
 }
 
-async function insertFollow(ctx: CoreContext, actorId: string, targetActorId: string) {
+async function insertFollow(
+  ctx: CoreContext,
+  actorId: string,
+  targetActorId: string,
+  apUri: string | null,
+) {
   const id = uuidv7();
   const inserted = await ctx.db
     .insert(follows)
-    .values({ id, actorId, targetActorId })
+    .values({ id, actorId, targetActorId, apUri })
     .onConflictDoNothing()
     .returning({ id: follows.id });
   if (inserted.length === 0) return;
   await createNotification(ctx, { actorId: targetActorId, type: 'follow', fromActorId: actorId });
-  await emit(ctx, { type: 'follow.created', followId: id, actorId, targetActorId });
+  await emit(ctx, { type: 'follow.created', followId: id, actorId, targetActorId, apUri });
 }
 
+/** Stops following (or cancels a pending request). */
 export async function unfollow(
   ctx: CoreContext,
   actorId: string,
@@ -85,13 +98,15 @@ export async function unfollow(
   const removed = await ctx.db
     .delete(follows)
     .where(and(eq(follows.actorId, actorId), eq(follows.targetActorId, targetActorId)))
-    .returning({ id: follows.id });
-  await ctx.db
+    .returning({ apUri: follows.apUri });
+  const cancelled = await ctx.db
     .delete(followRequests)
     .where(
       and(eq(followRequests.actorId, actorId), eq(followRequests.targetActorId, targetActorId)),
-    );
-  if (removed.length > 0) await emit(ctx, { type: 'follow.removed', actorId, targetActorId });
+    )
+    .returning({ apUri: followRequests.apUri });
+  const row = removed[0] ?? cancelled[0];
+  if (row) await emit(ctx, { type: 'follow.removed', actorId, targetActorId, apUri: row.apUri });
   return getRelationship(ctx, actorId, targetActorId);
 }
 
@@ -105,6 +120,7 @@ export async function listFollowRequests(ctx: CoreContext, targetActorId: string
     .then((rows) => rows.map((r) => r.actor));
 }
 
+/** Accepts a pending request (the target accepts the requester). */
 export async function acceptFollowRequest(
   ctx: CoreContext,
   targetActorId: string,
@@ -115,22 +131,37 @@ export async function acceptFollowRequest(
     .where(
       and(eq(followRequests.actorId, requesterId), eq(followRequests.targetActorId, targetActorId)),
     )
-    .returning({ id: followRequests.id });
-  if (removed.length === 0) throw new DomainError('not_found', 'Follow request not found');
-  await insertFollow(ctx, requesterId, targetActorId);
+    .returning({ apUri: followRequests.apUri });
+  const request = removed[0];
+  if (!request) throw new DomainError('not_found', 'Follow request not found');
+  await insertFollow(ctx, requesterId, targetActorId, request.apUri);
   return getRelationship(ctx, targetActorId, requesterId);
 }
 
+/** Rejects a pending request, or removes an existing follower. */
 export async function rejectFollowRequest(
   ctx: CoreContext,
   targetActorId: string,
   requesterId: string,
 ) {
-  await ctx.db
+  const removed = await ctx.db
     .delete(followRequests)
     .where(
       and(eq(followRequests.actorId, requesterId), eq(followRequests.targetActorId, targetActorId)),
-    );
+    )
+    .returning({ apUri: followRequests.apUri });
+  const unfollowed = await ctx.db
+    .delete(follows)
+    .where(and(eq(follows.actorId, requesterId), eq(follows.targetActorId, targetActorId)))
+    .returning({ apUri: follows.apUri });
+  const row = removed[0] ?? unfollowed[0];
+  if (row)
+    await emit(ctx, {
+      type: 'follow.rejected',
+      actorId: requesterId,
+      targetActorId,
+      apUri: row.apUri,
+    });
   return getRelationship(ctx, targetActorId, requesterId);
 }
 
@@ -173,6 +204,7 @@ export async function block(
         ),
       );
   });
+  await emit(ctx, { type: 'block.created', actorId, targetActorId });
   return getRelationship(ctx, actorId, targetActorId);
 }
 

@@ -248,6 +248,10 @@ export async function deletePost(
   if (!post || (post.actorId !== actorId && !options.asModerator)) {
     throw new DomainError('not_found', 'Post not found');
   }
+  const audience = await ctx.db
+    .select({ actorId: postAudiences.actorId })
+    .from(postAudiences)
+    .where(eq(postAudiences.postId, post.id));
   await ctx.db.transaction(async (tx) => {
     await tx.delete(posts).where(eq(posts.reblogOfId, post.id));
     await tx.delete(posts).where(eq(posts.id, post.id));
@@ -275,6 +279,10 @@ export async function deletePost(
     postId: post.id,
     actorId: post.actorId,
     apUri: post.apUri,
+    diasporaGuid: post.diasporaGuid,
+    audienceActorIds: audience.map((a) => a.actorId),
+    visibility: post.visibility,
+    reblogOfId: post.reblogOfId,
   });
 }
 
@@ -376,24 +384,53 @@ export async function unreblog(ctx: CoreContext, actorId: string, postId: string
   const removed = await ctx.db
     .delete(posts)
     .where(and(eq(posts.actorId, actorId), eq(posts.reblogOfId, postId)))
-    .returning({ id: posts.id, apUri: posts.apUri });
+    .returning({
+      id: posts.id,
+      apUri: posts.apUri,
+      diasporaGuid: posts.diasporaGuid,
+      visibility: posts.visibility,
+    });
   for (const row of removed) {
     await ctx.db
       .update(posts)
       .set({ reblogsCount: sql`greatest(${posts.reblogsCount} - 1, 0)` })
       .where(eq(posts.id, postId));
-    await emit(ctx, { type: 'post.deleted', postId: row.id, actorId, apUri: row.apUri });
+    await emit(ctx, {
+      type: 'post.deleted',
+      postId: row.id,
+      actorId,
+      apUri: row.apUri,
+      diasporaGuid: row.diasporaGuid,
+      audienceActorIds: [],
+      visibility: row.visibility,
+      reblogOfId: postId,
+    });
   }
   return getStatus(ctx, actorId, postId);
 }
 
-export async function like(ctx: CoreContext, actorId: string, postId: string): Promise<Status> {
+/** Likes a post. `options.apUri` is the id of an incoming Like activity (remote actor). */
+export async function like(
+  ctx: CoreContext,
+  actorId: string,
+  postId: string,
+  options: { apUri?: string; diasporaGuid?: string } = {},
+): Promise<Status> {
   const post = await getVisiblePost(ctx, actorId, postId);
-  if (post.reblogOfId) return like(ctx, actorId, post.reblogOfId);
+  if (post.reblogOfId) return like(ctx, actorId, post.reblogOfId, options);
+  const [actor] = await ctx.db.select().from(actors).where(eq(actors.id, actorId));
+  if (!actor) throw new DomainError('not_found', 'Account not found');
   const id = uuidv7();
+  const apUri = options.apUri ?? (actor.domain === null ? `${actor.apUri}#likes/${id}` : null);
   const inserted = await ctx.db
     .insert(likes)
-    .values({ id, actorId, postId: post.id, diasporaGuid: randomBytes(16).toString('hex') })
+    .values({
+      id,
+      actorId,
+      postId: post.id,
+      apUri,
+      diasporaGuid: options.diasporaGuid ?? randomBytes(16).toString('hex'),
+    })
     .onConflictDoNothing()
     .returning({ id: likes.id });
   if (inserted.length > 0) {
@@ -407,7 +444,7 @@ export async function like(ctx: CoreContext, actorId: string, postId: string): P
       fromActorId: actorId,
       postId: post.id,
     });
-    await emit(ctx, { type: 'like.created', likeId: id, actorId, postId: post.id });
+    await emit(ctx, { type: 'like.created', likeId: id, actorId, postId: post.id, apUri });
   }
   return getStatus(ctx, actorId, post.id);
 }
@@ -416,13 +453,14 @@ export async function unlike(ctx: CoreContext, actorId: string, postId: string):
   const removed = await ctx.db
     .delete(likes)
     .where(and(eq(likes.actorId, actorId), eq(likes.postId, postId)))
-    .returning({ id: likes.id });
-  if (removed.length > 0) {
+    .returning({ id: likes.id, apUri: likes.apUri });
+  const row = removed[0];
+  if (row) {
     await ctx.db
       .update(posts)
       .set({ likesCount: sql`greatest(${posts.likesCount} - 1, 0)` })
       .where(eq(posts.id, postId));
-    await emit(ctx, { type: 'like.removed', actorId, postId });
+    await emit(ctx, { type: 'like.removed', actorId, postId, apUri: row.apUri });
   }
   return getStatus(ctx, actorId, postId);
 }
