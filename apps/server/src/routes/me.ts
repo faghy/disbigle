@@ -9,6 +9,7 @@ import {
   finishPasskeyRegistration,
   getCurrentUser,
   listPasskeys,
+  type RegistrationResponseJSON,
   regenerateRecoveryCodes,
   updateProfile,
   updateSettings,
@@ -90,11 +91,10 @@ export async function meRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext
   app.post('/passkeys', async (request, reply) => {
     const session = requireUser(request);
     const input = parse(passkeyRegisterSchema, request.body);
-    // biome-ignore lint/suspicious/noExplicitAny: shape is validated by the WebAuthn library
     const passkey = await finishPasskeyRegistration(
       ctx,
       session.userId,
-      input.response as any,
+      input.response as unknown as RegistrationResponseJSON,
       input.name,
     );
     return reply.status(201).send(passkey);

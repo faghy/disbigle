@@ -6,6 +6,7 @@ import { generateActorKeyPair } from '../crypto/keys.ts';
 import { hashPassword } from '../crypto/passwords.ts';
 import { diasporaGuid } from '../crypto/tokens.ts';
 import { DomainError } from '../errors.ts';
+import { createDefaultAspects } from '../social/aspects.ts';
 import { localActorUrls } from './urls.ts';
 
 /** Usernames that would collide with routes or impersonate the instance. */
@@ -139,6 +140,7 @@ export async function registerUser(
   } catch (error) {
     throw mapUniqueViolation(error);
   }
+  await createDefaultAspects(ctx, actorId, input.locale);
 
   return { userId, actorId, approved };
 }

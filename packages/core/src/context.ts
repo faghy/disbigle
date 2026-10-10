@@ -1,5 +1,6 @@
 import type { Config } from '@disbigle/config';
 import type { Database } from '@disbigle/db';
+import type { DomainEvent, EventBus } from './events.ts';
 
 /** Minimal key-value store with expiry, used for short-lived state (challenges, pending secrets). */
 export interface KeyValueStore {
@@ -12,6 +13,8 @@ export interface CoreContext {
   db: Database;
   config: Config;
   kv: KeyValueStore;
+  /** Receives domain events; optional so simple scripts and tests can omit it. */
+  events?: EventBus;
   /** RSA modulus size for new actor keys. 4096 in production; tests may lower it for speed. */
   rsaKeyBits?: number;
 }
@@ -37,4 +40,8 @@ export class MemoryKeyValueStore implements KeyValueStore {
   async del(key: string): Promise<void> {
     this.entries.delete(key);
   }
+}
+
+export async function emit(ctx: CoreContext, event: DomainEvent): Promise<void> {
+  await ctx.events?.publish(event);
 }

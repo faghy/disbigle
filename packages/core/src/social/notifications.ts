@@ -1,0 +1,83 @@
+import { schema, uuidv7 } from '@disbigle/db';
+import type { NotificationType } from '@disbigle/shared';
+import { and, eq, isNull, lt, sql } from 'drizzle-orm';
+import { type CoreContext, emit } from '../context.ts';
+
+const { notifications, actors, mutes, blocks } = schema;
+
+/**
+ * Creates a notification for a local actor. Skips self-notifications, remote recipients,
+ * and senders the recipient muted or blocked.
+ */
+export async function createNotification(
+  ctx: CoreContext,
+  input: { actorId: string; type: NotificationType; fromActorId: string; postId?: string | null },
+): Promise<string | null> {
+  if (input.actorId === input.fromActorId) return null;
+  const [recipient] = await ctx.db
+    .select({ domain: actors.domain })
+    .from(actors)
+    .where(eq(actors.id, input.actorId));
+  if (!recipient || recipient.domain !== null) return null;
+
+  const [silenced] = await ctx.db
+    .select({ one: sql`1` })
+    .from(mutes)
+    .where(and(eq(mutes.actorId, input.actorId), eq(mutes.targetActorId, input.fromActorId)))
+    .union(
+      ctx.db
+        .select({ one: sql`1` })
+        .from(blocks)
+        .where(and(eq(blocks.actorId, input.actorId), eq(blocks.targetActorId, input.fromActorId))),
+    )
+    .limit(1);
+  if (silenced) return null;
+
+  const id = uuidv7();
+  await ctx.db.insert(notifications).values({
+    id,
+    actorId: input.actorId,
+    type: input.type,
+    fromActorId: input.fromActorId,
+    postId: input.postId ?? null,
+  });
+  await emit(ctx, {
+    type: 'notification.created',
+    notificationId: id,
+    recipientActorId: input.actorId,
+  });
+  return id;
+}
+
+export async function listNotificationRows(
+  ctx: CoreContext,
+  actorId: string,
+  options: { maxId?: string | undefined; limit: number },
+) {
+  return ctx.db
+    .select()
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.actorId, actorId),
+        options.maxId ? lt(notifications.id, options.maxId) : undefined,
+      ),
+    )
+    .orderBy(sql`${notifications.id} desc`)
+    .limit(options.limit);
+}
+
+export async function countUnreadNotifications(ctx: CoreContext, actorId: string): Promise<number> {
+  const [row] = await ctx.db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(notifications)
+    .where(and(eq(notifications.actorId, actorId), isNull(notifications.readAt)));
+  return row?.count ?? 0;
+}
+
+export async function markNotificationsRead(ctx: CoreContext, actorId: string): Promise<void> {
+  await ctx.db
+    .update(notifications)
+    .set({ readAt: new Date() })
+    .where(and(eq(notifications.actorId, actorId), isNull(notifications.readAt)));
+}

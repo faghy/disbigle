@@ -1,3 +1,4 @@
+export type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
 export * from './accounts/passkeys.ts';
 export * from './accounts/profile.ts';
 export * from './accounts/recovery-codes.ts';
@@ -11,3 +12,13 @@ export * from './crypto/keys.ts';
 export * from './crypto/passwords.ts';
 export * from './crypto/tokens.ts';
 export * from './errors.ts';
+export * from './events.ts';
+export * from './social/aspects.ts';
+export * from './social/content.ts';
+export * from './social/notification-list.ts';
+export * from './social/notifications.ts';
+export * from './social/posts.ts';
+export * from './social/relationships.ts';
+export * from './social/statuses.ts';
+export * from './social/timelines.ts';
+export * from './social/visibility.ts';

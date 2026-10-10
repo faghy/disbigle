@@ -8,6 +8,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -24,6 +25,22 @@ const updatedAt = () => timestamp('updated_at', { withTimezone: true }).notNull(
 export const protocolEnum = pgEnum('protocol', ['activitypub', 'diaspora']);
 export const userRoleEnum = pgEnum('user_role', ['user', 'moderator', 'admin']);
 export const sessionStageEnum = pgEnum('session_stage', ['mfa_pending', 'active']);
+export const visibilityEnum = pgEnum('visibility', [
+  'public',
+  'unlisted',
+  'followers',
+  'limited',
+  'direct',
+]);
+export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio', 'unknown']);
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'follow',
+  'follow_request',
+  'mention',
+  'reply',
+  'reblog',
+  'like',
+]);
 
 export type ProfileField = { name: string; value: string };
 
@@ -173,4 +190,310 @@ export const invites = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('invites_code_idx').on(t.code)],
+);
+
+const actorRef = (name: string) =>
+  uuid(name)
+    .notNull()
+    .references(() => actors.id, { onDelete: 'cascade' });
+
+/** Accepted follow relationships: `actorId` follows `targetActorId`. */
+export const follows = pgTable(
+  'follows',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    targetActorId: actorRef('target_actor_id'),
+    /** URI of the Follow activity, when federated. */
+    apUri: text('ap_uri'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('follows_pair_idx').on(t.actorId, t.targetActorId),
+    index('follows_target_idx').on(t.targetActorId),
+  ],
+);
+
+/** Pending follow requests to locked accounts. */
+export const followRequests = pgTable(
+  'follow_requests',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    targetActorId: actorRef('target_actor_id'),
+    apUri: text('ap_uri'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('follow_requests_pair_idx').on(t.actorId, t.targetActorId),
+    index('follow_requests_target_idx').on(t.targetActorId),
+  ],
+);
+
+export const blocks = pgTable(
+  'blocks',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    targetActorId: actorRef('target_actor_id'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('blocks_pair_idx').on(t.actorId, t.targetActorId),
+    index('blocks_target_idx').on(t.targetActorId),
+  ],
+);
+
+export const mutes = pgTable(
+  'mutes',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    targetActorId: actorRef('target_actor_id'),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('mutes_pair_idx').on(t.actorId, t.targetActorId)],
+);
+
+/**
+ * Aspects ("circles"): private, named groups of actors owned by a local actor.
+ * Members never learn which aspect they are in.
+ */
+export const aspects = pgTable(
+  'aspects',
+  {
+    id: uuid('id').primaryKey(),
+    ownerActorId: actorRef('owner_actor_id'),
+    name: text('name').notNull(),
+    position: integer('position').notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('aspects_owner_name_idx').on(t.ownerActorId, sql`lower(${t.name})`)],
+);
+
+export const aspectMemberships = pgTable(
+  'aspect_memberships',
+  {
+    aspectId: uuid('aspect_id')
+      .notNull()
+      .references(() => aspects.id, { onDelete: 'cascade' }),
+    actorId: actorRef('actor_id'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.aspectId, t.actorId] }),
+    index('aspect_memberships_actor_idx').on(t.actorId),
+  ],
+);
+
+/** Status messages, replies and reblogs, local or remote. */
+export const posts = pgTable(
+  'posts',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    local: boolean('local').notNull(),
+    visibility: visibilityEnum('visibility').notNull(),
+    /** Markdown source, for local posts. */
+    source: text('source'),
+    /** Sanitised HTML shown to readers. */
+    contentHtml: text('content_html').notNull().default(''),
+    /** Content warning / spoiler text. */
+    summary: text('summary').notNull().default(''),
+    sensitive: boolean('sensitive').notNull().default(false),
+    language: text('language'),
+    inReplyToId: uuid('in_reply_to_id'),
+    inReplyToActorId: uuid('in_reply_to_actor_id'),
+    /** First post of the thread; equals `id` for a thread root. */
+    threadRootId: uuid('thread_root_id'),
+    reblogOfId: uuid('reblog_of_id'),
+    apUri: text('ap_uri'),
+    apUrl: text('ap_url'),
+    diasporaGuid: text('diaspora_guid'),
+    repliesCount: integer('replies_count').notNull().default(0),
+    reblogsCount: integer('reblogs_count').notNull().default(0),
+    likesCount: integer('likes_count').notNull().default(0),
+    createdAt: createdAt(),
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('posts_actor_idx').on(t.actorId, t.id),
+    index('posts_reply_idx').on(t.inReplyToId),
+    index('posts_thread_idx').on(t.threadRootId),
+    index('posts_reblog_idx').on(t.reblogOfId),
+    index('posts_public_local_idx').on(t.id).where(sql`${t.visibility} = 'public' and ${t.local}`),
+    index('posts_public_idx').on(t.id).where(sql`${t.visibility} = 'public'`),
+    uniqueIndex('posts_ap_uri_idx').on(t.apUri),
+    uniqueIndex('posts_diaspora_guid_idx').on(t.diasporaGuid),
+    uniqueIndex('posts_reblog_unique_idx')
+      .on(t.actorId, t.reblogOfId)
+      .where(sql`${t.reblogOfId} is not null`),
+  ],
+);
+
+/** Explicit recipients of a post (mentions, limited and direct posts). */
+export const postAudiences = pgTable(
+  'post_audiences',
+  {
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    actorId: actorRef('actor_id'),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.actorId] }),
+    index('post_audiences_actor_idx').on(t.actorId, t.postId),
+  ],
+);
+
+/** Aspects a limited post was shared with. Visible to the author only. */
+export const postAspects = pgTable(
+  'post_aspects',
+  {
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    aspectId: uuid('aspect_id')
+      .notNull()
+      .references(() => aspects.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.aspectId] }),
+    index('post_aspects_aspect_idx').on(t.aspectId),
+  ],
+);
+
+export const mentions = pgTable(
+  'mentions',
+  {
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    actorId: actorRef('actor_id'),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.actorId] }),
+    index('mentions_actor_idx').on(t.actorId),
+  ],
+);
+
+export const tags = pgTable(
+  'tags',
+  {
+    id: uuid('id').primaryKey(),
+    /** Lowercase tag name without the leading `#`. */
+    name: text('name').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('tags_name_idx').on(t.name)],
+);
+
+export const postTags = pgTable(
+  'post_tags',
+  {
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.tagId] }),
+    index('post_tags_tag_idx').on(t.tagId, t.postId),
+  ],
+);
+
+export const tagFollows = pgTable(
+  'tag_follows',
+  {
+    actorId: actorRef('actor_id'),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.actorId, t.tagId] })],
+);
+
+export const likes = pgTable(
+  'likes',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    apUri: text('ap_uri'),
+    diasporaGuid: text('diaspora_guid'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('likes_pair_idx').on(t.actorId, t.postId),
+    index('likes_post_idx').on(t.postId),
+  ],
+);
+
+export const bookmarks = pgTable(
+  'bookmarks',
+  {
+    actorId: actorRef('actor_id'),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
+);
+
+export const mediaAttachments = pgTable(
+  'media_attachments',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    type: mediaTypeEnum('type').notNull(),
+    mimeType: text('mime_type').notNull(),
+    /** Path relative to MEDIA_DIR, for files stored locally. */
+    filePath: text('file_path'),
+    previewPath: text('preview_path'),
+    remoteUrl: text('remote_url'),
+    width: integer('width'),
+    height: integer('height'),
+    blurhash: text('blurhash'),
+    description: text('description').notNull().default(''),
+    position: integer('position').notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('media_attachments_post_idx').on(t.postId),
+    index('media_attachments_actor_idx').on(t.actorId),
+  ],
+);
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey(),
+    /** Local actor receiving the notification. */
+    actorId: actorRef('actor_id'),
+    type: notificationTypeEnum('type').notNull(),
+    fromActorId: actorRef('from_actor_id'),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('notifications_actor_idx').on(t.actorId, t.id)],
+);
+
+/** URIs of deleted federated objects, so they are never re-created from stale copies. */
+export const tombstones = pgTable(
+  'tombstones',
+  {
+    id: uuid('id').primaryKey(),
+    uri: text('uri').notNull(),
+    actorId: uuid('actor_id').references(() => actors.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('tombstones_uri_idx').on(t.uri)],
 );

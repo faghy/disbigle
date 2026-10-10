@@ -1,4 +1,5 @@
 import {
+  type AuthenticationResponseJSON,
   beginPasskeyAuthentication,
   type CoreContext,
   finishPasskeyAuthentication,
@@ -76,8 +77,7 @@ export async function authRoutes(app: FastifyInstance, { ctx }: { ctx: CoreConte
       ctx,
       {
         challengeId: input.challengeId,
-        // biome-ignore lint/suspicious/noExplicitAny: shape is validated by the WebAuthn library
-        response: input.response as any,
+        response: input.response as unknown as AuthenticationResponseJSON,
         ...(pending ? { pendingSessionToken: pending } : {}),
       },
       clientInfo(request),

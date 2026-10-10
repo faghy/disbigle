@@ -1,0 +1,186 @@
+import {
+  type CoreContext,
+  type DomainEvent,
+  type EventBus,
+  getStatus,
+  serializeNotifications,
+} from '@disbigle/core';
+import { schema } from '@disbigle/db';
+import type { StreamEvent } from '@disbigle/shared';
+import { and, eq, inArray } from 'drizzle-orm';
+import type { Redis } from 'ioredis';
+
+/** Minimal view of a WebSocket, so the hub can be tested without a network. */
+export interface StreamSocket {
+  send(data: string): void;
+  readonly readyState: number;
+}
+
+interface Connection {
+  socket: StreamSocket;
+  actorId: string | null;
+  streams: Set<string>;
+}
+
+export const STREAMS = ['user', 'public', 'public:local'] as const;
+
+export function isValidStream(stream: string, signedIn: boolean): boolean {
+  if (stream === 'user') return signedIn;
+  return (
+    stream === 'public' ||
+    stream === 'public:local' ||
+    /^hashtag:[\p{L}\p{N}_]{1,100}$/u.test(stream)
+  );
+}
+
+/** Routes domain events to connected clients, checking visibility per viewer. */
+export class StreamingHub {
+  private readonly connections = new Set<Connection>();
+
+  constructor(private readonly ctx: CoreContext) {}
+
+  add(socket: StreamSocket, actorId: string | null): Connection {
+    const connection: Connection = { socket, actorId, streams: new Set() };
+    this.connections.add(connection);
+    return connection;
+  }
+
+  remove(connection: Connection): void {
+    this.connections.delete(connection);
+  }
+
+  get size(): number {
+    return this.connections.size;
+  }
+
+  private send(connection: Connection, message: StreamEvent): void {
+    if (connection.socket.readyState === 1) connection.socket.send(JSON.stringify(message));
+  }
+
+  async handle(event: DomainEvent): Promise<void> {
+    if (this.connections.size === 0) return;
+    try {
+      if (event.type === 'post.created') await this.onPostCreated(event.postId);
+      else if (event.type === 'post.deleted') {
+        for (const c of this.connections) {
+          if (c.streams.size > 0)
+            this.send(c, {
+              event: 'delete',
+              stream: [...c.streams][0] ?? 'user',
+              payload: event.postId,
+            });
+        }
+      } else if (event.type === 'notification.created') {
+        await this.onNotification(event.notificationId, event.recipientActorId);
+      }
+    } catch (error) {
+      console.error('streaming: failed to handle event', event.type, error);
+    }
+  }
+
+  private async onPostCreated(postId: string): Promise<void> {
+    const { db } = this.ctx;
+    const { posts, follows, postAudiences, mutes, postTags, tags } = schema;
+    const [post] = await db.select().from(posts).where(eq(posts.id, postId));
+    if (!post) return;
+
+    const connected = [
+      ...new Set([...this.connections].map((c) => c.actorId).filter((id): id is string => !!id)),
+    ];
+    const homeAudience = new Set<string>([post.actorId]);
+    if (connected.length > 0) {
+      const [followers, audience, muted] = await Promise.all([
+        db
+          .select({ id: follows.actorId })
+          .from(follows)
+          .where(and(eq(follows.targetActorId, post.actorId), inArray(follows.actorId, connected))),
+        db
+          .select({ id: postAudiences.actorId })
+          .from(postAudiences)
+          .where(and(eq(postAudiences.postId, post.id), inArray(postAudiences.actorId, connected))),
+        db
+          .select({ id: mutes.actorId })
+          .from(mutes)
+          .where(and(eq(mutes.targetActorId, post.actorId), inArray(mutes.actorId, connected))),
+      ]);
+      for (const r of [...followers, ...audience]) homeAudience.add(r.id);
+      for (const r of muted) homeAudience.delete(r.id);
+    }
+    const isPublicTopLevel =
+      post.visibility === 'public' &&
+      !post.reblogOfId &&
+      (post.inReplyToActorId === null || post.inReplyToActorId === post.actorId);
+    const tagNames = isPublicTopLevel
+      ? (
+          await db
+            .select({ name: tags.name })
+            .from(postTags)
+            .innerJoin(tags, eq(tags.id, postTags.tagId))
+            .where(eq(postTags.postId, post.id))
+        ).map((t) => t.name)
+      : [];
+
+    const cache = new Map<string | null, Awaited<ReturnType<typeof getStatus>> | null>();
+    const statusFor = async (viewer: string | null) => {
+      if (!cache.has(viewer)) {
+        cache.set(viewer, await getStatus(this.ctx, viewer, post.id).catch(() => null));
+      }
+      return cache.get(viewer) ?? null;
+    };
+
+    for (const c of this.connections) {
+      const targets: string[] = [];
+      if (c.streams.has('user') && c.actorId && homeAudience.has(c.actorId)) targets.push('user');
+      if (isPublicTopLevel) {
+        if (c.streams.has('public')) targets.push('public');
+        if (post.local && c.streams.has('public:local')) targets.push('public:local');
+        for (const tag of tagNames)
+          if (c.streams.has(`hashtag:${tag}`)) targets.push(`hashtag:${tag}`);
+      }
+      if (targets.length === 0) continue;
+      const status = await statusFor(c.actorId);
+      if (!status) continue;
+      for (const stream of targets) this.send(c, { event: 'update', stream, payload: status });
+    }
+  }
+
+  private async onNotification(notificationId: string, recipientActorId: string): Promise<void> {
+    const listeners = [...this.connections].filter(
+      (c) => c.actorId === recipientActorId && c.streams.has('user'),
+    );
+    if (listeners.length === 0) return;
+    const rows = await this.ctx.db
+      .select()
+      .from(schema.notifications)
+      .where(eq(schema.notifications.id, notificationId));
+    const [notification] = await serializeNotifications(this.ctx, recipientActorId, rows);
+    if (!notification) return;
+    for (const c of listeners)
+      this.send(c, { event: 'notification', stream: 'user', payload: notification });
+  }
+}
+
+const CHANNEL = 'disbigle:events';
+
+/** Publishes domain events to Redis so every server process (and its hub) receives them. */
+export class RedisEventBus implements EventBus {
+  constructor(private readonly redis: Redis) {}
+  async publish(event: DomainEvent): Promise<void> {
+    await this.redis.publish(CHANNEL, JSON.stringify(event));
+  }
+}
+
+export async function subscribeHubToRedis(subscriber: Redis, hub: StreamingHub): Promise<void> {
+  await subscriber.subscribe(CHANNEL);
+  subscriber.on('message', (_channel, message) => {
+    void hub.handle(JSON.parse(message) as DomainEvent);
+  });
+}
+
+/** In-process bus for tests and single-process setups. */
+export class LocalEventBus implements EventBus {
+  constructor(private readonly hub: StreamingHub) {}
+  async publish(event: DomainEvent): Promise<void> {
+    await this.hub.handle(event);
+  }
+}

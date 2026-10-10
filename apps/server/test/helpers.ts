@@ -1,9 +1,10 @@
 import type { Config } from '@disbigle/config';
-import { MemoryKeyValueStore } from '@disbigle/core';
+import { type CoreContext, MemoryKeyValueStore } from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
 import { buildApp } from '../src/app.ts';
+import { LocalEventBus, StreamingHub } from '../src/streaming.ts';
 
 export const testConfig: Config = {
   NODE_ENV: 'test',
@@ -24,14 +25,15 @@ export function useTestApp(overrides: Partial<Config> = {}) {
   beforeAll(async () => {
     const testDb = await createTestDatabase();
     drop = testDb.drop;
-    app = await buildApp({
-      ctx: {
-        db: testDb.db,
-        config: { ...testConfig, ...overrides },
-        kv: new MemoryKeyValueStore(),
-        rsaKeyBits: 1024,
-      },
-    });
+    const ctx: CoreContext = {
+      db: testDb.db,
+      config: { ...testConfig, ...overrides },
+      kv: new MemoryKeyValueStore(),
+      rsaKeyBits: 1024,
+    };
+    const hub = new StreamingHub(ctx);
+    ctx.events = new LocalEventBus(hub);
+    app = await buildApp({ ctx, hub, disableRateLimit: true });
   });
   afterAll(async () => {
     await app?.close();
@@ -65,7 +67,12 @@ export class Client {
     return response;
   }
 
+  get cookieHeader(): string | undefined {
+    return this.cookie;
+  }
+
   get = (url: string) => this.request('GET', url);
+  put = (url: string, body: unknown = {}) => this.request('PUT', url, body);
   post = (url: string, body: unknown = {}) => this.request('POST', url, body);
   patch = (url: string, body: unknown = {}) => this.request('PATCH', url, body);
   delete = (url: string) => this.request('DELETE', url);
