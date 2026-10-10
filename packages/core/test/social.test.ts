@@ -388,3 +388,37 @@ describe('timelines', () => {
     });
   });
 });
+
+describe('remote mentions', () => {
+  it('resolves unknown remote accounts through the federation hook', async () => {
+    const { upsertRemoteActor } = await import('../src/index.ts');
+    const author = await newActor();
+    const lookups: string[] = [];
+    ctx().resolveAccount = async (username, domain) => {
+      lookups.push(`${username}@${domain}`);
+      const actor = await upsertRemoteActor(ctx(), {
+        username,
+        domain,
+        publicKeyPem: 'test-key',
+        apUri: `https://${domain}/users/${username}`,
+        apUrl: `https://${domain}/@${username}`,
+        apInbox: `https://${domain}/users/${username}/inbox`,
+        protocol: 'activitypub',
+      });
+      return actor.id;
+    };
+    try {
+      const post = await createPost(ctx(), author.id, {
+        content: 'ciao @gargron@mastodon.example',
+      });
+      expect(lookups).toEqual(['gargron@mastodon.example']);
+      expect(post.mentions[0]?.acct).toBe('gargron@mastodon.example');
+      expect(post.content).toContain('href="https://mastodon.example/@gargron"');
+      // Second time the account is already known: no network lookup.
+      await createPost(ctx(), author.id, { content: 'again @gargron@mastodon.example' });
+      expect(lookups).toHaveLength(1);
+    } finally {
+      ctx().resolveAccount = undefined;
+    }
+  });
+});

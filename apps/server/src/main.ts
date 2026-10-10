@@ -2,6 +2,7 @@ import {
   ActivityPubPublisher,
   CompositeEventBus,
   createDisbigleFederation,
+  resolveRemoteAccount,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
 import type { CoreContext } from '@disbigle/core';
@@ -24,6 +25,8 @@ const federation = createDisbigleFederation({
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
 });
+ctx.resolveAccount = async (username, domain) =>
+  (await resolveRemoteAccount(federation, ctx, `${username}@${domain}`))?.id ?? null;
 ctx.events = new CompositeEventBus([
   new RedisEventBus(redis),
   new ActivityPubPublisher(federation, ctx),

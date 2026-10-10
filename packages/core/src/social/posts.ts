@@ -65,8 +65,13 @@ async function resolveMentions(ctx: CoreContext, source: string) {
           domain === null ? isNull(actors.domain) : sql`lower(${actors.domain}) = ${domain}`,
         ),
       );
-    if (actor && !actor.suspendedAt) {
-      resolved.set(`${mention.username.toLowerCase()}@${mention.domain ?? ''}`, actor);
+    let found = actor;
+    if (!found && domain !== null && ctx.resolveAccount) {
+      const id = await ctx.resolveAccount(mention.username, domain).catch(() => null);
+      found = id ? (await ctx.db.select().from(actors).where(eq(actors.id, id)))[0] : undefined;
+    }
+    if (found && !found.suspendedAt) {
+      resolved.set(`${mention.username.toLowerCase()}@${mention.domain ?? ''}`, found);
     }
   }
   return resolved;

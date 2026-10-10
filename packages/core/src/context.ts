@@ -15,6 +15,11 @@ export interface CoreContext {
   kv: KeyValueStore;
   /** Receives domain events; optional so simple scripts and tests can omit it. */
   events?: EventBus;
+  /**
+   * Looks up an unknown remote account (`user@domain`) over the network and stores it.
+   * Provided by the federation layer; returns the actor id or null.
+   */
+  resolveAccount?: (username: string, domain: string) => Promise<string | null>;
   /** RSA modulus size for new actor keys. 4096 in production; tests may lower it for speed. */
   rsaKeyBits?: number;
 }
