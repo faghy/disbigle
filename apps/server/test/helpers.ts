@@ -1,5 +1,5 @@
 import type { Config } from '@disbigle/config';
-import { type CoreContext, MemoryKeyValueStore } from '@disbigle/core';
+import { type CoreContext, MemoryKeyValueStore, MemoryMailer } from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
@@ -19,7 +19,11 @@ export const testConfig: Config = {
   MEDIA_DIR: '/tmp/disbigle-test-media',
   INSTANCE_TITLE: 'Disbigle Test',
   INSTANCE_DESCRIPTION: '',
+  MAIL_FROM: 'Disbigle Test <noreply@disbigle.test>',
 };
+
+/** Emails sent by test apps, newest last. */
+export const testMailer = new MemoryMailer();
 
 export function useTestApp(overrides: Partial<Config> = {}) {
   let app: FastifyInstance | undefined;
@@ -35,7 +39,7 @@ export function useTestApp(overrides: Partial<Config> = {}) {
     };
     const hub = new StreamingHub(ctx);
     ctx.events = new LocalEventBus(hub);
-    app = await buildApp({ ctx, hub, disableRateLimit: true });
+    app = await buildApp({ ctx, hub, mailer: testMailer, disableRateLimit: true });
   });
   afterAll(async () => {
     await app?.close();

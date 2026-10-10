@@ -16,6 +16,7 @@ export const testConfig: Config = {
   MEDIA_DIR: '/tmp/disbigle-test-media',
   INSTANCE_TITLE: 'Disbigle Test',
   INSTANCE_DESCRIPTION: '',
+  MAIL_FROM: 'Disbigle Test <noreply@disbigle.test>',
 };
 
 /** Provides a fresh migrated database per test file. Call at the top level of a test file. */

@@ -48,3 +48,43 @@ describe('account portability', () => {
     expect(login.json().error).toBe('account_disabled');
   });
 });
+
+describe('password reset', () => {
+  it('emails a one-time link that sets a new password and signs out other sessions', async () => {
+    const { testMailer } = await import('./helpers.ts');
+    const client = new Client(app);
+    const user = newUser();
+    await client.post('/api/v1/auth/register', user);
+
+    // Unknown addresses get the same answer and no email.
+    const before = testMailer.sent.length;
+    expect(
+      (await new Client(app).post('/api/v1/auth/password/forgot', { email: 'nobody@example.com' }))
+        .statusCode,
+    ).toBe(200);
+    expect(testMailer.sent.length).toBe(before);
+
+    await new Client(app).post('/api/v1/auth/password/forgot', { email: user.email.toUpperCase() });
+    const mail = testMailer.sent.at(-1);
+    expect(mail?.to).toBe(user.email);
+    const token = decodeURIComponent(/token=([^\s]+)/.exec(mail?.text ?? '')?.[1] ?? '');
+    expect(token.length).toBeGreaterThan(20);
+
+    const reset = await new Client(app).post('/api/v1/auth/password/reset', {
+      token,
+      password: 'a completely new one',
+    });
+    expect(reset.statusCode).toBe(200);
+    expect((await client.get('/api/v1/me')).statusCode).toBe(401);
+    const again = await new Client(app).post('/api/v1/auth/password/reset', {
+      token,
+      password: 'another new password',
+    });
+    expect(again.statusCode).toBe(400);
+    const login = await new Client(app).post('/api/v1/auth/login', {
+      login: user.username,
+      password: 'a completely new one',
+    });
+    expect(login.json().status).toBe('ok');
+  });
+});

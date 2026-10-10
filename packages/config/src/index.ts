@@ -13,6 +13,9 @@ const configSchema = z.object({
   MEDIA_DIR: z.string().default('./storage/media'),
   INSTANCE_TITLE: z.string().default('Disbigle'),
   INSTANCE_DESCRIPTION: z.string().default(''),
+  /** SMTP connection URL, e.g. smtps://user:pass@mail.example.org:465. Without it, emails are logged. */
+  SMTP_URL: z.string().optional(),
+  MAIL_FROM: z.string().default('Disbigle <noreply@localhost>'),
 });
 
 export type Config = z.infer<typeof configSchema>;

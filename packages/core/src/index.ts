@@ -1,5 +1,6 @@
 export type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
 export * from './accounts/passkeys.ts';
+export * from './accounts/password-reset.ts';
 export * from './accounts/portability.ts';
 export * from './accounts/profile.ts';
 export * from './accounts/recovery-codes.ts';
@@ -15,6 +16,7 @@ export * from './crypto/tokens.ts';
 export * from './errors.ts';
 export * from './events.ts';
 export * from './federation/remote.ts';
+export * from './mail.ts';
 export * from './media/storage.ts';
 export * from './media/upload.ts';
 export * from './moderation.ts';

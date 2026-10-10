@@ -34,6 +34,16 @@ export const mfaCodeRequestSchema = z.object({
 });
 export type MfaCodeRequest = z.infer<typeof mfaCodeRequestSchema>;
 
+export const passwordResetRequestSchema = z.object({
+  email: z.email().trim().max(320),
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().min(20).max(200),
+  password: passwordSchema,
+});
+export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
+
 export const changePasswordRequestSchema = z.object({
   currentPassword: z.string().min(1).max(256),
   newPassword: passwordSchema,

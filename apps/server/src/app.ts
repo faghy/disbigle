@@ -1,4 +1,10 @@
-import { type CoreContext, LocalMediaStorage, type MediaStorage } from '@disbigle/core';
+import {
+  type CoreContext,
+  LocalMediaStorage,
+  type Mailer,
+  type MediaStorage,
+  MemoryMailer,
+} from '@disbigle/core';
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
@@ -39,6 +45,8 @@ export interface AppOptions {
   serveMedia?: boolean;
   /** ActivityPub federation; when set, its endpoints (actors, inboxes, WebFinger, NodeInfo) are served. */
   federation?: Federation<CoreContext>;
+  /** Outgoing email; printed to the log when omitted. */
+  mailer?: Mailer;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
 }
@@ -91,7 +99,11 @@ export async function buildApp(options: AppOptions) {
   await app.register(
     async (api) => {
       await api.register(publicRoutes, { ctx });
-      await api.register(authRoutes, { ctx, prefix: '/auth' });
+      await api.register(authRoutes, {
+        ctx,
+        mailer: options.mailer ?? new MemoryMailer(true),
+        prefix: '/auth',
+      });
       await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });
       await api.register(statusRoutes, { ctx, prefix: '/statuses' });
       await api.register(timelineRoutes, { ctx, prefix: '/timelines' });

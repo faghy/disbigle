@@ -2,14 +2,23 @@ import {
   type AuthenticationResponseJSON,
   beginPasskeyAuthentication,
   type CoreContext,
+  confirmPasswordReset,
   finishPasskeyAuthentication,
   getCurrentUser,
   login,
+  type Mailer,
   registerUser,
+  requestPasswordReset,
   revokeSession,
   verifySecondFactor,
 } from '@disbigle/core';
-import { loginRequestSchema, mfaCodeRequestSchema, registerRequestSchema } from '@disbigle/shared';
+import {
+  loginRequestSchema,
+  mfaCodeRequestSchema,
+  passwordResetConfirmSchema,
+  passwordResetRequestSchema,
+  registerRequestSchema,
+} from '@disbigle/shared';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
@@ -30,7 +39,10 @@ const passkeyVerifySchema = z.object({
   }),
 });
 
-export async function authRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
+export async function authRoutes(
+  app: FastifyInstance,
+  { ctx, mailer }: { ctx: CoreContext; mailer: Mailer },
+) {
   const strict = { config: { rateLimit: { max: 10, timeWindow: '5 minutes' } } };
 
   app.post('/register', strict, async (request, reply) => {
@@ -84,6 +96,21 @@ export async function authRoutes(app: FastifyInstance, { ctx }: { ctx: CoreConte
     );
     if (result.token && result.expiresAt)
       setSessionCookie(reply, ctx, result.token, result.expiresAt);
+    return { status: 'ok' };
+  });
+
+  app.post(
+    '/password/forgot',
+    { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } },
+    async (request) => {
+      const { email } = parse(passwordResetRequestSchema, request.body);
+      await requestPasswordReset({ ...ctx, mailer }, email);
+      return { status: 'ok' };
+    },
+  );
+
+  app.post('/password/reset', strict, async (request) => {
+    await confirmPasswordReset(ctx, parse(passwordResetConfirmSchema, request.body));
     return { status: 'ok' };
   });
 }

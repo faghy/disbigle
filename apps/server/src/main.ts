@@ -11,6 +11,7 @@ import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { RedisKeyValueStore } from './kv.ts';
+import { SmtpMailer } from './mailer.ts';
 import { RedisEventBus, StreamingHub, subscribeHubToRedis } from './streaming.ts';
 
 const config = loadConfig();
@@ -39,6 +40,7 @@ const app = await buildApp({
   redis,
   hub,
   federation,
+  ...(config.SMTP_URL ? { mailer: new SmtpMailer(config.SMTP_URL, config.MAIL_FROM) } : {}),
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
   trustProxy: process.env.TRUST_PROXY === 'true',
   serveMedia: config.NODE_ENV !== 'production' || process.env.SERVE_MEDIA === 'true',
