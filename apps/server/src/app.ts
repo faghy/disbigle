@@ -23,6 +23,7 @@ import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { meRoutes } from './routes/me.ts';
 import { mediaRoutes } from './routes/media.ts';
+import { migrationRoutes } from './routes/migration.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { publicRoutes } from './routes/public.ts';
 import { searchRoutes } from './routes/search.ts';
@@ -121,6 +122,11 @@ export async function buildApp(options: AppOptions) {
           ctx,
           federation: options.federation,
           prefix: '/search',
+        });
+        await api.register(migrationRoutes, {
+          ctx,
+          federation: options.federation,
+          prefix: '/me/migration',
         });
       }
       if (hub) await api.register(streamingRoutes, { hub, prefix: '/streaming' });

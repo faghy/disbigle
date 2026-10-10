@@ -43,6 +43,7 @@ export async function localActorToPerson(
   ctx: Context<CoreContext>,
   actor: ActorRow,
   keys: Awaited<ReturnType<Context<CoreContext>['getActorKeyPairs']>>,
+  movedToUri: string | null = null,
 ): Promise<Person | Service> {
   const values = {
     id: ctx.getActorUri(actor.username),
@@ -66,6 +67,8 @@ export async function localActorToPerson(
     attachments: actor.fields.map(
       (f) => new PropertyValue({ name: f.name, value: escapeHtml(f.value) }),
     ),
+    aliases: actor.alsoKnownAs.map((uri) => new URL(uri)),
+    successor: movedToUri ? new URL(movedToUri) : null,
   };
   return actor.bot ? new Service(values) : new Person(values);
 }
@@ -218,6 +221,7 @@ export async function remoteActorData(
     apSharedInbox: actor.endpoints?.sharedInbox?.href ?? null,
     apOutbox: actor.outboxId?.href ?? null,
     apFollowers: actor.followersId?.href ?? null,
+    alsoKnownAs: actor.aliasIds.map((u) => u.href),
     protocol: 'activitypub',
   };
 }

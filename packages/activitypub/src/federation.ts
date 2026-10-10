@@ -1,5 +1,6 @@
 import {
   acceptFollowRequest,
+  applyRemoteMove,
   block,
   type CoreContext,
   deleteRemoteActor,
@@ -36,6 +37,7 @@ import {
   Follow,
   isActor,
   Like,
+  Move,
   Note,
   Person,
   Reject,
@@ -137,7 +139,20 @@ export function createDisbigleFederation(options: FederationOptions): Federation
   federation
     .setActorDispatcher('/users/{identifier}', async (ctx, identifier) => {
       const actor = await localActorByIdentifier(ctx.data, identifier);
-      if (actor) return localActorToPerson(ctx, actor, await ctx.getActorKeyPairs(identifier));
+      if (actor) {
+        const [moved] = actor.movedToActorId
+          ? await ctx.data.db
+              .select({ uri: schema.actors.apUri })
+              .from(schema.actors)
+              .where(eq(schema.actors.id, actor.movedToActorId))
+          : [];
+        return localActorToPerson(
+          ctx,
+          actor,
+          await ctx.getActorKeyPairs(identifier),
+          moved?.uri ?? null,
+        );
+      }
       // Accounts being deleted answer 410 Gone with a Tombstone.
       const deleted = await deletedLocalActor(ctx.data, identifier);
       return deleted
@@ -494,6 +509,27 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       }
       if (post)
         await ingestRemoteAnnounce(ctx.data, sender.id, post.id, { apUri: activity.id.href });
+    })
+    .on(Move, async (ctx, activity) => {
+      // Only an account can announce its own move.
+      if (
+        !activity.actorId ||
+        activity.objectId?.href !== activity.actorId.href ||
+        !activity.targetId
+      )
+        return;
+      const origin = await storeActor(ctx, await activity.getActor(ctx));
+      if (!origin) return;
+      // The target may be one of our accounts; otherwise fetch it fresh (its alsoKnownAs must list the origin).
+      const parsed = ctx.parseUri(activity.targetId);
+      let targetRow =
+        parsed?.type === 'actor' ? await localActorByIdentifier(ctx.data, parsed.identifier) : null;
+      if (!targetRow) {
+        const target = await ctx.lookupObject(activity.targetId).catch(() => null);
+        if (!isActor(target)) return;
+        targetRow = await storeActor(ctx, target);
+      }
+      if (targetRow) await applyRemoteMove(ctx.data, origin.id, targetRow.id);
     })
     .on(Block, async (ctx, activity) => {
       if (!activity.objectId) return;

@@ -322,4 +322,67 @@ describe('federation between two instances', () => {
     });
     expect(gone.status).toBe(410);
   });
+
+  it('moves an account to another server, taking its followers along', async () => {
+    const carol = await signUp(a); // moving away from server A
+    const dan = await signUp(a); // follower on the same server
+    const bob = await signUp(b); // follower on the other server
+    const carla = await signUp(b); // Carol's new account on server B
+
+    const remoteCarol = (
+      await bob.client.post('/api/v1/search/resolve', {
+        q: `${a.url}/users/${carol.account.username}`,
+      })
+    ).json();
+    await bob.client.post(`/api/v1/accounts/${remoteCarol.id}/follow`);
+    await eventually(
+      async () =>
+        (await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteCarol.id}`)).json()[0]
+          ?.following,
+    );
+    await dan.client.post(`/api/v1/accounts/${carol.account.id}/follow`);
+
+    // The new account declares the old one as an alias, then the old one moves.
+    const alias = await carla.client.post('/api/v1/me/migration/aliases', {
+      accounts: [`${a.url}/users/${carol.account.username}`],
+    });
+    expect(alias.json().aliases).toEqual([`${a.url}/users/${carol.account.username}`]);
+    const remoteCarla = (
+      await carol.client.post('/api/v1/search/resolve', {
+        q: `${b.url}/users/${carla.account.username}`,
+      })
+    ).json();
+    expect(
+      (
+        await carol.client.post('/api/v1/me/migration/move', {
+          target: `${b.url}/users/${carla.account.username}`,
+          password: 'wrong',
+        })
+      ).statusCode,
+    ).toBe(403);
+    const moved = await carol.client.post('/api/v1/me/migration/move', {
+      target: `${b.url}/users/${carla.account.username}`,
+      password: 'correct horse battery staple',
+    });
+    expect(moved.statusCode).toBe(200);
+
+    // Dan (same server as Carol) now follows Carla; Bob (on Carla's server) too.
+    await eventually(
+      async () =>
+        (await dan.client.get(`/api/v1/accounts/relationships?id[]=${remoteCarla.id}`)).json()[0]
+          ?.following,
+    );
+    await eventually(
+      async () =>
+        (await bob.client.get(`/api/v1/accounts/relationships?id[]=${carla.account.id}`)).json()[0]
+          ?.following,
+    );
+    expect(
+      (await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteCarol.id}`)).json()[0]
+        ?.following,
+    ).toBe(false);
+    expect((await dan.client.get(`/api/v1/accounts/${carol.account.id}`)).json().movedToId).toBe(
+      remoteCarla.id,
+    );
+  });
 });

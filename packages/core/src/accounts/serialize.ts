@@ -21,6 +21,7 @@ export function serializeAccount(actor: ActorRow): Account {
     local: actor.domain === null,
     url: actor.apUrl,
     createdAt: actor.createdAt.toISOString(),
+    movedToId: actor.movedToActorId,
   };
 }
 

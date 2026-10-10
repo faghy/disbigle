@@ -81,6 +81,10 @@ export const actors = pgTable(
     diasporaReceiveUrl: text('diaspora_receive_url'),
     protocols: protocolEnum('protocols').array().notNull().default(sql`'{}'`),
     preferredProtocol: protocolEnum('preferred_protocol'),
+    /** Other identities of this account (ActivityPub `alsoKnownAs`), as actor URIs. */
+    alsoKnownAs: text('also_known_as').array().notNull().default(sql`'{}'`),
+    /** Set when the account moved to another one (ActivityPub `movedTo` / `Move`). */
+    movedToActorId: uuid('moved_to_actor_id'),
     lastFetchedAt: timestamp('last_fetched_at', { withTimezone: true }),
     suspendedAt: timestamp('suspended_at', { withTimezone: true }),
     silencedAt: timestamp('silenced_at', { withTimezone: true }),

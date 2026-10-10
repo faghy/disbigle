@@ -36,6 +36,8 @@ export interface RemoteActorData {
   apFollowers?: string | null;
   diasporaGuid?: string;
   diasporaReceiveUrl?: string | null;
+  /** ActivityPub `alsoKnownAs`, as actor URIs. */
+  alsoKnownAs?: string[];
   protocol: Protocol;
 }
 
@@ -107,6 +109,7 @@ export async function upsertRemoteActor(
     apFollowers: data.apFollowers,
     diasporaGuid: data.diasporaGuid,
     diasporaReceiveUrl: data.diasporaReceiveUrl,
+    alsoKnownAs: data.alsoKnownAs?.slice(0, 20),
     lastFetchedAt: new Date(),
   };
   const defined = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined));

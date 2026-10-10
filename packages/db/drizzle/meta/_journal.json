@@ -36,6 +36,13 @@
       "when": 1791675113515,
       "tag": "0004_account_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791675508426,
+      "tag": "0005_account_moves",
+      "breakpoints": true
     }
   ]
 }

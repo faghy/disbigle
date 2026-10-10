@@ -39,6 +39,8 @@ export interface Account {
   local: boolean;
   url: string | null;
   createdAt: string;
+  /** The account this one moved to, if any. */
+  movedToId?: string | null;
   /** Present on single-account endpoints (profile pages). */
   followersCount?: number;
   followingCount?: number;

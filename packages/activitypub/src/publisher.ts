@@ -9,6 +9,7 @@ import {
   Delete,
   Follow,
   Like,
+  Move,
   PUBLIC_COLLECTION,
   type Recipient,
   Reject,
@@ -206,6 +207,25 @@ export class ActivityPubPublisher implements EventBus {
             actor: ctx.getActorUri(local.username),
             object: new URL(target.apUri ?? ''),
           }),
+        );
+        return;
+      }
+      case 'account.moved': {
+        const actors = await this.actors([event.actorId, event.targetActorId]);
+        const origin = actors.get(event.actorId);
+        const target = actors.get(event.targetActorId);
+        if (origin?.domain !== null || !target?.apUri) return;
+        await ctx.sendActivity(
+          { identifier: origin.username },
+          'followers',
+          new Move({
+            id: freshId(ctx, origin.username, 'moves'),
+            actor: ctx.getActorUri(origin.username),
+            object: ctx.getActorUri(origin.username),
+            target: new URL(target.apUri),
+            to: PUBLIC_COLLECTION,
+          }),
+          { preferSharedInbox: true },
         );
         return;
       }
