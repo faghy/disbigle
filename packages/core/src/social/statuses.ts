@@ -138,6 +138,7 @@ export async function hydrateStatuses(
       reblogged: reblogged.has(post.id),
       bookmarked: bookmarked.has(post.id),
     };
+    if (post.actorId === viewerActorId && post.source !== null) status.source = post.source;
     if (post.actorId === viewerActorId && post.visibility === 'limited') {
       status.aspectIds = aspectRows.filter((r) => r.postId === post.id).map((r) => r.aspectId);
     }

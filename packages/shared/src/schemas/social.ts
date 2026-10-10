@@ -94,6 +94,8 @@ export interface Status {
   bookmarked: boolean;
   /** Aspects a limited post was shared with; only present for the author. */
   aspectIds?: string[];
+  /** Markdown source of a local post; only present for the author (for editing). */
+  source?: string;
 }
 
 export interface StatusContext {
