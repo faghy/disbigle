@@ -1,0 +1,21 @@
+{
+  "name": "@disbigle/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/main.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@disbigle/activitypub": "workspace:*",
+    "@disbigle/config": "workspace:*",
+    "@disbigle/core": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "@fedify/redis": "^2.4.2",
+    "drizzle-orm": "^0.45.4",
+    "ioredis": "^5.8.2"
+  }
+}
