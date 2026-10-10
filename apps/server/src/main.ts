@@ -7,6 +7,12 @@ import {
 import { loadConfig } from '@disbigle/config';
 import type { CoreContext } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
+import {
+  chainResolvers,
+  DiasporaBridge,
+  DiasporaPublisher,
+  diasporaRoutes,
+} from '@disbigle/diaspora-bridge';
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
@@ -26,11 +32,17 @@ const federation = createDisbigleFederation({
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
 });
-ctx.resolveAccount = async (username, domain) =>
-  (await resolveRemoteAccount(federation, ctx, `${username}@${domain}`))?.id ?? null;
+const diaspora = new DiasporaBridge({ ctx });
+// Unknown remote accounts: try ActivityPub first, then diaspora* (WebFinger + hCard).
+ctx.resolveAccount = chainResolvers(
+  async (username, domain) =>
+    (await resolveRemoteAccount(federation, ctx, `${username}@${domain}`))?.id ?? null,
+  diaspora.resolveAccount,
+);
 ctx.events = new CompositeEventBus([
   new RedisEventBus(redis),
   new ActivityPubPublisher(federation, ctx),
+  new DiasporaPublisher(diaspora),
 ]);
 const hub = new StreamingHub(ctx);
 await subscribeHubToRedis(subscriber, hub);
@@ -45,9 +57,11 @@ const app = await buildApp({
   trustProxy: process.env.TRUST_PROXY === 'true',
   serveMedia: config.NODE_ENV !== 'production' || process.env.SERVE_MEDIA === 'true',
 });
+await app.register(diasporaRoutes, { ctx, bridge: diaspora });
 
 const shutdown = async () => {
   await app.close();
+  await diaspora.idle();
   await close();
   redis.disconnect();
   subscriber.disconnect();

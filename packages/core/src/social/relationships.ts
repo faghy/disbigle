@@ -51,7 +51,10 @@ export async function follow(
   if (!existing) {
     const id = uuidv7();
     const apUri = options.apUri ?? (actor.domain === null ? `${actor.apUri}#follows/${id}` : null);
-    if (target.locked || target.domain !== null) {
+    // diaspora* has no accept step: following someone there takes effect at once.
+    const awaitsAccept =
+      target.locked || (target.domain !== null && target.preferredProtocol !== 'diaspora');
+    if (awaitsAccept) {
       const inserted = await ctx.db
         .insert(followRequests)
         .values({ id, actorId, targetActorId, apUri })

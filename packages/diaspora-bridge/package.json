@@ -1,0 +1,24 @@
+{
+  "name": "@disbigle/diaspora-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@disbigle/config": "workspace:*",
+    "@disbigle/core": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "@disbigle/diaspora": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.5"
+  },
+  "devDependencies": {
+    "@disbigle/shared": "workspace:*"
+  }
+}

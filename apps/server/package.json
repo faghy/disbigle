@@ -17,6 +17,8 @@
     "@disbigle/config": "workspace:*",
     "@disbigle/core": "workspace:*",
     "@disbigle/db": "workspace:*",
+    "@disbigle/diaspora": "workspace:*",
+    "@disbigle/diaspora-bridge": "workspace:*",
     "@disbigle/shared": "workspace:*",
     "@fastify/cookie": "^11.1.3",
     "@fastify/helmet": "^13.1.2",

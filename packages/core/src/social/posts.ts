@@ -360,6 +360,7 @@ export async function deletePost(
     audienceActorIds: audience.map((a) => a.actorId),
     visibility: post.visibility,
     reblogOfId: post.reblogOfId,
+    threadRootId: post.threadRootId,
   });
 }
 
@@ -481,6 +482,7 @@ export async function unreblog(ctx: CoreContext, actorId: string, postId: string
       audienceActorIds: [],
       visibility: row.visibility,
       reblogOfId: postId,
+      threadRootId: null,
     });
   }
   return getStatus(ctx, actorId, postId);
@@ -530,14 +532,20 @@ export async function unlike(ctx: CoreContext, actorId: string, postId: string):
   const removed = await ctx.db
     .delete(likes)
     .where(and(eq(likes.actorId, actorId), eq(likes.postId, postId)))
-    .returning({ id: likes.id, apUri: likes.apUri });
+    .returning({ id: likes.id, apUri: likes.apUri, diasporaGuid: likes.diasporaGuid });
   const row = removed[0];
   if (row) {
     await ctx.db
       .update(posts)
       .set({ likesCount: sql`greatest(${posts.likesCount} - 1, 0)` })
       .where(eq(posts.id, postId));
-    await emit(ctx, { type: 'like.removed', actorId, postId, apUri: row.apUri });
+    await emit(ctx, {
+      type: 'like.removed',
+      actorId,
+      postId,
+      apUri: row.apUri,
+      diasporaGuid: row.diasporaGuid,
+    });
   }
   return getStatus(ctx, actorId, postId);
 }

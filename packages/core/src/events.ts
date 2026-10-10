@@ -11,6 +11,8 @@ export type DomainEvent =
       audienceActorIds: string[];
       visibility: 'public' | 'unlisted' | 'followers' | 'limited' | 'direct';
       reblogOfId: string | null;
+      /** First post of the thread (diaspora sends comments to the thread root). */
+      threadRootId: string | null;
     }
   | { type: 'notification.created'; notificationId: string; recipientActorId: string }
   | {
@@ -24,7 +26,13 @@ export type DomainEvent =
   | { type: 'follow.removed'; actorId: string; targetActorId: string; apUri: string | null }
   | { type: 'follow.rejected'; actorId: string; targetActorId: string; apUri: string | null }
   | { type: 'like.created'; likeId: string; actorId: string; postId: string; apUri: string | null }
-  | { type: 'like.removed'; actorId: string; postId: string; apUri: string | null }
+  | {
+      type: 'like.removed';
+      actorId: string;
+      postId: string;
+      apUri: string | null;
+      diasporaGuid: string | null;
+    }
   | { type: 'profile.updated'; actorId: string }
   | { type: 'block.created'; actorId: string; targetActorId: string }
   | { type: 'account.deleted'; actorId: string }

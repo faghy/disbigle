@@ -347,6 +347,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         href: `${base}/hcard/users/${actor.diasporaGuid}`,
       },
       { rel: 'http://joindiaspora.com/seed_location', type: 'text/html', href: `${base}/` },
+      { rel: 'salmon', href: `${base}/receive/users/${actor.diasporaGuid}` },
     ];
   });
 
