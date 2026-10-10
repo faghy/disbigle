@@ -278,4 +278,38 @@ describe('federation between two instances', () => {
     const context = (await alice.client.get(`/api/v1/statuses/${received.id}/context`)).json();
     expect(context.ancestors.map((s: { uri: string }) => s.uri)).toEqual([davePost.uri]);
   });
+
+  it('tells other servers when an account is deleted', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const remoteBob = (
+      await alice.client.post('/api/v1/search/resolve', {
+        q: `${b.url}/users/${bob.account.username}`,
+      })
+    ).json();
+    await alice.client.post(`/api/v1/accounts/${remoteBob.id}/follow`);
+    await eventually(
+      async () =>
+        (await alice.client.get(`/api/v1/accounts/relationships?id[]=${remoteBob.id}`)).json()[0]
+          ?.following,
+    );
+    await bob.client.post('/api/v1/statuses', { content: 'addio' });
+    await eventually(
+      async () => (await alice.client.get('/api/v1/timelines/home')).json().length > 0,
+    );
+
+    // Alice deletes her account: Bob's server forgets her.
+    const remoteAlice = (
+      await bob.client.get(`/api/v1/accounts/${bob.account.id}/followers`)
+    ).json()[0];
+    expect(remoteAlice.acct).toBe(`${alice.account.username}@${a.domain}`);
+    await alice.client.post('/api/v1/me/delete', { password: 'correct horse battery staple' });
+    await eventually(
+      async () => (await bob.client.get(`/api/v1/accounts/${remoteAlice.id}`)).statusCode === 404,
+    );
+    const gone = await fetch(`${a.url}/users/${alice.account.username}`, {
+      headers: { accept: 'application/activity+json' },
+    });
+    expect(gone.status).toBe(410);
+  });
 });

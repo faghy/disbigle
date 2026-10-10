@@ -37,6 +37,7 @@ import {
   isActor,
   Like,
   Note,
+  Person,
   Reject,
   Tombstone,
   Undo,
@@ -66,6 +67,21 @@ async function storeActor(ctx: InboxContext<CoreContext>, actor: Actor | null) {
   // Servers suspended by the admins are ignored entirely.
   if ((await domainBlockSeverity(ctx.data, data.domain)) === 'suspend') return null;
   return upsertRemoteActor(ctx.data, data);
+}
+
+/** A local account whose owner asked for deletion (closed, not yet purged). */
+async function deletedLocalActor(ctx: CoreContext, identifier: string) {
+  const actor = await findLocalActorByUsername(ctx, identifier);
+  if (!actor) return null;
+  const [user] = await ctx.db
+    .select({ deletionRequestedAt: schema.users.deletionRequestedAt })
+    .from(schema.users)
+    .where(eq(schema.users.actorId, actor.id));
+  if (!user?.deletionRequestedAt) return null;
+  return {
+    actor,
+    deletedAt: Temporal.Instant.fromEpochMilliseconds(user.deletionRequestedAt.getTime()),
+  };
 }
 
 async function localActorByIdentifier(ctx: CoreContext, identifier: string) {
@@ -121,20 +137,33 @@ export function createDisbigleFederation(options: FederationOptions): Federation
   federation
     .setActorDispatcher('/users/{identifier}', async (ctx, identifier) => {
       const actor = await localActorByIdentifier(ctx.data, identifier);
-      if (!actor) return null;
-      return localActorToPerson(ctx, actor, await ctx.getActorKeyPairs(identifier));
+      if (actor) return localActorToPerson(ctx, actor, await ctx.getActorKeyPairs(identifier));
+      // Accounts being deleted answer 410 Gone with a Tombstone.
+      const deleted = await deletedLocalActor(ctx.data, identifier);
+      return deleted
+        ? new Tombstone({
+            id: ctx.getActorUri(identifier),
+            formerType: Person,
+            deleted: deleted.deletedAt,
+          })
+        : null;
     })
     .mapHandle(
       async (ctx, username) => (await localActorByIdentifier(ctx.data, username))?.username ?? null,
     )
     .setKeyPairsDispatcher(async (ctx, identifier) => {
-      const actor = await localActorByIdentifier(ctx.data, identifier);
+      // Deleted accounts keep their keys until purged, so their Delete activity can be signed.
+      const actor =
+        (await localActorByIdentifier(ctx.data, identifier)) ??
+        (await deletedLocalActor(ctx.data, identifier))?.actor;
       return actor ? getLocalKeyPairs(ctx.data, actor.id) : [];
     });
 
   federation
     .setFollowersDispatcher('/users/{identifier}/followers', async (ctx, identifier, cursor) => {
-      const actor = await localActorByIdentifier(ctx.data, identifier);
+      const actor =
+        (await localActorByIdentifier(ctx.data, identifier)) ??
+        (await deletedLocalActor(ctx.data, identifier))?.actor;
       if (!actor) return null;
       const { follows, actors } = schema;
       const rows = await ctx.data.db
@@ -308,6 +337,23 @@ export function createDisbigleFederation(options: FederationOptions): Federation
 
   federation
     .setInboxListeners('/users/{identifier}/inbox', '/inbox')
+    // A deleted actor's key can no longer be fetched (410 Gone), so its own Delete arrives unverified.
+    // The 410 itself proves the deletion: drop the account if we know it.
+    .onUnverifiedActivity(async (ctx, activity, reason) => {
+      if (
+        activity instanceof Delete &&
+        activity.actorId &&
+        activity.objectId?.href === activity.actorId.href &&
+        reason.type === 'keyFetchError' &&
+        'status' in reason.result &&
+        reason.result.status === 410
+      ) {
+        const known = await findActorByApUri(ctx.data, activity.actorId.href);
+        if (known) await deleteRemoteActor(ctx.data, known.id);
+        return new Response(null, { status: 202 });
+      }
+      return undefined;
+    })
     .on(Follow, async (ctx, activity) => {
       if (!activity.id || !activity.objectId) return;
       const parsed = ctx.parseUri(activity.objectId);

@@ -119,6 +119,8 @@ export const users = pgTable(
     totpSecret: text('totp_secret'),
     totpEnabledAt: timestamp('totp_enabled_at', { withTimezone: true }),
     disabledAt: timestamp('disabled_at', { withTimezone: true }),
+    /** Set when the user deletes their account; data is purged once the deletion has federated. */
+    deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),
     lastSignInAt: timestamp('last_sign_in_at', { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

@@ -1,4 +1,10 @@
-import { type CoreContext, cleanupUnattachedMedia, type MediaStorage } from '@disbigle/core';
+import {
+  type CoreContext,
+  cleanupUnattachedMedia,
+  DELETION_GRACE_MS,
+  type MediaStorage,
+  purgeDeletedAccounts,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { lt } from 'drizzle-orm';
 
@@ -19,6 +25,14 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
       run: async () => {
         const removed = await cleanupUnattachedMedia(ctx, new Date(Date.now() - 24 * HOUR));
         return `removed ${removed} uploads never attached to a post`;
+      },
+    },
+    {
+      name: 'purge-deleted-accounts',
+      every: HOUR,
+      run: async () => {
+        const purged = await purgeDeletedAccounts(ctx, new Date(Date.now() - DELETION_GRACE_MS));
+        return `purged ${purged} deleted accounts`;
       },
     },
     {

@@ -207,6 +207,42 @@ export class ActivityPubPublisher implements EventBus {
         );
         return;
       }
+      case 'account.deleted': {
+        const [actor] = (await this.actors([event.actorId])).values();
+        if (!actor || actor.domain !== null) return;
+        await ctx.sendActivity(
+          { identifier: actor.username },
+          'followers',
+          new Delete({
+            id: new URL(`${ctx.getActorUri(actor.username).href}#delete`),
+            actor: ctx.getActorUri(actor.username),
+            object: ctx.getActorUri(actor.username),
+            to: PUBLIC_COLLECTION,
+          }),
+          { preferSharedInbox: true },
+        );
+        // Also tell the servers of the accounts we follow, as Mastodon does.
+        const followed = await this.core.db
+          .select({ actor: schema.actors })
+          .from(schema.follows)
+          .innerJoin(schema.actors, eq(schema.actors.id, schema.follows.targetActorId))
+          .where(eq(schema.follows.actorId, actor.id));
+        const targets = followed.map((f) => f.actor).filter(speaksActivityPub);
+        if (targets.length > 0) {
+          await ctx.sendActivity(
+            { identifier: actor.username },
+            targets.map(recipient),
+            new Delete({
+              id: new URL(`${ctx.getActorUri(actor.username).href}#delete`),
+              actor: ctx.getActorUri(actor.username),
+              object: ctx.getActorUri(actor.username),
+              to: PUBLIC_COLLECTION,
+            }),
+            { preferSharedInbox: true },
+          );
+        }
+        return;
+      }
       default:
         return;
     }

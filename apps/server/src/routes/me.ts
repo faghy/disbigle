@@ -7,6 +7,7 @@ import {
   DomainError,
   deletePasskey,
   disableTotp,
+  exportAccount,
   finishPasskeyRegistration,
   getCurrentUser,
   listPasskeys,
@@ -15,6 +16,7 @@ import {
   type RegistrationResponseJSON,
   regenerateRecoveryCodes,
   removeProfileImage,
+  requestAccountDeletion,
   updateProfile,
   updateProfileImage,
   updateSettings,
@@ -28,7 +30,7 @@ import {
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
-import { requireUser } from '../plugins/auth.ts';
+import { clearSessionCookie, requireUser } from '../plugins/auth.ts';
 
 const passwordSchema = z.object({ password: z.string().min(1).max(256) });
 const passkeyRegisterSchema = z.object({
@@ -71,6 +73,34 @@ export async function meRoutes(
   }
 
   app.get('/', async (request) => getCurrentUser(ctx, requireUser(request).userId));
+
+  app.get(
+    '/export',
+    { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const session = requireUser(request);
+      const data = await exportAccount(ctx, session.userId);
+      const date = new Date().toISOString().slice(0, 10);
+      return reply
+        .header(
+          'content-disposition',
+          `attachment; filename="disbigle-${data.account.handle}-${date}.json"`,
+        )
+        .send(data);
+    },
+  );
+
+  app.post(
+    '/delete',
+    { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const session = requireUser(request);
+      const { password } = parse(passwordSchema, request.body);
+      await requestAccountDeletion(ctx, session.userId, password);
+      clearSessionCookie(reply);
+      return { status: 'ok' };
+    },
+  );
 
   app.patch('/profile', async (request) => {
     const session = requireUser(request);
