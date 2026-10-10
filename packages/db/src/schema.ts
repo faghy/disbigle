@@ -568,3 +568,13 @@ export const adminActionLogs = pgTable(
   },
   (t) => [index('admin_action_logs_created_idx').on(t.id)],
 );
+
+/** Key pairs of the instance itself (the "instance actor" used to sign fetches). One row. */
+export const instanceKeys = pgTable('instance_keys', {
+  id: text('id').primaryKey(),
+  rsaPrivateKeyPem: text('rsa_private_key_pem').notNull(),
+  rsaPublicKeyPem: text('rsa_public_key_pem').notNull(),
+  ed25519PrivateKeyPem: text('ed25519_private_key_pem').notNull(),
+  ed25519PublicKeyPem: text('ed25519_public_key_pem').notNull(),
+  createdAt: createdAt(),
+});

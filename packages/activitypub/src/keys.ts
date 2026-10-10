@@ -75,3 +75,52 @@ async function loadKeyPairs(ctx: CoreContext, actorId: string): Promise<CryptoKe
     await importEd25519KeyPair(ed25519PrivateKeyPem, ed25519PublicKeyPem),
   ];
 }
+
+/** Identifier of the instance actor; the tilde keeps it apart from every username. */
+export const INSTANCE_ACTOR = '~actor';
+
+let instancePairs: Promise<{ pairs: CryptoKeyPair[] }> | undefined;
+
+/** Key pairs of the instance actor, created on first use. */
+export function getInstanceKeyPairs(ctx: CoreContext): Promise<CryptoKeyPair[]> {
+  instancePairs ??= loadInstanceKeys(ctx);
+  instancePairs.catch(() => {
+    instancePairs = undefined;
+  });
+  return instancePairs.then((r) => r.pairs);
+}
+
+async function loadInstanceKeys(ctx: CoreContext): Promise<{ pairs: CryptoKeyPair[] }> {
+  let [row] = await ctx.db
+    .select()
+    .from(schema.instanceKeys)
+    .where(eq(schema.instanceKeys.id, 'instance'));
+  if (!row) {
+    const { generateActorKeyPair } = await import('@disbigle/core');
+    const [rsaKeys, edKeys] = await Promise.all([
+      generateActorKeyPair(4096),
+      generateEd25519KeyPair(),
+    ]);
+    await ctx.db
+      .insert(schema.instanceKeys)
+      .values({
+        id: 'instance',
+        rsaPrivateKeyPem: rsaKeys.privateKeyPem,
+        rsaPublicKeyPem: rsaKeys.publicKeyPem,
+        ed25519PrivateKeyPem: edKeys.privateKeyPem,
+        ed25519PublicKeyPem: edKeys.publicKeyPem,
+      })
+      .onConflictDoNothing();
+    [row] = await ctx.db
+      .select()
+      .from(schema.instanceKeys)
+      .where(eq(schema.instanceKeys.id, 'instance'));
+    if (!row) throw new Error('Could not create instance keys');
+  }
+  return {
+    pairs: [
+      await importRsaKeyPair(row.rsaPrivateKeyPem, row.rsaPublicKeyPem),
+      await importEd25519KeyPair(row.ed25519PrivateKeyPem, row.ed25519PublicKeyPem),
+    ],
+  };
+}

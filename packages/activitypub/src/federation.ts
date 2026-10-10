@@ -31,9 +31,11 @@ import {
   Accept,
   type Actor,
   Announce,
+  Application,
   Block,
   Create,
   Delete,
+  Endpoints,
   Follow,
   isActor,
   Like,
@@ -47,7 +49,7 @@ import {
 } from '@fedify/vocab';
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm';
 import { localActorToPerson, noteToPostData, postToNote, remoteActorData } from './convert.ts';
-import { getLocalKeyPairs } from './keys.ts';
+import { getInstanceKeyPairs, getLocalKeyPairs, INSTANCE_ACTOR } from './keys.ts';
 
 const PAGE_SIZE = 40;
 export const SOFTWARE_VERSION = '0.1.0';
@@ -138,6 +140,21 @@ export function createDisbigleFederation(options: FederationOptions): Federation
 
   federation
     .setActorDispatcher('/users/{identifier}', async (ctx, identifier) => {
+      if (identifier === INSTANCE_ACTOR) {
+        const keys = await ctx.getActorKeyPairs(identifier);
+        return new Application({
+          id: ctx.getActorUri(identifier),
+          preferredUsername: ctx.data.config.LOCAL_DOMAIN,
+          name: ctx.data.config.INSTANCE_TITLE,
+          inbox: ctx.getInboxUri(identifier),
+          outbox: ctx.getOutboxUri(identifier),
+          endpoints: new Endpoints({ sharedInbox: ctx.getInboxUri() }),
+          publicKey: keys[0]?.cryptographicKey ?? null,
+          assertionMethods: keys.map((k) => k.multikey),
+          manuallyApprovesFollowers: true,
+          url: new URL(`${ctx.data.config.PUBLIC_URL}/about`),
+        });
+      }
       const actor = await localActorByIdentifier(ctx.data, identifier);
       if (actor) {
         const [moved] = actor.movedToActorId
@@ -167,6 +184,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       async (ctx, username) => (await localActorByIdentifier(ctx.data, username))?.username ?? null,
     )
     .setKeyPairsDispatcher(async (ctx, identifier) => {
+      if (identifier === INSTANCE_ACTOR) return getInstanceKeyPairs(ctx.data);
       // Deleted accounts keep their keys until purged, so their Delete activity can be signed.
       const actor =
         (await localActorByIdentifier(ctx.data, identifier)) ??
@@ -353,6 +371,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
 
   federation
     .setInboxListeners('/users/{identifier}/inbox', '/inbox')
+    // Fetches made while handling the shared inbox are signed as the instance (authorized fetch).
+    .setSharedKeyDispatcher(() => ({ identifier: INSTANCE_ACTOR }))
     // A deleted actor's key can no longer be fetched (410 Gone), so its own Delete arrives unverified.
     // The 410 itself proves the deletion: drop the account if we know it.
     .onUnverifiedActivity(async (ctx, activity, reason) => {

@@ -118,6 +118,13 @@ describe('discovery', () => {
     });
     expect(person.publicKey.publicKeyPem).toContain('BEGIN PUBLIC KEY');
 
+    const browser = await fetch(`${a.url}/users/${account.username}`, {
+      headers: { accept: 'text/html' },
+      redirect: 'manual',
+    });
+    expect(browser.status).toBe(302);
+    expect(browser.headers.get('location')).toBe(`/@${account.username}`);
+
     const links = (await (await fetch(`${a.url}/.well-known/nodeinfo`)).json()) as {
       links: { href: string }[];
     };

@@ -49,7 +49,7 @@ export async function searchRoutes(
           and(
             or(ilike(schema.actors.username, term), ilike(schema.actors.displayName, term)),
             isNull(schema.actors.suspendedAt),
-            sql`${schema.actors.discoverable} or ${schema.actors.domain} is null`,
+            sql`(${schema.actors.discoverable} or ${schema.actors.domain} is null)`,
           ),
         )
         .orderBy(sql`${schema.actors.domain} is not null`, schema.actors.username)

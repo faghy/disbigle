@@ -2,6 +2,7 @@ import { type CoreContext, findActorByHandle, upsertRemoteActor } from '@disbigl
 import type { Federation } from '@fedify/fedify';
 import { isActor } from '@fedify/vocab';
 import { remoteActorData } from './convert.ts';
+import { INSTANCE_ACTOR } from './keys.ts';
 
 /** Parses `user@domain`, `@user@domain` or `acct:user@domain`. */
 export function parseHandle(input: string): { username: string; domain: string } | null {
@@ -29,7 +30,9 @@ export async function resolveRemoteAccount(
   if (!handle && !/^https?:\/\//.test(target)) return null;
   let object: unknown;
   try {
-    object = await ctx.lookupObject(target);
+    // Signed as the instance actor, for servers that require authorized fetch.
+    const documentLoader = await ctx.getDocumentLoader({ identifier: INSTANCE_ACTOR });
+    object = await ctx.lookupObject(target, { documentLoader });
   } catch {
     return null;
   }

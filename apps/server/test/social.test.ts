@@ -136,6 +136,15 @@ describe('accounts and notifications', () => {
     expect((await b.client.get('/api/v1/notifications/unread_count')).json()).toEqual({ count: 0 });
   });
 
+  it('searches accounts by name only', async () => {
+    const { account } = await signedIn();
+    const results = (
+      await new Client(app).get(`/api/v1/search/accounts?q=${account.username}`)
+    ).json();
+    expect(results.map((r: { id: string }) => r.id)).toContain(account.id);
+    expect((await new Client(app).get('/api/v1/search/accounts?q=zzzznobody')).json()).toEqual([]);
+  });
+
   it('manages aspects', async () => {
     const { client } = await signedIn();
     const created = await client.post('/api/v1/aspects', { name: 'Pod admins' });

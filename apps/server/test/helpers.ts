@@ -1,6 +1,8 @@
+import { createDisbigleFederation } from '@disbigle/activitypub';
 import type { Config } from '@disbigle/config';
 import { type CoreContext, MemoryKeyValueStore, MemoryMailer } from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
+import { MemoryKvStore } from '@fedify/fedify';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
 import { buildApp } from '../src/app.ts';
@@ -39,7 +41,11 @@ export function useTestApp(overrides: Partial<Config> = {}) {
     };
     const hub = new StreamingHub(ctx);
     ctx.events = new LocalEventBus(hub);
-    app = await buildApp({ ctx, hub, mailer: testMailer, disableRateLimit: true });
+    const federation = createDisbigleFederation({
+      kv: new MemoryKvStore(),
+      allowPrivateAddress: true,
+    });
+    app = await buildApp({ ctx, hub, federation, mailer: testMailer, disableRateLimit: true });
   });
   afterAll(async () => {
     await app?.close();

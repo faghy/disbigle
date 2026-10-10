@@ -43,6 +43,13 @@
       "when": 1791675508426,
       "tag": "0005_account_moves",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791676059036,
+      "tag": "0006_instance_keys",
+      "breakpoints": true
     }
   ]
 }

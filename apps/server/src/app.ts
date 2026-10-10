@@ -68,6 +68,17 @@ export async function buildApp(options: AppOptions) {
     await app.register(fedifyPlugin, {
       federation: options.federation,
       contextDataFactory: () => ctx,
+      errorHandlers: {
+        // A browser opening an ActivityPub id (e.g. /users/alice) gets the web page instead.
+        onNotAcceptable: (request: Request) => {
+          const path = new URL(request.url).pathname;
+          const match = /^\/users\/([^/]+)(?:\/statuses\/([^/]+))?\/?$/.exec(path);
+          if (!match)
+            return new Response('Not Acceptable', { status: 406, headers: { Vary: 'Accept' } });
+          const target = match[2] ? `/@${match[1]}/${match[2]}` : `/@${match[1]}`;
+          return new Response(null, { status: 302, headers: { Location: target, Vary: 'Accept' } });
+        },
+      },
     });
   }
   await app.register(helmet, { contentSecurityPolicy: false });
