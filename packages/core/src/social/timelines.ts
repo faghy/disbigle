@@ -20,6 +20,7 @@ const {
   aspectMemberships,
   bookmarks,
   domainBlocks,
+  tagFollows,
 } = schema;
 
 /** Excludes posts from servers the admins silenced or suspended (public and tag timelines). */
@@ -63,8 +64,8 @@ async function page(
 }
 
 /**
- * Home: your own posts, posts of accounts you follow, and posts shared with you
- * (diaspora-style limited posts and mentions), newest first.
+ * Home: your own posts, posts of accounts you follow, posts shared with you (diaspora-style
+ * limited posts and mentions) and public posts with hashtags you follow, newest first.
  */
 export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: PaginationQuery = {}) {
   return page(
@@ -74,6 +75,10 @@ export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: Pag
       ${posts.actorId} = ${viewerActorId}
       or exists (select 1 from ${follows} where ${follows.actorId} = ${viewerActorId} and ${follows.targetActorId} = ${posts.actorId})
       or exists (select 1 from ${postAudiences} where ${postAudiences.postId} = ${posts.id} and ${postAudiences.actorId} = ${viewerActorId})
+      or (${posts.visibility} = 'public' and exists (
+        select 1 from ${postTags} inner join ${tagFollows} on ${tagFollows.tagId} = ${postTags.tagId}
+        where ${postTags.postId} = ${posts.id} and ${tagFollows.actorId} = ${viewerActorId}
+      ))
     )`,
     query,
   );

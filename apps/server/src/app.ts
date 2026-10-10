@@ -28,6 +28,7 @@ import { publicRoutes } from './routes/public.ts';
 import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
+import { tagRoutes } from './routes/tags.ts';
 import { timelineRoutes } from './routes/timelines.ts';
 import type { StreamingHub } from './streaming.ts';
 
@@ -113,6 +114,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });
       await api.register(mediaRoutes, { ctx: mediaCtx, prefix: '/media' });
       await api.register(reportRoutes, { ctx, prefix: '/reports' });
+      await api.register(tagRoutes, { ctx, prefix: '/tags' });
       await api.register(adminRoutes, { ctx, prefix: '/admin' });
       if (options.federation) {
         await api.register(searchRoutes, {

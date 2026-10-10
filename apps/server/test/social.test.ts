@@ -58,6 +58,27 @@ describe('statuses and timelines', () => {
     expect(edited.tags).toEqual([{ name: 'final' }]);
   });
 
+  it('follows hashtags into the home timeline', async () => {
+    const reader = await signedIn();
+    const writer = await signedIn();
+    const tag = `t${Date.now().toString(36)}`;
+    expect(
+      (await reader.client.post(`/api/v1/tags/${tag.toUpperCase()}/follow`)).json(),
+    ).toMatchObject({ name: tag, following: true });
+    expect((await reader.client.get('/api/v1/tags/followed')).json()).toEqual([tag]);
+    const post = (await writer.client.post('/api/v1/statuses', { content: `news #${tag}` })).json();
+    await writer.client.post('/api/v1/statuses', {
+      content: `quiet #${tag}`,
+      visibility: 'unlisted',
+    });
+    expect(
+      (await reader.client.get('/api/v1/timelines/home')).json().map((s: { id: string }) => s.id),
+    ).toEqual([post.id]);
+    expect((await reader.client.get(`/api/v1/tags/${tag}`)).json().postsCount).toBe(2);
+    expect((await reader.client.post(`/api/v1/tags/${tag}/unfollow`)).json().following).toBe(false);
+    expect((await reader.client.post('/api/v1/tags/1234/follow')).statusCode).toBe(422);
+  });
+
   it('rejects empty posts and anonymous posting', async () => {
     const { client } = await signedIn();
     expect((await client.post('/api/v1/statuses', { content: '   ' })).statusCode).toBe(422);
