@@ -20,9 +20,7 @@ export const notNil: Rule = { name: 'not_nil', checksNil: true, test: (v) => v !
 
 export const notEmpty: Rule = {
   name: 'not_empty',
-  test: (v) =>
-    v !== undefined &&
-    !((typeof v === 'string' || Array.isArray(v)) && v.length === 0),
+  test: (v) => v !== undefined && !((typeof v === 'string' || Array.isArray(v)) && v.length === 0),
 };
 
 export const diasporaId: Rule = { name: 'diaspora_id', test: isValidDiasporaId };
@@ -61,7 +59,8 @@ export function regex(pattern: RegExp): Rule {
 export function name(max: number): Rule {
   return {
     name: `name(max ${max})`,
-    test: (v) => v === undefined || (typeof v === 'string' && !v.includes(';') && [...v].length <= max),
+    test: (v) =>
+      v === undefined || (typeof v === 'string' && !v.includes(';') && [...v].length <= max),
   };
 }
 

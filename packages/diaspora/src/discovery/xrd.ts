@@ -68,8 +68,7 @@ export function buildXrd(doc: XrdDocument): string {
     children.push({ name: 'Link', attributes });
   }
   const xrd: XmlNode = { name: 'XRD', attributes: [['xmlns', XRD_XMLNS]], children };
-  const body =
-    children.length > 0 ? serializeXml(xrd) : `<XRD xmlns="${XRD_XMLNS}">\n</XRD>`;
+  const body = children.length > 0 ? serializeXml(xrd) : `<XRD xmlns="${XRD_XMLNS}">\n</XRD>`;
   return `<?xml version="1.0" encoding="UTF-8"?>\n${body}\n`;
 }
 

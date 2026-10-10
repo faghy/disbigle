@@ -6,10 +6,7 @@ import { InvalidXmlError } from './errors.ts';
 const ELEMENT_NODE = 1;
 
 /** Characters not allowed in XML 1.0 documents; replaced with U+FFFD before serialising. */
-const INVALID_XML_CHARS = new RegExp(
-  '[^\\t\\n\\r\\u0020-\\uD7FF\\uE000-\\uFFFD\\u{10000}-\\u{10FFFF}]',
-  'gu',
-);
+const INVALID_XML_CHARS = /[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu;
 
 /** Replaces characters that are invalid in XML with U+FFFD, like the reference implementation. */
 export function replaceInvalidXmlChars(value: string): string {
@@ -27,10 +24,7 @@ export function escapeText(value: string): string {
 
 /** Escapes an attribute value (double-quoted). */
 export function escapeAttribute(value: string): string {
-  return escapeText(value)
-    .replace(/"/g, '&quot;')
-    .replace(/\n/g, '&#10;')
-    .replace(/\t/g, '&#9;');
+  return escapeText(value).replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;');
 }
 
 /** A node of the serialisation tree: either text content or child elements. */

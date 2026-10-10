@@ -12,12 +12,7 @@ import {
   InvalidXmlError,
   SenderKeyNotFoundError,
 } from './errors.ts';
-import {
-  type PrivateKeyInput,
-  type PublicKeyInput,
-  toPrivateKey,
-  toPublicKey,
-} from './keys.ts';
+import { type PrivateKeyInput, type PublicKeyInput, toPrivateKey, toPublicKey } from './keys.ts';
 import { childByLocalName, localName, parseXml, serializeXml, textContent } from './xml.ts';
 
 export const MAGIC_ENV_XMLNS = 'http://salmon-protocol.org/ns/magic-env';
@@ -63,7 +58,11 @@ export function createMagicEnvelope(
       },
       { name: 'me:encoding', text: MAGIC_ENV_ENCODING },
       { name: 'me:alg', text: MAGIC_ENV_ALGORITHM },
-      { name: 'me:sig', attributes: [['key_id', urlsafeEncode64(sender)]], text: urlsafeEncode64(sig) },
+      {
+        name: 'me:sig',
+        attributes: [['key_id', urlsafeEncode64(sender)]],
+        text: urlsafeEncode64(sig),
+      },
     ],
   });
   return `<?xml version="1.0" encoding="UTF-8"?>\n${body}\n`;
@@ -115,12 +114,14 @@ export function parseMagicEnvelope(xml: string): ParsedMagicEnvelope {
 
   const dataType = dataEl.getAttribute('type');
   if (!dataType) throw new InvalidDataTypeError('missing data type');
-  if (dataType !== MAGIC_ENV_DATA_TYPE) throw new InvalidDataTypeError(`invalid data type: ${dataType}`);
+  if (dataType !== MAGIC_ENV_DATA_TYPE)
+    throw new InvalidDataTypeError(`invalid data type: ${dataType}`);
 
   const encodingEl = childByLocalName(env, 'encoding');
   if (!encodingEl) throw new InvalidEncodingError('missing encoding');
   const encoding = textContent(encodingEl).trim();
-  if (encoding !== MAGIC_ENV_ENCODING) throw new InvalidEncodingError(`invalid encoding: ${encoding}`);
+  if (encoding !== MAGIC_ENV_ENCODING)
+    throw new InvalidEncodingError(`invalid encoding: ${encoding}`);
 
   const algEl = childByLocalName(env, 'alg');
   if (!algEl) throw new InvalidAlgorithmError('missing algorithm');
@@ -167,7 +168,10 @@ function verifySubject(subject: string, signature: Buffer, key: ReturnType<typeo
  * Throws `InvalidEnvelopeError` (and the more specific structure errors),
  * `SenderKeyNotFoundError` or `InvalidSignatureError`.
  */
-export async function unenvelop(xml: string, options: UnenvelopOptions): Promise<OpenedMagicEnvelope> {
+export async function unenvelop(
+  xml: string,
+  options: UnenvelopOptions,
+): Promise<OpenedMagicEnvelope> {
   const env = parseMagicEnvelope(xml);
   const sender = options.sender ?? env.keyId;
   if (!sender) throw new InvalidEnvelopeError('no key_id');
@@ -177,9 +181,11 @@ export async function unenvelop(xml: string, options: UnenvelopOptions): Promise
   const signature = decode64(env.sig);
   // The reference implementation re-encodes the decoded data (with padding); some
   // implementations sign the data string exactly as transmitted, so accept both.
+  const params = [env.dataType, env.encoding, env.alg];
   const subjects = new Set([
     magicEnvelopeSignatureSubject(env.payload),
-    [env.data, ...[env.dataType, env.encoding, env.alg].map((p) => urlsafeEncode64(p))].join('.'),
+    [env.data, ...params.map((p) => urlsafeEncode64(p))].join('.'),
+    [env.data, ...params.map((p) => urlsafeEncode64(p).replace(/=+$/, ''))].join('.'),
   ]);
   const valid = [...subjects].some((subject) => {
     try {

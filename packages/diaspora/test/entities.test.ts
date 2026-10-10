@@ -24,7 +24,12 @@ import { ALICE, BOB, CAROL, guid } from './helpers.ts';
 const T1 = new Date('2016-07-11T22:38:19Z');
 const T2 = new Date('2016-07-12T10:00:00Z');
 
-const location = { type: 'Location', address: 'Vienna, Austria', lat: '48.208174', lng: '16.373819' } as const;
+const location = {
+  type: 'Location',
+  address: 'Vienna, Austria',
+  lat: '48.208174',
+  lng: '16.373819',
+} as const;
 
 const photo = (n: number, sm = guid(100)): Photo => ({
   type: 'Photo',
@@ -114,7 +119,14 @@ const SAMPLES: Entity[] = [
     editedAt: T2,
     authorSignature: 'c2ln',
   },
-  { type: 'Contact', author: ALICE, recipient: BOB, following: true, sharing: true, blocking: false },
+  {
+    type: 'Contact',
+    author: ALICE,
+    recipient: BOB,
+    following: true,
+    sharing: true,
+    blocking: false,
+  },
   {
     type: 'Conversation',
     author: ALICE,
@@ -124,7 +136,13 @@ const SAMPLES: Entity[] = [
     participants: `${ALICE};${BOB}`,
     messages: [message(401), message(402)],
   },
-  { type: 'Embed', url: 'https://example.org/', title: 'Example', description: 'Desc', image: 'https://example.org/x.png' },
+  {
+    type: 'Embed',
+    url: 'https://example.org/',
+    title: 'Example',
+    description: 'Desc',
+    image: 'https://example.org/x.png',
+  },
   event,
   {
     type: 'EventParticipation',
@@ -149,9 +167,23 @@ const SAMPLES: Entity[] = [
   photo(7),
   poll,
   { type: 'PollAnswer', guid: guid(8), answer: 'Maybe' },
-  { type: 'PollParticipation', author: BOB, guid: guid(9), parentGuid: guid(200), pollAnswerGuid: guid(201), authorSignature: 'c2ln' },
+  {
+    type: 'PollParticipation',
+    author: BOB,
+    guid: guid(9),
+    parentGuid: guid(200),
+    pollAnswerGuid: guid(201),
+    authorSignature: 'c2ln',
+  },
   profile,
-  { type: 'Reshare', author: BOB, guid: guid(10), createdAt: T1, rootAuthor: ALICE, rootGuid: guid(100) },
+  {
+    type: 'Reshare',
+    author: BOB,
+    guid: guid(10),
+    createdAt: T1,
+    rootAuthor: ALICE,
+    rootGuid: guid(100),
+  },
   { type: 'Retraction', author: ALICE, targetGuid: guid(100), targetType: 'Post' },
   {
     type: 'StatusMessage',
@@ -172,7 +204,11 @@ const SAMPLES: Entity[] = [
 
 /** Strips relayable parsing metadata, to compare with the input. */
 function withoutMeta(entity: Entity): Entity {
-  const { propertyOrder: _o, additionalData: _a, ...rest } = entity as Entity & {
+  const {
+    propertyOrder: _o,
+    additionalData: _a,
+    ...rest
+  } = entity as Entity & {
     propertyOrder?: unknown;
     additionalData?: unknown;
   };
@@ -335,7 +371,13 @@ ${photoXml(p2)}
   <blocking>false</blocking>
 </contact>`);
     expect(
-      serializeEntity({ type: 'Participation', author: BOB, guid: guid(6), parentGuid: guid(1), parentType: 'Post' }),
+      serializeEntity({
+        type: 'Participation',
+        author: BOB,
+        guid: guid(6),
+        parentGuid: guid(1),
+        parentType: 'Post',
+      }),
     ).toBe(`<participation>
   <author>${BOB}</author>
   <guid>${guid(6)}</guid>
@@ -343,7 +385,14 @@ ${photoXml(p2)}
   <parent_type>Post</parent_type>
 </participation>`);
     expect(
-      serializeEntity({ type: 'Reshare', author: BOB, guid: guid(10), createdAt: T1, rootAuthor: ALICE, rootGuid: guid(1) }),
+      serializeEntity({
+        type: 'Reshare',
+        author: BOB,
+        guid: guid(10),
+        createdAt: T1,
+        rootAuthor: ALICE,
+        rootGuid: guid(1),
+      }),
     ).toBe(`<reshare>
   <author>${BOB}</author>
   <guid>${guid(10)}</guid>
@@ -351,8 +400,14 @@ ${photoXml(p2)}
   <root_author>${ALICE}</root_author>
   <root_guid>${guid(1)}</root_guid>
 </reshare>`);
-    expect(serializeEntity({ type: 'Retraction', author: ALICE, targetGuid: guid(1), targetType: 'Post' }))
-      .toBe(`<retraction>
+    expect(
+      serializeEntity({
+        type: 'Retraction',
+        author: ALICE,
+        targetGuid: guid(1),
+        targetType: 'Post',
+      }),
+    ).toBe(`<retraction>
   <author>${ALICE}</author>
   <target_guid>${guid(1)}</target_guid>
   <target_type>Post</target_type>
@@ -372,7 +427,9 @@ ${photoXml(p2)}
     <answer>No</answer>
   </poll_answer>
 </poll>`);
-    expect(serializeEntity({ ...event, end: undefined, timezone: undefined, allDay: true })).toBe(`<event>
+    expect(
+      serializeEntity({ ...event, end: undefined, timezone: undefined, allDay: true }),
+    ).toBe(`<event>
   <author>${ALICE}</author>
   <guid>${guid(300)}</guid>
   <summary>Cool event</summary>
@@ -388,7 +445,12 @@ ${photoXml(p2)}
   });
 
   it('writes an empty element for an empty required string', () => {
-    const xml = serializeEntity({ type: 'StatusMessage', author: ALICE, guid: guid(1), createdAt: T1 });
+    const xml = serializeEntity({
+      type: 'StatusMessage',
+      author: ALICE,
+      guid: guid(1),
+      createdAt: T1,
+    });
     expect(xml).toBe(`<status_message>
   <author>${ALICE}</author>
   <guid>${guid(1)}</guid>
@@ -441,14 +503,25 @@ describe('entities: parsing', () => {
     expect(migration.signature?.trim()).toMatch(/^07b1OIY6/);
 
     const like = parseEntityAs('Like', SPEC_EXAMPLES.find((e) => e.name === 'like')?.xml ?? '');
-    expect(like.propertyOrder).toEqual(['positive', 'guid', 'parent_type', 'parent_guid', 'author']);
+    expect(like.propertyOrder).toEqual([
+      'positive',
+      'guid',
+      'parent_type',
+      'parent_guid',
+      'author',
+    ]);
   });
 
   it('applies defaults only for absent elements', () => {
-    const contact = parseEntityAs('Contact', `<contact><author>${ALICE}</author><recipient>${BOB}</recipient></contact>`);
+    const contact = parseEntityAs(
+      'Contact',
+      `<contact><author>${ALICE}</author><recipient>${BOB}</recipient></contact>`,
+    );
     expect(contact).toMatchObject({ following: true, sharing: true, blocking: false });
     expect(() =>
-      parseEntity(`<contact><author>${ALICE}</author><recipient>${BOB}</recipient><sharing/></contact>`),
+      parseEntity(
+        `<contact><author>${ALICE}</author><recipient>${BOB}</recipient><sharing/></contact>`,
+      ),
     ).toThrow(ValidationError);
   });
 
@@ -463,7 +536,9 @@ describe('entities: parsing', () => {
     expect(p.createdAt).toEqual(new Date('2016-06-29T04:42:23Z'));
     expect(p.height).toBeUndefined();
     expect(p.width).toBe(800);
-    expect(parseTimestamp('2016-07-11T22:38:19.123+02:00')).toEqual(new Date('2016-07-11T20:38:19.123Z'));
+    expect(parseTimestamp('2016-07-11T22:38:19.123+02:00')).toEqual(
+      new Date('2016-07-11T20:38:19.123Z'),
+    );
     expect(parseTimestamp('not a date')).toBeUndefined();
   });
 
@@ -471,7 +546,12 @@ describe('entities: parsing', () => {
     const r = parseEntity(
       `<retraction><author>${ALICE}</author><target_guid>${guid(1)}</target_guid><target_type>Post</target_type><x>1</x></retraction>`,
     );
-    expect(r).toEqual({ type: 'Retraction', author: ALICE, targetGuid: guid(1), targetType: 'Post' });
+    expect(r).toEqual({
+      type: 'Retraction',
+      author: ALICE,
+      targetGuid: guid(1),
+      targetType: 'Post',
+    });
   });
 
   it('treats empty nested elements as absent', () => {
@@ -488,7 +568,9 @@ describe('entities: negative cases', () => {
   it('rejects unknown and invalid root elements', () => {
     expect(() => parseEntity('<unknown_thing/>')).toThrow(UnknownEntityError);
     expect(() => parseEntity('<Status-Message/>')).toThrow(UnknownEntityError);
-    expect(() => parseEntityAs('Comment', `<retraction><author>${ALICE}</author></retraction>`)).toThrow();
+    expect(() =>
+      parseEntityAs('Comment', `<retraction><author>${ALICE}</author></retraction>`),
+    ).toThrow();
   });
 
   it('rejects malformed XML', () => {
@@ -504,14 +586,26 @@ describe('entities: negative cases', () => {
   });
 
   it('validates property values', () => {
-    expect(() => parseEntity('<account_deletion><author>not an id</author></account_deletion>')).toThrow(
-      /diaspora_id/,
-    );
     expect(() =>
-      serializeEntity({ type: 'Retraction', author: ALICE, targetGuid: 'short', targetType: 'Post' }),
+      parseEntity('<account_deletion><author>not an id</author></account_deletion>'),
+    ).toThrow(/diaspora_id/);
+    expect(() =>
+      serializeEntity({
+        type: 'Retraction',
+        author: ALICE,
+        targetGuid: 'short',
+        targetType: 'Post',
+      }),
     ).toThrow(/guid/);
     expect(() =>
-      serializeEntity({ type: 'Like', author: ALICE, guid: guid(1), parentGuid: guid(2), parentType: 'Photo', positive: true }),
+      serializeEntity({
+        type: 'Like',
+        author: ALICE,
+        guid: guid(1),
+        parentGuid: guid(2),
+        parentType: 'Photo',
+        positive: true,
+      }),
     ).toThrow(ValidationError);
     expect(() =>
       serializeEntity({ type: 'Profile', author: ALICE, firstName: 'semi;colon' }),
@@ -532,18 +626,45 @@ describe('entities: negative cases', () => {
       serializeEntity({ type: 'Contact', author: ALICE, recipient: BOB, blocking: true }),
     ).toThrow(/can't both be true/);
     expect(
-      serializeEntity({ type: 'Contact', author: ALICE, recipient: BOB, following: false, sharing: false, blocking: true }),
+      serializeEntity({
+        type: 'Contact',
+        author: ALICE,
+        recipient: BOB,
+        following: false,
+        sharing: false,
+        blocking: true,
+      }),
     ).toContain('<blocking>true</blocking>');
     expect(() =>
-      serializeEntity({ type: 'Conversation', author: ALICE, guid: guid(1), subject: 's', participants: `${ALICE};${BOB}`, messages: [{ ...message(2, guid(1)), author: BOB }] }),
+      serializeEntity({
+        type: 'Conversation',
+        author: ALICE,
+        guid: guid(1),
+        subject: 's',
+        participants: `${ALICE};${BOB}`,
+        messages: [{ ...message(2, guid(1)), author: BOB }],
+      }),
     ).toThrow(/different author/);
     expect(() =>
-      serializeEntity({ type: 'StatusMessage', author: ALICE, guid: guid(1), photos: [{ ...photo(2), author: BOB }] }),
+      serializeEntity({
+        type: 'StatusMessage',
+        author: ALICE,
+        guid: guid(1),
+        photos: [{ ...photo(2), author: BOB }],
+      }),
     ).toThrow(/different author/);
     expect(() => serializeEntity({ type: 'Embed' })).toThrow(/nothing/);
-    expect(() => serializeEntity({ type: 'Embed', url: 'https://x.org/', nothing: true })).toThrow(/nothing/);
+    expect(() => serializeEntity({ type: 'Embed', url: 'https://x.org/', nothing: true })).toThrow(
+      /nothing/,
+    );
     expect(() =>
-      serializeEntity({ type: 'Conversation', author: ALICE, guid: guid(1), subject: 's', participants: ALICE }),
+      serializeEntity({
+        type: 'Conversation',
+        author: ALICE,
+        guid: guid(1),
+        subject: 's',
+        participants: ALICE,
+      }),
     ).toThrow(/diaspora_id_list/);
   });
 });

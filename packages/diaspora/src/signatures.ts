@@ -9,12 +9,7 @@ import {
 } from './entities/codec.ts';
 import type { AccountMigration, Relayable } from './entities/types.ts';
 import { SignatureVerificationError } from './errors.ts';
-import {
-  type PrivateKeyInput,
-  type PublicKeyInput,
-  toPrivateKey,
-  toPublicKey,
-} from './keys.ts';
+import { type PrivateKeyInput, type PublicKeyInput, toPrivateKey, toPublicKey } from './keys.ts';
 
 /** Signs `data` with RSA-SHA256 and returns the strict base64 signature. */
 export function signString(data: string, privateKey: PrivateKeyInput): string {
@@ -39,14 +34,20 @@ export function verifyString(data: string, signature: string, publicKey: PublicK
  * set. Defaults are applied and `propertyOrder` is fixed, so the result serialises exactly
  * to what was signed. Do not sign when the author is also the root author of the parent.
  */
-export function signRelayable<T extends Relayable>(entity: T, authorPrivateKey: PrivateKeyInput): T {
+export function signRelayable<T extends Relayable>(
+  entity: T,
+  authorPrivateKey: PrivateKeyInput,
+): T & { authorSignature: string; propertyOrder: string[] } {
   const withDefaults = applyDefaults(entity);
   const fixed = { ...withDefaults, propertyOrder: signatureOrder(withDefaults) };
   return { ...fixed, authorSignature: signString(relayableSignatureData(fixed), authorPrivateKey) };
 }
 
 /** True if the relayable's `author_signature` is valid for the author's public key. */
-export function verifyRelayableSignature(entity: Relayable, authorPublicKey: PublicKeyInput): boolean {
+export function verifyRelayableSignature(
+  entity: Relayable,
+  authorPublicKey: PublicKeyInput,
+): boolean {
   if (!entity.authorSignature) return false;
   return verifyString(relayableSignatureData(entity), entity.authorSignature, authorPublicKey);
 }
@@ -57,7 +58,9 @@ export function assertRelayableSignature(entity: Relayable, authorPublicKey: Pub
     throw new SignatureVerificationError(`no author_signature for ${entity.type}:${entity.guid}`);
   }
   if (!verifyRelayableSignature(entity, authorPublicKey)) {
-    throw new SignatureVerificationError(`wrong author_signature for ${entity.type}:${entity.guid}`);
+    throw new SignatureVerificationError(
+      `wrong author_signature for ${entity.type}:${entity.guid}`,
+    );
   }
 }
 
@@ -65,7 +68,6 @@ export function assertRelayableSignature(entity: Relayable, authorPublicKey: Pub
 export function accountMigrationNewIdentity(entity: AccountMigration): string {
   return entity.profile.author;
 }
-
 
 /** The diaspora* ID whose key signs the migration: the identity that is not the author. */
 export function accountMigrationSigner(entity: AccountMigration): string | undefined {
@@ -82,7 +84,10 @@ export function signAccountMigration(
   entity: AccountMigration,
   signerPrivateKey: PrivateKeyInput,
 ): AccountMigration {
-  return { ...entity, signature: signString(accountMigrationSignatureData(entity), signerPrivateKey) };
+  return {
+    ...entity,
+    signature: signString(accountMigrationSignatureData(entity), signerPrivateKey),
+  };
 }
 
 /** True if the account migration signature is valid for the signer's public key. */

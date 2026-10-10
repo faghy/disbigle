@@ -55,7 +55,8 @@ export function buildWebFinger(input: WebFingerInput): JrdJson {
     { rel: REL_SEED, type: 'text/html', href: input.seedUrl },
   ];
   if (input.profileUrl) links.push({ rel: REL_PROFILE, type: 'text/html', href: input.profileUrl });
-  if (input.atomUrl) links.push({ rel: REL_ATOM, type: 'application/atom+xml', href: input.atomUrl });
+  if (input.atomUrl)
+    links.push({ rel: REL_ATOM, type: 'application/atom+xml', href: input.atomUrl });
   if (input.salmonUrl) links.push({ rel: REL_SALMON, href: input.salmonUrl });
   if (input.subscribeUrl) links.push({ rel: REL_SUBSCRIBE, template: input.subscribeUrl });
   links.push(...(input.links ?? []));
@@ -169,6 +170,7 @@ export function buildHostMeta(baseUrl: string): string {
 export function parseHostMeta(xml: string): { webFingerTemplate?: string; document: XrdDocument } {
   const document = parseXrd(xml);
   const lrdd = (document.links ?? []).filter((l) => l.rel === REL_LRDD && l.template);
-  const preferred = lrdd.find((l) => l.type === JRD_CONTENT_TYPE || l.type === undefined) ?? lrdd[0];
+  const preferred =
+    lrdd.find((l) => l.type === JRD_CONTENT_TYPE || l.type === undefined) ?? lrdd[0];
   return preferred?.template ? { webFingerTemplate: preferred.template, document } : { document };
 }

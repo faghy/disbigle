@@ -8,29 +8,6 @@
  */
 
 export {
-  decryptMagicEnvelope,
-  ENCRYPTED_ENVELOPE_CONTENT_TYPE,
-  type EncryptedMagicEnvelope,
-  encryptMagicEnvelope,
-} from './encrypted-envelope.ts';
-export {
-  accountMigrationOldIdentity,
-  applyDefaults,
-  formatTimestamp,
-  isRelayable,
-  parseEntity,
-  parseEntityAs,
-  parseTimestamp,
-  relayableParentType,
-  relayableSignatureData,
-  serializeEntity,
-  signatureOrder,
-  validateEntity,
-} from './entities/codec.ts';
-export { isValidGuid } from './entities/rules.ts';
-export { isRelayableType, schemaFor, type EntitySchema } from './entities/schema.ts';
-export type * from './entities/types.ts';
-export {
   DIASPORA_ID_MAX_LENGTH,
   DIASPORA_ID_REGEX,
   type DiasporaId,
@@ -68,6 +45,29 @@ export {
   type XrdDocument,
   type XrdLink,
 } from './discovery/xrd.ts';
+export {
+  decryptMagicEnvelope,
+  ENCRYPTED_ENVELOPE_CONTENT_TYPE,
+  type EncryptedMagicEnvelope,
+  encryptMagicEnvelope,
+} from './encrypted-envelope.ts';
+export {
+  accountMigrationOldIdentity,
+  applyDefaults,
+  formatTimestamp,
+  isRelayable,
+  parseEntity,
+  parseEntityAs,
+  parseTimestamp,
+  relayableParentType,
+  relayableSignatureData,
+  serializeEntity,
+  signatureOrder,
+  validateEntity,
+} from './entities/codec.ts';
+export { isValidGuid } from './entities/rules.ts';
+export { type EntitySchema, isRelayableType, schemaFor } from './entities/schema.ts';
+export type * from './entities/types.ts';
 export * from './errors.ts';
 export {
   buildPrivateMessage,

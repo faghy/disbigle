@@ -36,12 +36,12 @@ function capitalize(name: string): string {
 
 function property(name: string, inner: string): string {
   return [
-    `      <dl class="entity_${name}">`,
-    `        <dt>${capitalize(name)}</dt>`,
-    '        <dd>',
-    `          ${inner}`,
-    '        </dd>',
-    '      </dl>',
+    `        <dl class="entity_${name}">`,
+    `          <dt>${capitalize(name)}</dt>`,
+    '          <dd>',
+    `            ${inner}`,
+    '          </dd>',
+    '        </dl>',
   ].join('\n');
 }
 
@@ -80,7 +80,7 @@ export function buildHCard(hcard: HCard): string {
       property('photo', img(300, hcard.photoLargeUrl)),
       property('photo_medium', img(100, hcard.photoMediumUrl)),
       property('photo_small', img(50, hcard.photoSmallUrl)),
-    ].map((block) => block.replace(/^/gm, '  ')),
+    ],
     '      </div>',
     '    </div>',
     '  </body>',
@@ -130,12 +130,14 @@ export function parseHCard(html: string): HCard {
   const key = result.publicKey?.trim() ?? '';
   const pem =
     (key.startsWith('-----BEGIN PUBLIC KEY-----') && key.endsWith('-----END PUBLIC KEY-----')) ||
-    (key.startsWith('-----BEGIN RSA PUBLIC KEY-----') && key.endsWith('-----END RSA PUBLIC KEY-----'));
+    (key.startsWith('-----BEGIN RSA PUBLIC KEY-----') &&
+      key.endsWith('-----END RSA PUBLIC KEY-----'));
   if (!pem) errors.push('public_key');
   if (!result.photoLargeUrl) errors.push('photo_large_url');
   if (!result.photoMediumUrl) errors.push('photo_medium_url');
   if (!result.photoSmallUrl) errors.push('photo_small_url');
-  if (errors.length > 0) throw new InvalidDataError(`invalid hcard, properties: ${errors.join(', ')}`);
+  if (errors.length > 0)
+    throw new InvalidDataError(`invalid hcard, properties: ${errors.join(', ')}`);
 
   const hcard: HCard = {
     guid: result.guid as string,

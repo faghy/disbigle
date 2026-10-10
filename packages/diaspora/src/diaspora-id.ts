@@ -29,7 +29,10 @@ export interface DiasporaId {
 
 /** Trims, strips a leading `acct:` and lowercases, like the reference discovery code. */
 export function normalizeDiasporaId(input: string): string {
-  return input.trim().replace(/^acct:/i, '').toLowerCase();
+  return input
+    .trim()
+    .replace(/^acct:/i, '')
+    .toLowerCase();
 }
 
 /** True if `value` is a valid (already normalised) diaspora* ID. */

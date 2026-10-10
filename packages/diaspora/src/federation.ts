@@ -1,7 +1,13 @@
 // High-level receive and send helpers, mirroring the reference Receiver/Sender flow.
-import { isRelayable, parseEntity, relayableParentType, serializeEntity } from './entities/codec.ts';
-import type { Entity, Relayable } from './entities/types.ts';
+
 import { decryptMagicEnvelope, encryptMagicEnvelope } from './encrypted-envelope.ts';
+import {
+  isRelayable,
+  parseEntity,
+  relayableParentType,
+  serializeEntity,
+} from './entities/codec.ts';
+import type { Entity, Relayable } from './entities/types.ts';
 import {
   InvalidSenderError,
   NotPublicError,
@@ -101,7 +107,9 @@ async function checkRelayable(
       throw new SignatureVerificationError(`no author_signature for ${entity.type}:${entity.guid}`);
     }
     if (!verifyRelayableSignature(entity, key)) {
-      throw new SignatureVerificationError(`wrong author_signature for ${entity.type}:${entity.guid}`);
+      throw new SignatureVerificationError(
+        `wrong author_signature for ${entity.type}:${entity.guid}`,
+      );
     }
   }
   if (!((sender === entity.author && root.local) || sender === root.author)) {
@@ -133,7 +141,9 @@ export async function verifyReceivedEntity(
         ? [rootOf(target).author, target.author]
         : [target.author];
       if (!allowed.includes(sender)) {
-        throw new InvalidSenderError(`invalid sender ${sender} for retraction of ${entity.targetGuid}`);
+        throw new InvalidSenderError(
+          `invalid sender ${sender} for retraction of ${entity.targetGuid}`,
+        );
       }
       return target;
     }
@@ -224,7 +234,7 @@ export function receivePublic(body: string, options: ReceiveOptions): Promise<Re
  * Handles the body of a `POST /receive/users/:guid`: decrypts it with the recipient's private
  * key, then performs the same checks as `receivePublic` (except the public flag).
  */
-export function receivePrivate(
+export async function receivePrivate(
   body: string,
   recipientPrivateKey: PrivateKeyInput,
   options: ReceiveOptions,

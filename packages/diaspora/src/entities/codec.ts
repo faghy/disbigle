@@ -116,7 +116,9 @@ export function applyDefaults<T extends Entity>(entity: T): T {
     const value = data[prop.key];
     if (prop.kind === 'nested' && value !== undefined && value !== null) {
       data[prop.key] = prop.multi
-        ? (value as Entity[]).map((child) => applyDefaults({ ...child, type: prop.entity } as Entity))
+        ? (value as Entity[]).map((child) =>
+            applyDefaults({ ...child, type: prop.entity } as Entity),
+          )
         : applyDefaults({ ...(value as Entity), type: prop.entity } as Entity);
     }
   }

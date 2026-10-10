@@ -1,8 +1,8 @@
 // Entity schemas: property order, types, defaults and validation rules, mirroring
 // the property definitions of the reference implementation (diaspora_federation gem).
 import { ValidationError } from '../errors.ts';
-import * as r from './rules.ts';
 import type { Rule } from './rules.ts';
+import * as r from './rules.ts';
 import type { EntityType } from './types.ts';
 
 export type ScalarType = 'string' | 'integer' | 'boolean' | 'timestamp';

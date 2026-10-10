@@ -67,7 +67,10 @@ describe('relayables: interop fixtures from the gem (comment_integration_spec)',
   });
 
   it('relays the legacy order unchanged and the signature still verifies', () => {
-    const relayed = parseEntityAs('Comment', serializeEntity(parseEntity(COMMENT_XML_BOB_LEGACY_ORDER)));
+    const relayed = parseEntityAs(
+      'Comment',
+      serializeEntity(parseEntity(COMMENT_XML_BOB_LEGACY_ORDER)),
+    );
     expect(relayed.propertyOrder).toEqual(['guid', 'parent_guid', 'text', 'author']);
     expect(verifyRelayableSignature(relayed, ALICE_PUBLIC_KEY)).toBe(true);
   });
@@ -95,19 +98,27 @@ describe('relayables: interop fixtures from the gem (comment_integration_spec)',
       // the fixture predates created_at; reproduce its property order
       propertyOrder: ['author', 'guid', 'parent_guid', 'text'],
     };
-    expect(serializeEntity(signRelayable(comment, ALICE_PRIVATE_KEY))).toBe(COMMENT_XML_ALICE.trim());
+    expect(serializeEntity(signRelayable(comment, ALICE_PRIVATE_KEY))).toBe(
+      COMMENT_XML_ALICE.trim(),
+    );
   });
 
   it('rejects the fixture with a tampered value', () => {
     const tampered = COMMENT_XML_ALICE.replace(COMMENT_TEXT, 'this is a forged comment');
-    expect(verifyRelayableSignature(parseEntityAs('Comment', tampered), ALICE_PUBLIC_KEY)).toBe(false);
+    expect(verifyRelayableSignature(parseEntityAs('Comment', tampered), ALICE_PUBLIC_KEY)).toBe(
+      false,
+    );
   });
 
   it('rejects the fixture when an unknown property is tampered or dropped', () => {
     const tampered = COMMENT_XML_ALICE_WITH_NEW_DATA.replace('foobar', 'foobaz');
-    expect(verifyRelayableSignature(parseEntityAs('Comment', tampered), ALICE_PUBLIC_KEY)).toBe(false);
+    expect(verifyRelayableSignature(parseEntityAs('Comment', tampered), ALICE_PUBLIC_KEY)).toBe(
+      false,
+    );
     const dropped = COMMENT_XML_ALICE_WITH_NEW_DATA.replace('  <new_data>foobar</new_data>\n', '');
-    expect(verifyRelayableSignature(parseEntityAs('Comment', dropped), ALICE_PUBLIC_KEY)).toBe(false);
+    expect(verifyRelayableSignature(parseEntityAs('Comment', dropped), ALICE_PUBLIC_KEY)).toBe(
+      false,
+    );
   });
 
   it('rejects the fixture when the element order is changed', () => {
@@ -122,16 +133,18 @@ describe('relayables: interop fixtures from the gem (comment_integration_spec)',
 
   it('rejects the fixture with a wrong key', () => {
     const other = generateTestKeys();
-    expect(verifyRelayableSignature(parseEntityAs('Comment', COMMENT_XML_ALICE), other.publicKey)).toBe(
-      false,
-    );
+    expect(
+      verifyRelayableSignature(parseEntityAs('Comment', COMMENT_XML_ALICE), other.publicKey),
+    ).toBe(false);
   });
 
   it('rejects a missing or garbage signature', () => {
     const comment = parseEntityAs('Comment', COMMENT_XML_ALICE);
     const { authorSignature: _s, ...unsigned } = comment;
     expect(verifyRelayableSignature(unsigned, ALICE_PUBLIC_KEY)).toBe(false);
-    expect(verifyRelayableSignature({ ...comment, authorSignature: 'aa' }, ALICE_PUBLIC_KEY)).toBe(false);
+    expect(verifyRelayableSignature({ ...comment, authorSignature: 'aa' }, ALICE_PUBLIC_KEY)).toBe(
+      false,
+    );
   });
 });
 
@@ -168,14 +181,17 @@ describe('relayables: generated', () => {
     const dislike = signRelayable({ ...like, positive: false }, keys.privateKey);
     expect(relayableSignatureData(dislike)).toBe(`${ALICE};${guid(1)};${guid(2)};Post;false`);
     expect(serializeEntity(dislike)).toContain('<positive>false</positive>');
-    expect(verifyRelayableSignature(parseEntity(serializeEntity(dislike)) as Like, keys.publicKey)).toBe(
-      true,
-    );
+    expect(
+      verifyRelayableSignature(parseEntity(serializeEntity(dislike)) as Like, keys.publicKey),
+    ).toBe(true);
   });
 
   it('accepts other boolean spellings but signs the normalised value (gem behaviour)', () => {
     const signed = signRelayable(like, keys.privateKey);
-    const xml = serializeEntity(signed).replace('<positive>true</positive>', '<positive>1</positive>');
+    const xml = serializeEntity(signed).replace(
+      '<positive>true</positive>',
+      '<positive>1</positive>',
+    );
     const parsed = parseEntityAs('Like', xml);
     expect(parsed.positive).toBe(true);
     expect(verifyRelayableSignature(parsed, keys.publicKey)).toBe(true);
@@ -195,7 +211,10 @@ describe('relayables: generated', () => {
     expect(relayableSignatureData(signed)).toBe(
       `${ALICE};${guid(3)};${guid(4)};hello;2016-07-12T00:49:06Z`,
     );
-    const edited = signRelayable({ ...comment, editedAt: new Date('2016-07-13T00:00:00Z') }, keys.privateKey);
+    const edited = signRelayable(
+      { ...comment, editedAt: new Date('2016-07-13T00:00:00Z') },
+      keys.privateKey,
+    );
     expect(serializeEntity(edited)).toBe(`<comment>
   <author>${ALICE}</author>
   <guid>${guid(3)}</guid>
@@ -209,7 +228,7 @@ describe('relayables: generated', () => {
 
   it('fills created_at once when signing, so the serialisation matches the signature', () => {
     const signed = signRelayable(
-      { type: 'Comment', author: ALICE, guid: guid(5), parentGuid: guid(6), text: 'x' },
+      { type: 'Comment', author: ALICE, guid: guid(5), parentGuid: guid(6), text: 'x' } as Comment,
       keys.privateKey,
     );
     expect(signed.createdAt).toBeInstanceOf(Date);

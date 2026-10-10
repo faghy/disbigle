@@ -10,12 +10,7 @@ import {
 } from 'node:crypto';
 import { decode64, strictEncode64 } from './base64.ts';
 import { DecryptionError } from './errors.ts';
-import {
-  type PrivateKeyInput,
-  type PublicKeyInput,
-  toPrivateKey,
-  toPublicKey,
-} from './keys.ts';
+import { type PrivateKeyInput, type PublicKeyInput, toPrivateKey, toPublicKey } from './keys.ts';
 
 const CIPHER = 'aes-256-cbc';
 /** Content type for private deliveries to `/receive/users/:guid`. */
@@ -45,7 +40,10 @@ export function aesDecrypt(ciphertext: string, key: Buffer, iv: Buffer): Buffer 
  * Encrypts a Magic Envelope XML document for one recipient and returns the JSON body
  * (`{"aes_key":…,"encrypted_magic_envelope":…}`) to POST to the recipient's private receive URL.
  */
-export function encryptMagicEnvelope(envelopeXml: string, recipientPublicKey: PublicKeyInput): string {
+export function encryptMagicEnvelope(
+  envelopeXml: string,
+  recipientPublicKey: PublicKeyInput,
+): string {
   const key = randomBytes(32);
   const iv = randomBytes(16);
   const encryptedEnvelope = aesEncrypt(Buffer.from(envelopeXml, 'utf8'), key, iv);
@@ -87,9 +85,11 @@ export function decryptMagicEnvelope(
     if (typeof parsed.key !== 'string' || typeof parsed.iv !== 'string') {
       throw new Error('invalid AES key JSON');
     }
-    return aesDecrypt(json.encrypted_magic_envelope, decode64(parsed.key), decode64(parsed.iv)).toString(
-      'utf8',
-    );
+    return aesDecrypt(
+      json.encrypted_magic_envelope,
+      decode64(parsed.key),
+      decode64(parsed.iv),
+    ).toString('utf8');
   } catch (error) {
     throw new DecryptionError(
       `cannot decrypt magic envelope: ${error instanceof Error ? error.message : String(error)}`,
