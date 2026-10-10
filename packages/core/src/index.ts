@@ -25,3 +25,4 @@ export * from './social/relationships.ts';
 export * from './social/statuses.ts';
 export * from './social/timelines.ts';
 export * from './social/visibility.ts';
+export * from './moderation.ts';

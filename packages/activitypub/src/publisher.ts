@@ -24,6 +24,7 @@ type ActorRow = typeof schema.actors.$inferSelect;
 const speaksActivityPub = (actor: ActorRow | undefined): actor is ActorRow =>
   !!actor &&
   actor.domain !== null &&
+  !actor.suspendedAt &&
   actor.protocols.includes('activitypub') &&
   !!actor.apInbox &&
   !!actor.apUri;

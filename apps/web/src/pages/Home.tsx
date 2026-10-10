@@ -1,19 +1,24 @@
-import type { CurrentUser } from '@disbigle/shared';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '../api/queries.ts';
-import { Avatar } from '../components/Avatar.tsx';
-import { buttonClass, Card, LoadingState } from '../components/ui.tsx';
+import { socialKeys } from '../api/cache.ts';
+import { useInstance, useMe } from '../api/queries.ts';
+import { social } from '../api/social.ts';
+import { Composer } from '../components/Composer.tsx';
+import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
+import { HomeIcon } from '../components/icons.tsx';
+import { Timeline } from '../components/Timeline.tsx';
+import { buttonClass, LoadingState } from '../components/ui.tsx';
 
 export function HomePage() {
   const { t } = useTranslation();
   const me = useMe();
   if (me.isPending) return <LoadingState label={t('common.loading')} />;
-  return me.data ? <SignedInHome user={me.data} /> : <Landing />;
+  return me.data ? <HomeTimeline /> : <Landing />;
 }
 
 function Landing() {
   const { t } = useTranslation();
+  const instance = useInstance();
   return (
     <div className="flex flex-col items-center py-12 text-center sm:py-20">
       <span
@@ -22,8 +27,12 @@ function Landing() {
       >
         D
       </span>
-      <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Disbigle</h1>
-      <p className="mt-4 max-w-xl text-lg text-fg-muted">{t('landing.tagline')}</p>
+      <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+        {instance.data?.title || 'Disbigle'}
+      </h1>
+      <p className="mt-4 max-w-xl text-lg text-fg-muted">
+        {instance.data?.description || t('landing.tagline')}
+      </p>
       <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
         <Link to="/register" className={buttonClass('primary', 'px-6')}>
           {t('landing.register')}
@@ -32,34 +41,39 @@ function Landing() {
           {t('landing.signIn')}
         </Link>
       </div>
+      <Link
+        to="/public/local"
+        className="mt-6 rounded text-sm text-accent hover:underline focus-ring"
+      >
+        {t('landing.explore')}
+      </Link>
     </div>
   );
 }
 
-function SignedInHome({ user }: { user: CurrentUser }) {
+function HomeTimeline() {
   const { t } = useTranslation();
-  const { account } = user;
-  const name = account.displayName || account.username;
   return (
-    <div className="space-y-6">
-      <Card className="flex items-center gap-4">
-        <Avatar account={account} size="lg" />
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold tracking-tight">
-            {t('home.welcome', { name })}
-          </h1>
-          <Link
-            to="/@{$username}"
-            params={{ username: account.username }}
-            className="rounded text-sm text-fg-muted hover:text-accent focus-ring"
-          >
-            @{account.username}
-          </Link>
-        </div>
-      </Card>
-      <Card className="border-dashed text-center">
-        <p className="py-10 text-fg-muted">{t('home.timelinePlaceholder')}</p>
-      </Card>
+    <div className="space-y-4">
+      <FeedHeader title={t('timeline.home.title')} icon={HomeIcon} />
+      <Composer />
+      <FeedSection>
+        <Timeline
+          queryKey={socialKeys.timeline('home')}
+          fetchPage={social.homeTimeline}
+          stream="user"
+          label={t('timeline.home.title')}
+          empty={
+            <>
+              <p className="font-medium text-fg">{t('timeline.home.emptyTitle')}</p>
+              <p className="mt-1 text-sm">{t('timeline.home.empty')}</p>
+              <Link to="/public/local" className={buttonClass('secondary', 'mt-4')}>
+                {t('timeline.home.explore')}
+              </Link>
+            </>
+          }
+        />
+      </FeedSection>
     </div>
   );
 }

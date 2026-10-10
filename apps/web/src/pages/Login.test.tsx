@@ -76,7 +76,7 @@ describe('login page', () => {
     await user.type(screen.getByLabelText('Authentication code'), '123456');
     await user.click(screen.getByRole('button', { name: 'Verify' }));
 
-    expect(await screen.findByText('Your timeline will appear here.')).toBeInTheDocument();
+    expect(await screen.findByText('Your home timeline is empty')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/auth/mfa',
       expect.objectContaining({ body: JSON.stringify({ code: '123456' }) }),
@@ -127,7 +127,7 @@ describe('login page', () => {
   it('redirects signed-in users to the home page', async () => {
     mockApi({ 'GET /me': { body: currentUser }, 'GET /instance': instance() });
     const { router } = renderApp('/login');
-    expect(await screen.findByText('Your timeline will appear here.')).toBeInTheDocument();
+    expect(await screen.findByText('Your home timeline is empty')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
   });
 });

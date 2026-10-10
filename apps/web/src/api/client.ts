@@ -51,10 +51,27 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
+/** Query string from defined values; arrays repeat the key (`id[]=a&id[]=b`). */
+export function queryString(
+  params: Record<string, string | number | boolean | readonly string[] | null | undefined>,
+): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) for (const item of value) search.append(key, item);
+    else search.append(key, String(value));
+  }
+  const text = search.toString();
+  return text ? `?${text}` : '';
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { accept: 'application/json' };
   const init: RequestInit = { method, headers, credentials: 'same-origin' };
-  if (body !== undefined) {
+  if (body instanceof FormData) {
+    // The browser sets the multipart boundary itself.
+    init.body = body;
+  } else if (body !== undefined) {
     headers['content-type'] = 'application/json';
     init.body = JSON.stringify(body);
   }
@@ -88,5 +105,7 @@ export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {}),
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+  put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
+  upload: <T>(path: string, form: FormData) => request<T>('POST', path, form),
   delete: <T>(path: string) => request<T>('DELETE', path),
 };

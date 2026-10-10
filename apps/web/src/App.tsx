@@ -1,6 +1,7 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { useState } from 'react';
+import { StreamingProvider } from './components/StreamingProvider.tsx';
 import { createAppRouter } from './router.tsx';
 
 export function App({
@@ -13,7 +14,9 @@ export function App({
   const [appRouter] = useState(() => router ?? createAppRouter(queryClient));
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={appRouter} />
+      <StreamingProvider>
+        <RouterProvider router={appRouter} />
+      </StreamingProvider>
     </QueryClientProvider>
   );
 }

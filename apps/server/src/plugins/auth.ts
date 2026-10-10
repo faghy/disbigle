@@ -61,3 +61,17 @@ export const authPlugin = fp(async (app: FastifyInstance, opts: { ctx: CoreConte
     }
   });
 });
+
+/** Requires a signed-in moderator or administrator. */
+export function requireModerator(request: FastifyRequest): SessionInfo {
+  const session = requireUser(request);
+  if (session.role === 'user') throw new DomainError('forbidden', 'Moderators only');
+  return session;
+}
+
+/** Requires a signed-in administrator. */
+export function requireAdmin(request: FastifyRequest): SessionInfo {
+  const session = requireUser(request);
+  if (session.role !== 'admin') throw new DomainError('forbidden', 'Administrators only');
+  return session;
+}

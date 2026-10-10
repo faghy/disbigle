@@ -132,6 +132,84 @@
   }
 }
 
+/* Post HTML rendered by the server. */
+.status-content {
+  overflow-wrap: anywhere;
+
+  & > * + * {
+    margin-top: 0.6em;
+  }
+
+  & a {
+    color: var(--accent);
+  }
+
+  & a:hover {
+    text-decoration: underline;
+  }
+
+  & a.mention {
+    font-weight: 500;
+  }
+
+  & strong {
+    font-weight: 600;
+  }
+
+  & em {
+    font-style: italic;
+  }
+
+  & ul {
+    list-style: disc;
+    padding-left: 1.4em;
+  }
+
+  & ol {
+    list-style: decimal;
+    padding-left: 1.4em;
+  }
+
+  & blockquote {
+    border-left: 3px solid var(--border-strong);
+    padding-left: 0.8em;
+    color: var(--fg-muted);
+  }
+
+  & code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background-color: var(--surface-muted);
+    border-radius: 0.3em;
+    padding: 0.1em 0.3em;
+  }
+
+  & pre {
+    overflow-x: auto;
+    background-color: var(--surface-muted);
+    border-radius: 0.5em;
+    padding: 0.7em 0.9em;
+
+    & code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  & h1,
+  & h2,
+  & h3,
+  & h4,
+  & h5,
+  & h6 {
+    font-weight: 600;
+  }
+
+  & hr {
+    border-color: var(--border);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

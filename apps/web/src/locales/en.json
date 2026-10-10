@@ -2,7 +2,10 @@
   "common": {
     "loading": "Loading…",
     "or": "or",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "done": "Done"
   },
   "languages": {
     "en": "English",
@@ -17,7 +20,14 @@
     "register": "Create account",
     "accountMenu": "Account menu",
     "viewProfile": "View profile",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "local": "Local",
+    "federated": "Federated",
+    "notifications": "Notifications",
+    "aspects": "Aspects",
+    "bookmarks": "Bookmarks",
+    "unread_one": "{{count}} unread notification",
+    "unread_other": "{{count}} unread notifications"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -26,11 +36,8 @@
   "landing": {
     "tagline": "A friendly corner of the fediverse, open to Mastodon, diaspora* and beyond.",
     "register": "Create account",
-    "signIn": "Sign in"
-  },
-  "home": {
-    "welcome": "Hi, {{name}}",
-    "timelinePlaceholder": "Your timeline will appear here."
+    "signIn": "Sign in",
+    "explore": "Look around the local timeline"
   },
   "login": {
     "title": "Sign in",
@@ -80,7 +87,41 @@
     "locked": "Approves followers",
     "joined": "Joined {{date}}",
     "edit": "Edit profile",
-    "notFound": "There is no account called @{{username}} here."
+    "notFound": "There is no account called @{{username}} here.",
+    "follow": "Follow",
+    "followBack": "Follow back",
+    "unfollow": "Unfollow",
+    "requested": "Requested",
+    "cancelRequest": "Cancel follow request",
+    "lockedHint": "This account approves followers manually.",
+    "followsYou": "Follows you",
+    "muted": "Muted",
+    "blockedBy": "This account has blocked you.",
+    "moreActions": "More actions",
+    "mute": "Mute {{name}}",
+    "unmute": "Unmute {{name}}",
+    "block": "Block {{name}}",
+    "unblock": "Unblock",
+    "blockTitle": "Block {{name}}?",
+    "blockDescription": "They won't be able to follow you or see your posts, and they will be removed from your aspects.",
+    "blockConfirm": "Block",
+    "aspects": {
+      "add": "Add to aspects",
+      "inMany_one": "In {{count}} aspect",
+      "inMany_other": "In {{count}} aspects",
+      "legend": "Aspects for {{name}}",
+      "manage": "Manage aspects"
+    },
+    "tabs": {
+      "label": "Profile sections",
+      "posts": "Posts",
+      "replies": "Posts and replies",
+      "followers": "Followers",
+      "following": "Following"
+    },
+    "noPosts": "No posts yet.",
+    "noFollowers": "No followers yet.",
+    "noFollowing": "Not following anyone yet."
   },
   "settings": {
     "title": "Settings",
@@ -223,5 +264,195 @@
   "errorPage": {
     "title": "Something went wrong",
     "retry": "Try again"
+  },
+  "visibility": {
+    "public": {
+      "label": "Public",
+      "description": "Anyone, on any server"
+    },
+    "unlisted": {
+      "label": "Unlisted",
+      "description": "Anyone with the link; not in public timelines"
+    },
+    "followers": {
+      "label": "Followers",
+      "description": "Only people who follow you"
+    },
+    "limited": {
+      "label": "Aspects",
+      "description": "Only the people in the aspects you choose"
+    },
+    "direct": {
+      "label": "Direct",
+      "description": "Only the people you mention"
+    }
+  },
+  "composer": {
+    "label": "New post",
+    "replyLabel": "Reply",
+    "placeholder": "What's on your mind? Markdown, #tags and @mentions work.",
+    "replyPlaceholder": "Write your reply…",
+    "publish": "Post",
+    "reply": "Reply",
+    "shortcut": "Ctrl+Enter or Cmd+Enter to send",
+    "remaining_one": "{{count}} character left",
+    "remaining_other": "{{count}} characters left",
+    "privateReply": "Replies to this post stay with its original audience.",
+    "directHint": "Only the people you @mention will see this post.",
+    "sensitive": "Mark media as sensitive",
+    "warning": {
+      "toggle": "Content warning",
+      "label": "Content warning",
+      "placeholder": "Write your warning here"
+    },
+    "audience": {
+      "shareWith": "Share with:",
+      "legend": "Who can see this post",
+      "aspectsLegend": "Your aspects",
+      "chooseAspects": "choose aspects",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "noAspects": "You have no aspects yet.",
+      "createAspect": "Create one",
+      "chosen": "Chosen aspects",
+      "removeAspect": "Remove {{name}}"
+    },
+    "media": {
+      "add": "Add images, video or audio",
+      "list": "Attached media",
+      "preview": "Attachment {{number}}",
+      "uploading": "Uploading…",
+      "remove": "Remove {{name}}",
+      "addAlt": "Add description",
+      "altSet": "Description added",
+      "altLabel": "Description of attachment {{number}}",
+      "altPlaceholder": "Describe it for people who can't see it",
+      "altHint": "Shown to screen reader users and when the media can't load.",
+      "tooMany": "You can attach up to {{max}} files.",
+      "unsupported": "{{name}} is not a supported file type.",
+      "tooLarge": "{{name}} is larger than {{size}} MB."
+    },
+    "errors": {
+      "empty": "Write something or attach media.",
+      "tooLong": "Posts can be at most {{max}} characters long.",
+      "aspectsRequired": "Choose at least one aspect.",
+      "mediaFailed": "Remove the attachments that failed to upload."
+    }
+  },
+  "status": {
+    "reshared": "{{name}} reshared",
+    "sharedWithAspects": "Shared with aspects",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "reply": "Reply",
+    "reshare": "Reshare",
+    "unreshare": "Undo reshare",
+    "reshareUnavailable": "This post can't be reshared",
+    "like": "Like",
+    "unlike": "Remove like",
+    "bookmark": "Bookmark",
+    "unbookmark": "Remove bookmark",
+    "more": "More actions",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "openOriginal": "Open on the original server",
+    "delete": "Delete",
+    "deleteTitle": "Delete this post?",
+    "deleteDescription": "It will be removed for everyone. This can't be undone.",
+    "media": {
+      "sensitive": "Sensitive content",
+      "reveal": "Select to show",
+      "open": "Open image",
+      "openWithAlt": "Open image: {{alt}}",
+      "viewer": "Image viewer",
+      "previous": "Previous image",
+      "next": "Next image",
+      "position": "{{current}} of {{total}}"
+    }
+  },
+  "timeline": {
+    "loadMore": "Load more",
+    "end": "You're all caught up.",
+    "empty": "Nothing here yet.",
+    "newPosts_one": "{{count}} new post",
+    "newPosts_other": "{{count}} new posts",
+    "home": {
+      "title": "Home",
+      "emptyTitle": "Your home timeline is empty",
+      "empty": "Follow people or add them to your aspects to see their posts here.",
+      "explore": "Explore the local timeline"
+    },
+    "local": {
+      "title": "Local",
+      "description": "Public posts from people on this server."
+    },
+    "federated": {
+      "title": "Federated",
+      "description": "Public posts from this server and the fediverse."
+    },
+    "tag": {
+      "description": "Public posts tagged #{{tag}}.",
+      "empty": "No posts with #{{tag}} yet."
+    },
+    "bookmarks": {
+      "title": "Bookmarks",
+      "description": "Posts you saved for later. Only you can see this list.",
+      "empty": "You have no bookmarks yet."
+    },
+    "aspect": {
+      "description_one": "Posts from the {{count}} person in {{name}}.",
+      "description_other": "Posts from the {{count}} people in {{name}}.",
+      "empty": "No posts from {{name}} yet.",
+      "manage": "Manage aspects"
+    }
+  },
+  "thread": {
+    "title": "Post",
+    "ancestors": "Earlier in the conversation",
+    "replies": "Replies",
+    "noReplies": "No replies yet."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "accept": "Accept",
+    "reject": "Reject",
+    "accepted": "Follow request accepted.",
+    "rejected": "Follow request rejected.",
+    "mediaPost": "A post with media",
+    "types": {
+      "mention": "{{name}} mentioned you",
+      "reply": "{{name}} replied to you",
+      "follow": "{{name}} followed you",
+      "follow_request": "{{name}} wants to follow you",
+      "reblog": "{{name}} reshared your post",
+      "like": "{{name}} liked your post"
+    },
+    "verbs": {
+      "mention": "mentioned you",
+      "reply": "replied to you",
+      "follow": "followed you",
+      "follow_request": "asked to follow you",
+      "reblog": "reshared your post",
+      "like": "liked your post"
+    }
+  },
+  "aspects": {
+    "title": "Aspects",
+    "description": "Group the people you know, then choose which aspects see each post.",
+    "memberCount_one": "{{count}} person",
+    "memberCount_other": "{{count}} people",
+    "newName": "New aspect",
+    "newPlaceholder": "For example: Book club",
+    "create": "Create aspect",
+    "empty": "You have no aspects yet.",
+    "members": "Members",
+    "noMembers": "Nobody in this aspect yet. Add people from their profile.",
+    "rename": "Rename",
+    "renameLabel": "Rename {{name}}",
+    "delete": "Delete",
+    "deleteLabel": "Delete {{name}}",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteDescription": "People in it stay connected with you; posts already shared keep their audience."
   }
 }

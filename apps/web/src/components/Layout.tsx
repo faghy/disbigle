@@ -1,12 +1,23 @@
 import type { CurrentUser } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
-import { useEffect, useId, useRef, useState } from 'react';
+import { type ComponentType, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { endpoints } from '../api/endpoints.ts';
 import { clearUserData, queryKeys, useMe } from '../api/queries.ts';
+import { useUnreadCount } from '../api/socialQueries.ts';
+import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { Avatar } from './Avatar.tsx';
+import {
+  AspectsIcon,
+  BellIcon,
+  BookmarkIcon,
+  GlobeIcon,
+  HomeIcon,
+  LocalIcon,
+  SettingsIcon,
+} from './icons.tsx';
 import { buttonClass, cx } from './ui.tsx';
 
 /** Keeps the interface language in line with the signed-in user's setting. */
@@ -33,6 +44,7 @@ export function useSignOut() {
 export function RootLayout() {
   const { t } = useTranslation();
   const me = useMe();
+  const user = me.data ?? null;
   useUserLanguage(me.data);
 
   return (
@@ -43,26 +55,147 @@ export function RootLayout() {
       >
         {t('nav.skipToContent')}
       </a>
-      <TopBar user={me.data ?? null} loading={me.isPending} />
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-        <Outlet />
-      </main>
-      <Footer signedIn={Boolean(me.data)} />
+      <TopBar user={user} loading={me.isPending} />
+      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-0 sm:px-6">
+        {!me.isPending && <SideNav user={user} />}
+        <main
+          id="main"
+          tabIndex={-1}
+          className={cx(
+            'min-w-0 flex-1 px-4 py-6 sm:px-0 lg:max-w-2xl xl:max-w-3xl',
+            user && 'pb-24 md:pb-6',
+          )}
+        >
+          <Outlet />
+        </main>
+      </div>
+      <Footer signedIn={Boolean(user)} />
+      {user && <BottomNav />}
     </div>
   );
 }
 
-const navLinkClass = cx(
-  'rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition-colors focus-ring',
-  'hover:bg-surface-muted hover:text-fg data-[status=active]:text-fg',
-  'data-[status=active]:bg-surface-muted',
-);
+interface NavItem {
+  to:
+    | '/'
+    | '/public/local'
+    | '/public'
+    | '/notifications'
+    | '/aspects'
+    | '/bookmarks'
+    | '/settings';
+  label: string;
+  icon: ComponentType<{ size?: number }>;
+  exact?: boolean;
+  badge?: number;
+}
+
+function useNavItems(user: CurrentUser | null): NavItem[] {
+  const { t } = useTranslation();
+  const unread = useUnreadCount();
+  const items: NavItem[] = [
+    { to: '/', label: t('nav.home'), icon: HomeIcon, exact: true },
+    { to: '/public/local', label: t('nav.local'), icon: LocalIcon },
+    { to: '/public', label: t('nav.federated'), icon: GlobeIcon, exact: true },
+  ];
+  if (!user) return items;
+  return [
+    ...items,
+    {
+      to: '/notifications',
+      label: t('nav.notifications'),
+      icon: BellIcon,
+      badge: unread.data ?? 0,
+    },
+    { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
+    { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
+    { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
+  ];
+}
+
+function Badge({ count, className }: { count: number; className?: string }) {
+  const { t } = useTranslation();
+  if (count <= 0) return null;
+  return (
+    <span
+      className={cx(
+        'inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] leading-5 font-semibold text-accent-fg',
+        className,
+      )}
+    >
+      <span aria-hidden="true">{count > 99 ? '99+' : count}</span>
+      <span className="sr-only">{t('nav.unread', { count })}</span>
+    </span>
+  );
+}
+
+function SideNav({ user }: { user: CurrentUser | null }) {
+  const { t } = useTranslation();
+  const items = useNavItems(user);
+  return (
+    <nav aria-label={t('nav.main')} className="hidden w-56 shrink-0 md:block">
+      <ul className="sticky top-20 space-y-1 py-6">
+        {items.map((item) => (
+          <li key={item.to}>
+            <Link
+              to={item.to}
+              activeOptions={{ exact: item.exact ?? false }}
+              className={cx(
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-fg-muted transition-colors focus-ring',
+                'hover:bg-surface-muted hover:text-fg',
+                'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
+              )}
+            >
+              <item.icon size={22} />
+              <span className="flex-1">{item.label}</span>
+              {item.badge !== undefined && <Badge count={item.badge} />}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function BottomNav() {
+  const { t } = useTranslation();
+  const user = useMe().data ?? null;
+  const items = useNavItems(user);
+  return (
+    <nav
+      aria-label={t('nav.main')}
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+    >
+      <ul className="flex">
+        {items.map((item) => (
+          <li key={item.to} className="flex-1">
+            <Link
+              to={item.to}
+              activeOptions={{ exact: item.exact ?? false }}
+              aria-label={item.label}
+              title={item.label}
+              className={cx(
+                'relative flex h-14 items-center justify-center text-fg-muted focus-ring',
+                'data-[status=active]:text-accent',
+              )}
+            >
+              <item.icon size={22} />
+              {item.badge !== undefined && (
+                <Badge count={item.badge} className="absolute top-1.5 left-1/2 ml-1" />
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
 
 function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean }) {
   const { t } = useTranslation();
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-4xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           to="/"
           className="flex items-center gap-2 rounded-lg text-lg font-bold tracking-tight focus-ring"
@@ -75,17 +208,6 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
           </span>
           <span>Disbigle</span>
         </Link>
-
-        {user && (
-          <nav aria-label={t('nav.main')} className="flex items-center gap-1">
-            <Link to="/" activeOptions={{ exact: true }} className={navLinkClass}>
-              {t('nav.home')}
-            </Link>
-            <Link to="/settings" className={navLinkClass}>
-              {t('nav.settings')}
-            </Link>
-          </nav>
-        )}
 
         <div className="ml-auto flex items-center gap-2">
           {user ? (
@@ -114,33 +236,8 @@ function UserMenu({ user }: { user: CurrentUser }) {
   const menuId = useId();
   const signOut = useSignOut();
   const { account } = user;
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        buttonRef.current?.focus();
-      }
-    };
-    // Close when keyboard focus moves outside the menu (for example with Tab).
-    const onFocusOut = (event: FocusEvent) => {
-      const next = event.relatedTarget as Node | null;
-      if (next && !containerRef.current?.contains(next)) setOpen(false);
-    };
-    const container = containerRef.current;
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    container?.addEventListener('focusout', onFocusOut);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-      container?.removeEventListener('focusout', onFocusOut);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(open, close, containerRef, buttonRef);
 
   const itemClass =
     'block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-muted focus-ring';
@@ -199,8 +296,8 @@ function Footer({ signedIn }: { signedIn: boolean }) {
   const { t } = useTranslation();
   const id = useId();
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
+    <footer className={cx('border-t border-border', signedIn && 'hidden md:block')}>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
         <p>{t('footer.tagline')}</p>
         {!signedIn && (
           <div className="flex items-center gap-2">

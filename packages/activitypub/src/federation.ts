@@ -3,6 +3,7 @@ import {
   block,
   type CoreContext,
   deleteRemoteActor,
+  domainBlockSeverity,
   deleteRemotePost,
   findActorByApUri,
   findLocalActorByUsername,
@@ -62,6 +63,8 @@ async function storeActor(ctx: InboxContext<CoreContext>, actor: Actor | null) {
   const data = await remoteActorData(ctx, actor);
   if (!data) return null;
   if (data.domain.toLowerCase() === ctx.data.config.LOCAL_DOMAIN.toLowerCase()) return null;
+  // Servers suspended by the admins are ignored entirely.
+  if ((await domainBlockSeverity(ctx.data, data.domain)) === 'suspend') return null;
   return upsertRemoteActor(ctx.data, data);
 }
 

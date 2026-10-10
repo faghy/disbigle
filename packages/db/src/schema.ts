@@ -33,6 +33,8 @@ export const visibilityEnum = pgEnum('visibility', [
   'direct',
 ]);
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio', 'unknown']);
+export const domainBlockSeverityEnum = pgEnum('domain_block_severity', ['silence', 'suspend']);
+export const reportCategoryEnum = pgEnum('report_category', ['spam', 'illegal', 'harassment', 'violation', 'other']);
 export const notificationTypeEnum = pgEnum('notification_type', [
   'follow',
   'follow_request',
@@ -501,4 +503,53 @@ export const tombstones = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('tombstones_uri_idx').on(t.uri)],
+);
+
+/** Instance-wide moderation of other servers. */
+export const domainBlocks = pgTable(
+  'domain_blocks',
+  {
+    id: uuid('id').primaryKey(),
+    domain: text('domain').notNull(),
+    /** silence: hidden from public timelines; suspend: no federation at all, content removed. */
+    severity: domainBlockSeverityEnum('severity').notNull(),
+    publicComment: text('public_comment').notNull().default(''),
+    privateComment: text('private_comment').notNull().default(''),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('domain_blocks_domain_idx').on(t.domain)],
+);
+
+/** User reports about accounts and posts. */
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey(),
+    reporterActorId: actorRef('reporter_actor_id'),
+    targetActorId: actorRef('target_actor_id'),
+    postIds: uuid('post_ids').array().notNull().default(sql`'{}'`),
+    category: reportCategoryEnum('category').notNull().default('other'),
+    comment: text('comment').notNull().default(''),
+    /** Whether a copy was sent to the target's server. */
+    forwarded: boolean('forwarded').notNull().default(false),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolvedById: uuid('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('reports_target_idx').on(t.targetActorId), index('reports_open_idx').on(t.id).where(sql`${t.resolvedAt} is null`)],
+);
+
+/** Audit trail of moderation actions. */
+export const adminActionLogs = pgTable(
+  'admin_action_logs',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: text('target_id').notNull(),
+    details: jsonb('details').notNull().default({}),
+    createdAt: createdAt(),
+  },
+  (t) => [index('admin_action_logs_created_idx').on(t.id)],
 );

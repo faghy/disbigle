@@ -8,15 +8,25 @@ import {
 } from '@tanstack/react-router';
 import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
+import { AspectsPage } from './pages/Aspects.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { HomePage } from './pages/Home.tsx';
 import { LoginPage } from './pages/Login.tsx';
+import { NotificationsPage } from './pages/Notifications.tsx';
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
+import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
 import { ProfileSettingsPage } from './pages/settings/ProfileSettings.tsx';
 import { SecuritySettingsPage } from './pages/settings/SecuritySettings.tsx';
 import { SettingsLayout } from './pages/settings/SettingsLayout.tsx';
+import {
+  AspectTimelinePage,
+  BookmarksPage,
+  FederatedTimelinePage,
+  LocalTimelinePage,
+  TagTimelinePage,
+} from './pages/Timelines.tsx';
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -99,6 +109,58 @@ const profileRoute = createRoute({
   component: ProfilePage,
 });
 
+const statusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/@{$username}/$statusId',
+  component: StatusPage,
+});
+
+const localRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/public/local',
+  component: LocalTimelinePage,
+});
+
+const federatedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/public',
+  component: FederatedTimelinePage,
+});
+
+const tagRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/tags/$tag',
+  component: TagTimelinePage,
+});
+
+const bookmarksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/bookmarks',
+  beforeLoad: signedInOnly,
+  component: BookmarksPage,
+});
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notifications',
+  beforeLoad: signedInOnly,
+  component: NotificationsPage,
+});
+
+const aspectsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/aspects',
+  beforeLoad: signedInOnly,
+  component: AspectsPage,
+});
+
+const aspectTimelineRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/aspects/$aspectId',
+  beforeLoad: signedInOnly,
+  component: AspectTimelinePage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -110,6 +172,14 @@ export const routeTree = rootRoute.addChildren([
     settingsSecurityRoute,
   ]),
   profileRoute,
+  statusRoute,
+  localRoute,
+  federatedRoute,
+  tagRoute,
+  bookmarksRoute,
+  notificationsRoute,
+  aspectsRoute,
+  aspectTimelineRoute,
 ]);
 
 export function createAppRouter(queryClient: QueryClient, history?: RouterHistory) {

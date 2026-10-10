@@ -19,7 +19,14 @@ const {
   aspects,
   aspectMemberships,
   bookmarks,
+  domainBlocks,
 } = schema;
+
+/** Excludes posts from servers the admins silenced or suspended (public and tag timelines). */
+const notFromBlockedDomain = sql`not exists (
+  select 1 from ${actors} inner join ${domainBlocks} on ${domainBlocks.domain} = lower(${actors.domain})
+  where ${actors.id} = ${posts.actorId}
+)`;
 
 /** Hides posts from accounts the viewer muted or blocked, and from suspended accounts. */
 function notSilenced(viewerActorId: string | null): SQL {
@@ -84,7 +91,7 @@ export function publicTimeline(
     and(
       eq(posts.visibility, 'public'),
       isNull(posts.reblogOfId),
-      query.local ? eq(posts.local, true) : undefined,
+      query.local ? eq(posts.local, true) : notFromBlockedDomain,
       sql`(${posts.inReplyToActorId} is null or ${posts.inReplyToActorId} = ${posts.actorId})`,
     ),
     query,
@@ -102,6 +109,7 @@ export function tagTimeline(
     viewerActorId,
     and(
       eq(posts.visibility, 'public'),
+      notFromBlockedDomain,
       sql`exists (select 1 from ${postTags} inner join ${tags} on ${tags.id} = ${postTags.tagId}
         where ${postTags.postId} = ${posts.id} and ${tags.name} = ${tag.toLowerCase()})`,
     ),

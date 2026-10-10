@@ -2,7 +2,10 @@
   "common": {
     "loading": "Caricamento…",
     "or": "oppure",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "close": "Chiudi",
+    "done": "Fatto"
   },
   "languages": {
     "en": "English",
@@ -17,7 +20,14 @@
     "register": "Crea un account",
     "accountMenu": "Menu dell'account",
     "viewProfile": "Vedi profilo",
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "local": "Locale",
+    "federated": "Federata",
+    "notifications": "Notifiche",
+    "aspects": "Aspetti",
+    "bookmarks": "Segnalibri",
+    "unread_one": "{{count}} notifica non letta",
+    "unread_other": "{{count}} notifiche non lette"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -26,11 +36,8 @@
   "landing": {
     "tagline": "Un angolo accogliente del fediverso, aperto a Mastodon, diaspora* e oltre.",
     "register": "Crea un account",
-    "signIn": "Accedi"
-  },
-  "home": {
-    "welcome": "Ciao, {{name}}",
-    "timelinePlaceholder": "Qui comparirà la tua timeline."
+    "signIn": "Accedi",
+    "explore": "Dai un'occhiata alla timeline locale"
   },
   "login": {
     "title": "Accedi",
@@ -80,7 +87,41 @@
     "locked": "Approva i follower",
     "joined": "Iscritto dal {{date}}",
     "edit": "Modifica profilo",
-    "notFound": "Qui non esiste nessun account chiamato @{{username}}."
+    "notFound": "Qui non esiste nessun account chiamato @{{username}}.",
+    "follow": "Segui",
+    "followBack": "Ricambia",
+    "unfollow": "Smetti di seguire",
+    "requested": "Richiesta inviata",
+    "cancelRequest": "Annulla la richiesta di follow",
+    "lockedHint": "Questo account approva manualmente i follower.",
+    "followsYou": "Ti segue",
+    "muted": "Silenziato",
+    "blockedBy": "Questo account ti ha bloccato.",
+    "moreActions": "Altre azioni",
+    "mute": "Silenzia {{name}}",
+    "unmute": "Riattiva {{name}}",
+    "block": "Blocca {{name}}",
+    "unblock": "Sblocca",
+    "blockTitle": "Bloccare {{name}}?",
+    "blockDescription": "Non potrà seguirti né vedere i tuoi post e verrà tolto dai tuoi aspetti.",
+    "blockConfirm": "Blocca",
+    "aspects": {
+      "add": "Aggiungi agli aspetti",
+      "inMany_one": "In {{count}} aspetto",
+      "inMany_other": "In {{count}} aspetti",
+      "legend": "Aspetti per {{name}}",
+      "manage": "Gestisci gli aspetti"
+    },
+    "tabs": {
+      "label": "Sezioni del profilo",
+      "posts": "Post",
+      "replies": "Post e risposte",
+      "followers": "Follower",
+      "following": "Seguiti"
+    },
+    "noPosts": "Ancora nessun post.",
+    "noFollowers": "Ancora nessun follower.",
+    "noFollowing": "Non segue ancora nessuno."
   },
   "settings": {
     "title": "Impostazioni",
@@ -223,5 +264,195 @@
   "errorPage": {
     "title": "Qualcosa è andato storto",
     "retry": "Riprova"
+  },
+  "visibility": {
+    "public": {
+      "label": "Pubblico",
+      "description": "Chiunque, su qualsiasi server"
+    },
+    "unlisted": {
+      "label": "Non in elenco",
+      "description": "Chiunque abbia il link; non nelle timeline pubbliche"
+    },
+    "followers": {
+      "label": "Follower",
+      "description": "Solo chi ti segue"
+    },
+    "limited": {
+      "label": "Aspetti",
+      "description": "Solo le persone negli aspetti che scegli"
+    },
+    "direct": {
+      "label": "Diretto",
+      "description": "Solo le persone che menzioni"
+    }
+  },
+  "composer": {
+    "label": "Nuovo post",
+    "replyLabel": "Rispondi",
+    "placeholder": "A cosa stai pensando? Puoi usare Markdown, #tag e @menzioni.",
+    "replyPlaceholder": "Scrivi la tua risposta…",
+    "publish": "Pubblica",
+    "reply": "Rispondi",
+    "shortcut": "Ctrl+Invio o Cmd+Invio per inviare",
+    "remaining_one": "{{count}} carattere rimasto",
+    "remaining_other": "{{count}} caratteri rimasti",
+    "privateReply": "Le risposte a questo post restano visibili solo al suo pubblico originale.",
+    "directHint": "Solo le persone che @menzioni vedranno questo post.",
+    "sensitive": "Segna i contenuti multimediali come sensibili",
+    "warning": {
+      "toggle": "Avviso sul contenuto",
+      "label": "Avviso sul contenuto",
+      "placeholder": "Scrivi qui l'avviso"
+    },
+    "audience": {
+      "shareWith": "Condividi con:",
+      "legend": "Chi può vedere questo post",
+      "aspectsLegend": "I tuoi aspetti",
+      "chooseAspects": "scegli gli aspetti",
+      "selectAll": "Seleziona tutti",
+      "selectNone": "Nessuno",
+      "noAspects": "Non hai ancora nessun aspetto.",
+      "createAspect": "Creane uno",
+      "chosen": "Aspetti scelti",
+      "removeAspect": "Rimuovi {{name}}"
+    },
+    "media": {
+      "add": "Aggiungi immagini, video o audio",
+      "list": "Allegati",
+      "preview": "Allegato {{number}}",
+      "uploading": "Caricamento…",
+      "remove": "Rimuovi {{name}}",
+      "addAlt": "Aggiungi descrizione",
+      "altSet": "Descrizione aggiunta",
+      "altLabel": "Descrizione dell'allegato {{number}}",
+      "altPlaceholder": "Descrivilo per chi non può vederlo",
+      "altHint": "Viene letta dagli screen reader e mostrata quando il contenuto non si carica.",
+      "tooMany": "Puoi allegare al massimo {{max}} file.",
+      "unsupported": "{{name}} non è un tipo di file supportato.",
+      "tooLarge": "{{name}} supera i {{size}} MB."
+    },
+    "errors": {
+      "empty": "Scrivi qualcosa o allega un contenuto.",
+      "tooLong": "Un post può avere al massimo {{max}} caratteri.",
+      "aspectsRequired": "Scegli almeno un aspetto.",
+      "mediaFailed": "Rimuovi gli allegati che non sono stati caricati."
+    }
+  },
+  "status": {
+    "reshared": "{{name}} ha ricondiviso",
+    "sharedWithAspects": "Condiviso con aspetti",
+    "showMore": "Mostra",
+    "showLess": "Nascondi",
+    "reply": "Rispondi",
+    "reshare": "Ricondividi",
+    "unreshare": "Annulla ricondivisione",
+    "reshareUnavailable": "Questo post non si può ricondividere",
+    "like": "Mi piace",
+    "unlike": "Togli mi piace",
+    "bookmark": "Aggiungi ai segnalibri",
+    "unbookmark": "Togli dai segnalibri",
+    "more": "Altre azioni",
+    "copyLink": "Copia link",
+    "linkCopied": "Link copiato",
+    "openOriginal": "Apri sul server originale",
+    "delete": "Elimina",
+    "deleteTitle": "Eliminare questo post?",
+    "deleteDescription": "Verrà rimosso per tutti. L'operazione non si può annullare.",
+    "media": {
+      "sensitive": "Contenuto sensibile",
+      "reveal": "Seleziona per mostrare",
+      "open": "Apri immagine",
+      "openWithAlt": "Apri immagine: {{alt}}",
+      "viewer": "Visualizzatore immagini",
+      "previous": "Immagine precedente",
+      "next": "Immagine successiva",
+      "position": "{{current}} di {{total}}"
+    }
+  },
+  "timeline": {
+    "loadMore": "Carica altri",
+    "end": "Sei in pari.",
+    "empty": "Ancora niente qui.",
+    "newPosts_one": "{{count}} nuovo post",
+    "newPosts_other": "{{count}} nuovi post",
+    "home": {
+      "title": "Home",
+      "emptyTitle": "La tua home è vuota",
+      "empty": "Segui delle persone o aggiungile ai tuoi aspetti per vedere qui i loro post.",
+      "explore": "Esplora la timeline locale"
+    },
+    "local": {
+      "title": "Locale",
+      "description": "Post pubblici delle persone di questo server."
+    },
+    "federated": {
+      "title": "Federata",
+      "description": "Post pubblici da questo server e dal fediverso."
+    },
+    "tag": {
+      "description": "Post pubblici con #{{tag}}.",
+      "empty": "Ancora nessun post con #{{tag}}."
+    },
+    "bookmarks": {
+      "title": "Segnalibri",
+      "description": "I post che hai salvato. Solo tu puoi vedere questo elenco.",
+      "empty": "Non hai ancora segnalibri."
+    },
+    "aspect": {
+      "description_one": "Post della {{count}} persona in {{name}}.",
+      "description_other": "Post delle {{count}} persone in {{name}}.",
+      "empty": "Ancora nessun post da {{name}}.",
+      "manage": "Gestisci gli aspetti"
+    }
+  },
+  "thread": {
+    "title": "Post",
+    "ancestors": "In precedenza nella conversazione",
+    "replies": "Risposte",
+    "noReplies": "Ancora nessuna risposta."
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "empty": "Ancora nessuna notifica.",
+    "accept": "Accetta",
+    "reject": "Rifiuta",
+    "accepted": "Richiesta di follow accettata.",
+    "rejected": "Richiesta di follow rifiutata.",
+    "mediaPost": "Un post con contenuti multimediali",
+    "types": {
+      "mention": "{{name}} ti ha menzionato",
+      "reply": "{{name}} ti ha risposto",
+      "follow": "{{name}} ha iniziato a seguirti",
+      "follow_request": "{{name}} vuole seguirti",
+      "reblog": "{{name}} ha ricondiviso il tuo post",
+      "like": "A {{name}} piace il tuo post"
+    },
+    "verbs": {
+      "mention": "ti ha menzionato",
+      "reply": "ti ha risposto",
+      "follow": "ha iniziato a seguirti",
+      "follow_request": "ha chiesto di seguirti",
+      "reblog": "ha ricondiviso il tuo post",
+      "like": "ha messo mi piace al tuo post"
+    }
+  },
+  "aspects": {
+    "title": "Aspetti",
+    "description": "Raggruppa le persone che conosci e scegli quali aspetti vedono ogni post.",
+    "memberCount_one": "{{count}} persona",
+    "memberCount_other": "{{count}} persone",
+    "newName": "Nuovo aspetto",
+    "newPlaceholder": "Per esempio: Club del libro",
+    "create": "Crea aspetto",
+    "empty": "Non hai ancora nessun aspetto.",
+    "members": "Membri",
+    "noMembers": "Ancora nessuno in questo aspetto. Aggiungi persone dal loro profilo.",
+    "rename": "Rinomina",
+    "renameLabel": "Rinomina {{name}}",
+    "delete": "Elimina",
+    "deleteLabel": "Elimina {{name}}",
+    "deleteTitle": "Eliminare {{name}}?",
+    "deleteDescription": "Le persone che contiene restano in contatto con te; i post già condivisi mantengono il loro pubblico."
   }
 }

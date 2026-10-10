@@ -10,21 +10,30 @@ export interface MockResponse {
   body?: unknown;
 }
 
-type Handler = (body: unknown) => MockResponse;
+type Handler = (body: unknown, url: URL) => MockResponse | Promise<MockResponse>;
 
 /**
  * Replaces `fetch` with a table of `"METHOD /path"` handlers (paths relative to /api/v1).
  * Unknown routes answer 404 like the real API. Returns the mock to inspect calls.
  */
+/** Answers for endpoints most signed-in pages call; tests override them as needed. */
+const defaultRoutes: Record<string, Handler | MockResponse> = {
+  'GET /timelines/home': { body: [] },
+  'GET /aspects': { body: [] },
+  'GET /notifications/unread_count': { body: { count: 0 } },
+};
+
 export function mockApi(routes: Record<string, Handler | MockResponse>) {
+  const table = { ...defaultRoutes, ...routes };
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input), 'http://localhost');
     const key = `${init?.method ?? 'GET'} ${url.pathname.replace(/^\/api\/v1/, '')}`;
-    const route = routes[key];
-    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const route = table[key];
+    const raw = init?.body;
+    const body = raw instanceof FormData ? raw : raw ? JSON.parse(String(raw)) : undefined;
     const result: MockResponse = route
       ? typeof route === 'function'
-        ? route(body)
+        ? await route(body, url)
         : route
       : { status: 404, body: { error: 'not_found', message: 'Route not found' } };
     return new Response(result.body === undefined ? null : JSON.stringify(result.body), {

@@ -12,6 +12,7 @@ import type { Redis } from 'ioredis';
 import { errorHandler } from './http.ts';
 import { authPlugin } from './plugins/auth.ts';
 import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
+import { adminRoutes, reportRoutes } from './routes/admin.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { meRoutes } from './routes/me.ts';
@@ -99,6 +100,8 @@ export async function buildApp(options: AppOptions) {
       await api.register(aspectRoutes, { ctx, prefix: '/aspects' });
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });
       await api.register(mediaRoutes, { ctx: mediaCtx, prefix: '/media' });
+      await api.register(reportRoutes, { ctx, prefix: '/reports' });
+      await api.register(adminRoutes, { ctx, prefix: '/admin' });
       if (options.federation) {
         await api.register(searchRoutes, {
           ctx,
