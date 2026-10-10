@@ -73,6 +73,39 @@ async function localActorByIdentifier(ctx: CoreContext, identifier: string) {
   return actor && !actor.suspendedAt ? actor : null;
 }
 
+const MAX_ANCESTOR_FETCH = 5;
+
+/**
+ * Fetches and stores the posts a reply answers when we don't have them yet, so threads arriving
+ * from other servers are complete. Only public posts can be fetched; others are simply skipped.
+ */
+async function fetchMissingAncestors(ctx: InboxContext<CoreContext>, parentUri: URL | null): Promise<void> {
+  const chain: Note[] = [];
+  let next = parentUri;
+  while (next && chain.length < MAX_ANCESTOR_FETCH) {
+    if (await findPostByUri(ctx.data, next.href)) break;
+    let object: unknown;
+    try {
+      object = await ctx.lookupObject(next);
+    } catch {
+      break;
+    }
+    if (!(object instanceof Note) || object.id?.href !== next.href) break;
+    chain.push(object);
+    next = object.replyTargetId;
+  }
+  // Store oldest first so each reply finds its parent.
+  for (const note of chain.reverse()) {
+    if (!note.attributionId) continue;
+    const author = await ctx.lookupObject(note.attributionId).catch(() => null);
+    if (!isActor(author)) continue;
+    const authorRow = await storeActor(ctx, author);
+    if (!authorRow || note.attributionId.href !== authorRow.apUri) continue;
+    const data = await noteToPostData(ctx, note, authorRow);
+    if (data) await ingestRemotePost(ctx.data, data);
+  }
+}
+
 export function createDisbigleFederation(options: FederationOptions): Federation<CoreContext> {
   const federation = createFederation<CoreContext>({
     kv: options.kv,
@@ -353,6 +386,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       if (!(object instanceof Note)) return;
       const author = await storeActor(ctx, await activity.getActor(ctx));
       if (!author || object.attributionId?.href !== author.apUri) return;
+      await fetchMissingAncestors(ctx, object.replyTargetId);
       const data = await noteToPostData(ctx, object, author);
       if (data) await ingestRemotePost(ctx.data, data);
     })
