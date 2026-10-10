@@ -8,6 +8,7 @@ import {
   DiasporaBridge,
   DiasporaPublisher,
   diasporaRoutes,
+  type JobQueue,
 } from '@disbigle/diaspora-bridge';
 import { MemoryKvStore } from '@fedify/fedify';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
@@ -52,7 +53,9 @@ export interface Instance {
  * A Disbigle instance that federates over diaspora* only: Fedify is mounted (it serves
  * WebFinger, as in production) but the ActivityPub publisher is not.
  */
-export async function startInstance(options: { deliver?: DeliverFn } = {}): Promise<Instance> {
+export async function startInstance(
+  options: { deliver?: DeliverFn; queue?: JobQueue; consume?: boolean } = {},
+): Promise<Instance> {
   const port = await freePort();
   const domain = `127.0.0.1:${port}`;
   const url = `http://${domain}`;
@@ -67,6 +70,8 @@ export async function startInstance(options: { deliver?: DeliverFn } = {}): Prom
     ctx,
     allowHttp: true,
     ...(options.deliver ? { deliver: options.deliver } : {}),
+    ...(options.queue ? { queue: options.queue } : {}),
+    ...(options.consume !== undefined ? { consume: options.consume } : {}),
     onError: (error) => console.error(`[${domain}]`, error),
   });
   ctx.events = new DiasporaPublisher(bridge);

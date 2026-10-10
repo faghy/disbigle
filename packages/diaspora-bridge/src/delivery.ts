@@ -1,21 +1,37 @@
-// Outgoing HTTP delivery and a small in-process queue keeping it off the request path.
-// The queue is not persistent: jobs pending at shutdown are lost (see the package notes).
+// Outgoing HTTP delivery. Long-term retries are the job queue's business (see queue.ts);
+// `httpDeliver` only retries quickly once for transient network hiccups.
 
 /** Sends a body to a remote URL; must throw when the delivery failed. */
 export type DeliverFn = (url: string, body: string, contentType: string) => Promise<void>;
 
+/** The remote server answered with an error status. */
+export class DeliveryHttpError extends Error {
+  constructor(
+    readonly url: string,
+    readonly status: number,
+  ) {
+    super(`POST ${url} answered ${status}`);
+    this.name = 'DeliveryHttpError';
+  }
+
+  /** 4xx answers (except 408 and 429) will not get better by retrying. */
+  get permanent(): boolean {
+    return this.status >= 400 && this.status < 500 && this.status !== 408 && this.status !== 429;
+  }
+}
+
 export interface HttpDeliverOptions {
   timeoutMs?: number;
-  /** Attempts after the first one, for network errors, 5xx and 429. */
+  /** Immediate extra attempts for network errors and 5xx answers. */
   retries?: number;
-  /** Base delay of the exponential backoff, in milliseconds. */
+  /** Delay between immediate attempts, in milliseconds. */
   backoffMs?: number;
   userAgent?: string;
 }
 
-/** Default `deliver`: `fetch` with a timeout and a few retries with exponential backoff. */
+/** Default `deliver`: `fetch` with a timeout. */
 export function httpDeliver(options: HttpDeliverOptions = {}): DeliverFn {
-  const { timeoutMs = 15_000, retries = 3, backoffMs = 1_000, userAgent = 'Disbigle' } = options;
+  const { timeoutMs = 15_000, retries = 1, backoffMs = 1_000, userAgent = 'Disbigle' } = options;
   return async (url, body, contentType) => {
     let lastError: unknown;
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -30,8 +46,8 @@ export function httpDeliver(options: HttpDeliverOptions = {}): DeliverFn {
         });
         await response.body?.cancel();
         if (response.ok) return;
-        lastError = new Error(`POST ${url} answered ${response.status}`);
-        if (response.status < 500 && response.status !== 429) break;
+        lastError = new DeliveryHttpError(url, response.status);
+        if ((lastError as DeliveryHttpError).permanent) break;
       } catch (error) {
         lastError = error;
       }
@@ -41,47 +57,3 @@ export function httpDeliver(options: HttpDeliverOptions = {}): DeliverFn {
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** A bounded-concurrency in-memory job queue. */
-export class TaskQueue {
-  private readonly pending: Array<() => Promise<void>> = [];
-  private running = 0;
-  private waiters: Array<() => void> = [];
-
-  constructor(
-    private readonly concurrency = 4,
-    private readonly onError: (error: unknown) => void = (error) =>
-      console.error('diaspora: background job failed', error),
-  ) {}
-
-  /** Enqueues a job; returns immediately. */
-  push(job: () => Promise<void>): void {
-    this.pending.push(job);
-    this.drain();
-  }
-
-  /** Resolves when no job is pending or running (tests, graceful shutdown). */
-  idle(): Promise<void> {
-    if (this.running === 0 && this.pending.length === 0) return Promise.resolve();
-    return new Promise((resolve) => this.waiters.push(resolve));
-  }
-
-  private drain(): void {
-    while (this.running < this.concurrency && this.pending.length > 0) {
-      const job = this.pending.shift();
-      if (!job) break;
-      this.running++;
-      job()
-        .catch(this.onError)
-        .finally(() => {
-          this.running--;
-          this.drain();
-          if (this.running === 0 && this.pending.length === 0) {
-            const waiters = this.waiters;
-            this.waiters = [];
-            for (const resolve of waiters) resolve();
-          }
-        });
-    }
-  }
-}

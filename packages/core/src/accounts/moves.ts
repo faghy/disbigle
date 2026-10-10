@@ -107,3 +107,21 @@ export async function applyRemoteMove(
   await ctx.db.update(actors).set({ movedToActorId: target.id }).where(eq(actors.id, origin.id));
   return transferLocalFollowers(ctx, origin.id, target.id);
 }
+
+/** Applies a move proven by other means than aliases (a diaspora* AccountMigration, verified by signature). */
+export async function applyVerifiedMove(
+  ctx: CoreContext,
+  originActorId: string,
+  targetActorId: string,
+) {
+  const [origin, target] = await Promise.all([
+    getActor(ctx, originActorId),
+    getActor(ctx, targetActorId),
+  ]);
+  if (origin.id === target.id) return 0;
+  await ctx.db
+    .update(actors)
+    .set({ movedToActorId: target.id, updatedAt: new Date() })
+    .where(eq(actors.id, origin.id));
+  return transferLocalFollowers(ctx, origin.id, target.id);
+}

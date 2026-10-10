@@ -127,7 +127,7 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
     scope.post('/receive/public', async (request, reply) => {
       const body = typeof request.body === 'string' ? request.body : '';
       if (!body) return reply.status(422).send();
-      bridge.enqueuePublic(body);
+      await bridge.enqueuePublic(body);
       return reply.status(202).send();
     });
 
@@ -147,6 +147,19 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
         if (!post || !isPublicVisibility(post.visibility)) return reply.status(404).send();
         const author = await actorById(ctx, post.actorId);
         if (!author || author.suspendedAt) return reply.status(404).send();
+        if (!post.local && type === 'comment') {
+          // A remote comment on a local thread: serve it as received (its author signature
+          // still holds), in an envelope of the local root author, like a relay.
+          const stored = await bridge.relayables.get(guid);
+          const root = await threadRootOf(ctx, post);
+          const rootAuthor = root.local ? await actorById(ctx, root.actorId) : null;
+          const rootSigner = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
+          if (stored && rootSigner) {
+            return reply
+              .type(`${MAGIC_ENV_CONTENT_TYPE}; charset=utf-8`)
+              .send(createMagicEnvelope(stored.xml, rootSigner.diasporaId, rootSigner.privateKey));
+          }
+        }
         if (!post.local) {
           // Not ours: point to the owner, as the protocol asks.
           const ownerBase = deliversViaDiaspora(author) ? podBaseUrl(author) : null;

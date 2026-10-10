@@ -351,6 +351,9 @@ importers:
       '@disbigle/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@disbigle/diaspora-bridge':
+        specifier: workspace:*
+        version: link:../../packages/diaspora-bridge
       '@fedify/redis':
         specifier: ^2.4.2
         version: 2.4.2(@fedify/fedify@2.4.2)(ioredis@5.11.1)

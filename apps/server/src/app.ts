@@ -61,6 +61,19 @@ export async function buildApp(options: AppOptions) {
   const app = Fastify({ logger, trustProxy, bodyLimit: 1024 * 1024 });
 
   app.setErrorHandler(errorHandler);
+  // Accept an empty body with a JSON content type (some clients send it on DELETE/POST).
+  app.removeContentTypeParser('application/json');
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_request, body, done) => {
+    const text = typeof body === 'string' ? body : body.toString();
+    if (text.trim() === '') return done(null, undefined);
+    try {
+      done(null, JSON.parse(text));
+    } catch {
+      const error = new Error('Invalid JSON body') as Error & { statusCode: number };
+      error.statusCode = 400;
+      done(error, undefined);
+    }
+  });
   app.setNotFoundHandler((_request, reply) =>
     reply.status(404).send({ error: 'not_found', message: 'Route not found' }),
   );

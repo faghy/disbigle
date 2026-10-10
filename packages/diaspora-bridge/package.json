@@ -16,7 +16,8 @@
     "@disbigle/db": "workspace:*",
     "@disbigle/diaspora": "workspace:*",
     "drizzle-orm": "^0.45.4",
-    "fastify": "^5.12.5"
+    "fastify": "^5.12.5",
+    "ioredis": "^5.11.1"
   },
   "devDependencies": {
     "@disbigle/shared": "workspace:*"

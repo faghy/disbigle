@@ -9,9 +9,12 @@ import type { CoreContext } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   chainResolvers,
+  DbRelayableStore,
   DiasporaBridge,
   DiasporaPublisher,
   diasporaRoutes,
+  RedisJobQueue,
+  startDiasporaQueue,
 } from '@disbigle/diaspora-bridge';
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
@@ -32,7 +35,16 @@ const federation = createDisbigleFederation({
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
 });
-const diaspora = new DiasporaBridge({ ctx });
+const diaspora = new DiasporaBridge({
+  ctx,
+  queue: new RedisJobQueue(redis),
+  relayables: new DbRelayableStore(ctx),
+});
+// The worker can consume the diaspora queue instead: set RUN_DIASPORA_QUEUE=false here.
+const diasporaQueue = new AbortController();
+if (process.env.RUN_DIASPORA_QUEUE !== 'false') {
+  void startDiasporaQueue(diaspora, { signal: diasporaQueue.signal });
+}
 // Unknown remote accounts: try ActivityPub first, then diaspora* (WebFinger + hCard).
 ctx.resolveAccount = chainResolvers(
   async (username, domain) =>
@@ -61,7 +73,7 @@ await app.register(diasporaRoutes, { ctx, bridge: diaspora });
 
 const shutdown = async () => {
   await app.close();
-  await diaspora.idle();
+  diasporaQueue.abort();
   await close();
   redis.disconnect();
   subscriber.disconnect();

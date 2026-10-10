@@ -17,12 +17,15 @@ import {
   encryptMagicEnvelope,
   parseEntity,
   serializeEntity,
+  signAccountMigration,
   unenvelop,
+  verifyAccountMigrationSignature,
 } from '@disbigle/diaspora';
 import { and, eq } from 'drizzle-orm';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DiasporaBridge } from '../src/bridge.ts';
+import { relayStored } from '../src/incoming.ts';
 import { DiasporaPublisher } from '../src/publisher.ts';
 import { diasporaRoutes } from '../src/routes.ts';
 import { ALICE_PRIVATE_KEY, ALICE_PUBLIC_KEY, COMMENT_XML_ALICE } from './gem-fixtures.ts';
@@ -442,5 +445,132 @@ describe('outgoing', () => {
     expect(hcard.body).toContain('BEGIN PUBLIC KEY');
     const hostMeta = await app.inject({ method: 'GET', url: '/.well-known/host-meta' });
     expect(hostMeta.body).toContain('rel="lrdd"');
+  });
+});
+
+describe('stored relayables', () => {
+  it('keeps received comments as signed, serves them at /fetch and relays them again', async () => {
+    const guid = 'e21589b0b41101333b870f77ba60fa73';
+    const record = await bridge.relayables.get(guid);
+    expect(record).toMatchObject({ entityType: 'Comment', author: alice.id });
+    expect(record?.xml).toBe(COMMENT_XML_ALICE.trim());
+
+    const comment = await postByGuid(guid);
+    const root = (
+      await ctx.db
+        .select()
+        .from(schema.posts)
+        .where(eq(schema.posts.id, comment?.inReplyToId ?? ''))
+    )[0];
+    const [rootAuthor] = await ctx.db
+      .select()
+      .from(schema.actors)
+      .where(eq(schema.actors.id, root?.actorId ?? ''));
+    const fetched = await app.inject({ method: 'GET', url: `/fetch/comment/${guid}` });
+    expect(fetched.statusCode).toBe(200);
+    const opened = await unenvelop(fetched.body, {
+      fetchPublicKey: () => rootAuthor?.publicKeyPem ?? null,
+    });
+    expect(opened.payloadXml).toBe(COMMENT_XML_ALICE.trim());
+
+    sent.length = 0;
+    expect(await relayStored(bridge, guid)).toBe(true);
+    await bridge.idle();
+    expect(sent.map((s) => s.url)).toContain('https://pod-d.org/receive/public');
+    expect(sent.some((s) => s.url.startsWith('https://pod-a.org/'))).toBe(false);
+  });
+
+  it('forgets a relayable when it is retracted', async () => {
+    const guid = 'e21589b0b41101333b870f77ba60fa73';
+    await bridge.receivePublic(
+      envelopeFrom(alice, {
+        type: 'Retraction',
+        author: alice.id,
+        targetGuid: guid,
+        targetType: 'Comment',
+      }),
+    );
+    expect(await bridge.relayables.get(guid)).toBeNull();
+    expect(await postByGuid(guid)).toBeUndefined();
+  });
+});
+
+describe('AccountMigration', () => {
+  const oldFrank = fakePerson('frank@pod-f.org', 'ffffffffffffff01');
+  const newFrank = fakePerson('frank@pod-g.org', 'ffffffffffffff02');
+  people.set(oldFrank.id, oldFrank);
+  people.set(newFrank.id, newFrank);
+
+  const migration = (signWith: FakePerson) =>
+    signAccountMigration(
+      {
+        type: 'AccountMigration',
+        author: oldFrank.id,
+        profile: { type: 'Profile', author: newFrank.id, fullName: 'Frank Moved' },
+      },
+      signWith.privateKey,
+    );
+
+  it('rejects a migration not signed by the new identity', async () => {
+    const reader = await localUser();
+    const origin = await bridge.resolvePerson(oldFrank.id);
+    await follow(ctx, reader.actor.id, origin?.id ?? '');
+    await expect(
+      bridge.receivePublic(envelopeFrom(oldFrank, migration(oldFrank))),
+    ).rejects.toThrow();
+    const [row] = await ctx.db
+      .select()
+      .from(schema.actors)
+      .where(eq(schema.actors.id, origin?.id ?? ''));
+    expect(row?.movedToActorId).toBeNull();
+  });
+
+  it('moves local followers to the new identity', async () => {
+    const reader = await localUser();
+    const origin = await bridge.resolvePerson(oldFrank.id);
+    await follow(ctx, reader.actor.id, origin?.id ?? '');
+    await bridge.receivePublic(envelopeFrom(oldFrank, migration(newFrank)));
+    await bridge.idle();
+    const target = await bridge.resolvePerson(newFrank.id);
+    expect(target?.displayName).toBe('Frank Moved');
+    const following = await ctx.db
+      .select({ id: schema.follows.targetActorId })
+      .from(schema.follows)
+      .where(eq(schema.follows.actorId, reader.actor.id));
+    expect(following.map((f) => f.id)).toEqual([target?.id]);
+    const [row] = await ctx.db
+      .select()
+      .from(schema.actors)
+      .where(eq(schema.actors.id, origin?.id ?? ''));
+    expect(row?.movedToActorId).toBe(target?.id);
+    // The follow of the new identity was announced with a Contact.
+    expect(sent.some((s) => s.url === 'https://pod-g.org/receive/users/ffffffffffffff02')).toBe(
+      true,
+    );
+  });
+
+  it('announces a move between two local accounts to diaspora* contacts', async () => {
+    const origin = await localUser();
+    const target = await localUser();
+    const daveRow = await bridge.resolvePerson(dave.id);
+    await follow(ctx, daveRow?.id ?? '', origin.actor.id);
+    await bridge.idle();
+    sent.length = 0;
+    await ctx.events?.publish({
+      type: 'account.moved',
+      actorId: origin.actor.id,
+      targetActorId: target.actor.id,
+    });
+    await bridge.idle();
+    const delivery = sent.find((s) => s.url === 'https://pod-d.org/receive/public');
+    const opened = await unenvelop(delivery?.body ?? '', {
+      fetchPublicKey: () => origin.actor.publicKeyPem,
+    });
+    expect(opened.sender).toBe(origin.id);
+    const entity = parseEntity(opened.payloadXml);
+    if (entity.type !== 'AccountMigration') throw new Error('not a migration');
+    expect(entity.author).toBe(origin.id);
+    expect(entity.profile.author).toBe(target.id);
+    expect(verifyAccountMigrationSignature(entity, target.actor.publicKeyPem)).toBe(true);
   });
 });

@@ -8,6 +8,7 @@ import {
   type Profile,
   type Retraction,
   serializeEntity,
+  signAccountMigration,
 } from '@disbigle/diaspora';
 import { eq } from 'drizzle-orm';
 import {
@@ -40,22 +41,45 @@ async function followedIds(ctx: DiasporaBridge['ctx'], actorId: string): Promise
   return rows.map((r) => r.id);
 }
 
+/** The public Profile entity of a local actor. */
+export function profileFor(
+  ctx: DiasporaBridge['ctx'],
+  actor: ActorRow,
+  diasporaId: string,
+): Profile {
+  const name = actor.displayName || actor.username;
+  const avatar = actor.avatarUrl ? new URL(actor.avatarUrl, ctx.config.PUBLIC_URL).href : null;
+  return {
+    type: 'Profile',
+    author: diasporaId,
+    fullName: name.slice(0, 70).replace(/;/g, ','),
+    firstName: name.slice(0, 32).replace(/;/g, ','),
+    ...(avatar ? { imageUrl: avatar, imageUrlMedium: avatar, imageUrlSmall: avatar } : {}),
+    ...(actor.summary ? { bio: htmlToText(actor.summary) } : {}),
+    searchable: actor.discoverable,
+    public: true,
+  };
+}
+
 /**
  * diaspora* event publisher. `publish` only queues work on the bridge queue, so requests never
  * wait for remote servers.
  *
- * Two facts are not carried by the current domain events and are remembered in memory
- * (lost on restart): the thread root of a deleted reply, and the guid of a removed like.
+ * Older cores did not put the thread root of a deleted reply and the guid of a removed like in
+ * the events; for those the publisher falls back to what it saw in this process.
  */
 export class DiasporaPublisher implements EventBus {
   private readonly replyRoots = new Map<string, string>();
   private readonly likeGuids = new Map<string, string>();
   private readonly contactsSent = new Set<string>();
 
-  constructor(private readonly bridge: DiasporaBridge) {}
+  constructor(private readonly bridge: DiasporaBridge) {
+    bridge.attachPublisher(this);
+  }
 
+  /** Queues the event; it is handled by whichever process consumes the bridge queue. */
   async publish(event: DomainEvent): Promise<void> {
-    this.bridge.queue.push(() => this.handle(event));
+    await this.bridge.queue.enqueue({ type: 'event', event });
   }
 
   private get ctx() {
@@ -92,6 +116,8 @@ export class DiasporaPublisher implements EventBus {
         return this.profileUpdated(event.actorId);
       case 'account.deleted':
         return this.accountDeleted(event.actorId);
+      case 'account.moved':
+        return this.accountMoved(event.actorId, event.targetActorId);
       case 'follow.created':
         return this.followCreated(event.actorId, event.targetActorId);
       default:
@@ -123,7 +149,7 @@ export class DiasporaPublisher implements EventBus {
         { explicitIds: [originalAuthor.id] },
       );
       const entity = reshareFor(ctx, post, author, original, originalAuthor);
-      sendToRecipients(this.bridge, serializeEntity(entity), signer, recipients);
+      await sendToRecipients(this.bridge, serializeEntity(entity), signer, recipients);
       return;
     }
 
@@ -136,7 +162,12 @@ export class DiasporaPublisher implements EventBus {
     }
 
     const entity = await statusMessageFor(ctx, post, author);
-    sendToRecipients(this.bridge, serializeEntity(entity), signer, await recipientsFor(ctx, post));
+    await sendToRecipients(
+      this.bridge,
+      serializeEntity(entity),
+      signer,
+      await recipientsFor(ctx, post),
+    );
   }
 
   private async postDeleted(event: Extract<DomainEvent, { type: 'post.deleted' }>) {
@@ -179,7 +210,7 @@ export class DiasporaPublisher implements EventBus {
       },
       { explicitIds },
     );
-    sendToRecipients(this.bridge, serializeEntity(retraction), signer, recipients);
+    await sendToRecipients(this.bridge, serializeEntity(retraction), signer, recipients);
   }
 
   private async likeCreated(event: Extract<DomainEvent, { type: 'like.created' }>) {
@@ -258,8 +289,44 @@ export class DiasporaPublisher implements EventBus {
     };
     const recipients = emptyRecipients();
     recipients.privateActors.push(target);
-    sendToRecipients(this.bridge, serializeEntity(contact), signer, recipients);
+    await sendToRecipients(this.bridge, serializeEntity(contact), signer, recipients);
     return true;
+  }
+
+  /**
+   * AccountMigration to the diaspora* contacts of a local account that moved. As in diaspora*,
+   * the old identity is the author (and signs the envelope) and the new identity signs the
+   * migration, so both keys are needed: this works when the new account is also local.
+   * For a move to another server, that server has to announce it (see the package notes).
+   */
+  private async accountMoved(actorId: string, targetActorId: string) {
+    const ctx = this.ctx;
+    const origin = await actorById(ctx, actorId);
+    const target = await actorById(ctx, targetActorId);
+    if (!origin || !target || origin.domain !== null) return;
+    const oldSigner = await signerFor(ctx, origin);
+    const newSigner = await signerFor(ctx, target);
+    if (!oldSigner) return;
+    if (!newSigner) {
+      console.warn(
+        `diaspora: ${oldSigner.diasporaId} moved to a remote account; AccountMigration needs the new key and must come from the new server`,
+      );
+      return;
+    }
+    const migration = signAccountMigration(
+      {
+        type: 'AccountMigration',
+        author: oldSigner.diasporaId,
+        profile: profileFor(ctx, target, newSigner.diasporaId),
+      },
+      newSigner.privateKey,
+    );
+    const recipients = await recipientsFor(
+      ctx,
+      { id: origin.id, actorId: origin.id, visibility: 'public', inReplyToActorId: null },
+      { explicitIds: await followedIds(ctx, origin.id) },
+    );
+    await sendToRecipients(this.bridge, serializeEntity(migration), oldSigner, recipients);
   }
 
   /** AccountDeletion to every diaspora* contact: followers and followed people. */
@@ -275,7 +342,7 @@ export class DiasporaPublisher implements EventBus {
       { explicitIds: await followedIds(ctx, actorId) },
     );
     const deletion: AccountDeletion = { type: 'AccountDeletion', author: signer.diasporaId };
-    sendToRecipients(this.bridge, serializeEntity(deletion), signer, recipients);
+    await sendToRecipients(this.bridge, serializeEntity(deletion), signer, recipients);
   }
 
   private async profileUpdated(actorId: string) {
@@ -283,28 +350,12 @@ export class DiasporaPublisher implements EventBus {
     const actor = await this.localActor(actorId);
     const signer = actor ? await signerFor(ctx, actor) : null;
     if (!actor || !signer) return;
-    const name = actor.displayName || actor.username;
-    const profile: Profile = {
-      type: 'Profile',
-      author: signer.diasporaId,
-      fullName: name.slice(0, 70).replace(/;/g, ','),
-      firstName: name.slice(0, 32).replace(/;/g, ','),
-      ...(actor.avatarUrl
-        ? {
-            imageUrl: new URL(actor.avatarUrl, ctx.config.PUBLIC_URL).href,
-            imageUrlMedium: new URL(actor.avatarUrl, ctx.config.PUBLIC_URL).href,
-            imageUrlSmall: new URL(actor.avatarUrl, ctx.config.PUBLIC_URL).href,
-          }
-        : {}),
-      ...(actor.summary ? { bio: htmlToText(actor.summary) } : {}),
-      searchable: actor.discoverable,
-      public: true,
-    };
+    const profile = profileFor(ctx, actor, signer.diasporaId);
     const recipients = await recipientsFor(
       ctx,
       { id: actor.id, actorId: actor.id, visibility: 'public', inReplyToActorId: null },
       { explicitIds: [] },
     );
-    sendToRecipients(this.bridge, serializeEntity(profile), signer, recipients);
+    await sendToRecipients(this.bridge, serializeEntity(profile), signer, recipients);
   }
 }

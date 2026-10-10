@@ -11,6 +11,7 @@ Environment=NODE_ENV=production
 Environment=TRUST_PROXY=true
 # Let the worker drain the federation queue.
 Environment=RUN_FEDERATION_QUEUE=false
+Environment=RUN_DIASPORA_QUEUE=false
 ExecStart=/opt/disbigle/node_modules/.bin/tsx src/main.ts
 Restart=on-failure
 RestartSec=5

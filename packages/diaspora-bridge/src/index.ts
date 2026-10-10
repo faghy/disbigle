@@ -6,8 +6,16 @@
 export * from './actors.ts';
 export * from './bridge.ts';
 export * from './delivery.ts';
-export { applyEntity, renderDiasporaText } from './incoming.ts';
+export {
+  applyEntity,
+  findActorByDiasporaId,
+  relayStored,
+  renderDiasporaText,
+} from './incoming.ts';
+export * from './moves.ts';
 export * from './outgoing.ts';
 export * from './publisher.ts';
+export * from './queue.ts';
+export * from './relayables.ts';
 export * from './routes.ts';
 export * from './text.ts';

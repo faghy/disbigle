@@ -20,6 +20,8 @@ import {
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
+  type AccountMigration,
+  accountMigrationOldIdentity,
   type Comment,
   type Contact,
   type Conversation,
@@ -28,6 +30,7 @@ import {
   type Message,
   type Profile,
   parseDiasporaId,
+  parseEntity,
   type ReceivedMessage,
   type Reshare,
   type Retraction,
@@ -45,12 +48,17 @@ import {
   threadRootOf,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
+import { moveVerified } from './moves.ts';
 import { recipientsFor, sendToRecipients, signerFor } from './outgoing.ts';
 import { diasporaMentionsToMarkdown, mimeTypeFromName, parseDiasporaMentions } from './text.ts';
 
 const { postAudiences, likes } = schema;
 
 /** Finds a known actor (local or already stored remote) by diaspora* ID, without network access. */
+export async function findActorByDiasporaId(ctx: CoreContext, id: string) {
+  return knownActor(ctx, id);
+}
+
 async function knownActor(ctx: CoreContext, id: string): Promise<ActorRow | null> {
   try {
     const parsed = parseDiasporaId(id);
@@ -118,6 +126,38 @@ const ignoreDomainErrors = (error: unknown) => {
   if (!(error instanceof DomainError)) throw error;
 };
 
+/** Keeps a received relayable exactly as signed (order, unknown elements, signature). */
+async function storeRelayable(
+  bridge: DiasporaBridge,
+  entity: Comment | Like,
+  links: { postId?: string | null; likeId?: string | null },
+): Promise<void> {
+  await bridge.relayables.save({
+    guid: entity.guid,
+    entityType: entity.type,
+    parentGuid: entity.parentGuid,
+    author: entity.author,
+    xml: serializeEntity(entity),
+    ...links,
+  });
+}
+
+/**
+ * Relays a stored relayable again to everyone currently in its thread (e.g. after a failure,
+ * or when the audience grew). Only possible when the thread root is local.
+ */
+export async function relayStored(bridge: DiasporaBridge, guid: string): Promise<boolean> {
+  const record = await bridge.relayables.get(guid);
+  if (!record) return false;
+  const target = await findPostByGuid(bridge.ctx, record.parentGuid);
+  if (!target) return false;
+  const root = await threadRootOf(bridge.ctx, target);
+  if (!root.local) return false;
+  const author = await findActorByDiasporaId(bridge.ctx, record.author);
+  await relay(bridge, parseEntity(record.xml), root, author?.id ?? '');
+  return true;
+}
+
 /** Re-sends a relayable (or its retraction) received for a local thread to everyone in it. */
 async function relay(
   bridge: DiasporaBridge,
@@ -131,7 +171,7 @@ async function relay(
   if (!signer) return;
   const recipients = await recipientsFor(bridge.ctx, root, { exclude: authorId });
   // The entity is serialised exactly as received: same order, unknown elements and signature.
-  sendToRecipients(bridge, serializeEntity(entity), signer, recipients);
+  await sendToRecipients(bridge, serializeEntity(entity), signer, recipients);
 }
 
 async function statusMessage(
@@ -205,6 +245,11 @@ async function likeEntity(bridge: DiasporaBridge, entity: Like, author: ActorRow
       ignoreDomainErrors,
     );
   }
+  const [row] = await bridge.ctx.db
+    .select({ id: likes.id })
+    .from(likes)
+    .where(eq(likes.diasporaGuid, entity.guid));
+  await storeRelayable(bridge, entity, { likeId: row?.id ?? null });
   await relay(bridge, entity, await threadRootOf(bridge.ctx, target), author.id);
 }
 
@@ -225,6 +270,7 @@ async function retraction(bridge: DiasporaBridge, entity: Retraction, sender: st
     if (!row) return;
     const post = await postById(ctx, row.postId);
     await unlike(ctx, row.actorId, row.postId);
+    await bridge.relayables.delete(entity.targetGuid);
     if (post) await relay(bridge, entity, await threadRootOf(ctx, post), row.actorId);
     return;
   }
@@ -235,6 +281,7 @@ async function retraction(bridge: DiasporaBridge, entity: Retraction, sender: st
   const postAuthor = await actorById(ctx, post.actorId);
   const asModerator = !postAuthor || diasporaIdOf(ctx, postAuthor) !== sender;
   await deletePost(ctx, post.actorId, post.id, { asModerator }).catch(ignoreDomainErrors);
+  await bridge.relayables.delete(entity.targetGuid);
   if (root) await relay(bridge, entity, root, post.actorId);
 }
 
@@ -307,6 +354,21 @@ async function conversation(
   for (const message of rest) await comment(bridge, message, author, root, recipient);
 }
 
+/**
+ * A person moved to a new identity; the protocol layer verified the migration signature.
+ * Local followers of the old identity now follow the new one.
+ */
+async function accountMigration(bridge: DiasporaBridge, entity: AccountMigration) {
+  const ctx = bridge.ctx;
+  const oldId = accountMigrationOldIdentity(entity);
+  if (!oldId) return;
+  const origin = await findActorByDiasporaId(ctx, oldId);
+  const target = await bridge.resolvePerson(entity.profile.author);
+  if (!origin || !target || origin.id === target.id || origin.domain === null) return;
+  if (target.domain !== null) await profile(bridge, entity.profile, target);
+  await moveVerified(ctx, origin.id, target.id);
+}
+
 /** Applies a verified message to the core. `recipient` is set for private deliveries. */
 export async function applyEntity(
   bridge: DiasporaBridge,
@@ -327,6 +389,8 @@ export async function applyEntity(
       const parent = await findPostByGuid(ctx, entity.parentGuid);
       if (!parent) return;
       await comment(bridge, entity, author, parent, recipient);
+      const stored = await findPostByGuid(ctx, entity.guid);
+      await storeRelayable(bridge, entity, { postId: stored?.id ?? null });
       return relay(bridge, entity, await threadRootOf(ctx, parent), author.id);
     }
     case 'Like':
@@ -348,8 +412,10 @@ export async function applyEntity(
       if (parent) await comment(bridge, entity, author, parent, recipient);
       return;
     }
+    case 'AccountMigration':
+      return accountMigration(bridge, entity);
     default:
-      // Participation, PollParticipation, EventParticipation, AccountMigration, Photo, Event:
+      // Participation, PollParticipation, EventParticipation, Photo, Event:
       // nothing to store yet.
       return;
   }

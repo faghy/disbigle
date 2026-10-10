@@ -84,7 +84,7 @@ export async function meRoutes(
       return reply
         .header(
           'content-disposition',
-          `attachment; filename="disbigle-${data.account.handle}-${date}.json"`,
+          `attachment; filename="disbigle-${data.account.handle.replace(/[^a-zA-Z0-9._@-]/g, '_')}-${date}.json"`,
         )
         .send(data);
     },

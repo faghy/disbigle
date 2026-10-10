@@ -6,6 +6,13 @@ import {
 import { loadConfig } from '@disbigle/config';
 import { type CoreContext, LocalMediaStorage } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
+import {
+  DbRelayableStore,
+  DiasporaBridge,
+  DiasporaPublisher,
+  RedisJobQueue,
+  startDiasporaQueue,
+} from '@disbigle/diaspora-bridge';
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { scheduledJobs } from './jobs.ts';
@@ -30,17 +37,25 @@ const federation = createDisbigleFederation({
   manuallyStartQueue: true,
 });
 const publishChannel = new Redis(config.REDIS_URL);
+const diaspora = new DiasporaBridge({
+  ctx,
+  queue: new RedisJobQueue(redis),
+  relayables: new DbRelayableStore(ctx),
+});
 ctx.events = new CompositeEventBus([
   {
     publish: async (event) =>
       void (await publishChannel.publish('disbigle:events', JSON.stringify(event))),
   },
   new ActivityPubPublisher(federation, ctx),
+  new DiasporaPublisher(diaspora),
 ]);
 
 const abort = new AbortController();
 void federation.startQueue(ctx, { signal: abort.signal });
 console.log('worker: federation queue started');
+void startDiasporaQueue(diaspora, { signal: abort.signal, concurrency: 8 });
+console.log('worker: diaspora queue started');
 
 const jobs = scheduledJobs({ ...ctx, storage: new LocalMediaStorage(config.MEDIA_DIR) });
 const timers = jobs.map((job) =>

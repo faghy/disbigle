@@ -142,22 +142,22 @@ export async function signerFor(ctx: CoreContext, actor: ActorRow): Promise<Sign
 }
 
 /** Wraps entity XML in a Magic Envelope and queues one delivery per public URL and private recipient. */
-export function sendToRecipients(
+export async function sendToRecipients(
   bridge: DiasporaBridge,
   payloadXml: string,
   signer: Signer,
   recipients: Recipients,
-): void {
+): Promise<void> {
   if (recipients.publicUrls.size === 0 && recipients.privateActors.length === 0) return;
   const envelope = createMagicEnvelope(payloadXml, signer.diasporaId, signer.privateKey);
   for (const url of recipients.publicUrls.keys()) {
-    bridge.deliverLater(url, () => envelope, MAGIC_ENV_CONTENT_TYPE);
+    await bridge.deliverLater(url, envelope, MAGIC_ENV_CONTENT_TYPE);
   }
   for (const actor of recipients.privateActors) {
     if (!actor.diasporaReceiveUrl) continue;
-    bridge.deliverLater(
+    await bridge.deliverLater(
       actor.diasporaReceiveUrl,
-      () => encryptMagicEnvelope(envelope, actor.publicKeyPem),
+      encryptMagicEnvelope(envelope, actor.publicKeyPem),
       ENCRYPTED_ENVELOPE_CONTENT_TYPE,
     );
   }
@@ -187,14 +187,14 @@ export async function sendInteraction(
   if (rootAuthor.domain === null) {
     const rootSigner = await signerFor(ctx, rootAuthor);
     if (!rootSigner) return;
-    sendToRecipients(bridge, xml, rootSigner, await recipientsFor(ctx, root));
+    await sendToRecipients(bridge, xml, rootSigner, await recipientsFor(ctx, root));
     return;
   }
   if (!deliversViaDiaspora(rootAuthor)) return;
   const recipients = emptyRecipients();
   if (isPublicVisibility(root.visibility)) addPublic(recipients, rootAuthor);
   else addPrivate(recipients, rootAuthor);
-  sendToRecipients(bridge, xml, authorSigner, recipients);
+  await sendToRecipients(bridge, xml, authorSigner, recipients);
 }
 
 /** Mentions of a post, keyed for the mention resolver. */

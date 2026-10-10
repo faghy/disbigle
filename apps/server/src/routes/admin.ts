@@ -72,6 +72,7 @@ export async function adminRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCont
         origin: z.enum(['local', 'remote']).optional(),
         status: z.enum(['active', 'suspended']).optional(),
         limit: z.coerce.number().int().min(1).max(200).default(50),
+        offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
       }),
       request.query,
     );

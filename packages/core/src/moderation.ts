@@ -3,6 +3,7 @@ import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizz
 import { serializeAccount } from './accounts/serialize.ts';
 import type { CoreContext } from './context.ts';
 import { DomainError } from './errors.ts';
+import { hydrateStatuses } from './social/statuses.ts';
 
 const {
   users,
@@ -94,6 +95,7 @@ export async function listAccountsForAdmin(
     origin?: 'local' | 'remote';
     status?: 'active' | 'suspended';
     limit?: number;
+    offset?: number;
   },
 ) {
   const term = filter.query ? `%${filter.query.replace(/[%_\\]/g, (c) => `\\${c}`)}%` : null;
@@ -123,7 +125,8 @@ export async function listAccountsForAdmin(
       ),
     )
     .orderBy(desc(actors.id))
-    .limit(Math.min(filter.limit ?? 50, 200));
+    .limit(Math.min(filter.limit ?? 50, 200))
+    .offset(filter.offset ?? 0);
   return rows.map(({ actor, user }) => ({
     account: serializeAccount(actor),
     domain: actor.domain,
@@ -368,6 +371,14 @@ export async function listReports(ctx: CoreContext, options: { resolved?: boolea
       ? await ctx.db.select().from(reporter).where(inArray(reporter.id, actorIds))
       : [];
   const byId = new Map(actorRows.map((a) => [a.id, serializeAccount(a)]));
+  const reportedIds = [...new Set(rows.flatMap((r) => r.postIds))];
+  const reportedRows =
+    reportedIds.length > 0
+      ? await ctx.db.select().from(posts).where(inArray(posts.id, reportedIds))
+      : [];
+  const statusesById = new Map(
+    (await hydrateStatuses(ctx, null, reportedRows)).map((s) => [s.id, s]),
+  );
   return rows.map((r) => ({
     id: r.id,
     category: r.category,
@@ -377,6 +388,8 @@ export async function listReports(ctx: CoreContext, options: { resolved?: boolea
     resolvedAt: r.resolvedAt?.toISOString() ?? null,
     reporter: byId.get(r.reporterActorId) ?? null,
     target: byId.get(r.targetActorId) ?? null,
+    // Moderators see the reported posts whatever their visibility.
+    statuses: r.postIds.map((id) => statusesById.get(id)).filter((s) => s !== undefined),
   }));
 }
 

@@ -50,6 +50,13 @@
       "when": 1791676059036,
       "tag": "0006_instance_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791676393694,
+      "tag": "0007_diaspora_relayables",
+      "breakpoints": true
     }
   ]
 }

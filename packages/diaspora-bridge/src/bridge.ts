@@ -1,6 +1,7 @@
 // The diaspora* side of a Disbigle instance: discovery, receiving and delivery plumbing.
 import {
   type CoreContext,
+  DomainError,
   domainBlockSeverity,
   findActorByHandle,
   findPostByGuid,
@@ -8,6 +9,7 @@ import {
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
+  DiasporaError,
   decryptMagicEnvelope,
   InvalidSignatureError,
   NotPublicError,
@@ -19,6 +21,7 @@ import {
   type ReceivedMessage,
   type ReceiveOptions,
   type RelatedEntity,
+  RelatedEntityNotFoundError,
   SignatureVerificationError,
   unenvelop,
   verifyReceivedEntity,
@@ -33,9 +36,18 @@ import {
   podBaseUrl,
   postById,
 } from './actors.ts';
-import { type DeliverFn, httpDeliver, TaskQueue } from './delivery.ts';
+import { type DeliverFn, DeliveryHttpError, httpDeliver } from './delivery.ts';
 import { applyEntity } from './incoming.ts';
 import { localActorByGuid } from './outgoing.ts';
+import {
+  type DiasporaJob,
+  type FailureListener,
+  type JobQueue,
+  type ListenOptions,
+  MemoryJobQueue,
+  PermanentJobError,
+} from './queue.ts';
+import { MemoryRelayableStore, type RelayableStore } from './relayables.ts';
 
 export interface DiasporaBridgeOptions {
   ctx: CoreContext;
@@ -45,12 +57,26 @@ export interface DiasporaBridgeOptions {
   fetch?: typeof globalThis.fetch;
   /** Discovery over plain HTTP (tests and development only). */
   allowHttp?: boolean;
-  /** Parallel background jobs. */
+  /**
+   * Background job queue. Defaults to an in-memory queue consumed in this process; pass a
+   * `RedisJobQueue` for persistence and consume it with `startDiasporaQueue` (server or worker).
+   */
+  queue?: JobQueue;
+  /** Consume the queue in this process. Defaults to true for the in-memory queue only. */
+  consume?: boolean;
+  /** Parallel jobs when consuming here. */
   concurrency?: number;
+  /** Received relayables, for late relaying and `/fetch`. In memory by default. */
+  relayables?: RelayableStore;
   /** Re-discover remote people older than this (default 24 hours). */
   refreshAfterMs?: number;
-  /** Called with errors of background jobs (receiving and delivery). */
+  /** Called when a job of the default in-memory queue fails for good. */
   onError?: (error: unknown) => void;
+}
+
+/** Something that handles domain events in jobs (the `DiasporaPublisher`). */
+export interface EventJobHandler {
+  handle(event: Extract<DiasporaJob, { type: 'event' }>['event']): Promise<void>;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -61,7 +87,9 @@ const DAY = 24 * 60 * 60 * 1000;
  */
 export class DiasporaBridge {
   readonly ctx: CoreContext;
-  readonly queue: TaskQueue;
+  readonly queue: JobQueue;
+  readonly relayables: RelayableStore;
+  private publisher: EventJobHandler | undefined;
   private readonly deliverFn: DeliverFn;
   private readonly fetchFn: typeof globalThis.fetch;
   private readonly allowHttp: boolean;
@@ -73,17 +101,63 @@ export class DiasporaBridge {
     this.fetchFn = options.fetch ?? globalThis.fetch;
     this.allowHttp = options.allowHttp ?? false;
     this.refreshAfterMs = options.refreshAfterMs ?? DAY;
-    this.queue = new TaskQueue(options.concurrency ?? 4, options.onError);
+    const onFailure: FailureListener | undefined = options.onError
+      ? (error) => options.onError?.(error)
+      : undefined;
+    this.queue = options.queue ?? new MemoryJobQueue(onFailure ? { onFailure } : {});
+    this.relayables = options.relayables ?? new MemoryRelayableStore();
+    if (options.consume ?? !options.queue) {
+      void this.startQueue({ concurrency: options.concurrency ?? 4 });
+    }
   }
 
-  /** Queues a delivery; the body is built lazily (encryption happens in the background). */
-  deliverLater(url: string, body: () => string, contentType: string): void {
-    this.queue.push(() => this.deliverFn(url, body(), contentType));
+  /** Lets the publisher handle `event` jobs (called by `DiasporaPublisher`). */
+  attachPublisher(publisher: EventJobHandler): void {
+    this.publisher = publisher;
+  }
+
+  /** Consumes the job queue in this process until `signal` aborts. */
+  startQueue(options: ListenOptions = {}): Promise<void> {
+    return this.queue.listen((job) => this.runJob(job), options);
+  }
+
+  /** Queues one delivery. */
+  async deliverLater(url: string, body: string, contentType: string): Promise<void> {
+    await this.queue.enqueue({ type: 'deliver', url, body, contentType });
   }
 
   /** Resolves when all queued work is done. */
   idle(): Promise<void> {
     return this.queue.idle();
+  }
+
+  /** Runs one job. Errors that retrying cannot fix become `PermanentJobError`. */
+  async runJob(job: DiasporaJob): Promise<void> {
+    try {
+      switch (job.type) {
+        case 'deliver':
+          await this.deliverFn(job.url, job.body, job.contentType);
+          return;
+        case 'receive-public':
+          await this.process(job.body, { isPublic: true });
+          return;
+        case 'receive-private': {
+          const recipient = await localActorByGuid(this.ctx, job.recipientGuid);
+          if (recipient) await this.receivePrivate(recipient, job.body);
+          return;
+        }
+        case 'event':
+          await this.publisher?.handle(job.event);
+          return;
+      }
+    } catch (error) {
+      if (isPermanent(error)) {
+        throw new PermanentJobError(error instanceof Error ? error.message : String(error), {
+          cause: error,
+        });
+      }
+      throw error;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -120,6 +194,24 @@ export class DiasporaBridge {
     }
     if ((await domainBlockSeverity(ctx, id.host)) === 'suspend') return null;
 
+    try {
+      return await this.discover(id.id, id.username, id.host, known);
+    } catch (error) {
+      // Keep using what we know when the remote server is temporarily unreachable.
+      if (known?.protocols.includes('diaspora') && known.diasporaGuid && !options.refresh)
+        return known;
+      throw error;
+    }
+  }
+
+  private async discover(
+    diasporaId: string,
+    username: string,
+    host: string,
+    known: ActorRow | null,
+  ): Promise<ActorRow> {
+    const ctx = this.ctx;
+    const id = { id: diasporaId, username, host };
     const scheme = this.allowHttp ? 'http' : 'https';
     const finger = await this.get(
       `${scheme}://${id.host}/.well-known/webfinger?resource=acct:${id.id}`,
@@ -226,19 +318,15 @@ export class DiasporaBridge {
   // Receiving
 
   /** Queues a `/receive/public` body for processing. */
-  enqueuePublic(body: string): void {
-    this.queue.push(async () => {
-      await this.process(body, { isPublic: true });
-    });
+  async enqueuePublic(body: string): Promise<void> {
+    await this.queue.enqueue({ type: 'receive-public', body });
   }
 
   /** Queues a `/receive/users/:guid` body; false when the recipient is unknown. */
   async enqueuePrivate(recipientGuid: string, body: string): Promise<boolean> {
     const recipient = await localActorByGuid(this.ctx, recipientGuid);
     if (!recipient) return false;
-    this.queue.push(async () => {
-      await this.receivePrivate(recipient, body);
-    });
+    await this.queue.enqueue({ type: 'receive-private', recipientGuid, body });
     return true;
   }
 
@@ -312,6 +400,21 @@ export class DiasporaBridge {
     await applyEntity(this, message, options.recipient);
     return message;
   }
+}
+
+/** Errors that will not go away by retrying the job. */
+function isPermanent(error: unknown): boolean {
+  if (error instanceof PermanentJobError) return true;
+  if (error instanceof DeliveryHttpError) return error.permanent;
+  // A parent or target may still arrive (or be fetched) later.
+  if (error instanceof RelatedEntityNotFoundError) return false;
+  // Bad signatures, invalid XML, unknown entities, refused by the core...
+  return error instanceof DiasporaError || error instanceof DomainError;
+}
+
+/** Consumes the bridge job queue (server or worker process) until `signal` aborts. */
+export function startDiasporaQueue(bridge: DiasporaBridge, options: ListenOptions = {}) {
+  return bridge.startQueue(options);
 }
 
 function assertPublic({ entity }: ReceivedMessage): void {

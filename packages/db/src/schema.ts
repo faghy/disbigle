@@ -578,3 +578,21 @@ export const instanceKeys = pgTable('instance_keys', {
   ed25519PublicKeyPem: text('ed25519_public_key_pem').notNull(),
   createdAt: createdAt(),
 });
+
+/** diaspora* relayables (comments, likes) as received, author signature included, for relaying and /fetch. */
+export const diasporaRelayables = pgTable(
+  'diaspora_relayables',
+  {
+    guid: text('guid').primaryKey(),
+    entityType: text('entity_type').notNull(),
+    parentGuid: text('parent_guid').notNull(),
+    /** diaspora* ID of the author. */
+    author: text('author').notNull(),
+    /** Entity XML exactly as signed (order and unknown elements kept). */
+    xml: text('xml').notNull(),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    likeId: uuid('like_id').references(() => likes.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('diaspora_relayables_parent_idx').on(t.parentGuid)],
+);
