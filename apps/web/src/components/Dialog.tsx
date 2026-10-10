@@ -7,7 +7,8 @@ import {
   useRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './ui.tsx';
+import { CloseIcon } from './icons.tsx';
+import { Button, cx } from './ui.tsx';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -101,6 +102,79 @@ export function ConfirmDialog({
             {confirmLabel}
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** A general modal dialog with a title and a close button; Escape or the backdrop closes it. */
+export function Modal({
+  title,
+  description,
+  onClose,
+  children,
+  initialFocus,
+  wide = false,
+}: {
+  title: string;
+  description?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  initialFocus?: string;
+  wide?: boolean;
+}) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  const descriptionId = useId();
+  const ref = useRef<HTMLDivElement>(null);
+  const trap = useFocusTrap(ref, initialFocus);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
+        className={cx(
+          'flex max-h-[92dvh] w-full flex-col rounded-t-2xl border border-border bg-surface shadow-xl sm:rounded-2xl',
+          wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
+        )}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            onClose();
+          }
+          trap(event);
+        }}
+      >
+        <header className="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <h2 id={titleId} className="text-lg font-semibold">
+              {title}
+            </h2>
+            {description && (
+              <p id={descriptionId} className="mt-0.5 text-sm text-fg-muted">
+                {description}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('common.close')}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring"
+          >
+            <CloseIcon size={18} />
+          </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
       </div>
     </div>
   );

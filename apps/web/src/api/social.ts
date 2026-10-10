@@ -2,6 +2,7 @@ import type {
   Account,
   Aspect,
   CreatePostRequest,
+  EditPostRequest,
   MediaAttachment,
   Notification,
   Relationship,
@@ -21,6 +22,28 @@ export interface PageParams {
 
 export const PAGE_SIZE = 20;
 
+/** Offset paging for follower and following lists. */
+export interface OffsetPage {
+  limit?: number;
+  offset?: number;
+}
+
+export interface TagInfo {
+  name: string;
+  following: boolean;
+  postsCount: number;
+}
+
+export const reportCategories = ['spam', 'illegal', 'harassment', 'violation', 'other'] as const;
+export type ReportCategory = (typeof reportCategories)[number];
+
+export interface ReportRequest {
+  accountId: string;
+  statusIds: string[];
+  category: ReportCategory;
+  comment: string;
+}
+
 const id = (value: string) => encodeURIComponent(value);
 
 export type StatusAction = 'like' | 'unlike' | 'reblog' | 'unreblog' | 'bookmark' | 'unbookmark';
@@ -31,6 +54,8 @@ export const social = {
   createStatus: (body: CreatePostRequest) => api.post<Status>('/statuses', body),
   status: (statusId: string) => api.get<Status>(`/statuses/${id(statusId)}`),
   context: (statusId: string) => api.get<StatusContext>(`/statuses/${id(statusId)}/context`),
+  editStatus: (statusId: string, body: EditPostRequest) =>
+    api.put<Status>(`/statuses/${id(statusId)}`, body),
   deleteStatus: (statusId: string) => api.delete<Ok>(`/statuses/${id(statusId)}`),
   statusAction: (statusId: string, action: StatusAction) =>
     api.post<Status>(`/statuses/${id(statusId)}/${action}`),
@@ -63,8 +88,10 @@ export const social = {
     api.post<Relationship>(`/accounts/${id(accountId)}/${action}`),
   setAspectMemberships: (accountId: string, aspectIds: string[]) =>
     api.put<Relationship>(`/accounts/${id(accountId)}/aspects`, { aspectIds }),
-  followers: (accountId: string) => api.get<Account[]>(`/accounts/${id(accountId)}/followers`),
-  following: (accountId: string) => api.get<Account[]>(`/accounts/${id(accountId)}/following`),
+  followers: (accountId: string, page: OffsetPage = {}) =>
+    api.get<Account[]>(`/accounts/${id(accountId)}/followers${queryString({ ...page })}`),
+  following: (accountId: string, page: OffsetPage = {}) =>
+    api.get<Account[]>(`/accounts/${id(accountId)}/following${queryString({ ...page })}`),
   authorizeFollowRequest: (accountId: string) =>
     api.post<Relationship>(`/follow_requests/${id(accountId)}/authorize`),
   rejectFollowRequest: (accountId: string) =>
@@ -83,6 +110,18 @@ export const social = {
     api.get<Notification[]>(`/notifications${queryString({ ...page })}`),
   unreadCount: () => api.get<{ count: number }>('/notifications/unread_count'),
   markNotificationsRead: () => api.post<Ok>('/notifications/read'),
+
+  // Hashtags
+  tag: (name: string) => api.get<TagInfo>(`/tags/${id(name)}`),
+  followTag: (name: string, follow: boolean) =>
+    api.post<TagInfo>(`/tags/${id(name)}/${follow ? 'follow' : 'unfollow'}`),
+  followedTags: () => api.get<string[]>('/tags/followed'),
+
+  // Search and reports
+  searchAccounts: (q: string) => api.get<Account[]>(`/search/accounts${queryString({ q })}`),
+  /** Fetches a remote account by handle or URL; `null` when nothing was found. */
+  resolveAccount: (q: string) => api.post<Account | null>('/search/resolve', { q }),
+  report: (body: ReportRequest) => api.post<{ id: string }>('/reports', body),
 
   // Media
   uploadMedia: (file: File, description = '') => {

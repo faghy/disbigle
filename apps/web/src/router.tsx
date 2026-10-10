@@ -6,15 +6,23 @@ import {
   type RouterHistory,
   redirect,
 } from '@tanstack/react-router';
+import { isModerator } from './api/admin.ts';
 import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
+import { AccountsPage } from './pages/admin/Accounts.tsx';
+import { AdminLayout } from './pages/admin/AdminLayout.tsx';
+import { DomainBlocksPage } from './pages/admin/DomainBlocks.tsx';
+import { PendingPage } from './pages/admin/Pending.tsx';
+import { ReportsPage } from './pages/admin/Reports.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { HomePage } from './pages/Home.tsx';
 import { LoginPage } from './pages/Login.tsx';
 import { NotificationsPage } from './pages/Notifications.tsx';
+import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx';
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
+import { SearchPage } from './pages/Search.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
 import { ProfileSettingsPage } from './pages/settings/ProfileSettings.tsx';
@@ -50,6 +58,13 @@ async function signedInOnly({ context }: { context: RouterContext }) {
   if (!me) throw redirect({ to: '/login' });
 }
 
+/** The moderation area: moderators and administrators only. */
+async function moderatorsOnly({ context }: { context: RouterContext }) {
+  const me = await context.queryClient.ensureQueryData(meQueryOptions);
+  if (!me) throw redirect({ to: '/login' });
+  if (!isModerator(me)) throw redirect({ to: '/' });
+}
+
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
@@ -59,6 +74,9 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
+  validateSearch: (search: Record<string, unknown>): { reset?: 'done' | undefined } => ({
+    reset: search.reset === 'done' ? 'done' : undefined,
+  }),
   beforeLoad: guestOnly,
   component: LoginPage,
 });
@@ -161,6 +179,70 @@ const aspectTimelineRoute = createRoute({
   component: AspectTimelinePage,
 });
 
+const searchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/search',
+  validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
+    q: typeof search.q === 'string' && search.q.trim() ? search.q.slice(0, 500) : undefined,
+  }),
+  component: SearchPage,
+});
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  beforeLoad: moderatorsOnly,
+  component: AdminLayout,
+});
+
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/pending' });
+  },
+});
+
+const adminPendingRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/pending',
+  component: PendingPage,
+});
+
+const adminReportsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/reports',
+  component: ReportsPage,
+});
+
+const adminAccountsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/accounts',
+  component: AccountsPage,
+});
+
+const adminDomainsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/domains',
+  component: DomainBlocksPage,
+});
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  beforeLoad: guestOnly,
+  component: ForgotPasswordPage,
+});
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  validateSearch: (search: Record<string, unknown>): { token?: string | undefined } => ({
+    token: typeof search.token === 'string' ? search.token.slice(0, 200) : undefined,
+  }),
+  component: ResetPasswordPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -180,6 +262,16 @@ export const routeTree = rootRoute.addChildren([
   notificationsRoute,
   aspectsRoute,
   aspectTimelineRoute,
+  searchRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
+  adminRoute.addChildren([
+    adminIndexRoute,
+    adminPendingRoute,
+    adminReportsRoute,
+    adminAccountsRoute,
+    adminDomainsRoute,
+  ]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient, history?: RouterHistory) {
@@ -189,6 +281,8 @@ export function createAppRouter(queryClient: QueryClient, history?: RouterHistor
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
     scrollRestoration: true,
+    // Remote handles keep their `@` in the address bar: /@carol@mastodon.example
+    pathParamsAllowedCharacters: ['@'],
     ...(history ? { history } : {}),
   });
 }

@@ -1,4 +1,4 @@
-import type { Account, MediaAttachment, Status } from '@disbigle/shared';
+import type { Account, MediaAttachment, Mention, Status } from '@disbigle/shared';
 import { Link, useRouter } from '@tanstack/react-router';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { canReshare, visibilityIcons } from '../lib/visibility.tsx';
 import { Avatar } from './Avatar.tsx';
 import { Composer } from './Composer.tsx';
 import { ConfirmDialog } from './Dialog.tsx';
+import { EditStatusForm } from './EditStatusForm.tsx';
 import {
   BookmarkIcon,
   HeartIcon,
@@ -22,6 +23,7 @@ import {
   WarningIcon,
 } from './icons.tsx';
 import { Lightbox } from './Lightbox.tsx';
+import { ReportDialog } from './ReportDialog.tsx';
 import { Alert, cx } from './ui.tsx';
 
 /** Path of a post page inside the app. */
@@ -30,7 +32,13 @@ export const statusPath = (status: Status) => ({
   params: { username: status.account.acct, statusId: status.id },
 });
 
-/** Links to a local profile inside the app, or to the remote server for remote accounts. */
+/** Path of a profile page inside the app; remote accounts use their full `user@domain`. */
+export const profilePath = (account: Pick<Account, 'acct'>) => ({
+  to: '/@{$username}' as const,
+  params: { username: account.acct },
+});
+
+/** Links to a profile inside the app, for local and remote accounts alike. */
 export function AccountLink({
   account,
   className,
@@ -40,15 +48,8 @@ export function AccountLink({
   className?: string;
   children: ReactNode;
 }) {
-  if (!account.local && account.url) {
-    return (
-      <a href={account.url} className={className} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    );
-  }
   return (
-    <Link to="/@{$username}" params={{ username: account.username }} className={className}>
+    <Link {...profilePath(account)} className={className}>
       {children}
     </Link>
   );
@@ -58,13 +59,34 @@ export const displayName = (account: Account) => account.displayName || account.
 
 const INTERNAL_PATH = /^\/(@[A-Za-z0-9_]{1,30}(\/[0-9a-f-]{36})?|tags\/[^/?#]+)\/?$/;
 
+/** Normalises a URL for comparison (no trailing slash, no fragment). */
+const sameUrl = (a: string, b: string) => {
+  try {
+    const x = new URL(a);
+    const y = new URL(b);
+    return x.origin === y.origin && x.pathname.replace(/\/$/, '') === y.pathname.replace(/\/$/, '');
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Post HTML, sanitised by the server. Links to profiles, posts and tags of this server
- * open inside the app instead of a new tab.
+ * open inside the app, and so do mentions of remote people (their profile page here).
  */
-export function StatusContent({ html, className }: { html: string; className?: string }) {
+export function StatusContent({
+  html,
+  mentions = [],
+  className,
+}: {
+  html: string;
+  mentions?: Mention[];
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const mentionsRef = useRef(mentions);
+  mentionsRef.current = mentions;
 
   useEffect(() => {
     const element = ref.current;
@@ -78,6 +100,14 @@ export function StatusContent({ html, className }: { html: string; className?: s
       try {
         url = new URL(anchor.href, window.location.href);
       } catch {
+        return;
+      }
+      const mention = anchor.classList.contains('mention')
+        ? mentionsRef.current.find((m) => m.url && sameUrl(m.url, url.href))
+        : undefined;
+      if (mention) {
+        event.preventDefault();
+        router.history.push(`/@${mention.acct}`);
         return;
       }
       if (url.origin !== window.location.origin || !INTERNAL_PATH.test(url.pathname)) return;
@@ -264,10 +294,21 @@ function ActionButton({
   );
 }
 
-function MoreMenu({ status, isAuthor }: { status: Status; isAuthor: boolean }) {
+function MoreMenu({
+  status,
+  isAuthor,
+  signedIn,
+  onEdit,
+}: {
+  status: Status;
+  isAuthor: boolean;
+  signedIn: boolean;
+  onEdit: () => void;
+}) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -320,6 +361,18 @@ function MoreMenu({ status, isAuthor }: { status: Status; isAuthor: boolean }) {
             {t('status.openOriginal')}
           </a>
         )}
+        {isAuthor && status.account.local && (
+          <button
+            type="button"
+            className={itemClass}
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+          >
+            {t('status.edit')}
+          </button>
+        )}
         {isAuthor && (
           <button
             type="button"
@@ -332,7 +385,29 @@ function MoreMenu({ status, isAuthor }: { status: Status; isAuthor: boolean }) {
             {t('status.delete')}
           </button>
         )}
+        {signedIn && !isAuthor && (
+          <button
+            type="button"
+            className={cx(itemClass, 'text-danger')}
+            onClick={() => {
+              setOpen(false);
+              setReporting(true);
+            }}
+          >
+            {t('status.report', { acct: status.account.acct })}
+          </button>
+        )}
       </div>
+      {reporting && (
+        <ReportDialog
+          account={status.account}
+          status={status}
+          onClose={() => {
+            setReporting(false);
+            buttonRef.current?.focus();
+          }}
+        />
+      )}
       {confirming && (
         <ConfirmDialog
           title={t('status.deleteTitle')}
@@ -387,6 +462,7 @@ export function StatusCard({
   const isAuthor = user?.account.id === account.id;
   const [expanded, setExpanded] = useState(false);
   const [replying, setReplying] = useState(false);
+  const [editing, setEditing] = useState(false);
   const toggle = useToggleStatus();
   const contentId = useId();
   const headingId = useId();
@@ -439,6 +515,16 @@ export function StatusCard({
                     : relativeTime(status.createdAt, i18n.language)}
                 </time>
               </Link>
+              {status.editedAt && (
+                <span
+                  className="text-xs text-fg-muted"
+                  title={t('status.editedAt', {
+                    date: fullDateTime(status.editedAt, i18n.language),
+                  })}
+                >
+                  {t('status.edited')}
+                </span>
+              )}
               <VisibilityBadge status={status} isAuthor={isAuthor} />
             </div>
           </header>
@@ -459,10 +545,12 @@ export function StatusCard({
             </div>
           )}
 
-          <div id={contentId} hidden={hasWarning && !expanded}>
+          {editing && <EditStatusForm status={status} onDone={() => setEditing(false)} />}
+          <div id={contentId} hidden={editing || (hasWarning && !expanded)}>
             {status.content && (
               <StatusContent
                 html={status.content}
+                mentions={status.mentions}
                 className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
               />
             )}
@@ -518,7 +606,12 @@ export function StatusCard({
             >
               <BookmarkIcon size={18} filled={status.bookmarked} />
             </ActionButton>
-            <MoreMenu status={status} isAuthor={isAuthor} />
+            <MoreMenu
+              status={status}
+              isAuthor={isAuthor}
+              signedIn={signedIn}
+              onEdit={() => setEditing(true)}
+            />
           </div>
           {toggle.error && <Alert className="mt-2">{errorMessage(toggle.error)}</Alert>}
 

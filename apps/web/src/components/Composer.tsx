@@ -1,10 +1,4 @@
-import {
-  type CreatePostRequest,
-  MAX_POST_LENGTH,
-  type MediaAttachment,
-  type Status,
-  type Visibility,
-} from '@disbigle/shared';
+import type { CreatePostRequest, MediaAttachment, Status, Visibility } from '@disbigle/shared';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -17,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom, isFieldError } from '../api/errors.ts';
 import { useCreateStatus } from '../api/mutations.ts';
-import { useCurrentUser } from '../api/queries.ts';
+import { useCurrentUser, useLimits } from '../api/queries.ts';
 import { social } from '../api/social.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
@@ -26,11 +20,6 @@ import { Avatar } from './Avatar.tsx';
 import { CloseIcon, ImageIcon, WarningIcon } from './icons.tsx';
 import { Alert, Button, cx, Spinner } from './ui.tsx';
 
-export const MAX_MEDIA = 4;
-export const MAX_IMAGE_BYTES = 16 * 1024 * 1024;
-export const MAX_AV_BYTES = 40 * 1024 * 1024;
-export const ACCEPTED_MEDIA =
-  'image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,audio/mpeg,audio/ogg,audio/mp4';
 const MAX_DESCRIPTION = 1500;
 
 interface MediaItem {
@@ -75,6 +64,9 @@ export function Composer({
   const user = useCurrentUser();
   const aspects = useAspects();
   const create = useCreateStatus();
+  const limits = useLimits();
+  const maxLength = limits.maxPostLength;
+  const maxMedia = limits.maxMediaAttachments;
   const ids = { text: useId(), counter: useId(), warning: useId(), error: useId() };
   const ownTextarea = useRef<HTMLTextAreaElement>(null);
   const textarea = textareaRef ?? ownTextarea;
@@ -121,7 +113,7 @@ export function Composer({
   if (!user) return null;
 
   const length = content.length;
-  const remaining = MAX_POST_LENGTH - length;
+  const remaining = maxLength - length;
   const uploading = media.some((item) => item.state === 'uploading');
   const serverErrors = fieldErrorsFrom(create.error);
   const allErrors = { ...serverErrors, ...errors };
@@ -132,9 +124,9 @@ export function Composer({
   const addFiles = (files: FileList | null) => {
     if (!files) return;
     setMediaError(null);
-    const room = MAX_MEDIA - media.length;
+    const room = maxMedia - media.length;
     const list = [...files];
-    if (list.length > room) setMediaError(t('composer.media.tooMany', { max: MAX_MEDIA }));
+    if (list.length > room) setMediaError(t('composer.media.tooMany', { max: maxMedia }));
     for (const file of list.slice(0, Math.max(0, room))) {
       const kind = file.type.startsWith('image/')
         ? 'image'
@@ -143,11 +135,11 @@ export function Composer({
           : file.type.startsWith('audio/')
             ? 'audio'
             : null;
-      if (!kind || !ACCEPTED_MEDIA.split(',').includes(file.type)) {
+      if (!kind || !limits.acceptedMediaTypes.includes(file.type)) {
         setMediaError(t('composer.media.unsupported', { name: file.name }));
         continue;
       }
-      const limit = kind === 'image' ? MAX_IMAGE_BYTES : MAX_AV_BYTES;
+      const limit = kind === 'image' ? limits.maxImageBytes : limits.maxVideoBytes;
       if (file.size > limit) {
         setMediaError(
           t('composer.media.tooLarge', { name: file.name, size: Math.round(limit / 1024 / 1024) }),
@@ -202,8 +194,7 @@ export function Composer({
     const found: Record<string, string> = {};
     const ready = media.filter((item) => item.state === 'ready');
     if (!content.trim() && ready.length === 0) found.content = t('composer.errors.empty');
-    if (length > MAX_POST_LENGTH)
-      found.content = t('composer.errors.tooLong', { max: MAX_POST_LENGTH });
+    if (length > maxLength) found.content = t('composer.errors.tooLong', { max: maxLength });
     if (!lockedAudience && audience.visibility === 'limited' && audience.aspectIds.length === 0)
       found.aspectIds = t('composer.errors.aspectsRequired');
     if (media.some((item) => item.state === 'error'))
@@ -435,7 +426,7 @@ export function Composer({
             <input
               ref={fileInput}
               type="file"
-              accept={ACCEPTED_MEDIA}
+              accept={limits.acceptedMediaTypes.join(',')}
               multiple
               className="sr-only"
               tabIndex={-1}
@@ -449,7 +440,7 @@ export function Composer({
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              disabled={media.length >= MAX_MEDIA}
+              disabled={media.length >= maxMedia}
               aria-label={t('composer.media.add')}
               title={t('composer.media.add')}
               className="inline-flex size-9 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring disabled:opacity-40"

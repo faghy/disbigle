@@ -27,7 +27,10 @@
     "aspects": "Aspects",
     "bookmarks": "Bookmarks",
     "unread_one": "{{count}} unread notification",
-    "unread_other": "{{count}} unread notifications"
+    "unread_other": "{{count}} unread notifications",
+    "moderation": "Moderation",
+    "moderationPending_one": "{{count}} item waiting for moderators",
+    "moderationPending_other": "{{count}} items waiting for moderators"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -59,7 +62,8 @@
     "mfaPasskey": "Use a passkey",
     "codeInvalid": "Enter the code shown by your app (at least 6 characters).",
     "mfaExpired": "Your sign-in expired. Please enter your password again.",
-    "back": "Back to sign in"
+    "back": "Back to sign in",
+    "forgot": "Forgot your password?"
   },
   "register": {
     "title": "Create your account",
@@ -121,7 +125,18 @@
     },
     "noPosts": "No posts yet.",
     "noFollowers": "No followers yet.",
-    "noFollowing": "Not following anyone yet."
+    "noFollowing": "Not following anyone yet.",
+    "openOriginal": "Open on the original server",
+    "report": "Report {{name}}",
+    "cancelRequestFor": "Cancel follow request to {{name}}",
+    "counts": {
+      "posts_one": "<strong>{{formatted}}</strong> post",
+      "posts_other": "<strong>{{formatted}}</strong> posts",
+      "followers_one": "<strong>{{formatted}}</strong> follower",
+      "followers_other": "<strong>{{formatted}}</strong> followers",
+      "following_one": "<strong>{{formatted}}</strong> following",
+      "following_other": "<strong>{{formatted}}</strong> following"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -163,7 +178,25 @@
       "newPassword": "New password",
       "confirmPassword": "Confirm new password",
       "changePassword": "Change password",
-      "passwordChanged": "Your password has been changed."
+      "passwordChanged": "Your password has been changed.",
+      "export": {
+        "title": "Your data",
+        "description": "Download your profile, posts, aspects and contacts as a JSON file.",
+        "download": "Download your data"
+      },
+      "delete": {
+        "title": "Delete account",
+        "posts": "Your profile, posts and media will be removed from this server.",
+        "federation": "Other servers that know you will be told to remove your posts too; some may keep copies.",
+        "username": "Your username cannot be registered again.",
+        "final": "This cannot be undone.",
+        "exportFirst": "You may want to download your data first.",
+        "button": "Delete my account",
+        "confirmTitle": "Delete your account?",
+        "confirmDescription": "Enter your password to confirm. You will be signed out immediately.",
+        "confirm": "Delete account permanently",
+        "lastAdmin": "You are the last administrator. Make someone else an administrator before deleting your account."
+      }
     },
     "security": {
       "tab": "Security",
@@ -213,6 +246,28 @@
         "add": "Add a passkey",
         "added": "Passkey added."
       }
+    },
+    "images": {
+      "title": "Avatar and header",
+      "hint": "JPEG, PNG, WebP, GIF or AVIF. The server crops them to fit.",
+      "avatar": "Avatar",
+      "header": "Header",
+      "avatarSize": "Shown as a 400 × 400 square.",
+      "headerSize": "Shown at 1500 × 500.",
+      "upload": {
+        "avatar": "Upload avatar",
+        "header": "Upload header"
+      },
+      "change": {
+        "avatar": "Change avatar",
+        "header": "Change header"
+      },
+      "remove": {
+        "avatar": "Remove avatar",
+        "header": "Remove header"
+      },
+      "headerPreview": "Your header image",
+      "unsupported": "{{name}} is not a supported image type."
     }
   },
   "validation": {
@@ -368,7 +423,11 @@
       "previous": "Previous image",
       "next": "Next image",
       "position": "{{current}} of {{total}}"
-    }
+    },
+    "edit": "Edit",
+    "edited": "edited",
+    "editedAt": "Edited {{date}}",
+    "report": "Report @{{acct}}"
   },
   "timeline": {
     "loadMore": "Load more",
@@ -380,7 +439,9 @@
       "title": "Home",
       "emptyTitle": "Your home timeline is empty",
       "empty": "Follow people or add them to your aspects to see their posts here.",
-      "explore": "Explore the local timeline"
+      "explore": "Explore the local timeline",
+      "findPeople": "Find people to follow: try",
+      "findButton": "Find people"
     },
     "local": {
       "title": "Local",
@@ -392,7 +453,9 @@
     },
     "tag": {
       "description": "Public posts tagged #{{tag}}.",
-      "empty": "No posts with #{{tag}} yet."
+      "empty": "No posts with #{{tag}} yet.",
+      "postsCount_one": "{{count}} public post with #{{tag}}.",
+      "postsCount_other": "{{count}} public posts with #{{tag}}."
     },
     "bookmarks": {
       "title": "Bookmarks",
@@ -454,5 +517,193 @@
     "deleteLabel": "Delete {{name}}",
     "deleteTitle": "Delete {{name}}?",
     "deleteDescription": "People in it stay connected with you; posts already shared keep their audience."
+  },
+  "tags": {
+    "follow": "Follow hashtag",
+    "unfollow": "Unfollow hashtag",
+    "followedTitle": "Followed hashtags"
+  },
+  "edit": {
+    "label": "Edit post",
+    "save": "Save"
+  },
+  "search": {
+    "title": "Search",
+    "label": "Search people",
+    "description": "Find people here and across the fediverse.",
+    "placeholder": "Name, @user or @user@server",
+    "shortPlaceholder": "Search people",
+    "people": "People",
+    "searching": "Searching…",
+    "noResults": "Nobody here matches “{{query}}”.",
+    "noLocalMatchRemote": "Nobody on this server matches. Look them up on the network above.",
+    "remoteTitle": "{{query}}",
+    "remoteHint": "This looks like someone on another server.",
+    "lookUp": "Look up on the network",
+    "lookingUp": "Asking the other server about {{query}}… this can take a few seconds.",
+    "notFoundRemote": "Nothing found at {{query}}. Check the address and try again.",
+    "tryAgain": "Try again",
+    "found": "Found:",
+    "signInToLookUp": "Sign in to look up people on other servers.",
+    "lookUpHandle": "Look up {{handle}} on the network",
+    "followLabel": "{{action}} {{name}}",
+    "tips": {
+      "names": "Search people on this server by name or username.",
+      "remote": "To find someone on another server (Mastodon, diaspora*, Friendica…), type their full address, for example",
+      "url": "You can also paste the address of their profile page."
+    }
+  },
+  "passwordReset": {
+    "forgotTitle": "Reset your password",
+    "forgotHelp": "Enter the email address of your account and we will send you a link to choose a new password.",
+    "send": "Send reset link",
+    "sent": "If an account uses {{email}}, a reset link is on its way. It expires soon, so use it quickly.",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "save": "Save new password",
+    "invalidLink": "This reset link is invalid, has already been used or has expired.",
+    "requestNew": "Request a new link",
+    "done": "Your password has been changed. Sign in with your new password."
+  },
+  "report": {
+    "title": "Report {{name}}",
+    "description": "Moderators of this server will review your report. The person you report is not told who reported them.",
+    "categoryLegend": "What is the problem?",
+    "categories": {
+      "spam": {
+        "label": "Spam",
+        "description": "Ads, repeated unwanted messages, scams."
+      },
+      "illegal": {
+        "label": "Illegal content",
+        "description": "Something that breaks the law."
+      },
+      "harassment": {
+        "label": "Harassment",
+        "description": "Abuse, threats or hate towards someone."
+      },
+      "violation": {
+        "label": "Breaks the server rules",
+        "description": "Goes against this server's rules."
+      },
+      "other": {
+        "label": "Something else",
+        "description": "Explain it in the comment."
+      }
+    },
+    "postsLegend": "Posts to include",
+    "postsHint": "Choose up to {{max}} posts that show the problem.",
+    "noPosts": "No recent posts to choose from.",
+    "comment": "Comment (optional)",
+    "commentPlaceholder": "Anything the moderators should know",
+    "commentHint_one": "{{count}} character left",
+    "commentHint_other": "{{count}} characters left",
+    "submit": "Send report",
+    "doneTitle": "Thanks for your report",
+    "doneBody": "The moderators will look into it. You can also mute or block {{name}} from their profile."
+  },
+  "admin": {
+    "title": "Moderation",
+    "roleAdmin": "You are an administrator.",
+    "roleModerator": "You are a moderator.",
+    "sections": "Moderation sections",
+    "tabs": {
+      "pending": "Pending",
+      "reports": "Reports",
+      "accounts": "Accounts",
+      "domains": "Domain blocks"
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Administrator"
+    },
+    "pending": {
+      "empty": "No registrations are waiting for approval.",
+      "email": "Email",
+      "reason": "Why they want to join",
+      "noReason": "No reason given.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveLabel": "Approve @{{acct}}",
+      "rejectLabel": "Reject @{{acct}}",
+      "rejectTitle": "Reject @{{acct}}?",
+      "rejectDescription": "The registration will be deleted. They can sign up again later.",
+      "approved": "@{{acct}} has been approved and can now sign in.",
+      "rejected": "The registration of @{{acct}} has been rejected."
+    },
+    "reports": {
+      "filter": "Show reports",
+      "open": "Open",
+      "resolved": "Resolved",
+      "emptyOpen": "No open reports.",
+      "emptyResolved": "No resolved reports yet.",
+      "target": "Reported",
+      "reporter": "Reported by",
+      "comment": "Comment",
+      "noComment": "No comment.",
+      "unknownAccount": "Account no longer available",
+      "posts_one": "{{count}} reported post",
+      "posts_other": "{{count}} reported posts",
+      "postUnavailable": "This post is not available: it was deleted or you cannot see it.",
+      "resolve": "Mark as resolved",
+      "suspendTarget": "Suspend account",
+      "suspendAndResolve": "Suspend and resolve",
+      "resolvedAt": "Resolved {{date}}"
+    },
+    "suspend": {
+      "title": "Suspend @{{acct}}?",
+      "description": "The account is hidden everywhere, signed out and its follows are removed. You can undo this later.",
+      "reason": "Reason (for the moderation log)",
+      "reasonHint": "Only moderators can see it.",
+      "confirm": "Suspend"
+    },
+    "accounts": {
+      "search": "Search",
+      "searchPlaceholder": "Username, name or domain",
+      "origin": "Origin",
+      "status": "Status",
+      "all": "All",
+      "local": "Local",
+      "remote": "Remote",
+      "active": "Active",
+      "suspended": "Suspended",
+      "empty": "No accounts match these filters.",
+      "awaitingApproval": "Awaiting approval",
+      "suspend": "Suspend",
+      "unsuspend": "Lift suspension",
+      "role": "Role",
+      "roleSaved": "Role changed to {{role}}."
+    },
+    "domains": {
+      "severity": {
+        "silence": {
+          "label": "Silence",
+          "explain": "Posts from this server are hidden from public timelines; people who follow its accounts still see them."
+        },
+        "suspend": {
+          "label": "Suspend",
+          "explain": "No federation at all: nothing is sent to or accepted from this server, and its accounts are suspended."
+        }
+      },
+      "adminOnly": "Only administrators can add or remove domain blocks.",
+      "addTitle": "Block a server",
+      "domain": "Domain",
+      "severityLegend": "Severity",
+      "publicComment": "Public note",
+      "publicHint": "May be shown to users as the reason.",
+      "privateComment": "Private note",
+      "privateHint": "Only moderators can see it.",
+      "add": "Block server",
+      "added": "The server has been blocked.",
+      "empty": "No servers are blocked.",
+      "remove": "Remove block",
+      "removeLabel": "Remove the block on {{domain}}",
+      "removeTitle": "Remove the block on {{domain}}?",
+      "removeDescription": {
+        "silence": "Its public posts will appear in public timelines again.",
+        "suspend": "Federation resumes and its accounts are no longer suspended."
+      }
+    }
   }
 }

@@ -1,19 +1,21 @@
 import type { Account, Relationship } from '@disbigle/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { type KeyboardEvent, useCallback, useId, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
 import { ApiError } from '../api/client.ts';
 import { errorMessage } from '../api/errors.ts';
 import { accountQueryOptions, useCurrentUser, useInstance } from '../api/queries.ts';
 import { type AccountAction, social } from '../api/social.ts';
-import { relationshipQueryOptions, useAspects } from '../api/socialQueries.ts';
-import { AccountList } from '../components/AccountList.tsx';
+import { relationshipQueryOptions, useAspects, useRelationships } from '../api/socialQueries.ts';
+import { AccountRow } from '../components/AccountList.tsx';
 import { Avatar } from '../components/Avatar.tsx';
 import { ConfirmDialog } from '../components/Dialog.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
+import { FollowButton } from '../components/FollowButton.tsx';
 import { AspectsIcon, CheckIcon, ChevronDownIcon, MoreIcon } from '../components/icons.tsx';
+import { ReportDialog } from '../components/ReportDialog.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { Alert, Button, buttonClass, Card, cx, LoadingState } from '../components/ui.tsx';
 import { useDismiss } from '../lib/dismiss.ts';
@@ -31,25 +33,55 @@ export function ProfilePage() {
     }
     return <Alert>{errorMessage(account.error)}</Alert>;
   }
+  return <Profile account={account.data} />;
+}
+
+function Profile({ account }: { account: Account }) {
+  const [tab, setTab] = useState<TabId>('posts');
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const showTab = (next: TabId) => {
+    setTab(next);
+    tabsRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
   return (
     <div className="space-y-4">
-      <ProfileView account={account.data} />
-      <ProfileTabs account={account.data} />
+      <ProfileView account={account} onShowTab={showTab} />
+      <div ref={tabsRef} className="scroll-mt-20">
+        <ProfileTabs account={account} tab={tab} onTabChange={setTab} />
+      </div>
     </div>
   );
 }
 
 function ProfileNotFound({ username }: { username: string }) {
   const { t } = useTranslation();
+  const user = useCurrentUser();
   return (
     <div>
       <NotFoundPage />
       <p className="text-center text-sm text-fg-muted">{t('profile.notFound', { username })}</p>
+      {user && username.includes('@') && (
+        <p className="mt-3 text-center">
+          <Link
+            to="/search"
+            search={{ q: `@${username}` }}
+            className="rounded text-sm font-medium text-accent hover:underline focus-ring"
+          >
+            {t('search.lookUpHandle', { handle: `@${username}` })}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
 
-export function ProfileView({ account }: { account: Account }) {
+export function ProfileView({
+  account,
+  onShowTab,
+}: {
+  account: Account;
+  onShowTab?: (tab: TabId) => void;
+}) {
   const { t, i18n } = useTranslation();
   const instance = useInstance();
   const me = useCurrentUser();
@@ -62,9 +94,27 @@ export function ProfileView({ account }: { account: Account }) {
 
   return (
     <article className="space-y-6" aria-labelledby="profile-name">
-      <Card as="div">
+      <Card as="div" className="overflow-hidden">
+        <div className="-mx-5 -mt-5 mb-4 sm:-mx-6 sm:-mt-6">
+          {account.headerUrl ? (
+            <img
+              src={account.headerUrl}
+              alt=""
+              className="aspect-[3/1] w-full bg-surface-muted object-cover"
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="aspect-[6/1] w-full bg-gradient-to-r from-accent-soft via-surface-muted to-accent-soft"
+            />
+          )}
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <Avatar account={account} size="lg" />
+          <Avatar
+            account={account}
+            size="lg"
+            className="-mt-14 ring-4 ring-surface sm:-mt-16 sm:size-24 sm:text-3xl"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 id="profile-name" className="text-2xl font-semibold tracking-tight break-words">
@@ -75,6 +125,16 @@ export function ProfileView({ account }: { account: Account }) {
             </div>
             <p className="break-all text-fg-muted">@{handle}</p>
             <p className="mt-1 text-sm text-fg-muted">{t('profile.joined', { date: joined })}</p>
+            {!account.local && account.url && (
+              <a
+                href={account.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block rounded text-sm font-medium text-accent hover:underline focus-ring"
+              >
+                {t('profile.openOriginal')}
+              </a>
+            )}
           </div>
           {isOwn && (
             <Link to="/settings/profile" className={buttonClass('secondary', 'self-start')}>
@@ -82,6 +142,8 @@ export function ProfileView({ account }: { account: Account }) {
             </Link>
           )}
         </div>
+
+        <ProfileCounts account={account} onShowTab={onShowTab} />
 
         {me && !isOwn && <RelationshipBar account={account} />}
 
@@ -106,6 +168,45 @@ export function ProfileView({ account }: { account: Account }) {
   );
 }
 
+function ProfileCounts({
+  account,
+  onShowTab,
+}: {
+  account: Account;
+  onShowTab?: ((tab: TabId) => void) | undefined;
+}) {
+  const { i18n } = useTranslation();
+  const format = (n: number) => new Intl.NumberFormat(i18n.language).format(n);
+  const items: { tab: TabId; count: number | undefined; key: string }[] = [
+    { tab: 'posts', count: account.statusesCount, key: 'profile.counts.posts' },
+    { tab: 'followers', count: account.followersCount, key: 'profile.counts.followers' },
+    { tab: 'following', count: account.followingCount, key: 'profile.counts.following' },
+  ];
+  if (items.every((item) => item.count === undefined)) return null;
+  return (
+    <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+      {items.map((item) =>
+        item.count === undefined ? null : (
+          <li key={item.tab}>
+            <button
+              type="button"
+              onClick={() => onShowTab?.(item.tab)}
+              className="rounded text-fg-muted hover:text-fg focus-ring"
+            >
+              <Trans
+                i18nKey={item.key}
+                count={item.count}
+                values={{ formatted: format(item.count) }}
+                components={{ strong: <strong className="font-semibold text-fg" /> }}
+              />
+            </button>
+          </li>
+        ),
+      )}
+    </ul>
+  );
+}
+
 function Badge({ children }: { children: string }) {
   return (
     <span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
@@ -125,6 +226,7 @@ function useRelationshipAction(account: Account) {
     onSuccess: (relationship, action) => {
       queryClient.setQueryData(socialKeys.relationship(account.id), relationship);
       void queryClient.invalidateQueries({ queryKey: socialKeys.followers(account.id) });
+      void queryClient.invalidateQueries({ queryKey: ['account'] });
       if (action === 'block' || action === 'mute' || action === 'unblock' || action === 'unmute') {
         void queryClient.invalidateQueries({ queryKey: socialKeys.timelines });
         void queryClient.invalidateQueries({ queryKey: socialKeys.aspects });
@@ -330,6 +432,7 @@ function ProfileMenu({ account, relationship }: { account: Account; relationship
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
@@ -380,7 +483,26 @@ function ProfileMenu({ account, relationship }: { account: Account; relationship
         >
           {relationship.blocking ? t('profile.unblock') : t('profile.block', { name })}
         </button>
+        <button
+          type="button"
+          className={cx(itemClass, 'text-danger')}
+          onClick={() => {
+            setOpen(false);
+            setReporting(true);
+          }}
+        >
+          {t('profile.report', { name })}
+        </button>
       </div>
+      {reporting && (
+        <ReportDialog
+          account={account}
+          onClose={() => {
+            setReporting(false);
+            buttonRef.current?.focus();
+          }}
+        />
+      )}
       {confirmBlock && (
         <ConfirmDialog
           title={t('profile.blockTitle', { name })}
@@ -399,29 +521,28 @@ function ProfileMenu({ account, relationship }: { account: Account; relationship
 // Posts, replies, followers and following
 // ---------------------------------------------------------------------------------------------
 
-type TabId = 'posts' | 'replies' | 'followers' | 'following';
-const LIST_LIMIT = 40;
+export type TabId = 'posts' | 'replies' | 'followers' | 'following';
+const LIST_PAGE = 40;
 
-function ProfileTabs({ account }: { account: Account }) {
-  const { t } = useTranslation();
-  const [tab, setTab] = useState<TabId>('posts');
+function ProfileTabs({
+  account,
+  tab,
+  onTabChange: setTab,
+}: {
+  account: Account;
+  tab: TabId;
+  onTabChange: (tab: TabId) => void;
+}) {
+  const { t, i18n } = useTranslation();
   const baseId = useId();
-  const followers = useQuery({
-    queryKey: socialKeys.followers(account.id),
-    queryFn: () => social.followers(account.id),
-  });
-  const following = useQuery({
-    queryKey: socialKeys.following(account.id),
-    queryFn: () => social.following(account.id),
-  });
-  const count = (list: Account[] | undefined) =>
-    list === undefined ? '' : list.length >= LIST_LIMIT ? `${LIST_LIMIT}+` : String(list.length);
+  const format = (n: number | undefined) =>
+    n === undefined ? undefined : new Intl.NumberFormat(i18n.language).format(n);
 
-  const tabs: { id: TabId; label: string; count?: string }[] = [
+  const tabs: { id: TabId; label: string; count?: string | undefined }[] = [
     { id: 'posts', label: t('profile.tabs.posts') },
     { id: 'replies', label: t('profile.tabs.replies') },
-    { id: 'followers', label: t('profile.tabs.followers'), count: count(followers.data) },
-    { id: 'following', label: t('profile.tabs.following'), count: count(following.data) },
+    { id: 'followers', label: t('profile.tabs.followers'), count: format(account.followersCount) },
+    { id: 'following', label: t('profile.tabs.following'), count: format(account.followingCount) },
   ];
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -480,13 +601,69 @@ function ProfileTabs({ account }: { account: Account }) {
           />
         ) : (
           <div className="p-2">
-            <AccountList
-              query={tab === 'followers' ? followers : following}
+            <PagedAccountList
+              key={tab}
+              account={account}
+              kind={tab}
               empty={tab === 'followers' ? t('profile.noFollowers') : t('profile.noFollowing')}
             />
           </div>
         )}
       </div>
     </FeedSection>
+  );
+}
+
+/** Followers or following, 40 at a time. */
+function PagedAccountList({
+  account,
+  kind,
+  empty,
+}: {
+  account: Account;
+  kind: 'followers' | 'following';
+  empty: string;
+}) {
+  const { t } = useTranslation();
+  const query = useInfiniteQuery({
+    queryKey:
+      kind === 'followers' ? socialKeys.followers(account.id) : socialKeys.following(account.id),
+    queryFn: ({ pageParam }) => social[kind](account.id, { limit: LIST_PAGE, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.length < LIST_PAGE ? undefined : pages.length * LIST_PAGE,
+  });
+
+  const accounts = query.data?.pages.flat() ?? [];
+  useRelationships(accounts.map((item) => item.id));
+
+  if (query.isPending) return <LoadingState label={t('common.loading')} />;
+  if (query.isError) return <Alert>{errorMessage(query.error)}</Alert>;
+  if (accounts.length === 0)
+    return <p className="px-2 py-6 text-center text-sm text-fg-muted">{empty}</p>;
+  return (
+    <>
+      <ul>
+        {accounts.map((item) => (
+          <li key={item.id}>
+            <AccountRow
+              account={item}
+              actions={<FollowButton account={item} compact fetch={false} />}
+            />
+          </li>
+        ))}
+      </ul>
+      {query.hasNextPage && (
+        <div className="flex justify-center p-3">
+          <Button
+            variant="secondary"
+            loading={query.isFetchingNextPage}
+            onClick={() => void query.fetchNextPage()}
+          >
+            {t('timeline.loadMore')}
+          </Button>
+        </div>
+      )}
+    </>
   );
 }

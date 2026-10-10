@@ -67,9 +67,24 @@ function HomeTimeline() {
             <>
               <p className="font-medium text-fg">{t('timeline.home.emptyTitle')}</p>
               <p className="mt-1 text-sm">{t('timeline.home.empty')}</p>
-              <Link to="/public/local" className={buttonClass('secondary', 'mt-4')}>
-                {t('timeline.home.explore')}
-              </Link>
+              <p className="mt-3 text-sm">
+                {t('timeline.home.findPeople')}{' '}
+                <Link
+                  to="/search"
+                  search={{ q: '@someone@mastodon.social' }}
+                  className="font-mono text-accent hover:underline"
+                >
+                  @someone@mastodon.social
+                </Link>
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Link to="/search" className={buttonClass('primary')}>
+                  {t('timeline.home.findButton')}
+                </Link>
+                <Link to="/public/local" className={buttonClass('secondary')}>
+                  {t('timeline.home.explore')}
+                </Link>
+              </div>
             </>
           }
         />

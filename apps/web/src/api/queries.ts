@@ -1,4 +1,4 @@
-import type { CurrentUser } from '@disbigle/shared';
+import { type CurrentUser, type InstanceInfo, MAX_POST_LENGTH } from '@disbigle/shared';
 import { QueryClient, queryOptions, useQuery } from '@tanstack/react-query';
 import { ApiError } from './client.ts';
 import { endpoints } from './endpoints.ts';
@@ -72,4 +72,29 @@ export function clearUserData(queryClient: QueryClient) {
   queryClient.removeQueries({
     predicate: (query) => query.queryKey[0] !== 'me' && query.queryKey[0] !== 'instance',
   });
+}
+
+/** Used until `/instance` answers; the server's values replace them. */
+export const DEFAULT_LIMITS: InstanceInfo['limits'] = {
+  maxPostLength: MAX_POST_LENGTH,
+  maxMediaAttachments: 4,
+  maxImageBytes: 16 * 1024 * 1024,
+  maxVideoBytes: 40 * 1024 * 1024,
+  acceptedMediaTypes: [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/avif',
+    'video/mp4',
+    'video/webm',
+    'audio/mpeg',
+    'audio/ogg',
+    'audio/mp4',
+  ],
+};
+
+/** Post and upload limits announced by the server. */
+export function useLimits(): InstanceInfo['limits'] {
+  return useInstance().data?.limits ?? DEFAULT_LIMITS;
 }

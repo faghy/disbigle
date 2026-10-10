@@ -1,4 +1,4 @@
-import type { Account, CurrentUser, Notification, Status } from '@disbigle/shared';
+import type { Account, CurrentUser, Notification, Relationship, Status } from '@disbigle/shared';
 
 let counter = 0;
 /** Time-ordered ids shaped like the server's UUIDv7s. */
@@ -81,3 +81,17 @@ export function makeNotification(overrides: Partial<Notification> = {}): Notific
     ...overrides,
   };
 }
+
+export const relationship = (id: string, overrides: Partial<Relationship> = {}): Relationship => ({
+  id,
+  following: false,
+  requested: false,
+  followedBy: false,
+  blocking: false,
+  blockedBy: false,
+  muting: false,
+  aspectIds: [],
+  ...overrides,
+});
+
+export const withRole = (role: CurrentUser['role']): CurrentUser => ({ ...aliceUser, role });

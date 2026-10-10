@@ -12,7 +12,12 @@ export function streamingUrl(location: Pick<Location, 'protocol' | 'host'> = win
 function isStreamEvent(value: unknown): value is StreamEvent {
   if (typeof value !== 'object' || value === null) return false;
   const event = (value as { event?: unknown }).event;
-  return event === 'update' || event === 'delete' || event === 'notification';
+  return (
+    event === 'update' ||
+    event === 'status.update' ||
+    event === 'delete' ||
+    event === 'notification'
+  );
 }
 
 /**

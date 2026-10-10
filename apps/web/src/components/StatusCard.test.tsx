@@ -96,3 +96,44 @@ describe('status card', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/tags/cats'));
   });
 });
+
+describe('editing a post', () => {
+  it('prefills the markdown source, saves and marks the post as edited', async () => {
+    const own = makeStatus({
+      account: aliceUser.account,
+      content: '<p><strong>Hello</strong></p>',
+      source: '**Hello**',
+    });
+    let saved: unknown;
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/home': { body: [own] },
+      [`PUT /statuses/${own.id}`]: (body) => {
+        saved = body;
+        return {
+          body: {
+            ...own,
+            content: '<p><strong>Hello</strong> again</p>',
+            source: '**Hello** again',
+            editedAt: new Date().toISOString(),
+          },
+        };
+      },
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    const article = await screen.findByRole('article');
+    await user.click(within(article).getByRole('button', { name: 'More actions' }));
+    await user.click(within(article).getByRole('button', { name: 'Edit' }));
+
+    const editor = within(article).getByRole('textbox', { name: 'Edit post' });
+    expect(editor).toHaveValue('**Hello**');
+    await user.type(editor, ' again');
+    await user.click(within(article).getByRole('button', { name: 'Save' }));
+
+    expect(await within(article).findByText('again', { exact: false })).toBeInTheDocument();
+    expect(within(article).getByText('edited')).toBeInTheDocument();
+    expect(saved).toEqual({ content: '**Hello** again', summary: '', sensitive: false });
+  });
+});

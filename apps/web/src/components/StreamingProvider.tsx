@@ -1,7 +1,12 @@
 import type { Notification } from '@disbigle/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
-import { type NotificationPages, removeStatusEverywhere, socialKeys } from '../api/cache.ts';
+import {
+  type NotificationPages,
+  removeStatusEverywhere,
+  socialKeys,
+  storeStatus,
+} from '../api/cache.ts';
 import { useCurrentUser } from '../api/queries.ts';
 import { StreamingClient, type StreamListener } from '../lib/streaming.ts';
 
@@ -36,6 +41,7 @@ export function StreamingProvider({ children }: { children: ReactNode }) {
     setClient(next);
     const offAny = next.onAny((event) => {
       if (event.event === 'delete') removeStatusEverywhere(queryClient, event.payload);
+      else if (event.event === 'status.update') storeStatus(queryClient, event.payload);
       else if (event.event === 'notification') addNotification(queryClient, event.payload);
     });
     const offReconnect = next.onReconnect(() => {

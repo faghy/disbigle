@@ -1,8 +1,9 @@
 import { type CurrentUser, changePasswordRequestSchema } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../api/client.ts';
+import { API_BASE, ApiError } from '../../api/client.ts';
 import { endpoints } from '../../api/endpoints.ts';
 import {
   errorMessage,
@@ -11,8 +12,9 @@ import {
   isFieldError,
   issuesToFieldErrors,
 } from '../../api/errors.ts';
-import { queryKeys, useCurrentUser } from '../../api/queries.ts';
-import { Alert, Button, Card, PageTitle, TextField } from '../../components/ui.tsx';
+import { clearUserData, queryKeys, useCurrentUser } from '../../api/queries.ts';
+import { Modal } from '../../components/Dialog.tsx';
+import { Alert, Button, buttonClass, Card, PageTitle, TextField } from '../../components/ui.tsx';
 import { useFocusFirstError } from '../../lib/forms.ts';
 import { isLanguage, languages, setLanguage } from '../../lib/i18n.ts';
 
@@ -28,6 +30,8 @@ export function AccountSettingsPage() {
       <div className="space-y-6">
         <LanguageSettings user={user} />
         <ChangePassword />
+        <ExportData />
+        <DeleteAccount />
       </div>
     </>
   );
@@ -180,6 +184,117 @@ function ChangePassword() {
           {t('settings.account.changePassword')}
         </Button>
       </form>
+    </Card>
+  );
+}
+
+function ExportData() {
+  const { t } = useTranslation();
+  return (
+    <Card aria-labelledby="export-title">
+      <h2 id="export-title" className="font-semibold">
+        {t('settings.account.export.title')}
+      </h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('settings.account.export.description')}</p>
+      <a href={`${API_BASE}/me/export`} download className={buttonClass('secondary', 'mt-4')}>
+        {t('settings.account.export.download')}
+      </a>
+    </Card>
+  );
+}
+
+/** Deleting is final: the password is asked again inside a confirmation dialog. */
+function DeleteAccount() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [missing, setMissing] = useState(false);
+
+  const remove = useMutation({
+    mutationFn: endpoints.deleteAccount,
+    onSuccess: async () => {
+      setOpen(false);
+      await navigate({ to: '/' });
+      queryClient.setQueryData(queryKeys.me, null);
+      clearUserData(queryClient);
+    },
+  });
+
+  const wrongPassword = remove.error instanceof ApiError && remove.error.code === 'wrong_password';
+  const passwordError = missing
+    ? t('validation.required')
+    : wrongPassword
+      ? t('errors.wrong_password')
+      : undefined;
+  const lastAdmin = remove.error instanceof ApiError && remove.error.code === 'forbidden';
+  const generalError =
+    remove.error && !wrongPassword
+      ? lastAdmin
+        ? t('settings.account.delete.lastAdmin')
+        : errorMessage(remove.error)
+      : null;
+
+  const close = () => {
+    setOpen(false);
+    setPassword('');
+    setMissing(false);
+    remove.reset();
+  };
+
+  return (
+    <Card aria-labelledby="delete-title" className="border-danger/40">
+      <h2 id="delete-title" className="font-semibold text-danger">
+        {t('settings.account.delete.title')}
+      </h2>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-fg-muted">
+        <li>{t('settings.account.delete.posts')}</li>
+        <li>{t('settings.account.delete.federation')}</li>
+        <li>{t('settings.account.delete.username')}</li>
+        <li>{t('settings.account.delete.final')}</li>
+      </ul>
+      <p className="mt-2 text-sm text-fg-muted">{t('settings.account.delete.exportFirst')}</p>
+      <Button variant="danger" className="mt-4" onClick={() => setOpen(true)}>
+        {t('settings.account.delete.button')}
+      </Button>
+      {open && (
+        <Modal
+          title={t('settings.account.delete.confirmTitle')}
+          description={t('settings.account.delete.confirmDescription')}
+          onClose={close}
+          initialFocus="input[type=password]"
+        >
+          <form
+            noValidate
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setMissing(!password);
+              if (password) remove.mutate(password);
+            }}
+          >
+            <TextField
+              label={t('settings.security.password')}
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              error={passwordError}
+            />
+            <Alert>{generalError}</Alert>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={close} disabled={remove.isPending}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" variant="danger" loading={remove.isPending}>
+                {t('settings.account.delete.confirm')}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </Card>
   );
 }

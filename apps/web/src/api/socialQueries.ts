@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { socialKeys } from './cache.ts';
 import { useCurrentUser } from './queries.ts';
 import { social } from './social.ts';
@@ -46,4 +46,47 @@ export function useAspects() {
 export function useUnreadCount() {
   const user = useCurrentUser();
   return useQuery({ ...unreadCountQueryOptions, enabled: Boolean(user) });
+}
+
+const RELATIONSHIP_BATCH = 40;
+
+/**
+ * Loads relationships for many accounts in batches of 40 and stores each one under its own
+ * key, so `FollowButton`s in a list need no request of their own.
+ */
+export function useRelationships(ids: string[]) {
+  const queryClient = useQueryClient();
+  const user = useCurrentUser();
+  const wanted = [...new Set(ids)].filter((id) => id !== user?.account.id).sort();
+  return useQuery({
+    queryKey: ['relationships', ...wanted],
+    enabled: Boolean(user) && wanted.length > 0,
+    queryFn: async () => {
+      const batches: string[][] = [];
+      for (let i = 0; i < wanted.length; i += RELATIONSHIP_BATCH)
+        batches.push(wanted.slice(i, i + RELATIONSHIP_BATCH));
+      const results = (
+        await Promise.all(batches.map((batch) => social.relationships(batch)))
+      ).flat();
+      for (const relationship of results)
+        queryClient.setQueryData(socialKeys.relationship(relationship.id), relationship);
+      return results;
+    },
+  });
+}
+
+export const tagKeys = {
+  tag: (name: string) => ['tag', name] as const,
+  followed: ['tags', 'followed'] as const,
+};
+
+/** Hashtags the signed-in user follows (their public posts appear in Home). */
+export function useFollowedTags() {
+  const user = useCurrentUser();
+  return useQuery({
+    queryKey: tagKeys.followed,
+    queryFn: social.followedTags,
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
 }

@@ -27,7 +27,10 @@
     "aspects": "Aspetti",
     "bookmarks": "Segnalibri",
     "unread_one": "{{count}} notifica non letta",
-    "unread_other": "{{count}} notifiche non lette"
+    "unread_other": "{{count}} notifiche non lette",
+    "moderation": "Moderazione",
+    "moderationPending_one": "{{count}} elemento in attesa dei moderatori",
+    "moderationPending_other": "{{count}} elementi in attesa dei moderatori"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -59,7 +62,8 @@
     "mfaPasskey": "Usa una passkey",
     "codeInvalid": "Inserisci il codice mostrato dall'app (almeno 6 caratteri).",
     "mfaExpired": "L'accesso è scaduto. Inserisci di nuovo la password.",
-    "back": "Torna all'accesso"
+    "back": "Torna all'accesso",
+    "forgot": "Password dimenticata?"
   },
   "register": {
     "title": "Crea il tuo account",
@@ -121,7 +125,18 @@
     },
     "noPosts": "Ancora nessun post.",
     "noFollowers": "Ancora nessun follower.",
-    "noFollowing": "Non segue ancora nessuno."
+    "noFollowing": "Non segue ancora nessuno.",
+    "openOriginal": "Apri sul server originale",
+    "report": "Segnala {{name}}",
+    "cancelRequestFor": "Annulla la richiesta di follow a {{name}}",
+    "counts": {
+      "posts_one": "<strong>{{formatted}}</strong> post",
+      "posts_other": "<strong>{{formatted}}</strong> post",
+      "followers_one": "<strong>{{formatted}}</strong> follower",
+      "followers_other": "<strong>{{formatted}}</strong> follower",
+      "following_one": "<strong>{{formatted}}</strong> seguito",
+      "following_other": "<strong>{{formatted}}</strong> seguiti"
+    }
   },
   "settings": {
     "title": "Impostazioni",
@@ -163,7 +178,25 @@
       "newPassword": "Nuova password",
       "confirmPassword": "Conferma la nuova password",
       "changePassword": "Cambia password",
-      "passwordChanged": "La password è stata cambiata."
+      "passwordChanged": "La password è stata cambiata.",
+      "export": {
+        "title": "I tuoi dati",
+        "description": "Scarica profilo, post, aspetti e contatti in un file JSON.",
+        "download": "Scarica i tuoi dati"
+      },
+      "delete": {
+        "title": "Elimina account",
+        "posts": "Profilo, post e contenuti multimediali verranno rimossi da questo server.",
+        "federation": "Gli altri server che ti conoscono verranno avvisati di rimuovere i tuoi post; alcuni potrebbero conservarne copie.",
+        "username": "Il tuo nome utente non potrà essere registrato di nuovo.",
+        "final": "L'operazione non si può annullare.",
+        "exportFirst": "Potresti voler scaricare prima i tuoi dati.",
+        "button": "Elimina il mio account",
+        "confirmTitle": "Eliminare il tuo account?",
+        "confirmDescription": "Inserisci la password per confermare. Verrai disconnesso subito.",
+        "confirm": "Elimina l'account definitivamente",
+        "lastAdmin": "Sei l'ultimo amministratore. Nomina un altro amministratore prima di eliminare il tuo account."
+      }
     },
     "security": {
       "tab": "Sicurezza",
@@ -213,6 +246,28 @@
         "add": "Aggiungi una passkey",
         "added": "Passkey aggiunta."
       }
+    },
+    "images": {
+      "title": "Avatar e copertina",
+      "hint": "JPEG, PNG, WebP, GIF o AVIF. Il server le ritaglia nel formato giusto.",
+      "avatar": "Avatar",
+      "header": "Copertina",
+      "avatarSize": "Mostrato come quadrato 400 × 400.",
+      "headerSize": "Mostrata a 1500 × 500.",
+      "upload": {
+        "avatar": "Carica avatar",
+        "header": "Carica copertina"
+      },
+      "change": {
+        "avatar": "Cambia avatar",
+        "header": "Cambia copertina"
+      },
+      "remove": {
+        "avatar": "Rimuovi avatar",
+        "header": "Rimuovi copertina"
+      },
+      "headerPreview": "La tua immagine di copertina",
+      "unsupported": "{{name}} non è un tipo di immagine supportato."
     }
   },
   "validation": {
@@ -368,7 +423,11 @@
       "previous": "Immagine precedente",
       "next": "Immagine successiva",
       "position": "{{current}} di {{total}}"
-    }
+    },
+    "edit": "Modifica",
+    "edited": "modificato",
+    "editedAt": "Modificato il {{date}}",
+    "report": "Segnala @{{acct}}"
   },
   "timeline": {
     "loadMore": "Carica altri",
@@ -380,7 +439,9 @@
       "title": "Home",
       "emptyTitle": "La tua home è vuota",
       "empty": "Segui delle persone o aggiungile ai tuoi aspetti per vedere qui i loro post.",
-      "explore": "Esplora la timeline locale"
+      "explore": "Esplora la timeline locale",
+      "findPeople": "Trova persone da seguire: prova",
+      "findButton": "Trova persone"
     },
     "local": {
       "title": "Locale",
@@ -392,7 +453,9 @@
     },
     "tag": {
       "description": "Post pubblici con #{{tag}}.",
-      "empty": "Ancora nessun post con #{{tag}}."
+      "empty": "Ancora nessun post con #{{tag}}.",
+      "postsCount_one": "{{count}} post pubblico con #{{tag}}.",
+      "postsCount_other": "{{count}} post pubblici con #{{tag}}."
     },
     "bookmarks": {
       "title": "Segnalibri",
@@ -454,5 +517,193 @@
     "deleteLabel": "Elimina {{name}}",
     "deleteTitle": "Eliminare {{name}}?",
     "deleteDescription": "Le persone che contiene restano in contatto con te; i post già condivisi mantengono il loro pubblico."
+  },
+  "tags": {
+    "follow": "Segui hashtag",
+    "unfollow": "Smetti di seguire",
+    "followedTitle": "Hashtag seguiti"
+  },
+  "edit": {
+    "label": "Modifica post",
+    "save": "Salva"
+  },
+  "search": {
+    "title": "Cerca",
+    "label": "Cerca persone",
+    "description": "Trova persone qui e in tutto il fediverso.",
+    "placeholder": "Nome, @utente o @utente@server",
+    "shortPlaceholder": "Cerca persone",
+    "people": "Persone",
+    "searching": "Ricerca…",
+    "noResults": "Nessuno qui corrisponde a «{{query}}».",
+    "noLocalMatchRemote": "Nessuno su questo server corrisponde. Cercalo sulla rete qui sopra.",
+    "remoteTitle": "{{query}}",
+    "remoteHint": "Sembra una persona su un altro server.",
+    "lookUp": "Cerca sulla rete",
+    "lookingUp": "Sto chiedendo all'altro server di {{query}}… può volerci qualche secondo.",
+    "notFoundRemote": "Nessun risultato per {{query}}. Controlla l'indirizzo e riprova.",
+    "tryAgain": "Riprova",
+    "found": "Trovato:",
+    "signInToLookUp": "Accedi per cercare persone su altri server.",
+    "lookUpHandle": "Cerca {{handle}} sulla rete",
+    "followLabel": "{{action}} {{name}}",
+    "tips": {
+      "names": "Cerca persone su questo server per nome o nome utente.",
+      "remote": "Per trovare qualcuno su un altro server (Mastodon, diaspora*, Friendica…), scrivi il suo indirizzo completo, per esempio",
+      "url": "Puoi anche incollare l'indirizzo della sua pagina profilo."
+    }
+  },
+  "passwordReset": {
+    "forgotTitle": "Reimposta la password",
+    "forgotHelp": "Inserisci l'indirizzo email del tuo account: ti invieremo un link per scegliere una nuova password.",
+    "send": "Invia il link",
+    "sent": "Se un account usa {{email}}, il link sta arrivando. Scade presto, quindi usalo subito.",
+    "backToSignIn": "Torna all'accesso",
+    "resetTitle": "Scegli una nuova password",
+    "save": "Salva la nuova password",
+    "invalidLink": "Questo link non è valido, è già stato usato oppure è scaduto.",
+    "requestNew": "Richiedi un nuovo link",
+    "done": "La password è stata cambiata. Accedi con la nuova password."
+  },
+  "report": {
+    "title": "Segnala {{name}}",
+    "description": "I moderatori di questo server esamineranno la segnalazione. La persona segnalata non saprà chi l'ha segnalata.",
+    "categoryLegend": "Qual è il problema?",
+    "categories": {
+      "spam": {
+        "label": "Spam",
+        "description": "Pubblicità, messaggi ripetuti indesiderati, truffe."
+      },
+      "illegal": {
+        "label": "Contenuto illegale",
+        "description": "Qualcosa che viola la legge."
+      },
+      "harassment": {
+        "label": "Molestie",
+        "description": "Abusi, minacce o odio verso qualcuno."
+      },
+      "violation": {
+        "label": "Viola le regole del server",
+        "description": "Va contro le regole di questo server."
+      },
+      "other": {
+        "label": "Altro",
+        "description": "Spiegalo nel commento."
+      }
+    },
+    "postsLegend": "Post da allegare",
+    "postsHint": "Scegli fino a {{max}} post che mostrano il problema.",
+    "noPosts": "Nessun post recente da scegliere.",
+    "comment": "Commento (facoltativo)",
+    "commentPlaceholder": "Qualcosa che i moderatori dovrebbero sapere",
+    "commentHint_one": "{{count}} carattere rimasto",
+    "commentHint_other": "{{count}} caratteri rimasti",
+    "submit": "Invia segnalazione",
+    "doneTitle": "Grazie per la segnalazione",
+    "doneBody": "I moderatori la esamineranno. Puoi anche silenziare o bloccare {{name}} dal suo profilo."
+  },
+  "admin": {
+    "title": "Moderazione",
+    "roleAdmin": "Sei un amministratore.",
+    "roleModerator": "Sei un moderatore.",
+    "sections": "Sezioni della moderazione",
+    "tabs": {
+      "pending": "In attesa",
+      "reports": "Segnalazioni",
+      "accounts": "Account",
+      "domains": "Domini bloccati"
+    },
+    "roles": {
+      "user": "Utente",
+      "moderator": "Moderatore",
+      "admin": "Amministratore"
+    },
+    "pending": {
+      "empty": "Nessuna iscrizione in attesa di approvazione.",
+      "email": "Email",
+      "reason": "Perché vuole iscriversi",
+      "noReason": "Nessuna motivazione.",
+      "approve": "Approva",
+      "reject": "Rifiuta",
+      "approveLabel": "Approva @{{acct}}",
+      "rejectLabel": "Rifiuta @{{acct}}",
+      "rejectTitle": "Rifiutare @{{acct}}?",
+      "rejectDescription": "L'iscrizione verrà eliminata. Potrà iscriversi di nuovo in seguito.",
+      "approved": "@{{acct}} è stato approvato e ora può accedere.",
+      "rejected": "L'iscrizione di @{{acct}} è stata rifiutata."
+    },
+    "reports": {
+      "filter": "Mostra segnalazioni",
+      "open": "Aperte",
+      "resolved": "Risolte",
+      "emptyOpen": "Nessuna segnalazione aperta.",
+      "emptyResolved": "Ancora nessuna segnalazione risolta.",
+      "target": "Segnalato",
+      "reporter": "Segnalato da",
+      "comment": "Commento",
+      "noComment": "Nessun commento.",
+      "unknownAccount": "Account non più disponibile",
+      "posts_one": "{{count}} post segnalato",
+      "posts_other": "{{count}} post segnalati",
+      "postUnavailable": "Questo post non è disponibile: è stato eliminato o non puoi vederlo.",
+      "resolve": "Segna come risolta",
+      "suspendTarget": "Sospendi l'account",
+      "suspendAndResolve": "Sospendi e risolvi",
+      "resolvedAt": "Risolta il {{date}}"
+    },
+    "suspend": {
+      "title": "Sospendere @{{acct}}?",
+      "description": "L'account viene nascosto ovunque, disconnesso e i suoi follow vengono rimossi. Potrai annullare in seguito.",
+      "reason": "Motivo (per il registro di moderazione)",
+      "reasonHint": "Lo vedono solo i moderatori.",
+      "confirm": "Sospendi"
+    },
+    "accounts": {
+      "search": "Cerca",
+      "searchPlaceholder": "Nome utente, nome o dominio",
+      "origin": "Provenienza",
+      "status": "Stato",
+      "all": "Tutti",
+      "local": "Locali",
+      "remote": "Remoti",
+      "active": "Attivi",
+      "suspended": "Sospesi",
+      "empty": "Nessun account corrisponde ai filtri.",
+      "awaitingApproval": "In attesa di approvazione",
+      "suspend": "Sospendi",
+      "unsuspend": "Revoca la sospensione",
+      "role": "Ruolo",
+      "roleSaved": "Ruolo cambiato in {{role}}."
+    },
+    "domains": {
+      "severity": {
+        "silence": {
+          "label": "Silenzia",
+          "explain": "I post di questo server non compaiono nelle timeline pubbliche; chi segue i suoi account continua a vederli."
+        },
+        "suspend": {
+          "label": "Sospendi",
+          "explain": "Nessuna federazione: non si invia né si accetta nulla da questo server e i suoi account vengono sospesi."
+        }
+      },
+      "adminOnly": "Solo gli amministratori possono aggiungere o rimuovere domini bloccati.",
+      "addTitle": "Blocca un server",
+      "domain": "Dominio",
+      "severityLegend": "Livello",
+      "publicComment": "Nota pubblica",
+      "publicHint": "Può essere mostrata agli utenti come motivazione.",
+      "privateComment": "Nota privata",
+      "privateHint": "La vedono solo i moderatori.",
+      "add": "Blocca il server",
+      "added": "Il server è stato bloccato.",
+      "empty": "Nessun server bloccato.",
+      "remove": "Rimuovi il blocco",
+      "removeLabel": "Rimuovi il blocco su {{domain}}",
+      "removeTitle": "Rimuovere il blocco su {{domain}}?",
+      "removeDescription": {
+        "silence": "I suoi post pubblici torneranno nelle timeline pubbliche.",
+        "suspend": "La federazione riprende e i suoi account non sono più sospesi."
+      }
+    }
   }
 }

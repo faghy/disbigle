@@ -1,7 +1,7 @@
 import { type LoginResponse, loginRequestSchema, mfaCodeRequestSchema } from '@disbigle/shared';
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { type FormEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../api/client.ts';
@@ -31,7 +31,10 @@ export function LoginPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [mfaMethods, setMfaMethods] = useState<MfaMethod[] | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const { reset } = useSearch({ from: '/login' });
+  const [notice, setNotice] = useState<string | null>(
+    reset === 'done' ? t('passwordReset.done') : null,
+  );
 
   const finish = async () => {
     clearUserData(queryClient);
@@ -150,6 +153,14 @@ function CredentialsStep({
             onChange={(event) => setPassword(event.target.value)}
             error={errors.password}
           />
+          <p className="-mt-2 text-right text-sm">
+            <Link
+              to="/forgot-password"
+              className="rounded font-medium text-accent hover:underline focus-ring"
+            >
+              {t('login.forgot')}
+            </Link>
+          </p>
           <Button type="submit" className="w-full" loading={signIn.isPending}>
             {t('login.submit')}
           </Button>

@@ -1,4 +1,4 @@
-import type { CreatePostRequest, Status } from '@disbigle/shared';
+import type { CreatePostRequest, EditPostRequest, Status } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   prependToTimeline,
@@ -106,5 +106,14 @@ export function useCreateStatus() {
       for (const aspectId of status.aspectIds ?? [])
         prependToTimeline(queryClient, socialKeys.timeline('aspect', aspectId), [status]);
     },
+  });
+}
+
+export function useEditStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: EditPostRequest }) =>
+      social.editStatus(id, body),
+    onSuccess: (status) => storeStatus(queryClient, status),
   });
 }

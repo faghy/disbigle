@@ -2,7 +2,7 @@ import { createMemoryHistory } from '@tanstack/react-router';
 import { render } from '@testing-library/react';
 import { vi } from 'vitest';
 import { App } from '../App.tsx';
-import { createQueryClient } from '../api/queries.ts';
+import { createQueryClient, DEFAULT_LIMITS } from '../api/queries.ts';
 import { createAppRouter } from '../router.tsx';
 
 export interface MockResponse {
@@ -52,7 +52,14 @@ export const signedOut: MockResponse = {
 
 export function instance(registrationMode: 'open' | 'approval' | 'invite' | 'closed' = 'open') {
   return {
-    body: { domain: 'disbigle.test', title: 'disbigle.test', registrationMode, version: '0.1.0' },
+    body: {
+      domain: 'disbigle.test',
+      title: 'disbigle.test',
+      description: '',
+      registrationMode,
+      version: '0.1.0',
+      limits: DEFAULT_LIMITS,
+    },
   };
 }
 

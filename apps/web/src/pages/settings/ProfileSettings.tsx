@@ -21,6 +21,7 @@ import {
   TextField,
 } from '../../components/ui.tsx';
 import { useFocusFirstError } from '../../lib/forms.ts';
+import { ProfileImages } from './ProfileImages.tsx';
 
 const MAX_FIELDS = 4;
 
@@ -96,6 +97,9 @@ function ProfileForm({ user }: { user: CurrentUser }) {
       <PageTitle description={t('settings.profile.description')}>
         {t('settings.profile.title')}
       </PageTitle>
+      <div className="mb-6">
+        <ProfileImages user={user} />
+      </div>
       <form ref={formRef} onSubmit={onSubmit} noValidate className="space-y-6">
         <Card className="space-y-4">
           <TextField

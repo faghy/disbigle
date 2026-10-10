@@ -1,11 +1,12 @@
 import type { CurrentUser } from '@disbigle/shared';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, Outlet, useNavigate } from '@tanstack/react-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { type ComponentType, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isModerator, summaryQueryOptions } from '../api/admin.ts';
 import { endpoints } from '../api/endpoints.ts';
 import { clearUserData, queryKeys, useMe } from '../api/queries.ts';
-import { useUnreadCount } from '../api/socialQueries.ts';
+import { useFollowedTags, useUnreadCount } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { Avatar } from './Avatar.tsx';
@@ -16,7 +17,9 @@ import {
   GlobeIcon,
   HomeIcon,
   LocalIcon,
+  SearchIcon,
   SettingsIcon,
+  ShieldIcon,
 } from './icons.tsx';
 import { buttonClass, cx } from './ui.tsx';
 
@@ -83,16 +86,20 @@ interface NavItem {
     | '/notifications'
     | '/aspects'
     | '/bookmarks'
-    | '/settings';
+    | '/settings'
+    | '/admin';
   label: string;
   icon: ComponentType<{ size?: number }>;
   exact?: boolean;
   badge?: number;
+  badgeKey?: string;
 }
 
 function useNavItems(user: CurrentUser | null): NavItem[] {
   const { t } = useTranslation();
   const unread = useUnreadCount();
+  const moderator = isModerator(user);
+  const summary = useQuery({ ...summaryQueryOptions, enabled: moderator });
   const items: NavItem[] = [
     { to: '/', label: t('nav.home'), icon: HomeIcon, exact: true },
     { to: '/public/local', label: t('nav.local'), icon: LocalIcon },
@@ -110,10 +117,29 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
     { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
+    ...(moderator
+      ? [
+          {
+            to: '/admin' as const,
+            label: t('nav.moderation'),
+            icon: ShieldIcon,
+            badge: (summary.data?.pendingUsers ?? 0) + (summary.data?.openReports ?? 0),
+            badgeKey: 'nav.moderationPending',
+          },
+        ]
+      : []),
   ];
 }
 
-function Badge({ count, className }: { count: number; className?: string }) {
+function Badge({
+  count,
+  className,
+  labelKey = 'nav.unread',
+}: {
+  count: number;
+  className?: string;
+  labelKey?: string;
+}) {
   const { t } = useTranslation();
   if (count <= 0) return null;
   return (
@@ -124,8 +150,37 @@ function Badge({ count, className }: { count: number; className?: string }) {
       )}
     >
       <span aria-hidden="true">{count > 99 ? '99+' : count}</span>
-      <span className="sr-only">{t('nav.unread', { count })}</span>
+      <span className="sr-only">{t(labelKey, { count })}</span>
     </span>
+  );
+}
+
+function FollowedTags() {
+  const { t } = useTranslation();
+  const tags = useFollowedTags();
+  if (!tags.data || tags.data.length === 0) return null;
+  return (
+    <section aria-labelledby="followed-tags-title" className="mt-6 border-t border-border pt-4">
+      <h2
+        id="followed-tags-title"
+        className="px-3 text-xs font-semibold tracking-wide text-fg-muted uppercase"
+      >
+        {t('tags.followedTitle')}
+      </h2>
+      <ul className="mt-2 space-y-0.5">
+        {tags.data.map((name) => (
+          <li key={name}>
+            <Link
+              to="/tags/$tag"
+              params={{ tag: name }}
+              className="block truncate rounded-lg px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring data-[status=active]:text-accent"
+            >
+              #{name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -133,27 +188,34 @@ function SideNav({ user }: { user: CurrentUser | null }) {
   const { t } = useTranslation();
   const items = useNavItems(user);
   return (
-    <nav aria-label={t('nav.main')} className="hidden w-56 shrink-0 md:block">
-      <ul className="sticky top-20 space-y-1 py-6">
-        {items.map((item) => (
-          <li key={item.to}>
-            <Link
-              to={item.to}
-              activeOptions={{ exact: item.exact ?? false }}
-              className={cx(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-fg-muted transition-colors focus-ring',
-                'hover:bg-surface-muted hover:text-fg',
-                'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
-              )}
-            >
-              <item.icon size={22} />
-              <span className="flex-1">{item.label}</span>
-              {item.badge !== undefined && <Badge count={item.badge} />}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div className="hidden w-56 shrink-0 md:block">
+      <div className="sticky top-20 py-6">
+        <nav aria-label={t('nav.main')}>
+          <ul className="space-y-1">
+            {items.map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  activeOptions={{ exact: item.exact ?? false }}
+                  className={cx(
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-fg-muted transition-colors focus-ring',
+                    'hover:bg-surface-muted hover:text-fg',
+                    'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
+                  )}
+                >
+                  <item.icon size={22} />
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge !== undefined && (
+                    <Badge count={item.badge} labelKey={item.badgeKey} />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        {user && <FollowedTags />}
+      </div>
+    </div>
   );
 }
 
@@ -181,7 +243,11 @@ function BottomNav() {
             >
               <item.icon size={22} />
               {item.badge !== undefined && (
-                <Badge count={item.badge} className="absolute top-1.5 left-1/2 ml-1" />
+                <Badge
+                  count={item.badge}
+                  labelKey={item.badgeKey}
+                  className="absolute top-1.5 left-1/2 ml-1"
+                />
               )}
             </Link>
           </li>
@@ -209,7 +275,17 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
           <span>Disbigle</span>
         </Link>
 
+        <TopSearch />
+
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            to="/search"
+            aria-label={t('search.title')}
+            title={t('search.title')}
+            className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring md:hidden"
+          >
+            <SearchIcon />
+          </Link>
           {user ? (
             <UserMenu user={user} />
           ) : loading ? null : (
@@ -225,6 +301,48 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
         </div>
       </div>
     </header>
+  );
+}
+
+/** Search box in the top bar (wider screens); it opens the search page with the query. */
+function TopSearch() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const id = useId();
+  const [text, setText] = useState('');
+  const onSearchPage = useRouterState({ select: (state) => state.location.pathname === '/search' });
+  if (onSearchPage) return null;
+  return (
+    <search className="ml-4 hidden max-w-xs flex-1 md:block">
+      <form
+        className="relative"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const q = text.trim();
+          void navigate({ to: '/search', search: { q: q || undefined } });
+          setText('');
+        }}
+      >
+        <label htmlFor={id} className="sr-only">
+          {t('search.label')}
+        </label>
+        <SearchIcon
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+        />
+        <input
+          id={id}
+          type="search"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder={t('search.shortPlaceholder')}
+          className="input-base rounded-full py-1.5 pl-9 text-sm"
+        />
+      </form>
+    </search>
   );
 }
 
