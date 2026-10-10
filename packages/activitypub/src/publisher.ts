@@ -76,6 +76,8 @@ export class ActivityPubPublisher implements EventBus {
     switch (event.type) {
       case 'post.created':
         return this.postCreated(ctx, event.postId);
+      case 'post.updated':
+        return this.postCreated(ctx, event.postId, true);
       case 'post.deleted':
         return this.postDeleted(ctx, event);
       case 'follow.requested': {
@@ -248,7 +250,11 @@ export class ActivityPubPublisher implements EventBus {
     }
   }
 
-  private async postCreated(ctx: Context<CoreContext>, postId: string): Promise<void> {
+  private async postCreated(
+    ctx: Context<CoreContext>,
+    postId: string,
+    edited = false,
+  ): Promise<void> {
     const [post] = await this.core.db
       .select()
       .from(schema.posts)
@@ -262,6 +268,7 @@ export class ActivityPubPublisher implements EventBus {
     const sender = { identifier: author.username };
 
     if (post.reblogOfId) {
+      if (edited) return;
       const [original] = await this.core.db
         .select()
         .from(schema.posts)
@@ -290,8 +297,11 @@ export class ActivityPubPublisher implements EventBus {
 
     const note = await postToNote(ctx, post, author);
     const { explicitRecipients } = await addressing(ctx, post, author);
-    const create = new Create({
-      id: new URL(`${post.apUri}/activity`),
+    const Activity = edited ? Update : Create;
+    const create = new Activity({
+      id: edited
+        ? new URL(`${post.apUri}#updates/${Date.now()}`)
+        : new URL(`${post.apUri}/activity`),
       actor: ctx.getActorUri(author.username),
       object: note,
       tos: note.toIds,

@@ -174,6 +174,16 @@ describe('federation between two instances', () => {
     expect(received.account.acct).toBe(`${bob.account.username}@${b.domain}`);
     expect(received.tags).toEqual([{ name: 'federation' }]);
 
+    // Bob edits it; Alice's copy follows.
+    await bob.client.request('PUT', `/api/v1/statuses/${post.id}`, {
+      content: 'Ciao dal **server B** (modificato) #federation',
+    });
+    await eventually(async () =>
+      (await alice.client.get(`/api/v1/statuses/${received.id}`))
+        .json()
+        .content.includes('modificato'),
+    );
+
     // Alice likes it; Bob's server counts the like and notifies Bob.
     await alice.client.post(`/api/v1/statuses/${received.id}/like`);
     await eventually(

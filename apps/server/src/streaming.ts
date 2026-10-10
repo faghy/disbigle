@@ -60,7 +60,9 @@ export class StreamingHub {
   async handle(event: DomainEvent): Promise<void> {
     if (this.connections.size === 0) return;
     try {
-      if (event.type === 'post.created') await this.onPostCreated(event.postId);
+      if (event.type === 'post.created') await this.onPostCreated(event.postId, 'update');
+      else if (event.type === 'post.updated')
+        await this.onPostCreated(event.postId, 'status.update');
       else if (event.type === 'post.deleted') {
         await this.onPostDeleted(event);
       } else if (event.type === 'notification.created') {
@@ -71,7 +73,7 @@ export class StreamingHub {
     }
   }
 
-  private async onPostCreated(postId: string): Promise<void> {
+  private async onPostCreated(postId: string, kind: 'update' | 'status.update'): Promise<void> {
     const { db } = this.ctx;
     const { posts, follows, postAudiences, mutes, postTags, tags } = schema;
     const [post] = await db.select().from(posts).where(eq(posts.id, postId));
@@ -133,7 +135,7 @@ export class StreamingHub {
       if (targets.length === 0) continue;
       const status = await statusFor(c.actorId);
       if (!status) continue;
-      for (const stream of targets) this.send(c, { event: 'update', stream, payload: status });
+      for (const stream of targets) this.send(c, { event: kind, stream, payload: status });
     }
   }
 

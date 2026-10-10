@@ -27,7 +27,8 @@ export type DomainEvent =
   | { type: 'like.removed'; actorId: string; postId: string; apUri: string | null }
   | { type: 'profile.updated'; actorId: string }
   | { type: 'block.created'; actorId: string; targetActorId: string }
-  | { type: 'account.deleted'; actorId: string };
+  | { type: 'account.deleted'; actorId: string }
+  | { type: 'post.updated'; postId: string; actorId: string };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

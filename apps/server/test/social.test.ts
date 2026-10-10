@@ -40,6 +40,24 @@ describe('statuses and timelines', () => {
     expect((await client.get(`/api/v1/statuses/${status.id}`)).statusCode).toBe(404);
   });
 
+  it('lets only the author edit a post', async () => {
+    const author = await signedIn();
+    const other = await signedIn();
+    const post = (await author.client.post('/api/v1/statuses', { content: 'first #draft' })).json();
+    expect(
+      (await other.client.request('PUT', `/api/v1/statuses/${post.id}`, { content: 'hacked' }))
+        .statusCode,
+    ).toBe(404);
+    const edited = (
+      await author.client.request('PUT', `/api/v1/statuses/${post.id}`, {
+        content: 'second **version** #final',
+      })
+    ).json();
+    expect(edited.content).toContain('<strong>version</strong>');
+    expect(edited.editedAt).not.toBeNull();
+    expect(edited.tags).toEqual([{ name: 'final' }]);
+  });
+
   it('rejects empty posts and anonymous posting', async () => {
     const { client } = await signedIn();
     expect((await client.post('/api/v1/statuses', { content: '   ' })).statusCode).toBe(422);

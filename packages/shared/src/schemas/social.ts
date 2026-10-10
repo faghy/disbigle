@@ -26,6 +26,13 @@ export const createPostRequestSchema = z
   });
 export type CreatePostRequest = z.input<typeof createPostRequestSchema>;
 
+export const editPostRequestSchema = z.object({
+  content: z.string().max(MAX_POST_LENGTH),
+  summary: z.string().trim().max(500).default(''),
+  sensitive: z.boolean().default(false),
+});
+export type EditPostRequest = z.input<typeof editPostRequestSchema>;
+
 export const paginationQuerySchema = z.object({
   maxId: z.uuid().optional(),
   minId: z.uuid().optional(),
@@ -132,5 +139,6 @@ export interface Notification {
 /** Messages pushed over the streaming WebSocket. */
 export type StreamEvent =
   | { event: 'update'; stream: string; payload: Status }
+  | { event: 'status.update'; stream: string; payload: Status }
   | { event: 'delete'; stream: string; payload: string }
   | { event: 'notification'; stream: string; payload: Notification };

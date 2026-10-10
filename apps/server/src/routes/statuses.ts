@@ -3,6 +3,7 @@ import {
   type CoreContext,
   createPost,
   deletePost,
+  editPost,
   getStatus,
   getStatusContext,
   like,
@@ -11,7 +12,7 @@ import {
   unlike,
   unreblog,
 } from '@disbigle/core';
-import { createPostRequestSchema } from '@disbigle/shared';
+import { createPostRequestSchema, editPostRequestSchema } from '@disbigle/shared';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
@@ -37,6 +38,12 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
   app.get('/:id', async (request) => {
     const { id } = parse(idParams, request.params);
     return getStatus(ctx, request.session?.stage === 'active' ? request.session.actorId : null, id);
+  });
+
+  app.put('/:id', async (request) => {
+    const session = requireUser(request);
+    const { id } = parse(idParams, request.params);
+    return editPost(ctx, session.actorId, id, parse(editPostRequestSchema, request.body));
   });
 
   app.get('/:id/context', async (request) => {

@@ -3,6 +3,8 @@ import { schema, uuidv7 } from '@disbigle/db';
 import {
   type CreatePostRequest,
   createPostRequestSchema,
+  type EditPostRequest,
+  editPostRequestSchema,
   type Status,
   type StatusContext,
   type Visibility,
@@ -241,6 +243,75 @@ export async function createPost(
   const [status] = await hydrateStatuses(ctx, authorActorId, [created]);
   if (!status) throw new Error('Serialization failed');
   return status;
+}
+
+/**
+ * Edits the text of your own post. Audience, mentions-based recipients and attachments stay as
+ * they were; newly mentioned people are linked but not added to a private audience.
+ */
+export async function editPost(
+  ctx: CoreContext,
+  actorId: string,
+  postId: string,
+  request: EditPostRequest,
+): Promise<Status> {
+  const input = editPostRequestSchema.parse(request);
+  const [post] = await ctx.db.select().from(posts).where(eq(posts.id, postId));
+  if (!post || post.actorId !== actorId || !post.local || post.reblogOfId) {
+    throw new DomainError('not_found', 'Post not found');
+  }
+  const [hasMedia] = await ctx.db
+    .select({ id: mediaAttachments.id })
+    .from(mediaAttachments)
+    .where(eq(mediaAttachments.postId, post.id))
+    .limit(1);
+  if (!input.content.trim() && !hasMedia) {
+    throw new DomainError('validation_failed', 'A post needs text or media', [
+      { path: 'content', message: 'A post needs text or media' },
+    ]);
+  }
+  const mentioned = await resolveMentions(ctx, input.content);
+  const base = ctx.config.PUBLIC_URL;
+  const contentHtml = renderMarkdown(input.content, {
+    resolveMention: (username, domain) =>
+      mentioned.get(`${username.toLowerCase()}@${domain ?? ''}`)?.apUrl ?? null,
+    tagUrl: (tag) => `${base}/tags/${encodeURIComponent(tag)}`,
+    localOrigin: new URL(base).origin,
+  });
+  const tagNames = extractTags(input.content);
+  await ctx.db.transaction(async (tx) => {
+    await tx
+      .update(posts)
+      .set({
+        source: input.content,
+        contentHtml,
+        summary: input.summary,
+        sensitive: input.sensitive || input.summary.length > 0,
+        editedAt: new Date(),
+      })
+      .where(eq(posts.id, post.id));
+    await tx.delete(postTags).where(eq(postTags.postId, post.id));
+    if (tagNames.length > 0) {
+      await tx
+        .insert(tags)
+        .values(tagNames.map((name) => ({ id: uuidv7(), name })))
+        .onConflictDoNothing();
+      const tagRows = await tx
+        .select({ id: tags.id })
+        .from(tags)
+        .where(inArray(tags.name, tagNames));
+      await tx.insert(postTags).values(tagRows.map((t) => ({ postId: post.id, tagId: t.id })));
+    }
+    const newMentions = [...mentioned.values()].map((a) => a.id).filter((id) => id !== actorId);
+    if (newMentions.length > 0) {
+      await tx
+        .insert(mentions)
+        .values(newMentions.map((id) => ({ postId: post.id, actorId: id })))
+        .onConflictDoNothing();
+    }
+  });
+  await emit(ctx, { type: 'post.updated', postId: post.id, actorId });
+  return getStatus(ctx, actorId, post.id);
 }
 
 /** Deletes a post (and reblogs of it). Moderators may delete any post with `asModerator`. */
