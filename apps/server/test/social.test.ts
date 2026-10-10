@@ -136,6 +136,16 @@ describe('accounts and notifications', () => {
     expect((await b.client.get('/api/v1/notifications/unread_count')).json()).toEqual({ count: 0 });
   });
 
+  it('redirects old diaspora* URLs to the new pages', async () => {
+    const { account } = await signedIn();
+    const profile = await new Client(app).get(`/u/${account.username}`);
+    expect(profile.statusCode).toBe(301);
+    expect(profile.headers.location).toBe(`/@${account.username}`);
+    expect((await new Client(app).get('/posts/0123456789abcdef0123456789abcdef')).statusCode).toBe(
+      404,
+    );
+  });
+
   it('searches accounts by name only', async () => {
     const { account } = await signedIn();
     const results = (

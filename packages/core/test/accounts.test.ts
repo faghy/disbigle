@@ -254,3 +254,31 @@ describe('profile', () => {
     expect((await getCurrentUser(ctx(), userId)).account.displayName).toBe('Disbiglio');
   });
 });
+
+describe('imported diaspora passwords', () => {
+  it('accepts a Devise bcrypt hash and upgrades it to Argon2id', async () => {
+    const bcrypt = (await import('bcryptjs')).default;
+    const pepper =
+      '065eb8798b181ff0ea2c5c16aee0ff8b70e04e2ee6bd6e08b49da46924223e39127d5335e466207d42bf2a045c12be5f90e92012a4f05f7fc6d9f3c875f4c95b';
+    const input = uniqueUser();
+    const { userId } = await registerUser(ctx(), input);
+    const legacy = `$diaspora-bcrypt$${await bcrypt.hash(`old secret${pepper}`, 4)}`;
+    await ctx()
+      .db.update(schema.users)
+      .set({ passwordHash: legacy })
+      .where(eq(schema.users.id, userId));
+
+    await expectCode(
+      login(ctx(), { login: input.username, password: 'wrong' }),
+      'invalid_credentials',
+    );
+    expect((await login(ctx(), { login: input.username, password: 'old secret' })).status).toBe(
+      'ok',
+    );
+    const [user] = await ctx().db.select().from(schema.users).where(eq(schema.users.id, userId));
+    expect(user?.passwordHash.startsWith('$argon2id$')).toBe(true);
+    expect((await login(ctx(), { login: input.username, password: 'old secret' })).status).toBe(
+      'ok',
+    );
+  });
+});

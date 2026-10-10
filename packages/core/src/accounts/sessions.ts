@@ -1,7 +1,12 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
-import { getDummyPasswordHash, verifyPassword } from '../crypto/passwords.ts';
+import {
+  getDummyPasswordHash,
+  hashPassword,
+  passwordNeedsRehash,
+  verifyPassword,
+} from '../crypto/passwords.ts';
 import { randomToken, sha256 } from '../crypto/tokens.ts';
 import { DomainError } from '../errors.ts';
 import { consumeRecoveryCode } from './recovery-codes.ts';
@@ -83,6 +88,13 @@ export async function login(
   const { user } = row;
   if (!(await verifyPassword(user.passwordHash, credentials.password))) {
     throw new DomainError('invalid_credentials', 'Invalid login or password');
+  }
+  if (passwordNeedsRehash(user.passwordHash)) {
+    // Imported (e.g. diaspora bcrypt) hashes are upgraded to Argon2id on first sign-in.
+    await ctx.db
+      .update(schema.users)
+      .set({ passwordHash: await hashPassword(credentials.password), updatedAt: new Date() })
+      .where(eq(schema.users.id, user.id));
   }
   assertCanSignIn(user);
 

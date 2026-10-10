@@ -1,0 +1,22 @@
+{
+  "name": "@disbigle/diaspora-import",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "import": "tsx --env-file-if-exists=../../.env src/cli.ts"
+  },
+  "dependencies": {
+    "@disbigle/config": "workspace:*",
+    "@disbigle/core": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.4",
+    "postgres": "^3.4.9"
+  }
+}

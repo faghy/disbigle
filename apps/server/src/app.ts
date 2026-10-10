@@ -21,6 +21,7 @@ import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { adminRoutes, reportRoutes } from './routes/admin.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
+import { legacyDiasporaRoutes } from './routes/legacy.ts';
 import { meRoutes } from './routes/me.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { migrationRoutes } from './routes/migration.ts';
@@ -108,6 +109,7 @@ export async function buildApp(options: AppOptions) {
   }
 
   app.get('/health', async () => ({ status: 'ok' }));
+  await app.register(legacyDiasporaRoutes, { ctx });
 
   await app.register(
     async (api) => {
