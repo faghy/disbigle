@@ -34,7 +34,13 @@ export const visibilityEnum = pgEnum('visibility', [
 ]);
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio', 'unknown']);
 export const domainBlockSeverityEnum = pgEnum('domain_block_severity', ['silence', 'suspend']);
-export const reportCategoryEnum = pgEnum('report_category', ['spam', 'illegal', 'harassment', 'violation', 'other']);
+export const reportCategoryEnum = pgEnum('report_category', [
+  'spam',
+  'illegal',
+  'harassment',
+  'violation',
+  'other',
+]);
 export const notificationTypeEnum = pgEnum('notification_type', [
   'follow',
   'follow_request',
@@ -536,7 +542,10 @@ export const reports = pgTable(
     resolvedById: uuid('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },
-  (t) => [index('reports_target_idx').on(t.targetActorId), index('reports_open_idx').on(t.id).where(sql`${t.resolvedAt} is null`)],
+  (t) => [
+    index('reports_target_idx').on(t.targetActorId),
+    index('reports_open_idx').on(t.id).where(sql`${t.resolvedAt} is null`),
+  ],
 );
 
 /** Audit trail of moderation actions. */

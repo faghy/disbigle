@@ -1,4 +1,8 @@
-import { ActivityPubPublisher, CompositeEventBus, createDisbigleFederation } from '@disbigle/activitypub';
+import {
+  ActivityPubPublisher,
+  CompositeEventBus,
+  createDisbigleFederation,
+} from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
 import { type CoreContext, LocalMediaStorage } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
@@ -15,7 +19,11 @@ const config = loadConfig();
 const { db, close } = createDatabase(config.DATABASE_URL);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 
-const ctx: CoreContext = { db, config, kv: { get: async () => null, set: async () => {}, del: async () => {} } };
+const ctx: CoreContext = {
+  db,
+  config,
+  kv: { get: async () => null, set: async () => {}, del: async () => {} },
+};
 const federation = createDisbigleFederation({
   kv: new RedisKvStore(redis),
   queue: new RedisMessageQueue(() => new Redis(config.REDIS_URL)),
@@ -23,7 +31,10 @@ const federation = createDisbigleFederation({
 });
 const publishChannel = new Redis(config.REDIS_URL);
 ctx.events = new CompositeEventBus([
-  { publish: async (event) => void (await publishChannel.publish('disbigle:events', JSON.stringify(event))) },
+  {
+    publish: async (event) =>
+      void (await publishChannel.publish('disbigle:events', JSON.stringify(event))),
+  },
   new ActivityPubPublisher(federation, ctx),
 ]);
 
@@ -33,15 +44,24 @@ console.log('worker: federation queue started');
 
 const jobs = scheduledJobs({ ...ctx, storage: new LocalMediaStorage(config.MEDIA_DIR) });
 const timers = jobs.map((job) =>
-  setInterval(async () => {
-    const lock = await redis.set(`disbigle:job:${job.name}`, String(process.pid), 'PX', job.every - 1000, 'NX');
-    if (!lock) return;
-    try {
-      console.log(`worker: ${job.name}: ${await job.run()}`);
-    } catch (error) {
-      console.error(`worker: ${job.name} failed`, error);
-    }
-  }, Math.min(job.every, 60_000)),
+  setInterval(
+    async () => {
+      const lock = await redis.set(
+        `disbigle:job:${job.name}`,
+        String(process.pid),
+        'PX',
+        job.every - 1000,
+        'NX',
+      );
+      if (!lock) return;
+      try {
+        console.log(`worker: ${job.name}: ${await job.run()}`);
+      } catch (error) {
+        console.error(`worker: ${job.name} failed`, error);
+      }
+    },
+    Math.min(job.every, 60_000),
+  ),
 );
 
 const shutdown = async () => {

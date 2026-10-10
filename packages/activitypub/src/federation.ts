@@ -79,7 +79,10 @@ const MAX_ANCESTOR_FETCH = 5;
  * Fetches and stores the posts a reply answers when we don't have them yet, so threads arriving
  * from other servers are complete. Only public posts can be fetched; others are simply skipped.
  */
-async function fetchMissingAncestors(ctx: InboxContext<CoreContext>, parentUri: URL | null): Promise<void> {
+async function fetchMissingAncestors(
+  ctx: InboxContext<CoreContext>,
+  parentUri: URL | null,
+): Promise<void> {
   const chain: Note[] = [];
   let next = parentUri;
   while (next && chain.length < MAX_ANCESTOR_FETCH) {
