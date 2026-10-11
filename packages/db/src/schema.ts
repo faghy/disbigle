@@ -346,6 +346,10 @@ export const posts = pgTable(
     index('posts_reblog_idx').on(t.reblogOfId),
     index('posts_public_local_idx').on(t.id).where(sql`${t.visibility} = 'public' and ${t.local}`),
     index('posts_public_idx').on(t.id).where(sql`${t.visibility} = 'public'`),
+    index('posts_search_idx').using(
+      'gin',
+      sql`to_tsvector('simple', regexp_replace(${t.contentHtml} || ' ' || ${t.summary}, '<[^>]+>', ' ', 'g'))`,
+    ),
     uniqueIndex('posts_ap_uri_idx').on(t.apUri),
     uniqueIndex('posts_diaspora_guid_idx').on(t.diasporaGuid),
     uniqueIndex('posts_reblog_unique_idx')

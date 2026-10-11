@@ -1,0 +1,1 @@
+CREATE INDEX "posts_search_idx" ON "posts" USING gin (to_tsvector('simple', regexp_replace("content_html" || ' ' || "summary", '<[^>]+>', ' ', 'g')));

@@ -1,6 +1,13 @@
 import { resolveRemoteAccount, resolveRemoteStatus } from '@disbigle/activitypub';
-import { type CoreContext, findActorByHandle, getStatus, serializeAccount } from '@disbigle/core';
+import {
+  type CoreContext,
+  findActorByHandle,
+  getStatus,
+  searchStatuses,
+  serializeAccount,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
+import { paginationQuerySchema } from '@disbigle/shared';
 import type { Federation } from '@fedify/fedify';
 import { and, ilike, isNull, or, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -73,4 +80,18 @@ export async function searchRoutes(
     const id = await resolveRemoteStatus(federation, ctx, q);
     return id ? getStatus(ctx, session.actorId, id) : null;
   });
+
+  /** Full-text search in the posts the viewer can see. */
+  app.get(
+    '/statuses',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request) => {
+      const query = parse(
+        paginationQuerySchema.extend({ q: z.string().trim().min(1).max(200) }),
+        request.query,
+      );
+      const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+      return searchStatuses(ctx, viewer, query.q, query);
+    },
+  );
 }

@@ -215,6 +215,24 @@ describe('accounts and notifications', () => {
     expect((await client.get('/api/v1/invites')).json()).toEqual([]);
   });
 
+  it('searches posts the viewer can see', async () => {
+    const author = await signedIn();
+    const reader = await signedIn();
+    const word = `zucchine${Date.now().toString(36)}`;
+    const visible = (
+      await author.client.post('/api/v1/statuses', { content: `Ricetta delle ${word} ripiene` })
+    ).json();
+    await author.client.post('/api/v1/statuses', {
+      content: `${word} segrete`,
+      visibility: 'followers',
+    });
+    const found = (
+      await reader.client.get(`/api/v1/search/statuses?q=${word.slice(0, -2)} ripien`)
+    ).json();
+    expect(found.map((s: { id: string }) => s.id)).toEqual([visible.id]);
+    expect((await author.client.get(`/api/v1/search/statuses?q=${word}`)).json()).toHaveLength(2);
+  });
+
   it('searches accounts by name only', async () => {
     const { account } = await signedIn();
     const results = (

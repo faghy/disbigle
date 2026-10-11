@@ -1,4 +1,4 @@
-import { getStatus, serializeAccount, visibleTo } from '@disbigle/core';
+import { getStatus, searchStatuses, serializeAccount, visibleTo } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Status } from '@disbigle/shared';
 import { and, eq, ilike, inArray, or } from 'drizzle-orm';
@@ -14,9 +14,9 @@ import { searchAccounts } from './accounts.ts';
 const { posts, tags, tagFollows } = schema;
 
 /**
- * `GET /api/v2/search`: accounts by name or handle, hashtags by prefix, statuses by URL.
- * Like Mastodon without full-text search, statuses are only found by their URL (and fetched
- * from their server with `resolve=true`, when a resolver is configured).
+ * `GET /api/v2/search`: accounts by name or handle, hashtags by prefix, statuses by URL or text.
+ * A URL finds that status (fetched from its server with `resolve=true`, when a resolver is
+ * configured); other text is a full-text search in the posts the viewer can see.
  */
 export async function searchRoutes(app: FastifyInstance, deps: Deps) {
   const { ctx, options } = deps;
@@ -97,6 +97,12 @@ export async function searchRoutes(app: FastifyInstance, deps: Deps) {
           id = await options.resolveStatus(q).catch(() => null);
         const status = id ? await getStatus(ctx, viewer, id).catch(() => null) : null;
         if (status) statuses.push(status);
+      } else if (wants('statuses') && offset === 0) {
+        // Full-text search in posts the viewer can see.
+        const maxId = str(query.max_id);
+        statuses.push(
+          ...(await searchStatuses(ctx, viewer, q, { limit, ...(maxId ? { maxId } : {}) })),
+        );
       }
 
       return {

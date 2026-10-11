@@ -180,3 +180,33 @@ export function bookmarksTimeline(
     query,
   );
 }
+
+/**
+ * Full-text search in posts the viewer may see (signed out: public posts only). Words are matched
+ * as prefixes, all of them required. Newest first.
+ */
+export function searchStatuses(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  text: string,
+  query: PaginationQuery = {},
+) {
+  const words = text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}_]+/u)
+    .filter((w) => w.length > 0)
+    .slice(0, 8);
+  if (words.length === 0) return Promise.resolve([]);
+  const tsquery = words.map((w) => `${w}:*`).join(' & ');
+  return page(
+    ctx,
+    viewerActorId,
+    and(
+      isNull(posts.reblogOfId),
+      viewerActorId ? undefined : eq(posts.visibility, 'public'),
+      sql`to_tsvector('simple', regexp_replace(${posts.contentHtml} || ' ' || ${posts.summary}, '<[^>]+>', ' ', 'g')) @@ to_tsquery('simple', ${tsquery})`,
+    ),
+    query,
+    'public',
+  );
+}
