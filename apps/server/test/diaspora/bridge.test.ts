@@ -286,4 +286,85 @@ describe('bridge identities', () => {
       );
     }
   }, 90_000);
+
+  it('bridges replies on aspect-limited threads to the aspect only', async () => {
+    const alice = await signUp(hub);
+    const dora = await signUp(pod); // in the aspect, diaspora*
+    const erin = await signUp(pod); // follower outside the aspect, diaspora*
+    const paul = await signUp(ap as unknown as Instance); // in the aspect, ActivityPub
+    const quinn = await signUp(ap as unknown as Instance); // follower outside, ActivityPub
+
+    const aliceOnPod = await pod.bridge.resolvePerson(`${alice.account.username}@${hub.domain}`);
+    if (!aliceOnPod) throw new Error('alice not found from the pod');
+    for (const reader of [dora, erin])
+      await reader.client.post(`/api/v1/accounts/${aliceOnPod.id}/follow`);
+    for (const reader of [paul, quinn]) {
+      const aliceOnAp = (
+        await reader.client.post('/api/v1/search/resolve', {
+          q: `${hub.url}/users/${alice.account.username}`,
+        })
+      ).json();
+      await reader.client.post(`/api/v1/accounts/${aliceOnAp.id}/follow`);
+    }
+    const followers = await eventually(async () => {
+      const list = (
+        await alice.client.get(`/api/v1/accounts/${alice.account.id}/followers`)
+      ).json();
+      return list.length === 4 ? list : null;
+    });
+    const idOf = (username: string) =>
+      followers.find((f: { username: string }) => f.username === username).id;
+    const aspects = (await alice.client.get('/api/v1/aspects')).json();
+    for (const member of [dora, paul])
+      await alice.client.put(`/api/v1/accounts/${idOf(member.account.username)}/aspects`, {
+        aspectIds: [aspects[0].id],
+      });
+
+    await alice.client.post('/api/v1/statuses', {
+      content: 'Solo per il mio aspetto',
+      visibility: 'limited',
+      aspectIds: [aspects[0].id],
+    });
+    const find = (list: { id: string; content: string }[], text: string) =>
+      list.find((s) => textOf(s.content).includes(text));
+    const onPod = await eventually(async () =>
+      find((await dora.client.get('/api/v1/timelines/home')).json(), 'Solo per il mio aspetto'),
+    );
+    const onAp = await eventually(async () =>
+      find((await paul.client.get('/api/v1/timelines/home')).json(), 'Solo per il mio aspetto'),
+    );
+
+    // paul (ActivityPub) answers: dora sees it; erin, outside the aspect, doesn't.
+    await paul.client.post('/api/v1/statuses', {
+      content: 'Risposta privata da ActivityPub',
+      inReplyToId: onAp.id,
+    });
+    await eventually(async () => {
+      const context = (await dora.client.get(`/api/v1/statuses/${onPod.id}/context`)).json();
+      return find(context.descendants ?? [], 'Risposta privata da ActivityPub');
+    });
+
+    // dora (diaspora*) answers: paul sees it; quinn, outside the aspect, doesn't.
+    await dora.client.post('/api/v1/statuses', {
+      content: 'Risposta privata da diaspora',
+      inReplyToId: onPod.id,
+    });
+    await eventually(async () => {
+      const context = (await paul.client.get(`/api/v1/statuses/${onAp.id}/context`)).json();
+      return find(context.descendants ?? [], 'Risposta privata da diaspora');
+    });
+
+    await hub.bridge.idle();
+    await pod.bridge.idle();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    for (const outsider of [erin, quinn]) {
+      const home = (await outsider.client.get('/api/v1/timelines/home')).json();
+      expect(find(home, 'Solo per il mio aspetto')).toBeUndefined();
+      expect(find(home, 'Risposta privata')).toBeUndefined();
+      const notifications = JSON.stringify(
+        (await outsider.client.get('/api/v1/notifications')).json(),
+      );
+      expect(notifications).not.toContain('Risposta privata');
+    }
+  }, 120_000);
 });

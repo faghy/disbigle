@@ -117,16 +117,13 @@ export function bridgedPerson(
   });
 }
 
-/**
- * A reply written on another network, as a Note from its author's bridge identity. Public, and
- * addressed to the followers of the thread's (local) author, who relays it.
- */
+/** A reply written on another network, as a Note from its author's bridge identity. */
 export function bridgedNote(
   ctx: Context<CoreContext>,
   post: PostRow,
   bridge: { username: string },
   inReplyTo: string | null,
-  extraCc: URL[],
+  addressing: { to: URL[]; cc: URL[] },
 ): Note {
   return new Note({
     id: new URL(post.apUri ?? ''),
@@ -135,8 +132,8 @@ export function bridgedNote(
     ...(post.summary ? { summary: post.summary } : {}),
     sensitive: post.sensitive,
     replyTarget: inReplyTo ? new URL(inReplyTo) : null,
-    to: PUBLIC_COLLECTION,
-    ccs: extraCc,
+    tos: addressing.to,
+    ccs: addressing.cc,
     published: instant(post.createdAt),
     url: new URL(post.apUri ?? ''),
   });

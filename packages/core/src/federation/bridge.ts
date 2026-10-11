@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { schema, uuidv7 } from '@disbigle/db';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { generateActorKeyPair } from '../crypto/keys.ts';
 import type { ActorRow } from './remote.ts';
@@ -83,4 +83,35 @@ export function bridgedAccountByGuid(
   guid: string,
 ): Promise<BridgedAccount | null> {
   return bridgedBy(ctx, eq(bridgeIdentities.diasporaGuid, guid));
+}
+
+/**
+ * Whether `actorId` is among the people a local post was shared with. Bridged replies and likes
+ * on a private thread only count (and travel) when they come from someone inside it.
+ */
+export async function inAudienceOf(
+  ctx: CoreContext,
+  actorId: string,
+  post: { id: string; actorId: string; visibility: string },
+): Promise<boolean> {
+  const { follows, postAudiences } = schema;
+  switch (post.visibility) {
+    case 'public':
+    case 'unlisted':
+      return true;
+    case 'followers': {
+      const [row] = await ctx.db
+        .select({ id: follows.id })
+        .from(follows)
+        .where(and(eq(follows.actorId, actorId), eq(follows.targetActorId, post.actorId)));
+      return Boolean(row);
+    }
+    default: {
+      const [row] = await ctx.db
+        .select({ id: postAudiences.actorId })
+        .from(postAudiences)
+        .where(and(eq(postAudiences.postId, post.id), eq(postAudiences.actorId, actorId)));
+      return Boolean(row);
+    }
+  }
 }

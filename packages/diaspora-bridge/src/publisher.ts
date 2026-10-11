@@ -7,6 +7,7 @@ import {
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
+  inAudienceOf,
   postsForNewFollower,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
@@ -190,7 +191,7 @@ export class DiasporaPublisher implements EventBus {
   }
 
   /**
-   * A public thread started here, and a remote account diaspora* can't reach acting in it: what
+   * A thread started here, and a remote account diaspora* can't reach acting in it: what
    * it does there reaches diaspora* through its bridge identity, relayed by the thread's author.
    */
   private async bridgedThread(authorId: string, rootId: string) {
@@ -198,7 +199,10 @@ export class DiasporaPublisher implements EventBus {
     const author = await actorById(ctx, authorId);
     if (!author || author.domain === null || author.protocols.includes('diaspora')) return null;
     const root = await postById(ctx, rootId);
-    if (!root?.local || !root.diasporaGuid || !isPublicVisibility(root.visibility)) return null;
+    if (!root?.local || !root.diasporaGuid) return null;
+    // On a private thread, only people it was shared with take part (and then everyone in it
+    // sees what they do, as on diaspora*).
+    if (!(await inAudienceOf(ctx, author.id, root))) return null;
     const rootAuthor = await this.localActor(root.actorId);
     const rootSigner = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
     if (!rootSigner) return null;
@@ -272,16 +276,17 @@ export class DiasporaPublisher implements EventBus {
   }
 
   /**
-   * A reply from someone diaspora* can't reach (an ActivityPub account) on a public thread
-   * started here. diaspora* needs comments signed by their author, so it goes out from the
+   * A reply from someone diaspora* can't reach (an ActivityPub account) on a thread started
+   * here. diaspora* needs comments signed by their author, so it goes out from the
    * author's bridge identity, signed with its key, relayed by the thread's author like any comment.
    */
   private async bridgeReply(post: PostRow): Promise<void> {
     const ctx = this.ctx;
-    if (!isPublicVisibility(post.visibility) || !post.threadRootId) return;
-    if (post.threadRootId === post.id) return;
+    if (!post.threadRootId || post.threadRootId === post.id) return;
     const thread = await this.bridgedThread(post.actorId, post.threadRootId);
     if (!thread) return;
+    // A private answer (a direct message to the author, say) never goes to a public thread's audience.
+    if (isPublicVisibility(thread.root.visibility) && !isPublicVisibility(post.visibility)) return;
     const { author, root, rootSigner } = thread;
     const bridge = await ensureBridgeIdentity(ctx, author);
     let guid = post.diasporaGuid;

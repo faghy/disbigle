@@ -27,7 +27,7 @@ import {
   Update,
 } from '@fedify/vocab';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { bridgedReplyOf, bridgedThreadOf, threadAudience } from './bridge.ts';
+import { bridgedReplyOf, bridgedThreadOf, threadAddressing, threadAudience } from './bridge.ts';
 import { addressing, bridgedNote, localActorToPerson, postToNote } from './convert.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
@@ -48,6 +48,9 @@ function recipient(actor: ActorRow): Recipient {
     endpoints: actor.apSharedInbox ? { sharedInbox: new URL(actor.apSharedInbox) } : null,
   };
 }
+
+const isPublicThread = (root: PostRow) =>
+  root.visibility === 'public' || root.visibility === 'unlisted';
 
 const freshId = (ctx: Context<CoreContext>, username: string, kind: string) =>
   new URL(`${ctx.getActorUri(username).href}#${kind}/${crypto.randomUUID()}`);
@@ -367,15 +370,21 @@ export class ActivityPubPublisher implements EventBus {
         .set({ apUri })
         .where(and(eq(schema.posts.id, post.id), isNull(schema.posts.apUri)));
     }
+    const audience = await threadAudience(this.core, reply);
     const targets = new Map<string, ActorRow>();
-    for (const actor of await threadAudience(this.core, reply))
-      if (speaksActivityPub(actor)) targets.set(actor.id, actor);
+    for (const actor of audience) if (speaksActivityPub(actor)) targets.set(actor.id, actor);
     if (targets.size === 0) return;
+    const addressing = threadAddressing(ctx, reply, audience);
     const parentAuthor = reply.parent ? targets.get(reply.parent.actorId) : undefined;
-    const note = bridgedNote(ctx, { ...post, apUri }, bridge, reply.parent?.apUri ?? null, [
-      ctx.getFollowersUri(reply.rootAuthor.username),
-      ...(parentAuthor?.apUri ? [new URL(parentAuthor.apUri)] : []),
-    ]);
+    if (parentAuthor?.apUri && isPublicThread(reply.root))
+      addressing.cc.push(new URL(parentAuthor.apUri));
+    const note = bridgedNote(
+      ctx,
+      { ...post, apUri },
+      bridge,
+      reply.parent?.apUri ?? null,
+      addressing,
+    );
     await ctx.sendActivity(
       { identifier: bridge.username },
       [...targets.values()].map(recipient),
@@ -387,7 +396,8 @@ export class ActivityPubPublisher implements EventBus {
         ccs: note.ccIds,
         published: note.published,
       }),
-      { preferSharedInbox: true },
+      // Shared inboxes would reach everyone the server hosts; private threads go person by person.
+      { preferSharedInbox: isPublicThread(reply.root) },
     );
   }
 
@@ -442,6 +452,7 @@ export class ActivityPubPublisher implements EventBus {
     }
     const targets = (await threadAudience(this.core, thread)).filter(speaksActivityPub);
     if (!likeUri || targets.length === 0) return true;
+    const shared = isPublicThread(thread.root);
     const like = new Like({
       id: new URL(likeUri),
       actor: ctx.getActorUri(bridge.username),
@@ -457,7 +468,7 @@ export class ActivityPubPublisher implements EventBus {
             actor: ctx.getActorUri(bridge.username),
             object: like,
           }),
-      { preferSharedInbox: true },
+      { preferSharedInbox: shared },
     );
     return true;
   }
@@ -476,8 +487,10 @@ export class ActivityPubPublisher implements EventBus {
     const bridge = await bridgeIdentityOf(this.core, thread.author.id);
     if (!bridge || !event.apUri.startsWith(`${ctx.getActorUri(bridge.username).href}/`))
       return true;
-    const targets = (await threadAudience(this.core, thread)).filter(speaksActivityPub);
+    const audience = await threadAudience(this.core, thread);
+    const targets = audience.filter(speaksActivityPub);
     if (targets.length === 0) return true;
+    const { to, cc } = threadAddressing(ctx, thread, audience);
     await ctx.sendActivity(
       { identifier: bridge.username },
       targets.map(recipient),
@@ -485,9 +498,10 @@ export class ActivityPubPublisher implements EventBus {
         id: new URL(`${event.apUri}#delete`),
         actor: ctx.getActorUri(bridge.username),
         object: new Tombstone({ id: new URL(event.apUri) }),
-        to: PUBLIC_COLLECTION,
+        tos: to,
+        ccs: cc,
       }),
-      { preferSharedInbox: true },
+      { preferSharedInbox: isPublicThread(thread.root) },
     );
     return true;
   }

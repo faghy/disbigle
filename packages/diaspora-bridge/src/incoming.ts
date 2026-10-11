@@ -237,10 +237,16 @@ async function comment(
   author: ActorRow,
   parent: PostRow,
   recipient: ActorRow | undefined,
+  sender: string,
 ) {
   const ctx = bridge.ctx;
-  // Only people who can see a post may comment on it (knowing a private post's guid is not enough).
-  if (!(await canView(ctx, author.id, parent.id))) {
+  // Only people who can see a post may comment on it (knowing a private post's guid is not
+  // enough), unless the thread's author relays the comment: on diaspora* they decide who takes
+  // part, and we only know who the post was shared with here.
+  const root = await threadRootOf(ctx, parent);
+  const rootAuthor = await actorById(ctx, root.actorId);
+  const relayedByOwner = !!rootAuthor && diasporaIdOf(ctx, rootAuthor) === sender.toLowerCase();
+  if (!relayedByOwner && !(await canView(ctx, author.id, parent.id))) {
     throw new DomainError('forbidden', 'Comment on a post the author cannot see');
   }
   const rendered = await renderDiasporaText(ctx, entity.text);
@@ -377,7 +383,9 @@ async function conversation(
   await addAudience(ctx, id, participants);
   const root = await postById(ctx, id);
   if (!root) return;
-  for (const message of rest) await comment(bridge, message, author, root, recipient);
+  // The Conversation's author sent these messages with it.
+  const sender = diasporaIdOf(ctx, author);
+  for (const message of rest) await comment(bridge, message, author, root, recipient, sender);
 }
 
 /** A vote on a poll: counted, kept as signed, and relayed when the poll is ours. */
@@ -434,7 +442,7 @@ export async function applyEntity(
     case 'Comment': {
       const parent = await findPostByGuid(ctx, entity.parentGuid);
       if (!parent) return;
-      await comment(bridge, entity, author, parent, recipient);
+      await comment(bridge, entity, author, parent, recipient, sender);
       const stored = await findPostByGuid(ctx, entity.guid);
       await storeRelayable(bridge, entity, { postId: stored?.id ?? null });
       return relay(bridge, entity, await threadRootOf(ctx, parent), author.id);
@@ -455,7 +463,7 @@ export async function applyEntity(
       return conversation(bridge, entity, author, recipient);
     case 'Message': {
       const parent = await findPostByGuid(ctx, entity.conversationGuid);
-      if (parent) await comment(bridge, entity, author, parent, recipient);
+      if (parent) await comment(bridge, entity, author, parent, recipient, sender);
       return;
     }
     case 'AccountMigration':
