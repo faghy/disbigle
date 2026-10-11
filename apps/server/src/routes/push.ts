@@ -1,4 +1,10 @@
-import { type CoreContext, getVapidKeys, subscribePush, unsubscribePush } from '@disbigle/core';
+import {
+  type CoreContext,
+  getPushSubscription,
+  getVapidKeys,
+  subscribePush,
+  unsubscribePush,
+} from '@disbigle/core';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
@@ -39,6 +45,12 @@ export async function pushRoutes(app: FastifyInstance, { ctx }: { ctx: CoreConte
       ...input.subscription,
       ...(input.alerts ? { alerts: input.alerts } : {}),
     });
+  });
+
+  app.get('/subscription', async (request) => {
+    const session = requireUser(request);
+    const { endpoint } = parse(z.object({ endpoint: z.string().max(2048) }), request.query);
+    return getPushSubscription(ctx, session.userId, endpoint);
   });
 
   app.delete('/subscription', async (request) => {

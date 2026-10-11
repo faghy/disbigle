@@ -1,0 +1,26 @@
+{
+  "name": "@disbigle/mastodon-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./drizzle-store": "./src/oauth/drizzle-store.ts",
+    "./schema": "./src/oauth/schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@disbigle/config": "workspace:*",
+    "@disbigle/core": "workspace:*",
+    "@disbigle/db": "workspace:*",
+    "@disbigle/shared": "workspace:*",
+    "@fastify/multipart": "^10.1.3",
+    "@fastify/websocket": "^11.3.4",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.5",
+    "zod": "^4.6.5"
+  }
+}

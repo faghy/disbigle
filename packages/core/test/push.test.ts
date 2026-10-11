@@ -34,6 +34,21 @@ describe('web push', () => {
     }
   });
 
+  it('keeps saved alerts when a subscription is registered again', async () => {
+    const { getPushSubscription } = await import('../src/index.ts');
+    const { userId } = await registerUser(ctx(), uniqueUser());
+    await subscribePush(ctx(), userId, {
+      endpoint: 'https://push.example/keep',
+      keys,
+      alerts: { like: false },
+    });
+    await subscribePush(ctx(), userId, { endpoint: 'https://push.example/keep', keys });
+    expect(
+      (await getPushSubscription(ctx(), userId, 'https://push.example/keep'))?.alerts.like,
+    ).toBe(false);
+    expect(await getPushSubscription(ctx(), userId, 'https://push.example/other')).toBeNull();
+  });
+
   it('sends a localized message for new notifications, honours alerts and drops dead subscriptions', async () => {
     const author = await registerUser(ctx(), { ...uniqueUser(), locale: 'it' });
     const fan = await registerUser(ctx(), uniqueUser());

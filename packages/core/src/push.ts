@@ -78,7 +78,12 @@ export async function subscribePush(
   input: { endpoint: string; keys: { p256dh: string; auth: string }; alerts?: PushAlerts },
 ) {
   validateEndpoint(input.endpoint);
-  const alerts = { ...defaultPushAlerts, ...input.alerts };
+  const [existing] = await ctx.db
+    .select({ alerts: webPushSubscriptions.alerts })
+    .from(webPushSubscriptions)
+    .where(eq(webPushSubscriptions.endpoint, input.endpoint));
+  // Re-registering without alerts keeps the saved choices.
+  const alerts = { ...defaultPushAlerts, ...existing?.alerts, ...input.alerts };
   await ctx.db
     .insert(webPushSubscriptions)
     .values({
@@ -231,4 +236,15 @@ export class PushPublisher implements EventBus {
     }
     return sent;
   }
+}
+
+/** The alerts saved for one of the user's subscriptions, or null if it is not registered. */
+export async function getPushSubscription(ctx: CoreContext, userId: string, endpoint: string) {
+  const [row] = await ctx.db
+    .select()
+    .from(webPushSubscriptions)
+    .where(
+      and(eq(webPushSubscriptions.userId, userId), eq(webPushSubscriptions.endpoint, endpoint)),
+    );
+  return row ? { endpoint: row.endpoint, alerts: { ...defaultPushAlerts, ...row.alerts } } : null;
 }

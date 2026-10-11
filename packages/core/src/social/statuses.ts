@@ -101,6 +101,18 @@ export async function hydrateStatuses(
 
   const actorsById = new Map(actorRows.map((a) => [a.id, serializeAccount(a)]));
   const pollsByPost = await loadPolls(ctx, viewerActorId, postIds);
+  const pinnedIds = viewerActorId
+    ? new Set(
+        (
+          await db
+            .select({ postId: schema.pins.postId })
+            .from(schema.pins)
+            .where(
+              and(eq(schema.pins.actorId, viewerActorId), inArray(schema.pins.postId, postIds)),
+            )
+        ).map((p) => p.postId),
+      )
+    : new Set<string>();
   const liked = new Set(likedRows.map((r) => r.postId));
   const reblogged = new Set(rebloggedRows.map((r) => r.postId));
   const bookmarked = new Set(bookmarkedRows.map((r) => r.postId));
@@ -142,6 +154,7 @@ export async function hydrateStatuses(
       bookmarked: bookmarked.has(post.id),
     };
     if (post.actorId === viewerActorId && post.source !== null) status.source = post.source;
+    if (pinnedIds.has(post.id)) status.pinned = true;
     if (post.actorId === viewerActorId && post.visibility === 'limited') {
       status.aspectIds = aspectRows.filter((r) => r.postId === post.id).map((r) => r.aspectId);
     }

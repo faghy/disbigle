@@ -180,7 +180,11 @@ describe('accounts and notifications', () => {
       await client.post('/api/v1/statuses', { content: 'privato', visibility: 'followers' })
     ).json();
     expect((await client.post(`/api/v1/statuses/${secret.id}/pin`)).statusCode).toBe(400);
-    expect((await client.post(`/api/v1/statuses/${post.id}/pin`)).statusCode).toBe(200);
+    expect((await client.post(`/api/v1/statuses/${post.id}/pin`)).json().pinned).toBe(true);
+    expect((await client.get('/api/v1/timelines/home')).json()[0]).toMatchObject({
+      id: post.id,
+      pinned: true,
+    });
     const pinned = (
       await new Client(app).get(`/api/v1/accounts/${account.id}/statuses?pinned=true`)
     ).json();
