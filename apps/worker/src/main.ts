@@ -16,6 +16,7 @@ import {
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { scheduledJobs } from './jobs.ts';
+import { RedisKeyValueStore } from './kv.ts';
 
 /**
  * Background process: drains the federation delivery queue and runs periodic maintenance.
@@ -29,7 +30,7 @@ const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 const ctx: CoreContext = {
   db,
   config,
-  kv: { get: async () => null, set: async () => {}, del: async () => {} },
+  kv: new RedisKeyValueStore(redis),
 };
 const federation = createDisbigleFederation({
   kv: new RedisKvStore(redis),
