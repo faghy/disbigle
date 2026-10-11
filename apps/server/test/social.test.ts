@@ -217,6 +217,29 @@ describe('accounts and notifications', () => {
     ).toEqual([]);
   });
 
+  it('serves the following collection in pages', async () => {
+    const reader = await signedIn();
+    const followed = await signedIn();
+    await reader.client.post(`/api/v1/accounts/${followed.account.id}/follow`);
+    const fetchAp = async (url: string) =>
+      (
+        await app().inject({
+          method: 'GET',
+          url,
+          headers: { accept: 'application/activity+json' },
+        })
+      ).json();
+    const collection = await fetchAp(`/users/${reader.account.username}/following`);
+    expect(collection.totalItems).toBe(1);
+    expect(collection.first).toBeTruthy();
+    const first = await fetchAp(
+      new URL(collection.first).pathname + new URL(collection.first).search,
+    );
+    expect(first.orderedItems ?? first.items).toEqual([
+      expect.stringContaining(`/users/${followed.account.username}`),
+    ]);
+  });
+
   it('manages personal invitation links', async () => {
     const { client } = await signedIn();
     const created = await client.post('/api/v1/invites', { maxUses: 1 });

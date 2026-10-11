@@ -246,15 +246,22 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     .setFirstCursor(() => '');
 
   federation
-    .setFollowingDispatcher('/users/{identifier}/following', async (ctx, identifier) => {
+    .setFollowingDispatcher('/users/{identifier}/following', async (ctx, identifier, cursor) => {
       const actor = await localActorByIdentifier(ctx.data, identifier);
       if (!actor) return null;
+      // Paged, newest first, like the followers collection.
+      const { follows, actors } = schema;
       const rows = await ctx.data.db
-        .select({ uri: schema.actors.apUri })
-        .from(schema.follows)
-        .innerJoin(schema.actors, eq(schema.actors.id, schema.follows.targetActorId))
-        .where(eq(schema.follows.actorId, actor.id));
-      return { items: rows.filter((r) => r.uri).map((r) => new URL(r.uri ?? '')) };
+        .select({ id: follows.id, uri: actors.apUri })
+        .from(follows)
+        .innerJoin(actors, eq(actors.id, follows.targetActorId))
+        .where(and(eq(follows.actorId, actor.id), cursor ? lt(follows.id, cursor) : undefined))
+        .orderBy(desc(follows.id))
+        .limit(PAGE_SIZE);
+      return {
+        items: rows.filter((r) => r.uri).map((r) => new URL(r.uri ?? '')),
+        nextCursor: rows.length === PAGE_SIZE ? (rows.at(-1)?.id ?? null) : null,
+      };
     })
     .setCounter(async (ctx, identifier) => {
       const actor = await localActorByIdentifier(ctx.data, identifier);
@@ -264,7 +271,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         .from(schema.follows)
         .where(eq(schema.follows.actorId, actor.id));
       return row?.n ?? 0;
-    });
+    })
+    .setFirstCursor(() => '');
 
   federation
     .setOutboxDispatcher('/users/{identifier}/outbox', async (ctx, identifier, cursor) => {
