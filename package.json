@@ -15,7 +15,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "db:generate": "pnpm --filter @disbigle/db generate",
-    "db:migrate": "pnpm --filter @disbigle/db migrate"
+    "db:migrate": "pnpm --filter @disbigle/db migrate",
+    "seed": "pnpm --filter @disbigle/server seed"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
