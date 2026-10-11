@@ -4,6 +4,7 @@ import {
   findActorByHandle,
   getStatus,
   searchStatuses,
+  searchTags,
   serializeAccount,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
@@ -94,4 +95,17 @@ export async function searchRoutes(
       return searchStatuses(ctx, viewer, query.q, query);
     },
   );
+
+  /** Hashtags by prefix, most used first. */
+  app.get('/tags', async (request) => {
+    const { q, limit } = parse(
+      z.object({
+        q: z.string().trim().min(1).max(100),
+        limit: z.coerce.number().int().min(1).max(40).default(20),
+      }),
+      request.query,
+    );
+    const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+    return searchTags(ctx, viewer, q, limit);
+  });
 }

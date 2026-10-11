@@ -233,6 +233,20 @@ describe('accounts and notifications', () => {
     expect((await author.client.get(`/api/v1/search/statuses?q=${word}`)).json()).toHaveLength(2);
   });
 
+  it('searches hashtags by prefix', async () => {
+    const { client } = await signedIn();
+    const stem = `pasta${Date.now().toString(36)}`;
+    await client.post('/api/v1/statuses', {
+      content: `#${stem}fresca #${stem}fresca #${stem}secca`,
+    });
+    await client.post('/api/v1/statuses', { content: `#${stem}fresca` });
+    const found = (await new Client(app).get(`/api/v1/search/tags?q=%23${stem}`)).json();
+    expect(found).toEqual([
+      { name: `${stem}fresca`, postsCount: 2, following: false },
+      { name: `${stem}secca`, postsCount: 1, following: false },
+    ]);
+  });
+
   it('searches accounts by name only', async () => {
     const { account } = await signedIn();
     const results = (

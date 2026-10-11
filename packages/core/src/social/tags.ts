@@ -77,3 +77,39 @@ export async function listFollowedTags(ctx: CoreContext, actorId: string): Promi
     .orderBy(tags.name);
   return rows.map((r) => r.name);
 }
+
+/** Hashtags starting with `prefix`, most used first, with whether the viewer follows them. */
+export async function searchTags(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  prefix: string,
+  limit = 20,
+): Promise<TagInfo[]> {
+  const term = prefix.replace(/^#/, '').toLowerCase();
+  if (!/^[\p{L}\p{N}_]{1,100}$/u.test(term)) return [];
+  const rows = await ctx.db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      postsCount: sql<number>`(select count(*)::int from ${postTags} where ${postTags.tagId} = ${tags.id})`,
+    })
+    .from(tags)
+    .where(sql`${tags.name} like ${`${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`}`)
+    .orderBy(sql`3 desc`, tags.name)
+    .limit(Math.min(limit, 40));
+  const followed = viewerActorId
+    ? new Set(
+        (
+          await ctx.db
+            .select({ id: tagFollows.tagId })
+            .from(tagFollows)
+            .where(eq(tagFollows.actorId, viewerActorId))
+        ).map((r) => r.id),
+      )
+    : new Set<string>();
+  return rows.map((r) => ({
+    name: r.name,
+    postsCount: r.postsCount,
+    following: followed.has(r.id),
+  }));
+}
