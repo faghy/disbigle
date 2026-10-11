@@ -39,3 +39,8 @@ Choices made during implementation that the architecture document leaves open. N
 | 2026-10-11 | Imported diaspora passwords (Devise bcrypt + pepper) are accepted and rehashed to Argon2id on first sign-in | Users keep their passwords across the migration. |
 | 2026-10-11 | No Docker; production runs with systemd units and nginx (`deploy/`) | Requested; simple to operate on a single VPS. |
 | 2026-10-11 | The worker caches remote images locally (re-encoded, previews), behind SSRF checks and size limits; `CACHE_REMOTE_MEDIA=false` disables it | Readers don't reveal their IP to remote servers and media survive remote outages, as on Mastodon. |
+| 2026-10-11 | Mastodon-compatible client API on the same `/api/v1` paths, chosen per request: OAuth bearer tokens → Mastodon, session cookie or `x-disbigle-api: native` → native | Apps work with their usual server address; the native API keeps its shapes. Moving native to `/api/native/v1` remains an option if more clashes appear. |
+| 2026-10-11 | Mastodon lists are aspects | Same idea (named groups of people) without a second concept; an aspect is also an audience, which users should know. |
+| 2026-10-11 | Remote post ids derive from the publication date | Backfilled or late posts sort where they belong, as on Mastodon. |
+| 2026-10-11 | Changing or resetting the password revokes OAuth app tokens | A compromised password should not leave apps signed in. |
+| 2026-10-11 | Keyword filters remove posts server-side | Works the same in the web client and in apps; no client-side filtering needed. |

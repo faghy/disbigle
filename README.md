@@ -15,7 +15,7 @@ A federated social network that speaks ActivityPub and stays compatible with the
 - **Migration**: import an existing diaspora\* pod on the same domain, keeping handles, keys and contacts.
 - **Moderation**: approval queue, reports, suspensions, domain blocks, roles, audit log, editable instance settings and rules.
 - **Privacy**: images stripped of metadata, remote media cached locally, visibility enforced in one place.
-- **Web client** in English and Italian, installable as a PWA.
+- **Apps**: the web client (English and Italian) installs as a PWA with push notifications; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
 
 Status: early development. See [docs/architettura.md](docs/architettura.md) (Italian) for the design and [docs/decisions.md](docs/decisions.md) for implementation decisions.
 
