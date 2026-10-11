@@ -74,7 +74,8 @@ describe('statuses and timelines', () => {
     expect(
       (await reader.client.get('/api/v1/timelines/home')).json().map((s: { id: string }) => s.id),
     ).toEqual([post.id]);
-    expect((await reader.client.get(`/api/v1/tags/${tag}`)).json().postsCount).toBe(2);
+    // Only public posts count (the unlisted one doesn't).
+    expect((await reader.client.get(`/api/v1/tags/${tag}`)).json().postsCount).toBe(1);
     expect((await reader.client.post(`/api/v1/tags/${tag}/unfollow`)).json().following).toBe(false);
     expect((await reader.client.post('/api/v1/tags/1234/follow')).statusCode).toBe(422);
   });
@@ -240,11 +241,17 @@ describe('accounts and notifications', () => {
       content: `#${stem}fresca #${stem}fresca #${stem}secca`,
     });
     await client.post('/api/v1/statuses', { content: `#${stem}fresca` });
+    // Tags of non-public posts are neither listed nor counted.
+    await client.post('/api/v1/statuses', {
+      content: `#${stem}fresca #${stem}segreta`,
+      visibility: 'followers',
+    });
     const found = (await new Client(app).get(`/api/v1/search/tags?q=%23${stem}`)).json();
     expect(found).toEqual([
       { name: `${stem}fresca`, postsCount: 2, following: false },
       { name: `${stem}secca`, postsCount: 1, following: false },
     ]);
+    expect((await client.get(`/api/v1/tags/${stem}segreta`)).json().postsCount).toBe(0);
   });
 
   it('searches accounts by name only', async () => {

@@ -1,3 +1,4 @@
+import { type CoreContext, resolveSession } from '@disbigle/core';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { isValidStream, type StreamingHub } from '../streaming.ts';
@@ -11,10 +12,29 @@ const clientMessage = z.object({
  * WebSocket endpoint. Clients pass `?stream=user` (repeatable) or send
  * `{"type":"subscribe","stream":"hashtag:fediverse"}` messages.
  */
-export async function streamingRoutes(app: FastifyInstance, { hub }: { hub: StreamingHub }) {
+export async function streamingRoutes(
+  app: FastifyInstance,
+  { hub, ctx, recheckMs = 60_000 }: { hub: StreamingHub; ctx: CoreContext; recheckMs?: number },
+) {
+  const allowedOrigin = new URL(ctx.config.PUBLIC_URL).origin;
   app.get('/', { websocket: true }, (socket, request) => {
-    const actorId = request.session?.stage === 'active' ? request.session.actorId : null;
+    // Browsers send cookies on cross-site WebSocket handshakes too: only our own pages get a
+    // signed-in stream.
+    const origin = request.headers.origin;
+    const trusted = !origin || origin === allowedOrigin;
+    const token = trusted ? request.sessionToken : null;
+    const actorId = trusted && request.session?.stage === 'active' ? request.session.actorId : null;
     const connection = hub.add(socket, actorId);
+
+    // Signing out, a password change or a suspension end the stream as well.
+    const recheck =
+      actorId && token
+        ? setInterval(async () => {
+            const session = await resolveSession(ctx, token).catch(() => undefined);
+            if (session === undefined) return;
+            if (session?.stage !== 'active' || session.actorId !== actorId) socket.close(4401);
+          }, recheckMs)
+        : null;
 
     const subscribe = (stream: string) => {
       const normalized = stream.toLowerCase();
@@ -40,6 +60,9 @@ export async function streamingRoutes(app: FastifyInstance, { hub }: { hub: Stre
       if (parsed.data.type === 'subscribe') subscribe(parsed.data.stream);
       else connection.streams.delete(parsed.data.stream.toLowerCase());
     });
-    socket.on('close', () => hub.remove(connection));
+    socket.on('close', () => {
+      if (recheck) clearInterval(recheck);
+      hub.remove(connection);
+    });
   });
 }

@@ -2,9 +2,10 @@ import { listAspectMembers } from '@disbigle/core';
 import type { StreamEvent } from '@disbigle/shared';
 import type { WebSocket } from '@fastify/websocket';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { optionalUser } from '../auth.ts';
+import { resolveAuth } from '../auth.ts';
 import { mapContext } from '../entities/mappers.ts';
 import { isUuid, MastodonError, parseQuery, str } from '../http.ts';
+import { scopeAllows } from '../oauth/scopes.ts';
 import type { Deps, HubSocket, StreamingHubLike } from '../options.ts';
 import { MastodonStreamEncoder, type SubscriptionRequest, toSubscription } from '../streaming.ts';
 
@@ -20,9 +21,21 @@ export async function streamingRoutes(
 ) {
   const { ctx, hub } = deps;
 
+  /** Scope a stream needs, as on Mastodon (`read` covers them all). */
+  const scopeFor = (stream: string) =>
+    stream === 'user:notification'
+      ? 'read:notifications'
+      : stream === 'list'
+        ? 'read:lists'
+        : stream === 'user'
+          ? 'read:statuses'
+          : null;
+
   const handler = (socket: WebSocket, request: FastifyRequest) => {
-    const user = optionalUser(request);
+    const auth = request.mastodonAuth;
+    const user = auth.kind === 'ok' ? auth.user : null;
     const actorId = user?.actorId ?? null;
+    const scopes = auth.kind === 'ok' ? auth.token.scopes : [];
     const encoder = new MastodonStreamEncoder(mapContext(deps.baseUrl), actorId !== null);
     const proxy: HubSocket = {
       get readyState() {
@@ -52,6 +65,13 @@ export async function streamingRoutes(
       }
     };
     const subscribe = async (input: SubscriptionRequest) => {
+      const needed = scopeFor(input.stream);
+      if (needed && actorId && !scopeAllows(scopes, needed)) {
+        socket.send(
+          JSON.stringify({ error: 'This stream is outside the authorized scopes', status: 403 }),
+        );
+        return;
+      }
       const result = await toSubscription(input, actorId !== null, listMembers);
       if ('error' in result) {
         socket.send(JSON.stringify({ error: result.error, status: result.status }));
@@ -97,7 +117,19 @@ export async function streamingRoutes(
         }
       });
     });
-    socket.on('close', () => hub.remove(connection));
+    // A revoked token, or a suspended or deleted account, ends the stream.
+    const recheck =
+      auth.kind === 'ok'
+        ? setInterval(async () => {
+            const now = await resolveAuth(ctx, deps.store, request).catch(() => null);
+            if (!now) return;
+            if (now.kind !== 'ok' || now.token.id !== auth.token.id) socket.close(4401);
+          }, deps.options.streamingRecheckMs ?? 60_000)
+        : null;
+    socket.on('close', () => {
+      if (recheck) clearInterval(recheck);
+      hub.remove(connection);
+    });
   };
 
   const options = {

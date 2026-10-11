@@ -32,6 +32,8 @@ export interface MastodonApiOptions {
   storage?: MediaStorage;
   /** Streaming hub; without it `/api/v1/streaming` is not served by this plugin. */
   hub?: StreamingHubLike;
+  /** How often open streams re-check their token (ms). Default 60 s. */
+  streamingRecheckMs?: number;
   /** Finds or fetches a remote account (`user@domain` or URL), for `resolve=true` searches. */
   resolveAccount?: (query: string) => Promise<ActorRow | null>;
   /** Fetches a remote post by URL, returning its local id, for `resolve=true` searches. */

@@ -91,6 +91,28 @@ describe('Mastodon streaming', () => {
     ).rejects.toThrow(/401/);
   });
 
+  it('needs the matching read scope for private streams', async () => {
+    const carol = await mastodonUser(app, 'read:notifications');
+    const socket = await connect(`/api/v1/streaming?stream=user&access_token=${carol.api.token}`);
+    const [error] = await socket.waitFor(1);
+    expect(error).toEqual({ error: 'This stream is outside the authorized scopes', status: 403 });
+    socket.ws.send(JSON.stringify({ type: 'subscribe', stream: 'user:notification' }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(await socket.waitFor(2)).toHaveLength(1);
+    socket.ws.terminate();
+  });
+
+  it('ignores the session cookie on handshakes from other sites', async () => {
+    const dan = await mastodonUser(app);
+    const socket = await connect('/api/v1/streaming?stream=user', {
+      cookie: dan.client.cookieHeader ?? '',
+      origin: 'https://evil.example',
+    });
+    const [error] = await socket.waitFor(1);
+    socket.ws.terminate();
+    expect(error).toMatchObject({ error: 'invalid_stream', stream: 'user' });
+  });
+
   it('answers the streaming health check', async () => {
     const health = await app().inject({ method: 'GET', url: '/api/v1/streaming/health' });
     expect(health.body).toBe('OK');

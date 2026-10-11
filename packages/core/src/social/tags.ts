@@ -1,9 +1,18 @@
 import { schema, uuidv7 } from '@disbigle/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, type SQL, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
 
-const { tags, tagFollows, postTags } = schema;
+const { tags, tagFollows } = schema;
+
+/**
+ * Public posts using a tag (in queries on `tags`). Tag lists and counts only ever reflect public posts, so a hashtag
+ * written in a private post doesn't leak its existence.
+ */
+export const publicTagUses = (): SQL<number> =>
+  // Fully qualified by hand: Drizzle leaves column names bare in select lists, where they would
+  // resolve against the subquery's own tables.
+  sql<number>`(select count(*)::int from post_tags pt join posts p on p.id = pt.post_id where pt.tag_id = "tags"."id" and p.visibility = 'public')`;
 
 export interface TagInfo {
   name: string;
@@ -30,10 +39,7 @@ export async function getTag(
   const [row] = await ctx.db.select().from(tags).where(eq(tags.name, tag));
   if (!row) return { name: tag, following: false, postsCount: 0 };
   const [[count], following] = await Promise.all([
-    ctx.db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(postTags)
-      .where(eq(postTags.tagId, row.id)),
+    ctx.db.select({ n: publicTagUses() }).from(tags).where(eq(tags.id, row.id)),
     viewerActorId
       ? ctx.db
           .select({ id: tagFollows.tagId })
@@ -91,10 +97,17 @@ export async function searchTags(
     .select({
       id: tags.id,
       name: tags.name,
-      postsCount: sql<number>`(select count(*)::int from ${postTags} where ${postTags.tagId} = ${tags.id})`,
+      postsCount: publicTagUses(),
     })
     .from(tags)
-    .where(sql`${tags.name} like ${`${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`}`)
+    .where(
+      and(
+        sql`${tags.name} like ${`${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`}`,
+        viewerActorId
+          ? sql`(${publicTagUses()} > 0 or exists (select 1 from ${tagFollows} where ${tagFollows.tagId} = ${tags.id} and ${tagFollows.actorId} = ${viewerActorId}))`
+          : sql`${publicTagUses()} > 0`,
+      ),
+    )
     .orderBy(sql`3 desc`, tags.name)
     .limit(Math.min(limit, 40));
   const followed = viewerActorId

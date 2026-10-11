@@ -1,7 +1,13 @@
-import { getStatus, searchStatuses, serializeAccount, visibleTo } from '@disbigle/core';
+import {
+  getStatus,
+  publicTagUses,
+  searchStatuses,
+  serializeAccount,
+  visibleTo,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Status } from '@disbigle/shared';
-import { and, eq, ilike, inArray, or } from 'drizzle-orm';
+import { and, eq, gt, ilike, inArray, or } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { optionalUser } from '../auth.ts';
 import { mapTag } from '../entities/mappers.ts';
@@ -58,7 +64,12 @@ export async function searchRoutes(app: FastifyInstance, deps: Deps) {
           const rows = await ctx.db
             .select({ name: tags.name, id: tags.id })
             .from(tags)
-            .where(ilike(tags.name, `${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`))
+            .where(
+              and(
+                ilike(tags.name, `${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`),
+                gt(publicTagUses(), 0),
+              ),
+            )
             .orderBy(tags.name)
             .limit(limit)
             .offset(offset);

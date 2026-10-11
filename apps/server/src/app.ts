@@ -190,7 +190,7 @@ export async function buildApp(options: AppOptions) {
           prefix: '/me/migration',
         });
       }
-      if (hub) await api.register(streamingRoutes, { hub, prefix: '/streaming' });
+      if (hub) await api.register(streamingRoutes, { hub, ctx, prefix: '/streaming' });
     },
     { prefix: '/api/v1' },
   );
