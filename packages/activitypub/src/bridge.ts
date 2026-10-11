@@ -26,34 +26,61 @@ async function actorById(core: CoreContext, id: string): Promise<ActorRow | null
 export const needsActivityPubBridge = (actor: ActorRow) =>
   actor.domain !== null && !actor.protocols.includes('activitypub');
 
-export interface BridgedReply {
-  post: PostRow;
+/** A public thread started here, and a remote account ActivityPub can't reach acting in it. */
+export interface BridgedThread {
   author: ActorRow;
-  parent: PostRow | null;
   root: PostRow;
   rootAuthor: ActorRow;
 }
 
+export interface BridgedReply extends BridgedThread {
+  post: PostRow;
+  parent: PostRow | null;
+}
+
 /**
- * The thread of a remote reply, when its author needs a bridge to ActivityPub and the thread is
- * a public one started here (so the local author relays it, as diaspora* does).
+ * The thread `rootId` when `authorId` needs a bridge to ActivityPub and the thread is a public
+ * one started here, so its local author relays what happens in it (as diaspora* does).
  */
+export async function bridgedThreadOf(
+  core: CoreContext,
+  authorId: string,
+  rootId: string,
+): Promise<BridgedThread | null> {
+  const [author, root] = await Promise.all([actorById(core, authorId), postById(core, rootId)]);
+  if (!author || !needsActivityPubBridge(author)) return null;
+  if (!root?.local || !root.apUri || !isPublic(root.visibility)) return null;
+  const rootAuthor = await actorById(core, root.actorId);
+  if (!rootAuthor || rootAuthor.domain !== null) return null;
+  return { author, root, rootAuthor };
+}
+
 export async function bridgedReplyOf(
   core: CoreContext,
   post: PostRow,
 ): Promise<BridgedReply | null> {
   if (post.local || !post.inReplyToId || !post.threadRootId || !isPublic(post.visibility))
     return null;
-  const [author, root, parent] = await Promise.all([
-    actorById(core, post.actorId),
-    postById(core, post.threadRootId),
-    postById(core, post.inReplyToId),
-  ]);
-  if (!author || !needsActivityPubBridge(author)) return null;
-  if (!root?.local || !root.apUri || !isPublic(root.visibility)) return null;
-  const rootAuthor = await actorById(core, root.actorId);
-  if (!rootAuthor || rootAuthor.domain !== null) return null;
-  return { post, author, parent, root, rootAuthor };
+  const thread = await bridgedThreadOf(core, post.actorId, post.threadRootId);
+  if (!thread) return null;
+  return { ...thread, post, parent: await postById(core, post.inReplyToId) };
+}
+
+/** Who on ActivityPub follows a thread started here: its author's followers and its participants. */
+export async function threadAudience(core: CoreContext, thread: BridgedThread) {
+  const followers = await core.db
+    .select({ actor: schema.actors })
+    .from(schema.follows)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.follows.actorId))
+    .where(eq(schema.follows.targetActorId, thread.rootAuthor.id));
+  const participants = await core.db
+    .selectDistinct({ actor: schema.actors })
+    .from(schema.posts)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
+    .where(eq(schema.posts.threadRootId, thread.root.id));
+  const audience = new Map<string, ActorRow>();
+  for (const { actor } of [...followers, ...participants]) audience.set(actor.id, actor);
+  return [...audience.values()];
 }
 
 /** The bridged Note served at `/users/<bridge>/statuses/<id>`. */

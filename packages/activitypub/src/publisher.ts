@@ -1,4 +1,5 @@
 import {
+  bridgeIdentityOf,
   type CoreContext,
   type DomainEvent,
   type EventBus,
@@ -25,7 +26,7 @@ import {
   Update,
 } from '@fedify/vocab';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { bridgedReplyOf } from './bridge.ts';
+import { bridgedReplyOf, bridgedThreadOf, threadAudience } from './bridge.ts';
 import { addressing, bridgedNote, localActorToPerson, postToNote } from './convert.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
@@ -155,6 +156,7 @@ export class ActivityPubPublisher implements EventBus {
       }
       case 'like.created':
       case 'like.removed': {
+        if (await this.bridgeLike(ctx, event)) return;
         const [post] = await this.core.db
           .select()
           .from(schema.posts)
@@ -363,18 +365,8 @@ export class ActivityPubPublisher implements EventBus {
         .set({ apUri })
         .where(and(eq(schema.posts.id, post.id), isNull(schema.posts.apUri)));
     }
-    const followers = await this.core.db
-      .select({ actor: schema.actors })
-      .from(schema.follows)
-      .innerJoin(schema.actors, eq(schema.actors.id, schema.follows.actorId))
-      .where(eq(schema.follows.targetActorId, reply.rootAuthor.id));
-    const participants = await this.core.db
-      .selectDistinct({ actor: schema.actors })
-      .from(schema.posts)
-      .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
-      .where(eq(schema.posts.threadRootId, reply.root.id));
     const targets = new Map<string, ActorRow>();
-    for (const { actor } of [...followers, ...participants])
+    for (const actor of await threadAudience(this.core, reply))
       if (speaksActivityPub(actor)) targets.set(actor.id, actor);
     if (targets.size === 0) return;
     const parentAuthor = reply.parent ? targets.get(reply.parent.actorId) : undefined;
@@ -395,6 +387,86 @@ export class ActivityPubPublisher implements EventBus {
       }),
       { preferSharedInbox: true },
     );
+  }
+
+  /**
+   * A like (or its removal) by someone ActivityPub can't reach, on a public thread started here:
+   * sent from their bridge identity to the thread's ActivityPub audience. True when handled.
+   */
+  private async bridgeLike(
+    ctx: Context<CoreContext>,
+    event: Extract<DomainEvent, { type: 'like.created' | 'like.removed' }>,
+  ): Promise<boolean> {
+    const [target] = await this.core.db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.id, event.postId));
+    if (!target?.apUri) return false;
+    const thread = await bridgedThreadOf(
+      this.core,
+      event.actorId,
+      target.threadRootId ?? target.id,
+    );
+    if (!thread) return false;
+    const bridge = await ensureBridgeIdentity(this.core, thread.author);
+    let likeUri = event.apUri;
+    if (!likeUri && event.type === 'like.created') {
+      likeUri = `${ctx.getActorUri(bridge.username).href}#likes/${event.likeId}`;
+      await this.core.db
+        .update(schema.likes)
+        .set({ apUri: likeUri })
+        .where(and(eq(schema.likes.id, event.likeId), isNull(schema.likes.apUri)));
+    }
+    const targets = (await threadAudience(this.core, thread)).filter(speaksActivityPub);
+    if (!likeUri || targets.length === 0) return true;
+    const like = new Like({
+      id: new URL(likeUri),
+      actor: ctx.getActorUri(bridge.username),
+      object: new URL(target.apUri),
+    });
+    await ctx.sendActivity(
+      { identifier: bridge.username },
+      targets.map(recipient),
+      event.type === 'like.created'
+        ? like
+        : new Undo({
+            id: freshId(ctx, bridge.username, 'undo'),
+            actor: ctx.getActorUri(bridge.username),
+            object: like,
+          }),
+      { preferSharedInbox: true },
+    );
+    return true;
+  }
+
+  /**
+   * A bridged reply deleted by its author on diaspora*: the bridge identity deletes its Note for
+   * the thread's ActivityPub audience. True when handled.
+   */
+  private async bridgeDelete(
+    ctx: Context<CoreContext>,
+    event: Extract<DomainEvent, { type: 'post.deleted' }>,
+  ): Promise<boolean> {
+    if (!event.apUri || !event.threadRootId || event.threadRootId === event.postId) return false;
+    const thread = await bridgedThreadOf(this.core, event.actorId, event.threadRootId);
+    if (!thread) return false;
+    const bridge = await bridgeIdentityOf(this.core, thread.author.id);
+    if (!bridge || !event.apUri.startsWith(`${ctx.getActorUri(bridge.username).href}/`))
+      return true;
+    const targets = (await threadAudience(this.core, thread)).filter(speaksActivityPub);
+    if (targets.length === 0) return true;
+    await ctx.sendActivity(
+      { identifier: bridge.username },
+      targets.map(recipient),
+      new Delete({
+        id: new URL(`${event.apUri}#delete`),
+        actor: ctx.getActorUri(bridge.username),
+        object: new Tombstone({ id: new URL(event.apUri) }),
+        to: PUBLIC_COLLECTION,
+      }),
+      { preferSharedInbox: true },
+    );
+    return true;
   }
 
   /**
@@ -510,6 +582,7 @@ export class ActivityPubPublisher implements EventBus {
     ctx: Context<CoreContext>,
     event: Extract<DomainEvent, { type: 'post.deleted' }>,
   ) {
+    if (await this.bridgeDelete(ctx, event)) return;
     if (!event.apUri) return;
     const [author] = await this.core.db
       .select()
@@ -540,9 +613,14 @@ export class ActivityPubPublisher implements EventBus {
     ) {
       await ctx.sendActivity(sender, 'followers', activity, { preferSharedInbox: true });
     }
-    const audience = [...(await this.actors(event.audienceActorIds)).values()].filter(
-      speaksActivityPub,
-    );
+    // As for the reply itself: the author it answered got it, so they get its deletion too.
+    const replyTo =
+      event.inReplyToActorId && (event.visibility === 'public' || event.visibility === 'unlisted')
+        ? [event.inReplyToActorId]
+        : [];
+    const audience = [
+      ...(await this.actors([...event.audienceActorIds, ...replyTo])).values(),
+    ].filter(speaksActivityPub);
     if (audience.length > 0) await ctx.sendActivity(sender, audience.map(recipient), activity);
   }
 }

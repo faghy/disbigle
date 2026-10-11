@@ -511,12 +511,20 @@ export async function undoRemoteActivity(
   const removed = await ctx.db
     .delete(likes)
     .where(and(eq(likes.apUri, uri), eq(likes.actorId, actorId)))
-    .returning({ postId: likes.postId });
+    .returning({ postId: likes.postId, diasporaGuid: likes.diasporaGuid });
   for (const row of removed) {
     await ctx.db
       .update(posts)
       .set({ likesCount: sql`greatest(${posts.likesCount} - 1, 0)` })
       .where(eq(posts.id, row.postId));
+    // Other networks may have seen the like (through a bridge identity): tell them too.
+    await emit(ctx, {
+      type: 'like.removed',
+      actorId,
+      postId: row.postId,
+      apUri: uri,
+      diasporaGuid: row.diasporaGuid,
+    });
   }
 }
 

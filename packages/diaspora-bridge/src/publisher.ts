@@ -3,6 +3,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   acceptFollowRequest,
+  bridgeIdentityOf,
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
@@ -187,22 +188,97 @@ export class DiasporaPublisher implements EventBus {
   }
 
   /**
+   * A public thread started here, and a remote account diaspora* can't reach acting in it: what
+   * it does there reaches diaspora* through its bridge identity, relayed by the thread's author.
+   */
+  private async bridgedThread(authorId: string, rootId: string) {
+    const ctx = this.ctx;
+    const author = await actorById(ctx, authorId);
+    if (!author || author.domain === null || author.protocols.includes('diaspora')) return null;
+    const root = await postById(ctx, rootId);
+    if (!root?.local || !root.diasporaGuid || !isPublicVisibility(root.visibility)) return null;
+    const rootAuthor = await this.localActor(root.actorId);
+    const rootSigner = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
+    if (!rootSigner) return null;
+    return { author, root, rootGuid: root.diasporaGuid, rootSigner };
+  }
+
+  /** A like by someone diaspora* can't reach, as a Like signed by their bridge identity. */
+  private async bridgeLike(event: Extract<DomainEvent, { type: 'like.created' }>) {
+    const ctx = this.ctx;
+    const [row] = await ctx.db.select().from(schema.likes).where(eq(schema.likes.id, event.likeId));
+    const target = await postById(ctx, event.postId);
+    if (!row?.diasporaGuid || !target?.diasporaGuid) return;
+    const thread = await this.bridgedThread(event.actorId, (await threadRootOf(ctx, target)).id);
+    if (!thread) return;
+    const bridge = await ensureBridgeIdentity(ctx, thread.author);
+    const like = {
+      ...likeFor(ctx, row.diasporaGuid, thread.author, target),
+      author: this.bridgeId(bridge),
+    };
+    const xml = serializeEntity(signRelayable(like, bridge.privateKeyPem));
+    await this.bridge.relayables.save({
+      guid: row.diasporaGuid,
+      entityType: 'Like',
+      parentGuid: target.diasporaGuid,
+      author: like.author,
+      xml,
+      likeId: row.id,
+    });
+    await sendToRecipients(
+      this.bridge,
+      xml,
+      thread.rootSigner,
+      await recipientsFor(ctx, thread.root),
+    );
+  }
+
+  /**
+   * Removal of a bridged like or comment: a Retraction naming the bridge identity as author,
+   * relayed by the thread's author (diaspora* accepts retractions of comments and likes from
+   * either).
+   */
+  private async bridgeRetraction(
+    authorId: string,
+    rootId: string,
+    targetGuid: string,
+    targetType: 'Comment' | 'Like',
+  ) {
+    const ctx = this.ctx;
+    const thread = await this.bridgedThread(authorId, rootId);
+    const bridge = thread ? await bridgeIdentityOf(ctx, thread.author.id) : null;
+    if (!thread || !bridge || !(await this.bridge.relayables.get(targetGuid))) return;
+    const retraction: Retraction = {
+      type: 'Retraction',
+      author: this.bridgeId(bridge),
+      targetGuid,
+      targetType,
+    };
+    await sendToRecipients(
+      this.bridge,
+      serializeEntity(retraction),
+      thread.rootSigner,
+      await recipientsFor(ctx, thread.root),
+    );
+    await this.bridge.relayables.delete(targetGuid);
+  }
+
+  private bridgeId(bridge: { username: string }): string {
+    return `${bridge.username}@${this.ctx.config.LOCAL_DOMAIN}`.toLowerCase();
+  }
+
+  /**
    * A reply from someone diaspora* can't reach (an ActivityPub account) on a public thread
    * started here. diaspora* needs comments signed by their author, so it goes out from the
    * author's bridge identity, signed with its key, relayed by the thread's author like any comment.
    */
   private async bridgeReply(post: PostRow): Promise<void> {
     const ctx = this.ctx;
-    if (!isPublicVisibility(post.visibility)) return;
-    const author = await actorById(ctx, post.actorId);
-    if (!author || author.domain === null || author.protocols.includes('diaspora')) return;
-    const root = await threadRootOf(ctx, post);
-    if (root.id === post.id || !root.local || !root.diasporaGuid) return;
-    if (!isPublicVisibility(root.visibility)) return;
-    const rootAuthor = await this.localActor(root.actorId);
-    const rootSigner = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
-    if (!rootSigner) return;
-
+    if (!isPublicVisibility(post.visibility) || !post.threadRootId) return;
+    if (post.threadRootId === post.id) return;
+    const thread = await this.bridgedThread(post.actorId, post.threadRootId);
+    if (!thread) return;
+    const { author, root, rootSigner } = thread;
     const bridge = await ensureBridgeIdentity(ctx, author);
     let guid = post.diasporaGuid;
     if (!guid) {
@@ -214,9 +290,9 @@ export class DiasporaPublisher implements EventBus {
     }
     const comment: Comment = {
       type: 'Comment',
-      author: `${bridge.username}@${ctx.config.LOCAL_DOMAIN}`.toLowerCase(),
+      author: this.bridgeId(bridge),
       guid,
-      parentGuid: root.diasporaGuid,
+      parentGuid: thread.rootGuid,
       text: await diasporaText(ctx, post),
       createdAt: post.createdAt,
     };
@@ -225,7 +301,7 @@ export class DiasporaPublisher implements EventBus {
     await this.bridge.relayables.save({
       guid,
       entityType: 'Comment',
-      parentGuid: root.diasporaGuid,
+      parentGuid: thread.rootGuid,
       author: comment.author,
       xml,
       postId: post.id,
@@ -237,8 +313,17 @@ export class DiasporaPublisher implements EventBus {
     const ctx = this.ctx;
     if (!event.diasporaGuid) return;
     const author = await this.localActor(event.actorId);
-    const signer = author ? await signerFor(ctx, author) : null;
-    if (!author || !signer) return;
+    if (!author) {
+      if (!event.threadRootId || event.threadRootId === event.postId) return;
+      return this.bridgeRetraction(
+        event.actorId,
+        event.threadRootId,
+        event.diasporaGuid,
+        'Comment',
+      );
+    }
+    const signer = await signerFor(ctx, author);
+    if (!signer) return;
     const retraction: Retraction = {
       type: 'Retraction',
       author: diasporaIdOf(ctx, author),
@@ -279,7 +364,7 @@ export class DiasporaPublisher implements EventBus {
   private async likeCreated(event: Extract<DomainEvent, { type: 'like.created' }>) {
     const ctx = this.ctx;
     const author = await this.localActor(event.actorId);
-    if (!author) return;
+    if (!author) return this.bridgeLike(event);
     const [row] = await ctx.db.select().from(schema.likes).where(eq(schema.likes.id, event.likeId));
     const target = await postById(ctx, event.postId);
     if (!row?.diasporaGuid || !target?.diasporaGuid) return;
@@ -296,7 +381,12 @@ export class DiasporaPublisher implements EventBus {
   private async likeRemoved(event: Extract<DomainEvent, { type: 'like.removed' }>) {
     const ctx = this.ctx;
     const author = await this.localActor(event.actorId);
-    if (!author) return;
+    if (!author) {
+      const target = await postById(ctx, event.postId);
+      if (!target || !event.diasporaGuid) return;
+      const root = await threadRootOf(ctx, target);
+      return this.bridgeRetraction(event.actorId, root.id, event.diasporaGuid, 'Like');
+    }
     const key = `${event.actorId}:${event.postId}`;
     // Newer cores may carry the guid in the event itself.
     const guid =

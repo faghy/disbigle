@@ -152,10 +152,12 @@ describe('bridge identities', () => {
     );
 
     // paul (ActivityPub) answers: dora sees it, from paul's bridge identity on the hub.
-    await paul.client.post('/api/v1/statuses', {
-      content: 'Risposta da ActivityPub',
-      inReplyToId: onAp.id,
-    });
+    const paulReply = (
+      await paul.client.post('/api/v1/statuses', {
+        content: 'Risposta da ActivityPub',
+        inReplyToId: onAp.id,
+      })
+    ).json();
     const bridgedToPod = await eventually(async () => {
       const context = (await dora.client.get(`/api/v1/statuses/${onPod.id}/context`)).json();
       return context.descendants?.find((s: { content: string }) =>
@@ -170,10 +172,12 @@ describe('bridge identities', () => {
     expect(bridgedToPod.account.displayName).toBe(paul.account.username);
 
     // dora (diaspora*) answers: paul sees it, from dora's bridge identity on the hub.
-    await dora.client.post('/api/v1/statuses', {
-      content: 'Risposta da diaspora',
-      inReplyToId: onPod.id,
-    });
+    const doraReply = (
+      await dora.client.post('/api/v1/statuses', {
+        content: 'Risposta da diaspora',
+        inReplyToId: onPod.id,
+      })
+    ).json();
     const bridgedToAp = await eventually(async () => {
       const context = (await paul.client.get(`/api/v1/statuses/${onAp.id}/context`)).json();
       return context.descendants?.find((s: { content: string }) =>
@@ -185,6 +189,26 @@ describe('bridge identities', () => {
         `^${dora.account.username}_at_127\\.0\\.0\\.1_\\d+@${hub.domain.replace(/\./g, '\\.')}$`,
       ),
     );
+
+    // paul likes alice's post, then changes his mind: dora's copy follows along.
+    await paul.client.post(`/api/v1/statuses/${onAp.id}/like`);
+    await eventually(
+      async () => (await dora.client.get(`/api/v1/statuses/${onPod.id}`)).json().likesCount === 1,
+    );
+    await paul.client.post(`/api/v1/statuses/${onAp.id}/unlike`);
+    await eventually(
+      async () => (await dora.client.get(`/api/v1/statuses/${onPod.id}`)).json().likesCount === 0,
+    );
+
+    // paul likes dora's reply (a bridged Note for him): the like reaches dora on diaspora*.
+    await paul.client.post(`/api/v1/statuses/${bridgedToAp.id}/like`);
+    await eventually(async () => {
+      const context = (await dora.client.get(`/api/v1/statuses/${onPod.id}/context`)).json();
+      return context.descendants?.find(
+        (s: { content: string; likesCount: number }) =>
+          textOf(s.content).includes('Risposta da diaspora') && s.likesCount === 1,
+      );
+    });
 
     // On the hub itself, both replies come from the real accounts, not the bridges.
     const onHub = (await alice.client.get(`/api/v1/statuses/${post.id}/context`)).json();
@@ -204,5 +228,21 @@ describe('bridge identities', () => {
     expect(actor.summary).toContain('Bridge account');
     const page = await fetch(`${hub.url}/users/${bridgeName}`, { redirect: 'manual' });
     expect(page.headers.get('location')).toBe(`/@${dora.account.username}@${pod.domain}`);
-  }, 90_000);
+
+    // Deletions cross too: each side loses the other's reply.
+    const replies = async (client: typeof dora.client, id: string) =>
+      (await client.get(`/api/v1/statuses/${id}/context`))
+        .json()
+        .descendants.map((s: { content: string }) => textOf(s.content));
+    await paul.client.delete(`/api/v1/statuses/${paulReply.id}`);
+    await eventually(
+      async () =>
+        !(await replies(dora.client, onPod.id)).some((t: string) => t.includes('ActivityPub')),
+    );
+    await dora.client.delete(`/api/v1/statuses/${doraReply.id}`);
+    await eventually(
+      async () =>
+        !(await replies(paul.client, onAp.id)).some((t: string) => t.includes('diaspora')),
+    );
+  }, 120_000);
 });

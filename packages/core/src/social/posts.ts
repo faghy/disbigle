@@ -372,6 +372,7 @@ export async function deletePost(
     visibility: post.visibility,
     reblogOfId: post.reblogOfId,
     threadRootId: post.threadRootId,
+    inReplyToActorId: post.inReplyToActorId,
   });
 }
 

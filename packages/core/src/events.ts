@@ -13,6 +13,8 @@ export type DomainEvent =
       reblogOfId: string | null;
       /** First post of the thread (diaspora sends comments to the thread root). */
       threadRootId: string | null;
+      /** Author of the post this one answered, who received it and must hear of its deletion. */
+      inReplyToActorId?: string | null;
     }
   | { type: 'notification.created'; notificationId: string; recipientActorId: string }
   | {

@@ -82,6 +82,8 @@ export interface FederationOptions {
 }
 
 /** Stores (or refreshes) the sender of an activity and returns its row. */
+type PostRow = typeof schema.posts.$inferSelect;
+
 async function storeActor(ctx: InboxContext<CoreContext>, actor: Actor | null) {
   if (!actor) return null;
   const data = await remoteActorData(ctx, actor);
@@ -96,21 +98,28 @@ async function storeActor(ctx: InboxContext<CoreContext>, actor: Actor | null) {
  * A reply to a public thread started here is forwarded, as signed by its author, to the followers
  * of the thread's author (inbox forwarding, as Mastodon does), so they see the whole conversation.
  */
-async function forwardToThreadFollowers(ctx: InboxContext<CoreContext>, postId: string) {
-  const [post] = await ctx.data.db.select().from(schema.posts).where(eq(schema.posts.id, postId));
-  if (!post?.threadRootId || post.threadRootId === post.id) return;
+async function forwardToThreadFollowers(
+  ctx: InboxContext<CoreContext>,
+  post: Pick<PostRow, 'id' | 'threadRootId' | 'visibility'>,
+) {
+  if (!post.threadRootId || post.threadRootId === post.id) return;
   if (post.visibility !== 'public' && post.visibility !== 'unlisted') return;
-  const [root] = await ctx.data.db
-    .select({ post: schema.posts, author: schema.actors })
-    .from(schema.posts)
-    .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
-    .where(eq(schema.posts.id, post.threadRootId));
-  if (!root?.post.local || root.author.domain !== null) return;
-  if (root.post.visibility !== 'public' && root.post.visibility !== 'unlisted') return;
+  const root = await localThreadRoot(ctx.data, post.threadRootId);
+  if (!root || (root.post.visibility !== 'public' && root.post.visibility !== 'unlisted')) return;
   await ctx.forwardActivity({ identifier: root.author.username }, 'followers', {
     skipIfUnsigned: true,
     preferSharedInbox: true,
   });
+}
+
+/** The root of a thread when it was started here, with its author. */
+async function localThreadRoot(core: CoreContext, rootId: string) {
+  const [root] = await core.db
+    .select({ post: schema.posts, author: schema.actors })
+    .from(schema.posts)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
+    .where(eq(schema.posts.id, rootId));
+  return root?.post.local && root.author.domain === null ? root : null;
 }
 
 /** A local account whose owner asked for deletion (closed, not yet purged). */
@@ -588,7 +597,10 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       await fetchMissingAncestors(ctx, object.replyTargetId);
       const data = await noteToPostData(ctx, object, author);
       const id = data ? await ingestRemotePost(ctx.data, data) : null;
-      if (id) await forwardToThreadFollowers(ctx, id);
+      const [stored] = id
+        ? await ctx.data.db.select().from(schema.posts).where(eq(schema.posts.id, id))
+        : [];
+      if (stored) await forwardToThreadFollowers(ctx, stored);
     })
     .on(Update, async (ctx, activity) => {
       const object = await activity.getObject(ctx);
@@ -620,12 +632,21 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         await deleteRemoteActor(ctx.data, sender.id);
         return;
       }
-      await deleteRemotePost(ctx.data, sender.id, { apUri: objectUri.href });
+      const post = await findPostByUri(ctx.data, objectUri.href);
+      const removed = await deleteRemotePost(ctx.data, sender.id, { apUri: objectUri.href });
+      // The followers who got the reply forwarded get its deletion too.
+      if (removed && post) await forwardToThreadFollowers(ctx, post);
     })
     .on(Like, async (ctx, activity) => {
       if (!activity.id || !activity.objectId) return;
       const post = await findPostByUri(ctx.data, activity.objectId.href);
-      if (!post?.local) return;
+      if (!post) return;
+      // Our posts, and replies from other networks in threads started here (they are bridged).
+      if (
+        !post.local &&
+        !(post.threadRootId && (await localThreadRoot(ctx.data, post.threadRootId)))
+      )
+        return;
       const sender = await storeActor(ctx, await activity.getActor(ctx));
       if (!sender) return;
       await like(ctx.data, sender.id, post.id, { apUri: activity.id.href }).catch(() => undefined);
