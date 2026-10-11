@@ -145,7 +145,9 @@
       "following_other": "<strong>{{formatted}}</strong> following"
     },
     "pinned": "Pinned posts",
-    "remoteNotice": "You only see {{name}}'s public posts here. Followers-only posts arrive once you follow, and only new ones: {{name}}'s server decides that."
+    "remoteNotice": "You only see {{name}}'s public posts here. Followers-only posts arrive once you follow, and only new ones: {{name}}'s server decides that.",
+    "message": "Message",
+    "messageLabel": "Send {{name}} a private message"
   },
   "settings": {
     "title": "Settings",

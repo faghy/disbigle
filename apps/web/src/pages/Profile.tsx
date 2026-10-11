@@ -19,6 +19,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   InfoIcon,
+  MailIcon,
   MoreIcon,
 } from '../components/icons.tsx';
 import { ReportDialog } from '../components/ReportDialog.tsx';
@@ -315,6 +316,18 @@ function RelationshipBar({ account }: { account: Account }) {
           </Button>
         )}
         {!rel.blocking && <AspectsPopover account={account} relationship={rel} />}
+        {!rel.blocking && !rel.blockedBy && (
+          <Link
+            to="/messages"
+            search={{ to: account.acct }}
+            aria-label={t('profile.messageLabel', { name: displayName(account) })}
+            title={t('profile.messageLabel', { name: displayName(account) })}
+            className={buttonClass('secondary')}
+          >
+            <MailIcon size={18} />
+            {t('profile.message')}
+          </Link>
+        )}
         {rel.blocking && (
           <Button
             variant="danger"

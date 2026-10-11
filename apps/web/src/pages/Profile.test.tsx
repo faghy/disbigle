@@ -67,6 +67,10 @@ describe('public profile', () => {
     mockApi(routes(false));
     const first = renderApp('/@dora@remote.example');
     expect(await screen.findByText(/You only see Dora's public posts here/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Send Dora a private message' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/messages\?to=dora(%40|@)remote\.example$/),
+    );
     first.unmount();
 
     mockApi(routes(true));

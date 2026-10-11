@@ -85,4 +85,20 @@ describe('messages', () => {
     });
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/@alice\//));
   });
+
+  it('starts a message to the person whose profile asked for it', async () => {
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/conversations': { body: [] },
+      'GET /accounts/lookup/carol@diaspo.example': { body: carol },
+    });
+    renderApp('/messages?to=carol@diaspo.example');
+    // Carol is already a recipient, and mentioned at the start of the message.
+    expect(
+      await screen.findByRole('button', { name: 'Remove @carol@diaspo.example' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'New post' })).toHaveValue('@carol@diaspo.example ');
+    expect(screen.getByRole('button', { name: /Share with/ })).toHaveTextContent('Direct');
+  });
 });

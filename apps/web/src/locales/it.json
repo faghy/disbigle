@@ -145,7 +145,9 @@
       "following_other": "<strong>{{formatted}}</strong> seguiti"
     },
     "pinned": "Post in evidenza",
-    "remoteNotice": "Qui vedi solo i post pubblici di {{name}}. I post riservati ai follower arrivano dopo che inizi a seguire, e solo quelli nuovi: lo decide il server di {{name}}."
+    "remoteNotice": "Qui vedi solo i post pubblici di {{name}}. I post riservati ai follower arrivano dopo che inizi a seguire, e solo quelli nuovi: lo decide il server di {{name}}.",
+    "message": "Messaggio",
+    "messageLabel": "Scrivi un messaggio privato a {{name}}"
   },
   "settings": {
     "title": "Impostazioni",

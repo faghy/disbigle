@@ -1,10 +1,10 @@
 import type { Account, Status } from '@disbigle/shared';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../api/errors.ts';
-import { useCurrentUser } from '../api/queries.ts';
+import { accountQueryOptions, useCurrentUser } from '../api/queries.ts';
 import { type Conversation, PAGE_SIZE, social } from '../api/social.ts';
 import { Avatar } from '../components/Avatar.tsx';
 import { Composer } from '../components/Composer.tsx';
@@ -24,7 +24,9 @@ function excerpt(status: Status): string {
 
 export function MessagesPage() {
   const { t } = useTranslation();
-  const [composing, setComposing] = useState(false);
+  const { to } = useSearch({ from: '/messages' });
+  const navigate = useNavigate();
+  const [composing, setComposing] = useState(Boolean(to));
   const query = useInfiniteQuery({
     queryKey: conversationsKey,
     queryFn: ({ pageParam }) => social.conversations({ maxId: pageParam, limit: PAGE_SIZE }),
@@ -44,7 +46,15 @@ export function MessagesPage() {
           !composing && <Button onClick={() => setComposing(true)}>{t('messages.new')}</Button>
         }
       />
-      {composing && <NewMessage onClose={() => setComposing(false)} />}
+      {composing && (
+        <NewMessage
+          to={to}
+          onClose={() => {
+            setComposing(false);
+            if (to) void navigate({ to: '/messages', search: {}, replace: true });
+          }}
+        />
+      )}
       <FeedSection>
         {query.isPending ? (
           <LoadingState label={t('common.loading')} />
@@ -118,7 +128,7 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
 }
 
 /** Direct message composer with a recipient picker that adds @mentions to the text. */
-function NewMessage({ onClose }: { onClose: () => void }) {
+function NewMessage({ to, onClose }: { to?: string | undefined; onClose: () => void }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -136,6 +146,20 @@ function NewMessage({ onClose }: { onClose: () => void }) {
     });
     textarea.current?.focus();
   };
+  // Coming from a profile: that person is the first recipient.
+  const initial = useQuery({ ...accountQueryOptions(to ?? ''), enabled: Boolean(to) });
+  const initialAccount = initial.data;
+  const addedInitial = useRef(false);
+  useEffect(() => {
+    if (!initialAccount || addedInitial.current) return;
+    addedInitial.current = true;
+    setRecipients((list) =>
+      list.some((r) => r.id === initialAccount.id) ? list : [initialAccount, ...list],
+    );
+    editContent.current?.((content) => `@${initialAccount.acct} ${content}`);
+    textarea.current?.focus();
+  }, [initialAccount]);
+
   const remove = (account: Account) => {
     setRecipients((list) => list.filter((r) => r.id !== account.id));
     const escaped = account.acct.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

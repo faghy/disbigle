@@ -240,6 +240,13 @@ const aspectTimelineRoute = createRoute({
 const messagesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages',
+  // `?to=user@server` opens a new message to that person (the profile's "Message" button).
+  validateSearch: (search: Record<string, unknown>): { to?: string | undefined } => ({
+    to:
+      typeof search.to === 'string' && /^@?[\w.-]+(@[\w.:-]+)?$/.test(search.to)
+        ? search.to.replace(/^@/, '')
+        : undefined,
+  }),
   beforeLoad: signedInOnly,
   component: MessagesPage,
 });
