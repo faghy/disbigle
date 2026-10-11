@@ -110,7 +110,10 @@ export async function authRoutes(
   );
 
   app.post('/password/reset', strict, async (request) => {
-    await confirmPasswordReset(ctx, parse(passwordResetConfirmSchema, request.body));
+    request.passwordResetUserId = await confirmPasswordReset(
+      ctx,
+      parse(passwordResetConfirmSchema, request.body),
+    );
     return { status: 'ok' };
   });
 }

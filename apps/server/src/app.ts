@@ -28,6 +28,7 @@ import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { adminRoutes, reportRoutes } from './routes/admin.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
+import { authorizedAppRoutes } from './routes/authorized-apps.ts';
 import { filterRoutes } from './routes/filters.ts';
 import { inviteRoutes } from './routes/invites.ts';
 import { legacyDiasporaRoutes } from './routes/legacy.ts';
@@ -190,10 +191,11 @@ export async function buildApp(options: AppOptions) {
 
   // Mastodon client API (Tusky, Ivory, Elk…) on the same paths, chosen per request.
   const federation = options.federation;
+  const oauthStore = options.oauthStore ?? new DrizzleOAuthStore(ctx.db);
   await app.register(mastodonApi, {
     ctx,
     storage,
-    store: options.oauthStore ?? new DrizzleOAuthStore(ctx.db),
+    store: oauthStore,
     ...(hub ? { hub } : {}),
     ...(federation
       ? {
@@ -202,6 +204,17 @@ export async function buildApp(options: AppOptions) {
           backfillAccount: (actor) => backfillRemoteOutbox(federation, ctx, actor),
         }
       : {}),
+  });
+  await app.register(authorizedAppRoutes, { store: oauthStore, prefix: '/api/v1/me/apps' });
+  // Signing in again elsewhere is required after a password change or reset: revoke app tokens too.
+  app.addHook('onResponse', async (request, reply) => {
+    if (reply.statusCode !== 200 || request.method !== 'POST') return;
+    const path = request.url.split('?')[0];
+    if (path === '/api/v1/me/password' && request.session) {
+      await oauthStore.revokeUserTokens(request.session.userId);
+    } else if (path === '/api/v1/auth/password/reset' && request.passwordResetUserId) {
+      await oauthStore.revokeUserTokens(request.passwordResetUserId);
+    }
   });
 
   return app;

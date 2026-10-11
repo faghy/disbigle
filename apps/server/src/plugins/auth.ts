@@ -9,6 +9,8 @@ declare module 'fastify' {
     /** The resolved session, if the request carries a valid session cookie (any stage). */
     session: SessionInfo | null;
     sessionToken: string | null;
+    /** Set by a successful password reset, so app tokens of that user can be revoked. */
+    passwordResetUserId?: string;
   }
 }
 

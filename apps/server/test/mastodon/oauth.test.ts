@@ -364,3 +364,29 @@ describe('OAuth for Mastodon apps', () => {
     expect(invalid.statusCode).toBe(401);
   });
 });
+
+describe('authorized apps', () => {
+  it('lists and revokes app access, and a password change signs apps out', async () => {
+    const { mastodonUser } = await import('./helpers.ts');
+    const user = await mastodonUser(app);
+    expect((await user.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(200);
+
+    const apps = (await user.client.get('/api/v1/me/apps')).json();
+    expect(apps).toHaveLength(1);
+    expect(apps[0]).toMatchObject({ scopes: expect.any(Array), createdAt: expect.any(String) });
+
+    // A second authorization, revoked from the settings page.
+    const other = await mastodonUser(app);
+    const otherApps = (await other.client.get('/api/v1/me/apps')).json();
+    expect((await other.client.delete(`/api/v1/me/apps/${otherApps[0].id}`)).statusCode).toBe(200);
+    expect((await other.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(401);
+    expect((await user.client.delete(`/api/v1/me/apps/${otherApps[0].id}`)).statusCode).toBe(404);
+
+    // Changing the password revokes the remaining app tokens.
+    await user.client.post('/api/v1/me/password', {
+      currentPassword: 'correct horse battery staple',
+      newPassword: 'a brand new password',
+    });
+    expect((await user.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(401);
+  });
+});

@@ -51,7 +51,7 @@ export async function requestPasswordReset(
 export async function confirmPasswordReset(
   ctx: CoreContext,
   request: PasswordResetConfirm,
-): Promise<void> {
+): Promise<string> {
   const input = passwordResetConfirmSchema.parse(request);
   const key = `password-reset:${sha256(input.token)}`;
   const userId = await ctx.kv.get(key);
@@ -62,4 +62,5 @@ export async function confirmPasswordReset(
     .set({ passwordHash: await hashPassword(input.password), updatedAt: new Date() })
     .where(eq(schema.users.id, userId));
   await revokeOtherSessions(ctx, userId);
+  return userId;
 }
