@@ -148,7 +148,7 @@ function Badge({
   return (
     <span
       className={cx(
-        'inline-flex min-w-5 items-center justify-center rounded-full border-2 border-ink bg-accent px-1.5 text-[11px] leading-4 font-extrabold text-accent-fg',
+        'inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] leading-5 font-bold text-accent-fg',
         className,
       )}
     >
@@ -201,9 +201,9 @@ function SideNav({ user }: { user: CurrentUser | null }) {
                   to={item.to}
                   activeOptions={{ exact: item.exact ?? false }}
                   className={cx(
-                    'flex items-center gap-3 rounded-2xl border-2 border-transparent px-3 py-2.5 font-display text-[1.05rem] font-semibold text-fg-muted transition focus-ring',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.98rem] font-semibold text-fg-muted transition-colors focus-ring',
                     'hover:bg-surface-muted hover:text-fg',
-                    'data-[status=active]:border-ink data-[status=active]:bg-sun data-[status=active]:text-ink data-[status=active]:shadow-[3px_3px_0_0_var(--ink)]',
+                    'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
                   )}
                 >
                   <item.icon size={22} />
@@ -232,7 +232,7 @@ function FollowedTagsCard() {
   const tags = useFollowedTags();
   if (!tags.data || tags.data.length === 0) return null;
   return (
-    <div className="sticker-soft rounded-3xl bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
+    <div className="sticker-soft rounded-2xl bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
       <FollowedTags />
     </div>
   );
@@ -248,7 +248,7 @@ function SidePanel({ user }: { user: CurrentUser | null }) {
         {instance && (
           <section
             aria-labelledby="side-instance-title"
-            className="sticker-soft rounded-3xl bg-surface p-4"
+            className="sticker-soft rounded-2xl bg-surface p-4"
           >
             {/* Not a heading: the page itself often names the server already. */}
             <p id="side-instance-title" className="font-semibold">
@@ -284,7 +284,7 @@ const morePaths = ['/public/local', '/public', '/bookmarks', '/settings', '/admi
 
 const bottomLinkClass = cx(
   'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-bold text-fg-muted focus-ring',
-  'data-[status=active]:text-accent [&[data-status=active]>svg]:-rotate-6 [&>svg]:transition-transform',
+  'data-[status=active]:text-accent',
 );
 
 function BottomNav() {

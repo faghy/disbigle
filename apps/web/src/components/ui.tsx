@@ -13,18 +13,16 @@ export function cx(...classes: (string | false | null | undefined)[]) {
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  // The main action is a "sticker": solid edge, flat shadow, pressed in when clicked.
-  primary:
-    'border-ink bg-accent text-accent-fg shadow-[2px_2px_0_0_var(--ink)] hover:bg-accent-hover active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_0_var(--ink)]',
-  secondary: 'border-border-strong bg-surface text-fg hover:border-ink hover:bg-surface-muted',
+  primary: 'border-transparent bg-accent text-accent-fg hover:bg-accent-hover active:scale-[0.98]',
+  secondary: 'border-border-strong bg-surface text-fg hover:bg-surface-muted',
   ghost: 'border-transparent bg-transparent text-fg hover:bg-surface-muted',
   danger: 'border-danger/60 bg-surface text-danger hover:bg-danger-soft',
 };
 
 export const buttonClass = (variant: ButtonVariant = 'primary', extra?: string) =>
   cx(
-    'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border-2 px-4 py-2',
-    'text-sm font-bold transition focus-ring',
+    'inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2',
+    'text-sm font-semibold transition focus-ring',
     'disabled:cursor-not-allowed disabled:opacity-60',
     buttonVariants[variant],
     extra,
@@ -230,7 +228,7 @@ export function Card({
   'aria-labelledby'?: string;
 }) {
   return (
-    <Tag className={cx('sticker-soft rounded-3xl bg-surface p-5 sm:p-6', className)} {...rest}>
+    <Tag className={cx('sticker-soft rounded-2xl bg-surface p-5 sm:p-6', className)} {...rest}>
       {children}
     </Tag>
   );

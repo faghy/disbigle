@@ -77,7 +77,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className="w-full max-w-sm sticker-soft rounded-3xl bg-surface p-5"
+        className="w-full max-w-sm sticker rounded-2xl bg-surface p-5"
         onKeyDown={(event) => {
           if (event.key === 'Escape' && !pending) {
             event.stopPropagation();

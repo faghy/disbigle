@@ -193,11 +193,11 @@ function NetworkSearch({ query }: { query: string }) {
   return (
     <FeedSection className="p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="inline-flex size-10 -rotate-6 items-center justify-center rounded-xl border-2 border-ink bg-mint text-ink">
+        <span className="inline-flex size-10 items-center justify-center rounded-full bg-accent-soft text-accent">
           <GlobeIcon size={20} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-bold">{t('search.networkTitle', { query })}</p>
+          <p className="font-semibold">{t('search.networkTitle', { query })}</p>
           <p className="text-sm text-fg-muted">{t('search.networkHint')}</p>
         </div>
         {!search.isSuccess && (

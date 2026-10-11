@@ -2,7 +2,7 @@ import { cx } from './ui.tsx';
 
 /**
  * The Disbigle mark: a speech bubble that winks. Conversation, with the cheek of the name
- * ("sei un disbiglio!"). Colours come from the theme tokens.
+ * ("sei un disbiglio!"). Its colours are fixed: the one bold splash in a light interface.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -16,15 +16,15 @@ export function LogoMark({ className }: { className?: string }) {
     >
       <path
         d="M14 7h36a10 10 0 0 1 10 10v22a10 10 0 0 1-10 10H29L16.5 59l2-10H14A10 10 0 0 1 4 39V17A10 10 0 0 1 14 7Z"
-        fill="var(--accent)"
-        stroke="var(--ink)"
+        fill="#cf3200"
+        stroke="#2d1912"
         strokeWidth="3.2"
       />
-      <circle cx="17.5" cy="33" r="3.4" fill="var(--sun)" />
-      <circle cx="47" cy="33" r="3.4" fill="var(--sun)" />
-      <circle cx="23.5" cy="23.5" r="3.6" fill="var(--ink)" />
-      <path d="M36.5 24.5q4.6-5.2 9.2 0" stroke="var(--ink)" strokeWidth="3.2" />
-      <path d="M22 33.5q10.3 9.5 20.6 0" stroke="var(--ink)" strokeWidth="3.2" />
+      <circle cx="17.5" cy="33" r="3.4" fill="#fbca43" />
+      <circle cx="47" cy="33" r="3.4" fill="#fbca43" />
+      <circle cx="23.5" cy="23.5" r="3.6" fill="#2d1912" />
+      <path d="M36.5 24.5q4.6-5.2 9.2 0" stroke="#2d1912" strokeWidth="3.2" />
+      <path d="M22 33.5q10.3 9.5 20.6 0" stroke="#2d1912" strokeWidth="3.2" />
     </svg>
   );
 }
@@ -33,8 +33,8 @@ export function LogoMark({ className }: { className?: string }) {
 export function Logo({ className, markClassName }: { className?: string; markClassName?: string }) {
   return (
     <span className={cx('inline-flex items-center gap-2', className)}>
-      <LogoMark className={cx('size-9 -rotate-6', markClassName)} />
-      <span className="font-display text-[1.45rem] leading-none font-extrabold tracking-tight">
+      <LogoMark className={cx('size-8 -rotate-3', markClassName)} />
+      <span className="font-display text-[1.4rem] leading-none font-bold tracking-tight">
         disbigle
       </span>
     </span>

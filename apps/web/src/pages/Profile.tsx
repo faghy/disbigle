@@ -416,7 +416,7 @@ function AspectsPopover({
       <div
         id={panelId}
         hidden={!open}
-        className="absolute left-0 z-30 mt-2 w-72 sticker-soft rounded-3xl bg-surface p-2"
+        className="absolute left-0 z-30 mt-2 w-72 sticker rounded-2xl bg-surface p-2"
       >
         <fieldset>
           <legend className="px-2 py-1 text-sm font-semibold">
