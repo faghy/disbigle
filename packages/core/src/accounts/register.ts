@@ -6,6 +6,7 @@ import { generateActorKeyPair, generateEd25519KeyPair } from '../crypto/keys.ts'
 import { hashPassword } from '../crypto/passwords.ts';
 import { diasporaGuid } from '../crypto/tokens.ts';
 import { DomainError } from '../errors.ts';
+import { getInstanceSettings } from '../settings.ts';
 import { createDefaultAspects } from '../social/aspects.ts';
 import { localActorUrls } from './urls.ts';
 
@@ -60,7 +61,7 @@ export async function registerUser(
     .from(schema.users);
   const isFirstUser = userCount === 0;
 
-  const mode = config.REGISTRATION_MODE;
+  const mode = (await getInstanceSettings(ctx)).registrationMode;
   if (!isFirstUser && mode === 'closed') {
     throw new DomainError('registrations_closed', 'Registrations are closed on this instance');
   }

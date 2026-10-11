@@ -5,6 +5,7 @@ import {
   findActorByHandle,
   findLocalActorByUsername,
   getAccountWithCounts,
+  getInstanceSettings,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
 } from '@disbigle/core';
@@ -17,11 +18,14 @@ export const VERSION = '0.1.0';
 export async function publicRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
   app.get('/instance', async (): Promise<InstanceInfo> => {
     const [anyUser] = await ctx.db.select({ id: schema.users.id }).from(schema.users).limit(1);
+    const settings = await getInstanceSettings(ctx);
     return {
       domain: ctx.config.LOCAL_DOMAIN,
-      title: ctx.config.INSTANCE_TITLE,
-      description: ctx.config.INSTANCE_DESCRIPTION,
-      registrationMode: anyUser ? ctx.config.REGISTRATION_MODE : 'open',
+      title: settings.title,
+      description: settings.description,
+      rules: settings.rules,
+      contactEmail: settings.contactEmail,
+      registrationMode: anyUser ? settings.registrationMode : 'open',
       version: VERSION,
       limits: {
         maxPostLength: MAX_POST_LENGTH,

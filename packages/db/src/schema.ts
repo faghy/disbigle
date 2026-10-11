@@ -671,3 +671,18 @@ export const webPushSubscriptions = pgTable(
     index('web_push_subscriptions_user_idx').on(t.userId),
   ],
 );
+
+export type InstanceSettingsData = {
+  title?: string;
+  description?: string;
+  registrationMode?: 'open' | 'approval' | 'invite' | 'closed';
+  rules?: string[];
+  contactEmail?: string;
+};
+
+/** Settings an administrator can change at run time (one row); environment values are the defaults. */
+export const instanceSettings = pgTable('instance_settings', {
+  id: text('id').primaryKey(),
+  data: jsonb('data').$type<InstanceSettingsData>().notNull().default({}),
+  updatedAt: updatedAt(),
+});

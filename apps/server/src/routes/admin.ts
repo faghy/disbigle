@@ -4,6 +4,8 @@ import {
   type CoreContext,
   countOpenModerationItems,
   createReport,
+  getInstanceSettings,
+  instanceSettingsPatchSchema,
   listAccountsForAdmin,
   listDomainBlocks,
   listPendingUsers,
@@ -14,6 +16,7 @@ import {
   suspendAccount,
   unblockDomain,
   unsuspendAccount,
+  updateInstanceSettings,
 } from '@disbigle/core';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -104,6 +107,18 @@ export async function adminRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCont
     await setUserRole(ctx, requireAdmin(request).userId, parse(idParams, request.params).id, role);
     return { status: 'ok' };
   });
+
+  app.get('/settings', async (request) => {
+    requireAdmin(request);
+    return getInstanceSettings(ctx);
+  });
+  app.put('/settings', async (request) =>
+    updateInstanceSettings(
+      ctx,
+      requireAdmin(request).userId,
+      parse(instanceSettingsPatchSchema, request.body),
+    ),
+  );
 
   app.get('/domain_blocks', async (request) => {
     requireModerator(request);

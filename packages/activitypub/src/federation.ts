@@ -10,6 +10,7 @@ import {
   findLocalActorByUsername,
   findPostByUri,
   follow,
+  getInstanceSettings,
   ingestRemoteAnnounce,
   ingestRemotePost,
   like,
@@ -154,7 +155,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         return new Application({
           id: ctx.getActorUri(identifier),
           preferredUsername: ctx.data.config.LOCAL_DOMAIN,
-          name: ctx.data.config.INSTANCE_TITLE,
+          name: (await getInstanceSettings(ctx.data)).title,
           inbox: ctx.getInboxUri(identifier),
           outbox: ctx.getOutboxUri(identifier),
           endpoints: new Endpoints({ sharedInbox: ctx.getInboxUri() }),
@@ -327,6 +328,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
   });
 
   federation.setNodeInfoDispatcher('/nodeinfo/2.1', async (ctx) => {
+    const settings = await getInstanceSettings(ctx.data);
     const [[users], [localPosts]] = await Promise.all([
       ctx.data.db.select({ n: count() }).from(schema.users),
       ctx.data.db
@@ -352,10 +354,10 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         localPosts: localPosts?.n ?? 0,
         localComments: 0,
       },
-      openRegistrations: ctx.data.config.REGISTRATION_MODE === 'open',
+      openRegistrations: settings.registrationMode === 'open',
       metadata: {
-        nodeName: ctx.data.config.INSTANCE_TITLE,
-        nodeDescription: ctx.data.config.INSTANCE_DESCRIPTION,
+        nodeName: settings.title,
+        nodeDescription: settings.description,
       },
     };
   });

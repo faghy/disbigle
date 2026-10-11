@@ -78,6 +78,13 @@
       "when": 1791677669086,
       "tag": "0010_remote_image_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791677812258,
+      "tag": "0011_instance_settings",
+      "breakpoints": true
     }
   ]
 }

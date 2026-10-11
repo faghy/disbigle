@@ -80,6 +80,27 @@ describe('moderation', () => {
       login: pending.user.username,
       password: pending.user.password,
     });
+
+    // Instance settings (admins only) apply at once.
+    expect((await pendingClient.get('/api/v1/admin/settings')).statusCode).toBe(403);
+    const settings = await admin.request('PUT', '/api/v1/admin/settings', {
+      title: 'Diaspoverso',
+      rules: ['Sii gentile', 'Niente spam'],
+      registrationMode: 'closed',
+    });
+    expect(settings.json()).toMatchObject({ title: 'Diaspoverso', registrationMode: 'closed' });
+    expect((await new Client(app).get('/api/v1/instance')).json()).toMatchObject({
+      title: 'Diaspoverso',
+      rules: ['Sii gentile', 'Niente spam'],
+      registrationMode: 'closed',
+    });
+    const refused = await new Client(app).post('/api/v1/auth/register', {
+      ...newUser(),
+      reason: 'x',
+    });
+    expect(refused.json().error).toBe('registrations_closed');
+    await admin.request('PUT', '/api/v1/admin/settings', { registrationMode: 'approval' });
+
     expect(
       (
         await pendingClient.post('/api/v1/admin/domain_blocks', {

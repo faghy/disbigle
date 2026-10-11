@@ -22,6 +22,7 @@ export * from './media/storage.ts';
 export * from './media/upload.ts';
 export * from './moderation.ts';
 export * from './push.ts';
+export * from './settings.ts';
 export * from './social/aspects.ts';
 export * from './social/content.ts';
 export * from './social/notification-list.ts';
