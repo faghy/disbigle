@@ -23,6 +23,8 @@ export const ACCEPTED_MEDIA_TYPES = [
 ];
 const MAX_IMAGE_SIDE = 2560;
 const PREVIEW_SIDE = 640;
+/** Decoding bigger images (a few KB of PNG can claim gigapixels) is refused outright. */
+const MAX_INPUT_PIXELS = 50_000_000;
 
 const imageFormats: Record<string, 'jpeg' | 'png' | 'webp' | 'gif' | 'avif'> = {
   'image/jpeg': 'jpeg',
@@ -77,7 +79,7 @@ export async function uploadMedia(
     let image: Sharp;
     let meta: Metadata;
     try {
-      image = sharp(input.data, { animated, failOn: 'error' });
+      image = sharp(input.data, { animated, failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS });
       meta = await image.metadata();
     } catch {
       throw new DomainError('bad_request', 'The file is not a valid image');
@@ -98,7 +100,7 @@ export async function uploadMedia(
             ? resized.avif()
             : resized.webp({ quality: 85 })
     ).toBuffer({ resolveWithObject: true });
-    const preview = await sharp(input.data, { failOn: 'error' })
+    const preview = await sharp(input.data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({
         width: PREVIEW_SIDE,
@@ -204,7 +206,7 @@ export async function updateProfileImage(
   const size = profileImageSizes[kind];
   let output: Buffer;
   try {
-    output = await sharp(input.data, { failOn: 'error' })
+    output = await sharp(input.data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({ ...size, fit: 'cover', position: 'attention' })
       .webp({ quality: 85 })
@@ -275,7 +277,7 @@ export async function storeCachedRemoteImage(
   let output: { data: Buffer; info: { width: number; height: number } };
   let preview: Buffer;
   try {
-    output = await sharp(data, { failOn: 'error' })
+    output = await sharp(data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({
         width: MAX_IMAGE_SIDE,
@@ -285,7 +287,7 @@ export async function storeCachedRemoteImage(
       })
       .webp({ quality: 85 })
       .toBuffer({ resolveWithObject: true });
-    preview = await sharp(data, { failOn: 'error' })
+    preview = await sharp(data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({
         width: PREVIEW_SIDE,
@@ -339,7 +341,7 @@ export async function storeCachedProfileImage(
   const size = profileImageSizes[kind];
   let output: Buffer;
   try {
-    output = await sharp(data, { failOn: 'error' })
+    output = await sharp(data, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({ ...size, fit: 'cover', position: 'attention' })
       .webp({ quality: 85 })

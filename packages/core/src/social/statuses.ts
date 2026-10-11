@@ -4,6 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
 import { loadPolls } from './polls.ts';
+import { visibleTo } from './visibility.ts';
 
 export type PostRow = typeof schema.posts.$inferSelect;
 type MediaRow = typeof schema.mediaAttachments.$inferSelect;
@@ -40,8 +41,14 @@ export async function hydrateStatuses(
   const reblogIds = [
     ...new Set(rows.map((r) => r.reblogOfId).filter((id): id is string => id !== null)),
   ];
+  // A reshare shows its original only to those who may see the original itself.
   const originals =
-    reblogIds.length > 0 ? await db.select().from(posts).where(inArray(posts.id, reblogIds)) : [];
+    reblogIds.length > 0
+      ? await db
+          .select()
+          .from(posts)
+          .where(and(inArray(posts.id, reblogIds), visibleTo(viewerActorId)))
+      : [];
   const all = [...rows, ...originals];
   const postIds = [...new Set(all.map((p) => p.id))];
   const actorIds = [
@@ -169,5 +176,5 @@ export async function hydrateStatuses(
     return status;
   };
 
-  return rows.map(serialize);
+  return rows.filter((row) => !row.reblogOfId || originalsById.has(row.reblogOfId)).map(serialize);
 }

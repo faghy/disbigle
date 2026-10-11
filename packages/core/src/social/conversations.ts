@@ -52,7 +52,14 @@ export async function listConversations(
   const threadPosts = await ctx.db
     .select({ id: posts.id, actorId: posts.actorId, threadRootId: posts.threadRootId })
     .from(posts)
-    .where(and(inArray(posts.threadRootId, rootIds), eq(posts.visibility, 'direct')));
+    // Participants come from the messages the viewer can read, not from the whole thread.
+    .where(
+      and(
+        inArray(posts.threadRootId, rootIds),
+        eq(posts.visibility, 'direct'),
+        visibleTo(viewerActorId),
+      ),
+    );
   const audience = await ctx.db
     .select({ postId: postAudiences.postId, actorId: postAudiences.actorId })
     .from(postAudiences)
