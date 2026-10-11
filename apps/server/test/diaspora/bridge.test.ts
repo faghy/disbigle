@@ -5,7 +5,12 @@ import {
 } from '@disbigle/activitypub';
 import { type CoreContext, MemoryKeyValueStore } from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
-import { DiasporaBridge, DiasporaPublisher, diasporaRoutes } from '@disbigle/diaspora-bridge';
+import {
+  DbRelayableStore,
+  DiasporaBridge,
+  DiasporaPublisher,
+  diasporaRoutes,
+} from '@disbigle/diaspora-bridge';
 import { MemoryKvStore } from '@fedify/fedify';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -46,6 +51,8 @@ async function startHub(): Promise<Instance> {
     ctx,
     allowHttp: true,
     allowPrivateAddress: true,
+    // As in production: stored relayables go with their comment or like when those are deleted.
+    relayables: new DbRelayableStore(ctx),
     onError: (error) => console.error(`[hub ${domain}]`, error),
   });
   ctx.events = new CompositeEventBus([

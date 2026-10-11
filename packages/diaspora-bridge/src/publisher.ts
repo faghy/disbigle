@@ -246,8 +246,10 @@ export class DiasporaPublisher implements EventBus {
   ) {
     const ctx = this.ctx;
     const thread = await this.bridgedThread(authorId, rootId);
+    // No bridge identity: nothing of theirs ever reached diaspora*. (The stored copy can't tell:
+    // it goes with the comment or like it belongs to.)
     const bridge = thread ? await bridgeIdentityOf(ctx, thread.author.id) : null;
-    if (!thread || !bridge || !(await this.bridge.relayables.get(targetGuid))) return;
+    if (!thread || !bridge) return;
     const retraction: Retraction = {
       type: 'Retraction',
       author: this.bridgeId(bridge),
