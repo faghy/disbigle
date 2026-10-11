@@ -91,6 +91,18 @@ async function signUp(instance: Instance) {
 }
 
 describe('discovery', () => {
+  it('lets servers check the instance actor through WebFinger, as Mastodon does', async () => {
+    const actor = (await (
+      await fetch(`${a.url}/users/~actor`, { headers: { accept: 'application/activity+json' } })
+    ).json()) as { id: string; preferredUsername: string };
+    const finger = await fetch(
+      `${a.url}/.well-known/webfinger?resource=acct:${actor.preferredUsername}@${a.domain}`,
+    );
+    expect(finger.status).toBe(200);
+    const jrd = (await finger.json()) as { links: { rel: string; href?: string }[] };
+    expect(jrd.links.find((l) => l.rel === 'self')?.href).toBe(actor.id);
+  });
+
   it('serves WebFinger with ActivityPub and diaspora links, and NodeInfo with both protocols', async () => {
     const { account } = await signUp(a);
     const finger = await fetch(

@@ -1,4 +1,4 @@
-import { resolveRemoteAccount, resolveRemoteStatus } from '@disbigle/activitypub';
+import { resolveRemoteStatus } from '@disbigle/activitypub';
 import {
   type CoreContext,
   findActorByHandle,
@@ -15,6 +15,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
 import { requireUser } from '../plugins/auth.ts';
+import { findRemoteAccount } from '../resolve.ts';
 
 const searchQuery = z.object({
   q: z.string().trim().min(1).max(500),
@@ -44,7 +45,7 @@ export async function searchRoutes(
         const actor =
           known ??
           (resolve && request.session?.stage === 'active'
-            ? await resolveRemoteAccount(federation, ctx, q)
+            ? await findRemoteAccount(federation, ctx, q)
             : null);
         if (actor && !actor.suspendedAt) results.set(actor.id, serializeAccount(actor));
       }
@@ -71,7 +72,7 @@ export async function searchRoutes(
   app.post('/resolve', async (request) => {
     requireUser(request);
     const { q } = parse(z.object({ q: z.string().trim().min(3).max(500) }), request.body);
-    const actor = await resolveRemoteAccount(federation, ctx, q, { refresh: true });
+    const actor = await findRemoteAccount(federation, ctx, q, { refresh: true });
     return actor ? serializeAccount(actor) : null;
   });
 

@@ -27,7 +27,7 @@ sudo -u disbigle pnpm --filter @disbigle/web build
 
 ## 3. Configuration
 
-Create `/etc/disbigle/env` (readable by the `disbigle` user only):
+Create `/etc/disbigle/env` (readable by the `disbigle` user only; quote values that contain spaces):
 
 ```sh
 PUBLIC_URL=https://example.org
@@ -40,9 +40,9 @@ SESSION_SECRET=<output of: openssl rand -hex 32>
 REGISTRATION_MODE=approval
 MEDIA_DIR=/var/lib/disbigle/media
 INSTANCE_TITLE=Example
-INSTANCE_DESCRIPTION=A friendly corner of the Fediverse
+INSTANCE_DESCRIPTION="A friendly corner of the Fediverse"
 SMTP_URL=smtps://user:password@mail.example.org:465
-MAIL_FROM=Example <noreply@example.org>
+MAIL_FROM="Example <noreply@example.org>"
 ```
 
 `LOCAL_DOMAIN` becomes part of every handle (`user@example.org`) and **cannot change later** without breaking federation.
@@ -51,7 +51,7 @@ Apply the migrations:
 
 ```sh
 cd /opt/disbigle
-sudo -u disbigle env $(cat /etc/disbigle/env | xargs) pnpm db:migrate
+sudo -u disbigle bash -c 'set -a; . /etc/disbigle/env; set +a; pnpm db:migrate'
 ```
 
 ## 4. Services
@@ -77,6 +77,17 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Open the site and register: **the first account becomes the administrator**, even when registrations are closed.
 
+## On a Plesk server
+
+Plesk owns the nginx virtual hosts, so the configuration is split in two:
+
+- `map` and `upstream` blocks (http level) go in `/etc/nginx/conf.d/disbigle.conf`, with names that don't clash with other sites (e.g. `$disbigle_connection_upgrade`).
+- The `location` blocks and the CSP `set` go in the domain's **Additional nginx directives** (Apache & nginx Settings), or in `/var/www/vhosts/system/<domain>/conf/vhost_nginx.conf` followed by `plesk sbin httpdmng --reconfigure-domain <domain>`. Leave out `client_max_body_size`: Plesk already sets it. Give each location its own `root` (the app's `apps/web/dist`), since the server root is the domain's `httpdocs`.
+- Keep the domain's nginx proxy mode off (PHP-FPM served by nginx), so there is no `location /` from Plesk to clash with.
+- A database created in Plesk belongs to Plesk's admin role: grant the app's user `CREATE` on the database and on schema `public` before migrating.
+- On a shared server, bind Redis to localhost with `requirepass`, and don't add nginx to the `disbigle` group (it would be able to read `/etc/disbigle/env`); make the web build and the media directory world-readable instead.
+- Plesk ships Node.js in `/opt/plesk/node/<version>/bin`: put it on `PATH` in the systemd units.
+
 ## 6. Updating
 
 ```sh
@@ -84,7 +95,7 @@ cd /opt/disbigle
 sudo -u disbigle git pull
 sudo -u disbigle pnpm install --frozen-lockfile
 sudo -u disbigle pnpm --filter @disbigle/web build
-sudo -u disbigle env $(cat /etc/disbigle/env | xargs) pnpm db:migrate
+sudo -u disbigle bash -c 'set -a; . /etc/disbigle/env; set +a; pnpm db:migrate'
 sudo systemctl restart disbigle-server disbigle-worker
 ```
 
@@ -99,7 +110,7 @@ Disbigle can take over an existing pod **on the same domain**, keeping handles, 
 1. Install Disbigle as above on the pod's server (or a new one), with `LOCAL_DOMAIN` equal to the pod's domain. Do not switch nginx yet.
 2. Run a trial import against a copy of the pod database:
    ```sh
-   sudo -u disbigle env $(cat /etc/disbigle/env | xargs) \
+   sudo -u disbigle bash -c 'set -a; . /etc/disbigle/env; set +a; exec "$@"' _ \
      pnpm --filter @disbigle/diaspora-import run import \
        --source postgres://diaspora@localhost/diaspora_production \
        --uploads /opt/diaspora/public/uploads --dry-run

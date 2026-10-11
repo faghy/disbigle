@@ -190,9 +190,13 @@ export function createDisbigleFederation(options: FederationOptions): Federation
           })
         : null;
     })
-    .mapHandle(
-      async (ctx, username) => (await localActorByIdentifier(ctx.data, username))?.username ?? null,
-    )
+    .mapHandle(async (ctx, username) => {
+      // Mastodon checks that an actor's preferredUsername resolves back to it through WebFinger
+      // before trusting its key: the instance actor is `<domain>@<domain>`, as on Mastodon.
+      if (username.toLowerCase() === ctx.data.config.LOCAL_DOMAIN.toLowerCase())
+        return INSTANCE_ACTOR;
+      return (await localActorByIdentifier(ctx.data, username))?.username ?? null;
+    })
     .setKeyPairsDispatcher(async (ctx, identifier) => {
       if (identifier === INSTANCE_ACTOR) return getInstanceKeyPairs(ctx.data);
       // Deleted accounts keep their keys until purged, so their Delete activity can be signed.

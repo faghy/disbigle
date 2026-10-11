@@ -1,8 +1,4 @@
-import {
-  backfillRemoteOutbox,
-  resolveRemoteAccount,
-  resolveRemoteStatus,
-} from '@disbigle/activitypub';
+import { backfillRemoteOutbox, resolveRemoteStatus } from '@disbigle/activitypub';
 import {
   type CoreContext,
   LocalMediaStorage,
@@ -25,6 +21,7 @@ import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Redis } from 'ioredis';
 import { errorHandler } from './http.ts';
 import { authPlugin } from './plugins/auth.ts';
+import { findRemoteAccount } from './resolve.ts';
 import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { adminRoutes, reportRoutes } from './routes/admin.ts';
 import { aspectRoutes } from './routes/aspects.ts';
@@ -209,7 +206,7 @@ export async function buildApp(options: AppOptions) {
     ...(hub ? { hub } : {}),
     ...(federation
       ? {
-          resolveAccount: (q: string) => resolveRemoteAccount(federation, ctx, q),
+          resolveAccount: (q: string) => findRemoteAccount(federation, ctx, q),
           resolveStatus: (url: string) => resolveRemoteStatus(federation, ctx, url),
           backfillAccount: (actor) => backfillRemoteOutbox(federation, ctx, actor),
         }

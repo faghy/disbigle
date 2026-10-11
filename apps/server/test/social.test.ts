@@ -291,6 +291,31 @@ describe('accounts and notifications', () => {
     expect((await client.get(`/api/v1/tags/${stem}segreta`)).json().postsCount).toBe(0);
   });
 
+  it('finds diaspora*-only people when ActivityPub has no answer', async () => {
+    const { upsertRemoteActor } = await import('@disbigle/core');
+    const { client } = await signedIn();
+    const dora = await upsertRemoteActor(app.ctx(), {
+      username: 'dora',
+      domain: 'pod.invalid',
+      publicKeyPem: 'k',
+      diasporaGuid: 'd0d0d0d0d0d0d0d0',
+      diasporaReceiveUrl: 'https://pod.invalid/receive/users/d0d0d0d0d0d0d0d0',
+      protocol: 'diaspora',
+    });
+    const asked: string[] = [];
+    app.ctx().resolveAccount = async (username, domain) => {
+      asked.push(`${username}@${domain}`);
+      return dora.id;
+    };
+    try {
+      const found = await client.post('/api/v1/search/resolve', { q: 'dora@pod.invalid' });
+      expect(found.json()).toMatchObject({ id: dora.id, acct: 'dora@pod.invalid' });
+      expect(asked).toEqual(['dora@pod.invalid']);
+    } finally {
+      delete app.ctx().resolveAccount;
+    }
+  });
+
   it('searches accounts by name only', async () => {
     const { account } = await signedIn();
     const results = (
