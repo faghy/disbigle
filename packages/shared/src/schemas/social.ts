@@ -121,6 +121,8 @@ export interface Status {
   language: string | null;
   inReplyToId: string | null;
   inReplyToAccountId: string | null;
+  /** Handle of the replied-to author (`user` or `user@domain`), for "Replying to @…". */
+  inReplyToAccountAcct: string | null;
   reblog: Status | null;
   repliesCount: number;
   reblogsCount: number;

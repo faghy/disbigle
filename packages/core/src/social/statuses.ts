@@ -44,7 +44,12 @@ export async function hydrateStatuses(
     reblogIds.length > 0 ? await db.select().from(posts).where(inArray(posts.id, reblogIds)) : [];
   const all = [...rows, ...originals];
   const postIds = [...new Set(all.map((p) => p.id))];
-  const actorIds = [...new Set(all.map((p) => p.actorId))];
+  const actorIds = [
+    ...new Set([
+      ...all.map((p) => p.actorId),
+      ...all.map((p) => p.inReplyToActorId).filter((id): id is string => id !== null),
+    ]),
+  ];
 
   const [
     actorRows,
@@ -136,6 +141,9 @@ export async function hydrateStatuses(
       language: post.language,
       inReplyToId: post.inReplyToId,
       inReplyToAccountId: post.inReplyToActorId,
+      inReplyToAccountAcct: post.inReplyToActorId
+        ? (actorsById.get(post.inReplyToActorId)?.acct ?? null)
+        : null,
       reblog: original ? serialize(original) : null,
       repliesCount: post.repliesCount,
       reblogsCount: post.reblogsCount,

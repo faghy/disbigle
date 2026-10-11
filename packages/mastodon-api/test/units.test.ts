@@ -154,6 +154,7 @@ describe('entity mapping', () => {
       language: null,
       inReplyToId: null,
       inReplyToAccountId: null,
+      inReplyToAccountAcct: null,
       reblog: null,
       repliesCount: 1,
       reblogsCount: 2,

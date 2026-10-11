@@ -161,6 +161,20 @@ describe('card details', () => {
     expect(within(article).getByRole('link', { name: 'Replying to a post' })).toBeInTheDocument();
   });
 
+  it('names the parent author from the handle the server provides', async () => {
+    const reply = makeStatus({
+      inReplyToId: '01a12800-0000-7000-8000-0000000000e4',
+      inReplyToAccountId: '01a12800-0000-7000-8000-0000000000e5',
+      inReplyToAccountAcct: 'dora@remote.example',
+    });
+    const article = await renderHomeWith(reply, {});
+    const link = within(article).getByRole('link', { name: 'Replying to @dora@remote.example' });
+    expect(link).toHaveAttribute(
+      'href',
+      '/@dora@remote.example/01a12800-0000-7000-8000-0000000000e4',
+    );
+  });
+
   it('shows counts next to the actions and says them to screen readers', async () => {
     const status = makeStatus({ repliesCount: 4, reblogsCount: 1, likesCount: 0 });
     const article = await renderHomeWith(status, {});

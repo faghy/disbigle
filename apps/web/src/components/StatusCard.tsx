@@ -525,8 +525,10 @@ function ReplyContext({ status }: { status: Status }) {
   const parentAuthor =
     status.inReplyToAccountId === status.account.id
       ? status.account
-      : (status.mentions.find((mention) => mention.id === status.inReplyToAccountId) ??
-        findCachedStatus(queryClient, status.inReplyToId)?.account);
+      : status.inReplyToAccountAcct
+        ? { acct: status.inReplyToAccountAcct }
+        : (status.mentions.find((mention) => mention.id === status.inReplyToAccountId) ??
+          findCachedStatus(queryClient, status.inReplyToId)?.account);
   return (
     <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-fg-muted">
       <ReplyIcon size={14} className="shrink-0" />

@@ -105,7 +105,10 @@ export async function buildApp(options: AppOptions) {
   if (!disableRateLimit) {
     await app.register(rateLimit, {
       global: true,
-      max: (request) => (isFederationEndpoint(request.url) ? 3000 : 300),
+      // Development gets ten times the allowance: several tabs and test scripts are normal there.
+      max: (request) =>
+        (isFederationEndpoint(request.url) ? 3000 : 300) *
+        (ctx.config.NODE_ENV === 'development' ? 10 : 1),
       timeWindow: '5 minutes',
       ...(redis ? { redis, nameSpace: 'disbigle:ratelimit:' } : {}),
     });

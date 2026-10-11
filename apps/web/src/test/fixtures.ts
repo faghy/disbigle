@@ -57,6 +57,7 @@ export function makeStatus(overrides: Partial<Status> = {}): Status {
     language: null,
     inReplyToId: null,
     inReplyToAccountId: null,
+    inReplyToAccountAcct: null,
     reblog: null,
     repliesCount: 0,
     reblogsCount: 0,
