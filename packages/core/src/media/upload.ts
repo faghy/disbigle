@@ -1,6 +1,6 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { MediaAttachment } from '@disbigle/shared';
-import { and, eq, isNull, lt } from 'drizzle-orm';
+import { and, eq, isNull, lt, sql } from 'drizzle-orm';
 import sharp, { type Metadata, type Sharp } from 'sharp';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
@@ -243,4 +243,74 @@ export async function removeProfileImage(
     .set(kind === 'avatar' ? { avatarUrl: null } : { headerUrl: null })
     .where(eq(schema.actors.id, actorId));
   await emit(ctx, { type: 'profile.updated', actorId });
+}
+
+/** Remote image attachments not cached yet, oldest first. */
+export async function listUncachedRemoteMedia(ctx: CoreContext, limit: number) {
+  const { mediaAttachments } = schema;
+  return ctx.db
+    .select()
+    .from(mediaAttachments)
+    .where(
+      and(
+        isNull(mediaAttachments.filePath),
+        sql`${mediaAttachments.remoteUrl} is not null`,
+        eq(mediaAttachments.type, 'image'),
+        sql`${mediaAttachments.createdAt} > now() - interval '7 days'`,
+      ),
+    )
+    .orderBy(mediaAttachments.createdAt)
+    .limit(limit);
+}
+
+/**
+ * Stores a local copy of a remote image (re-encoded, metadata stripped, with a preview) so readers
+ * load it from this server instead of revealing themselves to the remote one.
+ */
+export async function storeCachedRemoteImage(
+  ctx: CoreContext & { storage: MediaStorage },
+  mediaId: string,
+  data: Buffer,
+): Promise<boolean> {
+  let output: { data: Buffer; info: { width: number; height: number } };
+  let preview: Buffer;
+  try {
+    output = await sharp(data, { failOn: 'error' })
+      .rotate()
+      .resize({
+        width: MAX_IMAGE_SIDE,
+        height: MAX_IMAGE_SIDE,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 85 })
+      .toBuffer({ resolveWithObject: true });
+    preview = await sharp(data, { failOn: 'error' })
+      .rotate()
+      .resize({
+        width: PREVIEW_SIDE,
+        height: PREVIEW_SIDE,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+  } catch {
+    return false;
+  }
+  const filePath = datedPath(`cache-${mediaId}`, 'webp');
+  const previewPath = datedPath(`cache-${mediaId}`, 'webp', '_preview');
+  await ctx.storage.put(filePath, output.data);
+  await ctx.storage.put(previewPath, preview);
+  await ctx.db
+    .update(schema.mediaAttachments)
+    .set({
+      filePath,
+      previewPath,
+      mimeType: 'image/webp',
+      width: output.info.width,
+      height: output.info.height,
+    })
+    .where(eq(schema.mediaAttachments.id, mediaId));
+  return true;
 }

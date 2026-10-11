@@ -105,3 +105,45 @@ describe('media uploads', () => {
     );
   });
 });
+
+describe('remote media cache', () => {
+  it('stores a local copy of a remote image and serves it instead', async () => {
+    const {
+      upsertRemoteActor,
+      ingestRemotePost,
+      listUncachedRemoteMedia,
+      storeCachedRemoteImage,
+      getStatus,
+    } = await import('../src/index.ts');
+    const remote = await upsertRemoteActor(base(), {
+      username: 'carla',
+      domain: 'remote.example',
+      publicKeyPem: 'k',
+      apUri: 'https://remote.example/users/carla',
+      apInbox: 'https://remote.example/inbox',
+      protocol: 'activitypub',
+    });
+    const postId = await ingestRemotePost(base(), {
+      authorActorId: remote.id,
+      apUri: 'https://remote.example/notes/photo',
+      contentHtml: '<p>foto</p>',
+      visibility: 'public',
+      attachments: [
+        { url: 'https://remote.example/photo.jpg', mimeType: 'image/jpeg', description: 'Sea' },
+      ],
+    });
+    const [pending] = await listUncachedRemoteMedia(base(), 100).then((rows) =>
+      rows.filter((r) => r.postId === postId),
+    );
+    expect(pending?.remoteUrl).toBe('https://remote.example/photo.jpg');
+    expect(
+      await storeCachedRemoteImage(ctx(), pending?.id ?? '', await photoWithGps(1200, 800)),
+    ).toBe(true);
+    const status = await getStatus(base(), null, postId ?? '');
+    expect(status.media[0]?.url).toMatch(/^https:\/\/disbigle\.test\/media\/.+cache-.+\.webp$/);
+    expect(status.media[0]?.description).toBe('Sea');
+    expect(
+      await storeCachedRemoteImage(ctx(), pending?.id ?? '', Buffer.from('not an image')),
+    ).toBe(false);
+  });
+});

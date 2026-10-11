@@ -38,3 +38,4 @@ Choices made during implementation that the architecture document leaves open. N
 | 2026-10-11 | Importer: a diaspora contact with `sharing` becomes the user following that person; `receiving` becomes the person following the user | That is what the flags mean in diaspora's `contact.rb`; the full rules are in `packages/diaspora-import/README.md`. |
 | 2026-10-11 | Imported diaspora passwords (Devise bcrypt + pepper) are accepted and rehashed to Argon2id on first sign-in | Users keep their passwords across the migration. |
 | 2026-10-11 | No Docker; production runs with systemd units and nginx (`deploy/`) | Requested; simple to operate on a single VPS. |
+| 2026-10-11 | The worker caches remote images locally (re-encoded, previews), behind SSRF checks and size limits; `CACHE_REMOTE_MEDIA=false` disables it | Readers don't reveal their IP to remote servers and media survive remote outages, as on Mastodon. |
