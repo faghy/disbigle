@@ -65,11 +65,16 @@ describe('live home timeline', () => {
       'GET /notifications/unread_count': { body: { count: 1 } },
     });
     renderApp('/');
-    expect((await screen.findAllByText('1 unread notification')).length).toBeGreaterThan(0);
+    // The count lives on the bell at the top right.
+    expect(
+      await screen.findByRole('button', { name: 'Notifications, 1 unread notification' }),
+    ).toHaveTextContent('1');
     const socket = await openSocket();
     act(() =>
       socket.receive({ event: 'notification', stream: 'user', payload: makeNotification() }),
     );
-    expect((await screen.findAllByText('2 unread notifications')).length).toBeGreaterThan(0);
+    expect(
+      await screen.findByRole('button', { name: 'Notifications, 2 unread notifications' }),
+    ).toHaveTextContent('2');
   });
 });

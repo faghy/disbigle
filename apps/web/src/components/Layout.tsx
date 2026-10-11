@@ -5,16 +5,16 @@ import { type ComponentType, useCallback, useEffect, useId, useRef, useState } f
 import { useTranslation } from 'react-i18next';
 import { isModerator, summaryQueryOptions } from '../api/admin.ts';
 import { endpoints } from '../api/endpoints.ts';
-import { clearUserData, queryKeys, useMe } from '../api/queries.ts';
-import { useFollowedTags, useUnreadCount } from '../api/socialQueries.ts';
+import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
+import { useFollowedTags } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
+import { setTheme, themes, useTheme } from '../lib/theme.ts';
 import { Avatar } from './Avatar.tsx';
 import { ComposeButton } from './ComposeSheet.tsx';
 import { useFocusTrap } from './Dialog.tsx';
 import {
   AspectsIcon,
-  BellIcon,
   BookmarkIcon,
   CloseIcon,
   GlobeIcon,
@@ -27,6 +27,7 @@ import {
   SettingsIcon,
   ShieldIcon,
 } from './icons.tsx';
+import { NotificationBell } from './NotificationBell.tsx';
 import { buttonClass, cx } from './ui.tsx';
 
 /** Keeps the interface language in line with the signed-in user's setting. */
@@ -65,7 +66,8 @@ export function RootLayout() {
         {t('nav.skipToContent')}
       </a>
       <TopBar user={user} loading={me.isPending} />
-      <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 px-0 sm:px-6">
+      {/* Full width on desktop: navigation, content, and a side panel on wide screens. */}
+      <div className="flex w-full flex-1 gap-6 px-0 sm:px-4 lg:px-6 xl:gap-8">
         {!me.isPending && <SideNav user={user} />}
         <main
           id="main"
@@ -74,6 +76,7 @@ export function RootLayout() {
         >
           <Outlet />
         </main>
+        {!me.isPending && <SidePanel user={user} />}
       </div>
       <Footer signedIn={Boolean(user)} />
       {user && <ComposeButton />}
@@ -87,7 +90,6 @@ interface NavItem {
     | '/'
     | '/public/local'
     | '/public'
-    | '/notifications'
     | '/messages'
     | '/aspects'
     | '/bookmarks'
@@ -102,7 +104,6 @@ interface NavItem {
 
 function useNavItems(user: CurrentUser | null): NavItem[] {
   const { t } = useTranslation();
-  const unread = useUnreadCount();
   const moderator = isModerator(user);
   const summary = useQuery({ ...summaryQueryOptions, enabled: moderator });
   const items: NavItem[] = [
@@ -111,14 +112,9 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     { to: '/public', label: t('nav.federated'), icon: GlobeIcon, exact: true },
   ];
   if (!user) return items;
+  // Notifications live behind the bell in the top bar.
   return [
     ...items,
-    {
-      to: '/notifications',
-      label: t('nav.notifications'),
-      icon: BellIcon,
-      badge: unread.data ?? 0,
-    },
     { to: '/messages', label: t('nav.messages'), icon: MailIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
@@ -194,8 +190,8 @@ function SideNav({ user }: { user: CurrentUser | null }) {
   const { t } = useTranslation();
   const items = useNavItems(user);
   return (
-    <div className="hidden w-56 shrink-0 md:block">
-      <div className="sticky top-20 py-6">
+    <div className="hidden w-56 shrink-0 md:block lg:w-64">
+      <div className="sticky top-16 max-h-[calc(100dvh-4rem)] overflow-y-auto py-6">
         <nav aria-label={t('nav.main')}>
           <ul className="space-y-1">
             {items.map((item) => (
@@ -219,14 +215,71 @@ function SideNav({ user }: { user: CurrentUser | null }) {
             ))}
           </ul>
         </nav>
-        {user && <FollowedTags />}
+        {/* Below the width where the side panel appears, the tags stay here. */}
+        {user && (
+          <div className="xl:hidden">
+            <FollowedTags />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+/** The followed hashtags as a card of the side panel (nothing when there are none). */
+function FollowedTagsCard() {
+  const tags = useFollowedTags();
+  if (!tags.data || tags.data.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-border bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
+      <FollowedTags />
+    </div>
+  );
+}
+
+/** Right column on wide screens: this server, and the hashtags you follow. */
+function SidePanel({ user }: { user: CurrentUser | null }) {
+  const { t } = useTranslation();
+  const instance = useInstance().data;
+  return (
+    <aside aria-label={t('nav.sidePanel')} className="hidden w-80 shrink-0 xl:block 2xl:w-96">
+      <div className="sticky top-16 max-h-[calc(100dvh-4rem)] space-y-4 overflow-y-auto py-6">
+        {instance && (
+          <section
+            aria-labelledby="side-instance-title"
+            className="rounded-2xl border border-border bg-surface p-4"
+          >
+            {/* Not a heading: the page itself often names the server already. */}
+            <p id="side-instance-title" className="font-semibold">
+              {instance.title}
+            </p>
+            <p className="mt-0.5 text-xs text-fg-muted">{instance.domain}</p>
+            {instance.description && (
+              <p className="mt-3 line-clamp-4 text-sm text-fg-muted">{instance.description}</p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to="/about" className={buttonClass('secondary', 'min-h-9 px-3 py-1 text-sm')}>
+                {t('nav.aboutServer')}
+              </Link>
+              {!user && (
+                <Link
+                  to="/register"
+                  className={buttonClass('primary', 'min-h-9 px-3 py-1 text-sm')}
+                >
+                  {t('nav.register')}
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
+        {user && <FollowedTagsCard />}
+      </div>
+    </aside>
+  );
+}
+
 /** Pages kept in the mobile "More" sheet (the bottom bar has room for four). */
-const morePaths = ['/public/local', '/public', '/aspects', '/bookmarks', '/settings', '/admin'];
+const morePaths = ['/public/local', '/public', '/bookmarks', '/settings', '/admin'];
 
 const bottomLinkClass = cx(
   'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-fg-muted focus-ring',
@@ -241,7 +294,7 @@ function BottomNav() {
   const moreButton = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const byPath = (path: NavItem['to']) => items.find((item) => item.to === path);
-  const primary = [byPath('/'), byPath('/notifications'), byPath('/messages')].filter(
+  const primary = [byPath('/'), byPath('/aspects'), byPath('/messages')].filter(
     (item): item is NavItem => Boolean(item),
   );
   const more = items.filter((item) => morePaths.includes(item.to));
@@ -393,7 +446,7 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
   const { t } = useTranslation();
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-5xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
+      <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-4 lg:px-6">
         <Link
           to="/"
           className="flex items-center gap-2 rounded-lg text-lg font-bold tracking-tight focus-ring"
@@ -421,7 +474,10 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
             </Link>
           )}
           {user ? (
-            <UserMenu user={user} />
+            <>
+              <UserMenu user={user} />
+              <NotificationBell />
+            </>
           ) : loading ? null : (
             <>
               <Link to="/login" className={buttonClass('ghost', 'max-sm:hidden')}>
@@ -450,7 +506,7 @@ function TopSearch() {
   const onSearchPage = useRouterState({ select: (state) => state.location.pathname === '/search' });
   if (onSearchPage) return null;
   return (
-    <search className="ml-4 hidden max-w-xs flex-1 md:block">
+    <search className="ml-4 hidden max-w-md flex-1 md:block lg:ml-14">
       <form
         className="relative"
         onSubmit={(event) => {
@@ -534,6 +590,8 @@ function UserMenu({ user }: { user: CurrentUser }) {
           {t('footer.about')}
         </Link>
         <hr className="my-1 border-border" />
+        <ThemeChoice />
+        <hr className="my-1 border-border" />
         <button
           type="button"
           className={cx(itemClass, 'text-danger')}
@@ -550,12 +608,45 @@ function UserMenu({ user }: { user: CurrentUser }) {
   );
 }
 
+/** Light (the default), dark, or the system's choice; kept on this device. */
+function ThemeChoice() {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const name = useId();
+  return (
+    <fieldset className="px-3 py-2">
+      <legend className="float-left mb-1.5 text-xs text-fg-muted">{t('theme.label')}</legend>
+      <div className="clear-left grid grid-cols-3 gap-1 rounded-lg bg-surface-muted p-1">
+        {themes.map((value) => (
+          <label
+            key={value}
+            className={cx(
+              'cursor-pointer rounded-md px-1.5 py-1 text-center text-xs font-medium text-fg-muted has-focus-visible:ring-2 has-focus-visible:ring-accent',
+              theme === value ? 'bg-surface text-fg shadow-sm' : 'hover:text-fg',
+            )}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={value}
+              checked={theme === value}
+              onChange={() => setTheme(value)}
+              className="sr-only"
+            />
+            {t(`theme.${value}`)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 function Footer({ signedIn }: { signedIn: boolean }) {
   const { t } = useTranslation();
   const id = useId();
   return (
     <footer className={cx('border-t border-border', signedIn && 'hidden md:block')}>
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
+      <div className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted lg:px-6">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{t('footer.tagline')}</span>
           <Link to="/about" className="rounded font-medium text-fg hover:underline focus-ring">

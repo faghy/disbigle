@@ -32,7 +32,9 @@
     "moderationPending_one": "{{count}} item waiting for moderators",
     "moderationPending_other": "{{count}} items waiting for moderators",
     "messages": "Messages",
-    "more": "More"
+    "more": "More",
+    "sidePanel": "About this server and your hashtags",
+    "aboutServer": "About this server"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -551,7 +553,8 @@
       "poll": "ended a poll"
     },
     "pollEnded": "A poll you voted in has ended",
-    "pollOwnEnded": "Your poll has ended"
+    "pollOwnEnded": "Your poll has ended",
+    "seeAll": "See all notifications"
   },
   "aspects": {
     "title": "Aspects",
@@ -1003,5 +1006,11 @@
     "revokeTitle": "Revoke access for {{name}}?",
     "revokeDescription": "{{name}} will be signed out and will need your permission again to use your account.",
     "passwordNote": "Changing or resetting your password also signs out every app."
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

@@ -32,7 +32,9 @@
     "moderationPending_one": "{{count}} elemento in attesa dei moderatori",
     "moderationPending_other": "{{count}} elementi in attesa dei moderatori",
     "messages": "Messaggi",
-    "more": "Altro"
+    "more": "Altro",
+    "sidePanel": "Informazioni sul server e i tuoi hashtag",
+    "aboutServer": "Informazioni sul server"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -551,7 +553,8 @@
       "poll": "ha chiuso un sondaggio"
     },
     "pollEnded": "Un sondaggio a cui hai votato è terminato",
-    "pollOwnEnded": "Il tuo sondaggio è terminato"
+    "pollOwnEnded": "Il tuo sondaggio è terminato",
+    "seeAll": "Vedi tutte le notifiche"
   },
   "aspects": {
     "title": "Aspetti",
@@ -1003,5 +1006,11 @@
     "revokeTitle": "Revocare l'accesso a {{name}}?",
     "revokeDescription": "{{name}} verrà disconnessa e dovrà chiederti di nuovo il permesso per usare il tuo account.",
     "passwordNote": "Cambiare o reimpostare la password disconnette anche tutte le app."
+  },
+  "theme": {
+    "label": "Aspetto",
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "system": "Sistema"
   }
 }

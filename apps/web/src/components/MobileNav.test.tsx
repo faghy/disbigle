@@ -28,9 +28,11 @@ describe('mobile navigation', () => {
     const labels = within(bar)
       .getAllByRole('listitem')
       .map((li) => li.textContent?.replace(/\d.*$/, '').trim());
-    expect(labels).toEqual(['Home', 'Notifications', 'Messages', 'Search', 'More']);
-    // Badges stay readable: links keep their visible names plus the count.
-    expect(within(bar).getByRole('link', { name: /Notifications/ })).toHaveTextContent('3');
+    // Notifications are behind the bell at the top; aspects get their place in the bar.
+    expect(labels).toEqual(['Home', 'Aspects', 'Messages', 'Search', 'More']);
+    expect(
+      screen.getByRole('button', { name: 'Notifications, 3 unread notifications' }),
+    ).toHaveTextContent('3');
     expect(within(bar).getByRole('button', { name: /More/ })).toHaveTextContent('2');
 
     await user.click(within(bar).getByRole('button', { name: /More/ }));
@@ -41,7 +43,6 @@ describe('mobile navigation', () => {
     expect(links).toEqual([
       '/public/local',
       '/public',
-      '/aspects',
       '/bookmarks',
       '/settings',
       '/admin',

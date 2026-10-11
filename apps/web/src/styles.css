@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. Neutral palette with a single accent colour; values switch with the
- * system colour scheme. Utilities such as `bg-surface` or `text-accent` read these variables.
+ * Design tokens. Neutral palette with a single accent colour. Light by default; the user can
+ * choose dark or "same as the system" (`data-theme` on <html>, see lib/theme.ts). Utilities such
+ * as `bg-surface` or `text-accent` read these variables.
  */
 :root {
   --bg: oklch(98.5% 0.002 286);
@@ -23,8 +24,28 @@
   color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  --bg: oklch(16% 0.006 286);
+  --surface: oklch(20.5% 0.007 286);
+  --surface-muted: oklch(24% 0.008 286);
+  --fg: oklch(95% 0.003 286);
+  --fg-muted: oklch(72% 0.012 286);
+  --border: oklch(30% 0.01 286);
+  --border-strong: oklch(40% 0.012 286);
+  --accent: oklch(72% 0.16 285);
+  --accent-hover: oklch(78% 0.14 285);
+  --accent-soft: oklch(28% 0.06 285);
+  --accent-fg: oklch(18% 0.03 285);
+  --danger: oklch(72% 0.17 25);
+  --danger-soft: oklch(27% 0.06 25);
+  --success: oklch(76% 0.14 155);
+  --success-soft: oklch(26% 0.05 155);
+  color-scheme: dark;
+}
+
+/* "Same as the system": dark only when the system asks for it. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root[data-theme="system"] {
     --bg: oklch(16% 0.006 286);
     --surface: oklch(20.5% 0.007 286);
     --surface-muted: oklch(24% 0.008 286);

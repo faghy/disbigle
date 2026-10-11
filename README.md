@@ -16,15 +16,19 @@ A federated social network that speaks ActivityPub and stays compatible with the
 - **Migration**: import an existing diaspora\* pod on the same domain, keeping handles, keys and contacts.
 - **Moderation**: approval queue, reports, suspensions, domain blocks, roles, audit log, editable instance settings and rules.
 - **Privacy**: images stripped of metadata, remote media cached locally, visibility enforced in one place.
-- **Apps**: the web client (English and Italian) installs as a PWA with push notifications; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
+- **Apps**: the web client (English and Italian; full width on desktop, notifications behind a bell at the top right, light theme by default with dark or system on request) installs as a PWA with push notifications; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
 
 Status: early development. A test instance runs at [test.disbigle.com](https://test.disbigle.com) and federates with real diaspora\* pods, Hubzilla and Mastodon. See [docs/architettura.md](docs/architettura.md) (Italian) for the design, [docs/decisions.md](docs/decisions.md) for implementation decisions and [docs/deploy.md](docs/deploy.md) to run your own.
 
 ## Screenshots
 
-| Home | Profile with a poll | Mobile, dark theme |
-| --- | --- | --- |
-| ![Home timeline with the composer](docs/screenshots/home.png) | ![Profile page with a poll](docs/screenshots/profile.png) | ![Home on a phone in dark mode](docs/screenshots/mobile-dark.png) |
+| Home | Notifications |
+| --- | --- |
+| ![Home timeline with the composer, full width on a desktop](docs/screenshots/home.png) | ![The notification bell open at the top right](docs/screenshots/notifications.png) |
+
+| Profile with a poll | Mobile, dark theme |
+| --- | --- |
+| ![Profile page with a poll](docs/screenshots/profile.png) | ![Home on a phone in dark mode](docs/screenshots/mobile-dark.png) |
 
 ## The name
 

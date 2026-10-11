@@ -22,7 +22,7 @@ import { AccountLink, displayName, StatusCard, statusPath } from '../components/
 import { Alert, Button, cx, LoadingState } from '../components/ui.tsx';
 import { relativeTime } from '../lib/time.ts';
 
-const typeStyle: Record<
+export const typeStyle: Record<
   NotificationType,
   { icon: ComponentType<{ size?: number; filled?: boolean }>; tone: string }
 > = {
@@ -36,7 +36,7 @@ const typeStyle: Record<
 };
 
 /** Plain-text excerpt of a post for one-line summaries. */
-function excerpt(html: string, max = 140): string {
+export function excerpt(html: string, max = 140): string {
   const text = new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '';
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
