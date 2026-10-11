@@ -33,8 +33,8 @@ export const createPostRequestSchema = z
       })
       .optional(),
   })
-  .refine((p) => p.content.trim().length > 0 || p.mediaIds.length > 0, {
-    message: 'A post needs text or media',
+  .refine((p) => p.content.trim().length > 0 || p.mediaIds.length > 0 || p.poll !== undefined, {
+    message: 'A post needs text, media or a poll',
     path: ['content'],
   });
 export type CreatePostRequest = z.input<typeof createPostRequestSchema>;

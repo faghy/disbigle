@@ -4,7 +4,7 @@ import {
   createDisbigleFederation,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
-import { type CoreContext, LocalMediaStorage } from '@disbigle/core';
+import { type CoreContext, LocalMediaStorage, PushPublisher } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   DbRelayableStore,
@@ -49,6 +49,7 @@ ctx.events = new CompositeEventBus([
   },
   new ActivityPubPublisher(federation, ctx),
   new DiasporaPublisher(diaspora),
+  new PushPublisher(ctx),
 ]);
 
 const abort = new AbortController();

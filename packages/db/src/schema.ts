@@ -576,6 +576,9 @@ export const instanceKeys = pgTable('instance_keys', {
   rsaPublicKeyPem: text('rsa_public_key_pem').notNull(),
   ed25519PrivateKeyPem: text('ed25519_private_key_pem').notNull(),
   ed25519PublicKeyPem: text('ed25519_public_key_pem').notNull(),
+  /** VAPID key pair for Web Push (base64url), created on first use. */
+  vapidPublicKey: text('vapid_public_key'),
+  vapidPrivateKey: text('vapid_private_key'),
   createdAt: createdAt(),
 });
 
@@ -634,5 +637,29 @@ export const pollVotes = pgTable(
   (t) => [
     uniqueIndex('poll_votes_unique_idx').on(t.pollId, t.actorId, t.choice),
     index('poll_votes_actor_idx').on(t.actorId),
+  ],
+);
+
+export type PushAlerts = Partial<
+  Record<'follow' | 'follow_request' | 'mention' | 'reply' | 'reblog' | 'like', boolean>
+>;
+
+/** Browser push subscriptions (Web Push). */
+export const webPushSubscriptions = pgTable(
+  'web_push_subscriptions',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    alerts: jsonb('alerts').$type<PushAlerts>().notNull().default({}),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('web_push_subscriptions_endpoint_idx').on(t.endpoint),
+    index('web_push_subscriptions_user_idx').on(t.userId),
   ],
 );

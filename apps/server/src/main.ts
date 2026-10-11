@@ -5,7 +5,7 @@ import {
   resolveRemoteAccount,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
-import type { CoreContext } from '@disbigle/core';
+import { type CoreContext, PushPublisher } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   chainResolvers,
@@ -55,6 +55,7 @@ ctx.events = new CompositeEventBus([
   new RedisEventBus(redis),
   new ActivityPubPublisher(federation, ctx),
   new DiasporaPublisher(diaspora),
+  new PushPublisher(ctx),
 ]);
 const hub = new StreamingHub(ctx);
 await subscribeHubToRedis(subscriber, hub);

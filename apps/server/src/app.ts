@@ -28,6 +28,7 @@ import { migrationRoutes } from './routes/migration.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { pollRoutes } from './routes/polls.ts';
 import { publicRoutes } from './routes/public.ts';
+import { pushRoutes } from './routes/push.ts';
 import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
@@ -148,6 +149,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(reportRoutes, { ctx, prefix: '/reports' });
       await api.register(tagRoutes, { ctx, prefix: '/tags' });
       await api.register(pollRoutes, { ctx, prefix: '/polls' });
+      await api.register(pushRoutes, { ctx, prefix: '/push' });
       await api.register(adminRoutes, { ctx, prefix: '/admin' });
       if (options.federation) {
         await api.register(searchRoutes, {
