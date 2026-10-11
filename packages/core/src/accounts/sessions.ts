@@ -15,6 +15,9 @@ import { verifyTotpCode } from './totp.ts';
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const MFA_PENDING_TTL_MS = 10 * 60 * 1000;
 const MAX_MFA_ATTEMPTS = 5;
+/** Across sign-ins, so a known password doesn't buy unlimited guesses at the second factor. */
+const MAX_MFA_ATTEMPTS_PER_USER = 15;
+const MFA_USER_WINDOW_S = 60 * 60;
 
 export type SecondFactor = 'totp' | 'recovery_code' | 'passkey';
 
@@ -152,12 +155,20 @@ export async function verifySecondFactor(
     await revokeSession(ctx, token);
     throw new DomainError('too_many_attempts', 'Too many attempts, sign in again');
   }
+  const userKey = `mfa-attempts-user:${session.userId}`;
+  const userAttempts = Number((await ctx.kv.get(userKey)) ?? 0) + 1;
+  await ctx.kv.set(userKey, String(userAttempts), MFA_USER_WINDOW_S);
+  if (userAttempts > MAX_MFA_ATTEMPTS_PER_USER) {
+    await revokeSession(ctx, token);
+    throw new DomainError('too_many_attempts', 'Too many attempts, try again later');
+  }
 
   const normalized = code.replace(/[\s-]/g, '');
   const ok = /^\d{6}$/.test(normalized)
     ? await verifyTotpCode(ctx, session.userId, normalized)
     : await consumeRecoveryCode(ctx, session.userId, normalized);
   if (!ok) throw new DomainError('invalid_mfa_code', 'Invalid code');
+  await ctx.kv.del(userKey);
 
   await activateSession(ctx, session.sessionId, session.userId);
 }

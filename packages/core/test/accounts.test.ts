@@ -253,6 +253,21 @@ describe('two-factor authentication', () => {
     expect(await resolveSession(ctx(), pending.token)).toBeNull();
   });
 
+  it('limits wrong codes across sign-ins too', async () => {
+    const { input } = await enrolledUser();
+    for (let round = 0; round < 3; round++) {
+      const pending = await login(ctx(), { login: input.username, password: input.password });
+      for (let i = 0; i < 5; i++) {
+        await expectCode(
+          verifySecondFactor(ctx(), pending.token, 'aaaaa-bbbbb'),
+          'invalid_mfa_code',
+        );
+      }
+    }
+    const pending = await login(ctx(), { login: input.username, password: input.password });
+    await expectCode(verifySecondFactor(ctx(), pending.token, 'aaaaa-bbbbb'), 'too_many_attempts');
+  });
+
   it('can be disabled with the password', async () => {
     const { input, userId } = await enrolledUser();
     await expectCode(disableTotp(ctx(), userId, 'wrong'), 'wrong_password');
