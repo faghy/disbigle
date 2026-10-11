@@ -724,3 +724,64 @@ export const keywordFilters = pgTable(
   },
   (t) => [index('keyword_filters_actor_idx').on(t.actorId)],
 );
+
+/** OAuth 2 client applications (Mastodon-compatible apps). */
+export const oauthApplications = pgTable(
+  'oauth_applications',
+  {
+    id: uuid('id').primaryKey(),
+    name: text('name').notNull(),
+    website: text('website'),
+    redirectUris: text('redirect_uris').array().notNull().default(sql`'{}'`),
+    scopes: text('scopes').array().notNull().default(sql`'{}'`),
+    clientId: text('client_id').notNull(),
+    clientSecretHash: text('client_secret_hash').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('oauth_applications_client_id_idx').on(t.clientId)],
+);
+
+export const oauthAccessGrants = pgTable(
+  'oauth_access_grants',
+  {
+    id: uuid('id').primaryKey(),
+    applicationId: uuid('application_id')
+      .notNull()
+      .references(() => oauthApplications.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    scopes: text('scopes').array().notNull(),
+    codeChallenge: text('code_challenge'),
+    codeChallengeMethod: text('code_challenge_method'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('oauth_access_grants_code_hash_idx').on(t.codeHash),
+    index('oauth_access_grants_expires_idx').on(t.expiresAt),
+  ],
+);
+
+export const oauthAccessTokens = pgTable(
+  'oauth_access_tokens',
+  {
+    id: uuid('id').primaryKey(),
+    applicationId: uuid('application_id')
+      .notNull()
+      .references(() => oauthApplications.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    scopes: text('scopes').array().notNull(),
+    createdAt: createdAt(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('oauth_access_tokens_token_hash_idx').on(t.tokenHash),
+    index('oauth_access_tokens_user_idx').on(t.userId),
+    index('oauth_access_tokens_application_idx').on(t.applicationId),
+  ],
+);

@@ -1,10 +1,17 @@
 import {
+  backfillRemoteOutbox,
+  resolveRemoteAccount,
+  resolveRemoteStatus,
+} from '@disbigle/activitypub';
+import {
   type CoreContext,
   LocalMediaStorage,
   type Mailer,
   type MediaStorage,
   MemoryMailer,
 } from '@disbigle/core';
+import { mastodonApi, type OAuthStore } from '@disbigle/mastodon-api';
+import { DrizzleOAuthStore } from '@disbigle/mastodon-api/drizzle-store';
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
@@ -54,6 +61,8 @@ export interface AppOptions {
   federation?: Federation<CoreContext>;
   /** Outgoing email; printed to the log when omitted. */
   mailer?: Mailer;
+  /** OAuth persistence for Mastodon-compatible apps; PostgreSQL by default. */
+  oauthStore?: OAuthStore;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
 }
@@ -178,6 +187,22 @@ export async function buildApp(options: AppOptions) {
     },
     { prefix: '/api/v1' },
   );
+
+  // Mastodon client API (Tusky, Ivory, Elk…) on the same paths, chosen per request.
+  const federation = options.federation;
+  await app.register(mastodonApi, {
+    ctx,
+    storage,
+    store: options.oauthStore ?? new DrizzleOAuthStore(ctx.db),
+    ...(hub ? { hub } : {}),
+    ...(federation
+      ? {
+          resolveAccount: (q: string) => resolveRemoteAccount(federation, ctx, q),
+          resolveStatus: (url: string) => resolveRemoteStatus(federation, ctx, url),
+          backfillAccount: (actor) => backfillRemoteOutbox(federation, ctx, actor),
+        }
+      : {}),
+  });
 
   return app;
 }

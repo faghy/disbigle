@@ -280,7 +280,9 @@ describe('streaming', () => {
   it('streams public posts to anonymous clients but refuses the user stream', async () => {
     const author = await signedIn();
     const messages: { event: string; stream: string; error?: string }[] = [];
-    const ws = await app().injectWS('/api/v1/streaming?stream=public:local');
+    const ws = await app().injectWS('/api/v1/streaming?stream=public:local', {
+      headers: { 'x-disbigle-api': 'native' },
+    });
     ws.on('message', (data: Buffer) => messages.push(JSON.parse(data.toString())));
     ws.send(JSON.stringify({ type: 'subscribe', stream: 'user' }));
     await new Promise((resolve) => setTimeout(resolve, 50));

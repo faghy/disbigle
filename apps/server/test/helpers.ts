@@ -71,7 +71,7 @@ export class Client {
       method,
       url,
       ...(payload !== undefined ? { payload: payload as object } : {}),
-      headers: this.cookie ? { cookie: this.cookie } : {},
+      headers: { 'x-disbigle-api': 'native', ...(this.cookie ? { cookie: this.cookie } : {}) },
     });
     const setCookie = response.cookies.find((c) => c.name === 'disbigle_session');
     if (setCookie)

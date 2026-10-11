@@ -258,7 +258,9 @@ export async function ingestRemotePost(
       ? await findPostByUri(ctx, data.inReplyTo.uri)
       : null;
 
-  const id = uuidv7();
+  // Ids follow the publication date (as on Mastodon), so backfilled posts sort where they belong.
+  const published = data.publishedAt?.getTime();
+  const id = uuidv7(published && published < Date.now() ? published : Date.now());
   const audience = new Set(data.audienceActorIds ?? []);
   const mentioned = new Set(data.mentionActorIds ?? []);
   audience.delete(data.authorActorId);

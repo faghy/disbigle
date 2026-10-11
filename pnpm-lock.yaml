@@ -205,6 +205,9 @@ importers:
       '@disbigle/diaspora-bridge':
         specifier: workspace:*
         version: link:../../packages/diaspora-bridge
+      '@disbigle/mastodon-api':
+        specifier: workspace:*
+        version: link:../../packages/mastodon-api
       '@disbigle/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -535,6 +538,36 @@ importers:
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
+
+  packages/mastodon-api:
+    dependencies:
+      '@disbigle/config':
+        specifier: workspace:*
+        version: link:../config
+      '@disbigle/core':
+        specifier: workspace:*
+        version: link:../core
+      '@disbigle/db':
+        specifier: workspace:*
+        version: link:../db
+      '@disbigle/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@fastify/multipart':
+        specifier: ^10.1.3
+        version: 10.1.3
+      '@fastify/websocket':
+        specifier: ^11.3.4
+        version: 11.3.4
+      drizzle-orm:
+        specifier: ^0.45.4
+        version: 0.45.4(@opentelemetry/api@1.9.1)(postgres@3.4.9)
+      fastify:
+        specifier: ^5.12.5
+        version: 5.12.5
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
   packages/shared:
     dependencies:

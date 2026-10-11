@@ -66,7 +66,11 @@ export function queryString(
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = { accept: 'application/json' };
+  // Our native API shares paths with the Mastodon client API; this header selects ours.
+  const headers: Record<string, string> = {
+    accept: 'application/json',
+    'x-disbigle-api': 'native',
+  };
   const init: RequestInit = { method, headers, credentials: 'same-origin' };
   if (body instanceof FormData) {
     // The browser sets the multipart boundary itself.
