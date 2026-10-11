@@ -413,3 +413,38 @@ export async function countOpenModerationItems(ctx: CoreContext) {
   ]);
   return { pendingUsers: pending?.n ?? 0, openReports: open?.n ?? 0 };
 }
+
+/** Servers this instance knows about, with how many of their accounts are stored and their protocols. */
+export async function listKnownInstances(
+  ctx: CoreContext,
+  options: { query?: string; limit?: number } = {},
+) {
+  const term = options.query ? `%${options.query.replace(/[%_\\]/g, (c) => `\\${c}`)}%` : null;
+  const rows = await ctx.db
+    .select({
+      domain: sql<string>`lower(${actors.domain})`,
+      accounts: sql<number>`count(*)::int`,
+      activitypub: sql<number>`count(*) filter (where 'activitypub' = any(${actors.protocols}))::int`,
+      diaspora: sql<number>`count(*) filter (where 'diaspora' = any(${actors.protocols}))::int`,
+      followers: sql<number>`count(*) filter (where exists (select 1 from ${follows} where ${follows.actorId} = ${actors.id}))::int`,
+      lastSeen: sql<Date>`max(coalesce(${actors.lastFetchedAt}, ${actors.createdAt}))`,
+    })
+    .from(actors)
+    .where(and(isNotNull(actors.domain), term ? ilike(actors.domain, term) : undefined))
+    .groupBy(sql`lower(${actors.domain})`)
+    .orderBy(desc(sql`count(*)`))
+    .limit(Math.min(options.limit ?? 100, 500));
+  const blocks = await ctx.db.select().from(domainBlocks);
+  const severity = new Map(blocks.map((b) => [b.domain, b.severity]));
+  return rows.map((r) => ({
+    domain: r.domain,
+    accounts: r.accounts,
+    protocols: [
+      ...(r.activitypub > 0 ? ['activitypub'] : []),
+      ...(r.diaspora > 0 ? ['diaspora'] : []),
+    ],
+    followersOfLocalAccounts: r.followers,
+    lastSeenAt: new Date(r.lastSeen).toISOString(),
+    block: severity.get(r.domain) ?? null,
+  }));
+}

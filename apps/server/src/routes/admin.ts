@@ -8,6 +8,7 @@ import {
   instanceSettingsPatchSchema,
   listAccountsForAdmin,
   listDomainBlocks,
+  listKnownInstances,
   listPendingUsers,
   listReports,
   rejectUser,
@@ -119,6 +120,18 @@ export async function adminRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCont
       parse(instanceSettingsPatchSchema, request.body),
     ),
   );
+
+  app.get('/instances', async (request) => {
+    requireModerator(request);
+    const { q, limit } = parse(
+      z.object({
+        q: z.string().trim().max(200).optional(),
+        limit: z.coerce.number().int().min(1).max(500).default(100),
+      }),
+      request.query,
+    );
+    return listKnownInstances(ctx, { ...(q ? { query: q } : {}), limit });
+  });
 
   app.get('/domain_blocks', async (request) => {
     requireModerator(request);

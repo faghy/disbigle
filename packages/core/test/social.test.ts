@@ -541,3 +541,36 @@ describe('remote data hygiene', () => {
     expect(status.media.map((m) => m.url)).toEqual(['https://evil.example/ok.png']);
   });
 });
+
+describe('known instances', () => {
+  it('groups remote accounts by server with their protocols', async () => {
+    const { upsertRemoteActor, listKnownInstances } = await import('../src/index.ts');
+    for (const [username, protocol] of [
+      ['uno', 'activitypub'],
+      ['due', 'diaspora'],
+    ] as const) {
+      await upsertRemoteActor(ctx(), {
+        username,
+        domain: 'mixed.example',
+        publicKeyPem: 'k',
+        ...(protocol === 'activitypub'
+          ? {
+              apUri: `https://mixed.example/users/${username}`,
+              apInbox: 'https://mixed.example/inbox',
+            }
+          : {
+              diasporaGuid: `guid${username}`,
+              diasporaReceiveUrl: `https://mixed.example/receive/users/${username}`,
+            }),
+        protocol,
+      });
+    }
+    const [mixed] = await listKnownInstances(ctx(), { query: 'mixed.example' });
+    expect(mixed).toMatchObject({
+      domain: 'mixed.example',
+      accounts: 2,
+      protocols: ['activitypub', 'diaspora'],
+      block: null,
+    });
+  });
+});
