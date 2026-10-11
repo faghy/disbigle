@@ -47,6 +47,16 @@ MAIL_FROM="Example <noreply@example.org>"
 
 `LOCAL_DOMAIN` becomes part of every handle (`user@example.org`) and **cannot change later** without breaking federation.
 
+**Split domain.** Handles can live on a different host from the app: `LOCAL_DOMAIN=example.org` with `PUBLIC_URL=https://social.example.org` gives handles like `user@example.org`. The app answers WebFinger for both hosts. The server at `example.org` (any web server or site) only has to send the discovery paths to the app:
+
+```nginx
+location = /.well-known/webfinger { return 301 https://social.example.org$request_uri; }
+location = /.well-known/host-meta { return 301 https://social.example.org$request_uri; }
+location = /.well-known/nodeinfo  { return 301 https://social.example.org$request_uri; }
+```
+
+Mastodon and diaspora* follow these redirects.
+
 Apply the migrations:
 
 ```sh

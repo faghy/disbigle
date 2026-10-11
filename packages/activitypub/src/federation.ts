@@ -1,3 +1,4 @@
+import { type Config, webHost } from '@disbigle/config';
 import {
   acceptFollowRequest,
   applyRemoteMove,
@@ -79,6 +80,17 @@ export interface FederationOptions {
   /** Tests only: lets two instances on localhost talk to each other. */
   allowPrivateAddress?: boolean;
   manuallyStartQueue?: boolean;
+  /** Split domain: handles on one host, the app on another. See {@link federationOrigin}. */
+  origin?: { handleHost: string; webOrigin: string };
+}
+
+/**
+ * Fedify's origin when handles (`user@LOCAL_DOMAIN`) and the web address (PUBLIC_URL) are on
+ * different hosts; undefined when they match, so URLs follow the request as before.
+ */
+export function federationOrigin(config: Pick<Config, 'PUBLIC_URL' | 'LOCAL_DOMAIN'>) {
+  if (webHost(config) === config.LOCAL_DOMAIN.toLowerCase()) return undefined;
+  return { handleHost: config.LOCAL_DOMAIN.toLowerCase(), webOrigin: config.PUBLIC_URL };
 }
 
 /** Stores (or refreshes) the sender of an activity and returns its row. */
@@ -184,6 +196,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     queue: options.queue,
     allowPrivateAddress: options.allowPrivateAddress ?? false,
     manuallyStartQueue: options.manuallyStartQueue ?? false,
+    ...(options.origin ? { origin: options.origin } : {}),
     userAgent: { software: `Disbigle/${SOFTWARE_VERSION}` },
   });
 

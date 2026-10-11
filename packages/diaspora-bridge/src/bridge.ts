@@ -1,4 +1,5 @@
 // The diaspora* side of a Disbigle instance: discovery, receiving and delivery plumbing.
+import { isLocalDomain } from '@disbigle/config';
 import {
   type CoreContext,
   DomainError,
@@ -208,7 +209,7 @@ export class DiasporaBridge {
   ): Promise<ActorRow | null> {
     const id = parseDiasporaId(diasporaId);
     const ctx = this.ctx;
-    if (id.host === ctx.config.LOCAL_DOMAIN.toLowerCase()) {
+    if (isLocalDomain(ctx.config, id.host)) {
       return findActorByHandle(ctx, id.username, null);
     }
     const known = await findActorByHandle(ctx, id.username, id.host);

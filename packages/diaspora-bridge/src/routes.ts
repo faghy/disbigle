@@ -1,4 +1,5 @@
 // HTTP endpoints of the diaspora* protocol, as a Fastify plugin.
+import { isLocalDomain } from '@disbigle/config';
 import {
   bridgedAccountByGuid,
   type CoreContext,
@@ -85,7 +86,7 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
           let actor = null;
           try {
             const id = parseDiasporaId(resource);
-            if (id.host === ctx.config.LOCAL_DOMAIN.toLowerCase()) {
+            if (isLocalDomain(ctx.config, id.host)) {
               actor = await findActorByHandle(ctx, id.username, null);
             }
           } catch {

@@ -1,3 +1,4 @@
+import { isLocalDomain } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { serializeAccount } from './accounts/serialize.ts';
@@ -243,7 +244,7 @@ export async function blockDomain(
   },
 ) {
   const domain = normalizeDomain(input.domain);
-  if (!domain || domain === ctx.config.LOCAL_DOMAIN.toLowerCase()) {
+  if (!domain || isLocalDomain(ctx.config, domain)) {
     throw new DomainError('validation_failed', 'Invalid domain', [
       { path: 'domain', message: 'Invalid domain' },
     ]);

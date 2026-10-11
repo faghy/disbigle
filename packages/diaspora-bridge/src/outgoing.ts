@@ -1,4 +1,5 @@
 // Building diaspora* entities from core rows, computing recipients and sending envelopes.
+import { isLocalDomain } from '@disbigle/config';
 import { type CoreContext, mediaUrl } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
@@ -205,9 +206,8 @@ async function mentionResolver(ctx: CoreContext, postId: string) {
     .from(mentions)
     .innerJoin(actors, eq(actors.id, mentions.actorId))
     .where(eq(mentions.postId, postId));
-  const local = ctx.config.LOCAL_DOMAIN.toLowerCase();
   return (username: string, domain: string | null): string | null => {
-    const wantedDomain = domain === local ? null : domain;
+    const wantedDomain = isLocalDomain(ctx.config, domain) ? null : domain;
     const actor = rows
       .map((r) => r.actor)
       .find(

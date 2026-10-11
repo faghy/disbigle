@@ -1,3 +1,4 @@
+import { isLocalDomain } from '@disbigle/config';
 import { type CoreContext, findActorByHandle, upsertRemoteActor } from '@disbigle/core';
 import type { Federation } from '@fedify/fedify';
 import { isActor } from '@fedify/vocab';
@@ -38,6 +39,6 @@ export async function resolveRemoteAccount(
   }
   if (!isActor(object)) return null;
   const data = await remoteActorData(ctx, object);
-  if (!data || data.domain.toLowerCase() === core.config.LOCAL_DOMAIN.toLowerCase()) return null;
+  if (!data || isLocalDomain(core.config, data.domain)) return null;
   return upsertRemoteActor(core, data);
 }

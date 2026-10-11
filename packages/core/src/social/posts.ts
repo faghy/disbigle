@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { isLocalDomain } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import {
   type CreatePostRequest,
@@ -58,7 +59,7 @@ async function resolveMentions(ctx: CoreContext, source: string) {
   const parsed = extractMentions(source);
   const resolved = new Map<string, typeof actors.$inferSelect>();
   for (const mention of parsed) {
-    const domain = mention.domain === ctx.config.LOCAL_DOMAIN.toLowerCase() ? null : mention.domain;
+    const domain = isLocalDomain(ctx.config, mention.domain) ? null : mention.domain;
     const [actor] = await ctx.db
       .select()
       .from(actors)

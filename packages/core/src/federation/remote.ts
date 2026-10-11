@@ -1,3 +1,4 @@
+import { isLocalDomain } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import type { Visibility } from '@disbigle/shared';
 import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
@@ -64,7 +65,7 @@ export async function findActorByHandle(ctx: CoreContext, username: string, doma
     .where(
       and(
         sql`lower(${actors.username}) = lower(${username})`,
-        domain === null || domain.toLowerCase() === ctx.config.LOCAL_DOMAIN.toLowerCase()
+        domain === null || isLocalDomain(ctx.config, domain)
           ? isNull(actors.domain)
           : sql`lower(${actors.domain}) = lower(${domain})`,
       ),
@@ -78,7 +79,7 @@ export async function upsertRemoteActor(
   data: RemoteActorData,
 ): Promise<ActorRow> {
   const domain = data.domain.toLowerCase();
-  if (domain === ctx.config.LOCAL_DOMAIN.toLowerCase()) {
+  if (isLocalDomain(ctx.config, domain)) {
     throw new DomainError('bad_request', 'Refusing to store a local account as remote');
   }
   const matches = await ctx.db

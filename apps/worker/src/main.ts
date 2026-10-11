@@ -2,6 +2,7 @@ import {
   ActivityPubPublisher,
   CompositeEventBus,
   createDisbigleFederation,
+  federationOrigin,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
 import { type CoreContext, LocalMediaStorage, PushPublisher } from '@disbigle/core';
@@ -39,6 +40,7 @@ const federation = createDisbigleFederation({
   kv: new RedisKvStore(redis),
   queue: new RedisMessageQueue(() => new Redis(config.REDIS_URL)),
   manuallyStartQueue: true,
+  origin: federationOrigin(config),
 });
 const publishChannel = new Redis(config.REDIS_URL);
 const diaspora = new DiasporaBridge({

@@ -2,6 +2,7 @@ import {
   ActivityPubPublisher,
   CompositeEventBus,
   createDisbigleFederation,
+  federationOrigin,
   resolveRemoteAccount,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
@@ -37,6 +38,7 @@ const federation = createDisbigleFederation({
   queue: new RedisMessageQueue(() => new Redis(config.REDIS_URL)),
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
+  origin: federationOrigin(config),
 });
 const oauthStore = new DrizzleOAuthStore(db);
 const mastodonPushStore = new DrizzleMastodonPushStore(db);

@@ -1,4 +1,4 @@
-import { createDisbigleFederation } from '@disbigle/activitypub';
+import { createDisbigleFederation, federationOrigin } from '@disbigle/activitypub';
 import type { Config } from '@disbigle/config';
 import { type CoreContext, MemoryKeyValueStore, MemoryMailer } from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
@@ -46,6 +46,7 @@ export function useTestApp(overrides: Partial<Config> = {}) {
     const federation = createDisbigleFederation({
       kv: new MemoryKvStore(),
       allowPrivateAddress: true,
+      origin: federationOrigin(ctx.config),
     });
     app = await buildApp({ ctx, hub, federation, mailer: testMailer, disableRateLimit: true });
   });

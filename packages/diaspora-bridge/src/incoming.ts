@@ -1,4 +1,5 @@
 // Applying verified incoming diaspora* entities to the core.
+import { isLocalDomain } from '@disbigle/config';
 import {
   block,
   type CoreContext,
@@ -66,7 +67,7 @@ export async function findActorByDiasporaId(ctx: CoreContext, id: string) {
 async function knownActor(ctx: CoreContext, id: string): Promise<ActorRow | null> {
   try {
     const parsed = parseDiasporaId(id);
-    const local = parsed.host === ctx.config.LOCAL_DOMAIN.toLowerCase();
+    const local = isLocalDomain(ctx.config, parsed.host);
     return await findActorByHandle(ctx, parsed.username, local ? null : parsed.host);
   } catch {
     return null;

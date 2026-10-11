@@ -29,3 +29,21 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   }
   return result.data;
 }
+
+/**
+ * The host of the web address. It differs from LOCAL_DOMAIN on a split-domain setup, where
+ * handles are `user@example.org` and the app is served at `https://social.example.org`.
+ */
+export function webHost(config: Pick<Config, 'PUBLIC_URL'>): string {
+  return new URL(config.PUBLIC_URL).host.toLowerCase();
+}
+
+/** Whether a domain (from a handle or a URL) means this server. */
+export function isLocalDomain(
+  config: Pick<Config, 'PUBLIC_URL' | 'LOCAL_DOMAIN'>,
+  domain: string | null | undefined,
+): boolean {
+  if (!domain) return false;
+  const d = domain.toLowerCase();
+  return d === config.LOCAL_DOMAIN.toLowerCase() || d === webHost(config);
+}
