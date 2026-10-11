@@ -1,5 +1,5 @@
-import { resolveRemoteAccount } from '@disbigle/activitypub';
-import { type CoreContext, findActorByHandle, serializeAccount } from '@disbigle/core';
+import { resolveRemoteAccount, resolveRemoteStatus } from '@disbigle/activitypub';
+import { type CoreContext, findActorByHandle, getStatus, serializeAccount } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Federation } from '@fedify/fedify';
 import { and, ilike, isNull, or, sql } from 'drizzle-orm';
@@ -64,5 +64,13 @@ export async function searchRoutes(
     const { q } = parse(z.object({ q: z.string().trim().min(3).max(500) }), request.body);
     const actor = await resolveRemoteAccount(federation, ctx, q, { refresh: true });
     return actor ? serializeAccount(actor) : null;
+  });
+
+  /** Imports a remote post by URL so it can be read and interacted with here. */
+  app.post('/resolve_status', async (request) => {
+    const session = requireUser(request);
+    const { q } = parse(z.object({ q: z.string().trim().url().max(2000) }), request.body);
+    const id = await resolveRemoteStatus(federation, ctx, q);
+    return id ? getStatus(ctx, session.actorId, id) : null;
   });
 }

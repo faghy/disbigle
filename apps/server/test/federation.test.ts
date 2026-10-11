@@ -457,4 +457,23 @@ describe('federation between two instances', () => {
       return poll.votersCount === 1 && poll.options[1].votesCount === 1;
     });
   });
+
+  it('imports a remote post by URL', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const post = (
+      await bob.client.post('/api/v1/statuses', { content: 'trovami per link' })
+    ).json();
+    const resolved = await alice.client.post('/api/v1/search/resolve_status', { q: post.uri });
+    expect(resolved.json()).toMatchObject({
+      uri: post.uri,
+      content: expect.stringContaining('trovami'),
+    });
+    expect(
+      (await alice.client.post(`/api/v1/statuses/${resolved.json().id}/like`)).json().liked,
+    ).toBe(true);
+    await eventually(
+      async () => (await bob.client.get(`/api/v1/statuses/${post.id}`)).json().likesCount === 1,
+    );
+  });
 });

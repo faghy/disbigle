@@ -6,3 +6,4 @@ export * from './federation.ts';
 export * from './keys.ts';
 export * from './publisher.ts';
 export * from './resolve.ts';
+export * from './resolve-status.ts';
