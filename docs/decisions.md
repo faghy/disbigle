@@ -44,3 +44,12 @@ Choices made during implementation that the architecture document leaves open. N
 | 2026-10-11 | Remote post ids derive from the publication date | Backfilled or late posts sort where they belong, as on Mastodon. |
 | 2026-10-11 | Changing or resetting the password revokes OAuth app tokens | A compromised password should not leave apps signed in. |
 | 2026-10-11 | Keyword filters remove posts server-side | Works the same in the web client and in apps; no client-side filtering needed. |
+| 2026-10-11 | A remote identity (diaspora guid, ActivityPub id) belongs to the first account that claims it; later claims from another handle or server are refused | Prevents account takeover through a forged hcard or actor document. |
+| 2026-10-11 | A remote object id reused by another author is ignored; Deletes only tombstone the sender's own posts or URIs on its own server | One server can't hijack or pre-delete another server's posts. |
+| 2026-10-11 | Limited (aspect) posts are delivered over ActivityPub one recipient at a time, each addressed to that recipient only | As on diaspora, aspect members don't learn who else is in the aspect. Costs one request per recipient. |
+| 2026-10-11 | Suspended accounts and accounts pending deletion can't sign in; their web sessions, OAuth tokens and open streams stop working | Moderation and deletion take effect at once. Streams re-check credentials every minute. |
+| 2026-10-11 | Cookie-authenticated WebSockets must come from our own origin | Browsers send cookies on cross-site WebSocket handshakes. |
+| 2026-10-11 | Hashtag search and counts only reflect public posts (not unlisted) | A tag used only in private posts shouldn't leak; matches Mastodon's tag pages. |
+| 2026-10-11 | Push endpoints must resolve to public addresses before each send | The endpoint is chosen by the client; this blocks requests to internal services. A DNS change between check and send is still possible. |
+| 2026-10-11 | Accounts that opt out of discovery are found only by their exact username | Same rule for local and remote accounts; diaspora's "searchable" behaves similarly. |
+| 2026-10-11 | Second-factor attempts are limited per sign-in (5) and per user (15 per hour) | A known password must not buy unlimited guesses. |
