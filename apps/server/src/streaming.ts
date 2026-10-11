@@ -4,6 +4,7 @@ import {
   type EventBus,
   getStatus,
   serializeNotifications,
+  streamableTo,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { StreamEvent } from '@disbigle/shared';
@@ -123,14 +124,35 @@ export class StreamingHub {
       return cache.get(viewer) ?? null;
     };
 
+    // Mutes, blocks, keyword filters and the like apply to live updates as to timelines.
+    const allowed = new Map<string, Promise<boolean>>();
+    const allowedFor = (viewer: string | null, context: 'home' | 'public') => {
+      const key = `${viewer ?? ''}:${context}`;
+      let result = allowed.get(key);
+      if (!result) {
+        result = streamableTo(this.ctx, viewer, post.id, context).catch(() => false);
+        allowed.set(key, result);
+      }
+      return result;
+    };
+
     for (const c of this.connections) {
       const targets: string[] = [];
-      if (c.streams.has('user') && c.actorId && homeAudience.has(c.actorId)) targets.push('user');
+      if (
+        c.streams.has('user') &&
+        c.actorId &&
+        homeAudience.has(c.actorId) &&
+        (await allowedFor(c.actorId, 'home'))
+      )
+        targets.push('user');
       if (isPublicTopLevel) {
-        if (c.streams.has('public')) targets.push('public');
-        if (post.local && c.streams.has('public:local')) targets.push('public:local');
+        const publicTargets: string[] = [];
+        if (c.streams.has('public')) publicTargets.push('public');
+        if (post.local && c.streams.has('public:local')) publicTargets.push('public:local');
         for (const tag of tagNames)
-          if (c.streams.has(`hashtag:${tag}`)) targets.push(`hashtag:${tag}`);
+          if (c.streams.has(`hashtag:${tag}`)) publicTargets.push(`hashtag:${tag}`);
+        if (publicTargets.length > 0 && (await allowedFor(c.actorId, 'public')))
+          targets.push(...publicTargets);
       }
       if (targets.length === 0) continue;
       const status = await statusFor(c.actorId);

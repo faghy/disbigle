@@ -39,6 +39,31 @@ function notSilenced(viewerActorId: string | null): SQL {
     and not exists (select 1 from ${blocks} where ${blocks.actorId} = ${viewerActorId} and ${blocks.targetActorId} = ${posts.actorId}))`;
 }
 
+/**
+ * Whether a new post may go to a viewer's live stream: the timelines' rules (visibility, mutes,
+ * blocks, suspended authors, keyword filters, and blocked servers on public streams).
+ */
+export async function streamableTo(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  postId: string,
+  context: 'home' | 'public',
+): Promise<boolean> {
+  const [row] = await ctx.db
+    .select({ id: posts.id })
+    .from(posts)
+    .where(
+      and(
+        eq(posts.id, postId),
+        visibleTo(viewerActorId),
+        notSilenced(viewerActorId),
+        notFilteredFor(viewerActorId, context),
+        context === 'public' ? notFromBlockedDomain : undefined,
+      ),
+    );
+  return Boolean(row);
+}
+
 async function page(
   ctx: CoreContext,
   viewerActorId: string | null,

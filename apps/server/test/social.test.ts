@@ -360,6 +360,24 @@ describe('streaming', () => {
     expect(messages.filter((m) => m.event === 'update')).toHaveLength(1);
   });
 
+  it('keeps muted accounts out of public streams', async () => {
+    const reader = await signedIn();
+    const loud = await signedIn();
+    const quiet = await signedIn();
+    await reader.client.post(`/api/v1/accounts/${loud.account.id}/mute`);
+    const messages: { event: string; payload?: { content: string } }[] = [];
+    const ws = await app().injectWS('/api/v1/streaming?stream=public:local', {
+      headers: { 'x-disbigle-api': 'native', cookie: reader.client.cookieHeader ?? '' },
+    });
+    ws.on('message', (data: Buffer) => messages.push(JSON.parse(data.toString())));
+    await loud.client.post('/api/v1/statuses', { content: 'LOUD' });
+    await quiet.client.post('/api/v1/statuses', { content: 'quiet' });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    ws.terminate();
+    const contents = messages.filter((m) => m.event === 'update').map((m) => m.payload?.content);
+    expect(contents).toEqual(['<p>quiet</p>']);
+  });
+
   it('only tells clients that could see a private post about its deletion', async () => {
     const author = await signedIn();
     const friend = await signedIn();
