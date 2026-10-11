@@ -12,12 +12,13 @@ A federated social network that speaks ActivityPub and stays compatible with the
 - **Sharing**: posts in Markdown with media, content warnings, polls and hashtags; five audiences (public, unlisted, followers, aspects, direct); replies, reshares, likes, bookmarks, edits; private conversations.
 - **Timelines**: home, local, federated, hashtags (followable), aspects, bookmarks; live updates over WebSocket; notifications, including Web Push.
 - **Federation**: ActivityPub (Mastodon, Misskey, Pixelfed, Lemmy…) and the diaspora\* protocol (diaspora, Friendica, Hubzilla); one account record per person even when they speak both.
+- **One conversation across networks**: on public threads, comments, likes and deletions made on diaspora\* reach Mastodon and the rest of the Fediverse, and the other way round, through clearly labelled bridge accounts (`user_at_domain@your.server`). Replies between ActivityPub servers are forwarded to your followers, as Mastodon does.
 - **Migration**: import an existing diaspora\* pod on the same domain, keeping handles, keys and contacts.
 - **Moderation**: approval queue, reports, suspensions, domain blocks, roles, audit log, editable instance settings and rules.
 - **Privacy**: images stripped of metadata, remote media cached locally, visibility enforced in one place.
 - **Apps**: the web client (English and Italian) installs as a PWA with push notifications; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
 
-Status: early development. See [docs/architettura.md](docs/architettura.md) (Italian) for the design and [docs/decisions.md](docs/decisions.md) for implementation decisions.
+Status: early development. A test instance runs at [test.disbigle.com](https://test.disbigle.com) and federates with real diaspora\* pods, Hubzilla and Mastodon. See [docs/architettura.md](docs/architettura.md) (Italian) for the design, [docs/decisions.md](docs/decisions.md) for implementation decisions and [docs/deploy.md](docs/deploy.md) to run your own.
 
 ## Screenshots
 
@@ -62,6 +63,9 @@ Useful commands:
 | `packages/db` | Database schema and migrations |
 | `packages/activitypub` | ActivityPub adapter (Fedify) |
 | `packages/diaspora` | diaspora\* protocol implementation |
+| `packages/diaspora-bridge` | diaspora\* federation: discovery, delivery queue, incoming entities, bridge identities |
+| `packages/diaspora-import` | In-place migration of a diaspora\* pod |
+| `packages/mastodon-api` | Mastodon-compatible client API and OAuth 2 |
 | `packages/shared` | API types and schemas shared with the client |
 | `packages/config` | Typed configuration |
 
