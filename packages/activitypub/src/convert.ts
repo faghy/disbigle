@@ -57,6 +57,7 @@ export async function localActorToPerson(
     outbox: ctx.getOutboxUri(actor.username),
     followers: ctx.getFollowersUri(actor.username),
     following: ctx.getFollowingUri(actor.username),
+    featured: ctx.getFeaturedUri(actor.username),
     endpoints: new Endpoints({ sharedInbox: ctx.getInboxUri() }),
     publicKey: keys[0]?.cryptographicKey ?? null,
     assertionMethods: keys.map((k) => k.multikey),

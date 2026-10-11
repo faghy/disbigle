@@ -689,3 +689,16 @@ export const instanceSettings = pgTable('instance_settings', {
   data: jsonb('data').$type<InstanceSettingsData>().notNull().default({}),
   updatedAt: updatedAt(),
 });
+
+/** Posts pinned to the top of a local profile (ActivityPub `featured`). */
+export const pins = pgTable(
+  'pins',
+  {
+    actorId: actorRef('actor_id'),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
+);

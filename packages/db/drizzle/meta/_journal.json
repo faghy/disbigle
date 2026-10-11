@@ -92,6 +92,13 @@
       "when": 1791677974951,
       "tag": "0012_poll_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791678271980,
+      "tag": "0013_pins",
+      "breakpoints": true
     }
   ]
 }

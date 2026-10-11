@@ -310,6 +310,18 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     })
     .setFirstCursor(() => '');
 
+  federation.setFeaturedDispatcher('/users/{identifier}/featured', async (ctx, identifier) => {
+    const actor = await localActorByIdentifier(ctx.data, identifier);
+    if (!actor) return null;
+    const rows = await ctx.data.db
+      .select({ post: schema.posts })
+      .from(schema.pins)
+      .innerJoin(schema.posts, eq(schema.posts.id, schema.pins.postId))
+      .where(and(eq(schema.pins.actorId, actor.id), eq(schema.posts.visibility, 'public')))
+      .orderBy(desc(schema.pins.createdAt));
+    return { items: await Promise.all(rows.map((r) => postToNote(ctx, r.post, actor))) };
+  });
+
   federation.setObjectDispatcher(Note, '/users/{identifier}/statuses/{id}', async (ctx, values) => {
     const actor = await localActorByIdentifier(ctx.data, values.identifier);
     if (!actor) return null;

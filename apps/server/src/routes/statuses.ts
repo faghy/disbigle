@@ -7,9 +7,11 @@ import {
   getStatus,
   getStatusContext,
   like,
+  pinPost,
   reblog,
   unbookmark,
   unlike,
+  unpinPost,
   unreblog,
 } from '@disbigle/core';
 import { createPostRequestSchema, editPostRequestSchema } from '@disbigle/shared';
@@ -62,7 +64,16 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
     return { status: 'ok' };
   });
 
-  const actions = { like, unlike, reblog, unreblog, bookmark, unbookmark } as const;
+  const actions = {
+    like,
+    unlike,
+    reblog,
+    unreblog,
+    bookmark,
+    unbookmark,
+    pin: pinPost,
+    unpin: unpinPost,
+  } as const;
   for (const [name, action] of Object.entries(actions)) {
     app.post(`/:id/${name}`, async (request) => {
       const session = requireUser(request);

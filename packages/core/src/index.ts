@@ -29,6 +29,7 @@ export * from './social/content.ts';
 export * from './social/conversations.ts';
 export * from './social/notification-list.ts';
 export * from './social/notifications.ts';
+export * from './social/pins.ts';
 export * from './social/polls.ts';
 export * from './social/posts.ts';
 export * from './social/relationships.ts';

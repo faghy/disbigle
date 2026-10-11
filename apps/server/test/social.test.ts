@@ -173,6 +173,30 @@ describe('accounts and notifications', () => {
     expect((await a.client.get('/api/v1/timelines/conversations')).json()).toHaveLength(2);
   });
 
+  it('pins public posts to the profile', async () => {
+    const { client, account } = await signedIn();
+    const post = (await client.post('/api/v1/statuses', { content: 'importante' })).json();
+    const secret = (
+      await client.post('/api/v1/statuses', { content: 'privato', visibility: 'followers' })
+    ).json();
+    expect((await client.post(`/api/v1/statuses/${secret.id}/pin`)).statusCode).toBe(400);
+    expect((await client.post(`/api/v1/statuses/${post.id}/pin`)).statusCode).toBe(200);
+    const pinned = (
+      await new Client(app).get(`/api/v1/accounts/${account.id}/statuses?pinned=true`)
+    ).json();
+    expect(pinned).toEqual([expect.objectContaining({ id: post.id, pinned: true })]);
+    const featured = await app().inject({
+      method: 'GET',
+      url: `/users/${account.username}/featured`,
+      headers: { accept: 'application/activity+json' },
+    });
+    expect(featured.json().orderedItems ?? featured.json().items).toHaveLength(1);
+    await client.post(`/api/v1/statuses/${post.id}/unpin`);
+    expect(
+      (await new Client(app).get(`/api/v1/accounts/${account.id}/statuses?pinned=true`)).json(),
+    ).toEqual([]);
+  });
+
   it('manages personal invitation links', async () => {
     const { client } = await signedIn();
     const created = await client.post('/api/v1/invites', { maxUses: 1 });

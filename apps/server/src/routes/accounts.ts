@@ -12,6 +12,7 @@ import {
   listFollowing,
   listFollowRequests,
   mute,
+  pinnedStatuses,
   rejectFollowRequest,
   serializeAccount,
   setAspectMemberships,
@@ -65,10 +66,15 @@ export async function accountRoutes(
           .enum(['true', 'false'])
           .optional()
           .transform((v) => v === 'true'),
+        pinned: z
+          .enum(['true', 'false'])
+          .optional()
+          .transform((v) => v === 'true'),
       }),
       request.query,
     );
     const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+    if (query.pinned) return pinnedStatuses(ctx, viewer, id);
     // First look at a remote profile: fetch its recent public posts (bounded wait).
     if (federation && actor.domain !== null && !query.maxId && !query.minId) {
       const backfill = backfillRemoteOutbox(federation, ctx, actor).catch((error) => {
