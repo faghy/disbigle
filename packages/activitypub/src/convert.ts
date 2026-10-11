@@ -1,4 +1,4 @@
-import type { CoreContext, RemoteActorData, RemotePostData } from '@disbigle/core';
+import type { BridgedAccount, CoreContext, RemoteActorData, RemotePostData } from '@disbigle/core';
 import { findActorByApUri, findPostByUri, mediaUrl } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Visibility } from '@disbigle/shared';
@@ -74,6 +74,72 @@ export async function localActorToPerson(
     successor: movedToUri ? new URL(movedToUri) : null,
   };
   return actor.bot ? new Service(values) : new Person(values);
+}
+
+/** Where people can see a remote account on its own server. */
+export function remoteProfileUrl(actor: ActorRow): string | null {
+  if (actor.apUrl) return actor.apUrl;
+  if (actor.apUri) return actor.apUri;
+  if (actor.domain && actor.diasporaGuid)
+    return `https://${actor.domain}/people/${actor.diasporaGuid}`;
+  return null;
+}
+
+/**
+ * The ActivityPub face of a bridge identity: the remote account's name and picture, our key, and
+ * a bio that says plainly what it is.
+ */
+export function bridgedPerson(
+  ctx: Context<CoreContext>,
+  { bridge, actor }: BridgedAccount,
+  keys: Awaited<ReturnType<Context<CoreContext>['getActorKeyPairs']>>,
+): Person {
+  const handle = `${actor.username}@${actor.domain}`;
+  const profile = remoteProfileUrl(actor);
+  const network = actor.protocols.includes('activitypub') ? 'the fediverse' : 'diaspora*';
+  const link = profile
+    ? `<a href="${escapeHtml(profile)}">${escapeHtml(handle)}</a>`
+    : escapeHtml(handle);
+  const avatar = actor.avatarUrl ?? actor.avatarRemoteUrl;
+  return new Person({
+    id: ctx.getActorUri(bridge.username),
+    preferredUsername: bridge.username,
+    name: actor.displayName || actor.username,
+    summary: `<p>Bridge account for ${link} on ${network}, run by ${escapeHtml(ctx.data.config.LOCAL_DOMAIN)}. It brings their comments on posts from this server to people on other networks.</p>`,
+    url: profile ? new URL(profile) : null,
+    inbox: ctx.getInboxUri(bridge.username),
+    endpoints: new Endpoints({ sharedInbox: ctx.getInboxUri() }),
+    publicKey: keys[0]?.cryptographicKey ?? null,
+    manuallyApprovesFollowers: true,
+    discoverable: false,
+    indexable: false,
+    icon: avatar ? new Image({ url: new URL(avatar, ctx.data.config.PUBLIC_URL) }) : null,
+  });
+}
+
+/**
+ * A reply written on another network, as a Note from its author's bridge identity. Public, and
+ * addressed to the followers of the thread's (local) author, who relays it.
+ */
+export function bridgedNote(
+  ctx: Context<CoreContext>,
+  post: PostRow,
+  bridge: { username: string },
+  inReplyTo: string | null,
+  extraCc: URL[],
+): Note {
+  return new Note({
+    id: new URL(post.apUri ?? ''),
+    attribution: ctx.getActorUri(bridge.username),
+    content: post.contentHtml,
+    ...(post.summary ? { summary: post.summary } : {}),
+    sensitive: post.sensitive,
+    replyTarget: inReplyTo ? new URL(inReplyTo) : null,
+    to: PUBLIC_COLLECTION,
+    ccs: extraCc,
+    published: instant(post.createdAt),
+    url: new URL(post.apUri ?? ''),
+  });
 }
 
 /** Audience fields for a post, following Mastodon's conventions so other servers display it right. */

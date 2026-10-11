@@ -1,6 +1,8 @@
 import { backfillRemoteOutbox, resolveRemoteStatus } from '@disbigle/activitypub';
 import {
+  bridgedAccountByUsername,
   type CoreContext,
+  isBridgeUsername,
   LocalMediaStorage,
   type Mailer,
   type MediaStorage,
@@ -116,12 +118,20 @@ export async function buildApp(options: AppOptions) {
       contextDataFactory: () => ctx,
       errorHandlers: {
         // A browser opening an ActivityPub id (e.g. /users/alice) gets the web page instead.
-        onNotAcceptable: (request: Request) => {
+        onNotAcceptable: async (request: Request) => {
           const path = new URL(request.url).pathname;
           const match = /^\/users\/([^/]+)(?:\/statuses\/([^/]+))?\/?$/.exec(path);
-          if (!match)
+          if (!match?.[1])
             return new Response('Not Acceptable', { status: 406, headers: { Vary: 'Accept' } });
-          const target = match[2] ? `/@${match[1]}/${match[2]}` : `/@${match[1]}`;
+          let handle = match[1];
+          if (isBridgeUsername(handle)) {
+            // A bridge identity: show the account it stands for.
+            const bridged = await bridgedAccountByUsername(ctx, handle);
+            if (!bridged)
+              return new Response('Not Found', { status: 404, headers: { Vary: 'Accept' } });
+            handle = `${bridged.actor.username}@${bridged.actor.domain}`;
+          }
+          const target = match[2] ? `/@${handle}/${match[2]}` : `/@${handle}`;
           return new Response(null, { status: 302, headers: { Location: target, Vary: 'Accept' } });
         },
       },

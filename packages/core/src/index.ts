@@ -17,6 +17,7 @@ export * from './crypto/passwords.ts';
 export * from './crypto/tokens.ts';
 export * from './errors.ts';
 export * from './events.ts';
+export * from './federation/bridge.ts';
 export * from './federation/remote.ts';
 export * from './mail.ts';
 export * from './media/storage.ts';

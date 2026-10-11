@@ -1,5 +1,10 @@
 // HTTP endpoints of the diaspora* protocol, as a Fastify plugin.
-import { type CoreContext, findActorByHandle, findPostByGuid } from '@disbigle/core';
+import {
+  bridgedAccountByGuid,
+  type CoreContext,
+  findActorByHandle,
+  findPostByGuid,
+} from '@disbigle/core';
 import {
   buildHCard,
   buildHostMeta,
@@ -105,7 +110,29 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
 
     scope.get<{ Params: { guid: string } }>('/hcard/users/:guid', async (request, reply) => {
       const actor = await localActorByGuid(ctx, request.params.guid);
-      if (!actor?.diasporaGuid) return reply.status(404).send();
+      if (!actor?.diasporaGuid) {
+        // A bridge identity: the remote account's name and picture, our key.
+        const bridged = await bridgedAccountByGuid(ctx, request.params.guid);
+        if (!bridged) return reply.status(404).send();
+        const { bridge: b, actor: remote } = bridged;
+        const name = remote.displayName || remote.username;
+        const picture = remote.avatarUrl ?? remote.avatarRemoteUrl;
+        const avatar = picture ? new URL(picture, base).href : defaultAvatarUrl(ctx);
+        return reply.type('text/html; charset=utf-8').send(
+          buildHCard({
+            guid: b.diasporaGuid,
+            nickname: b.username,
+            fullName: name.slice(0, 70).replace(/;/g, ','),
+            firstName: name.slice(0, 32).replace(/;/g, ','),
+            lastName: '',
+            publicKey: b.publicKeyPem,
+            photoLargeUrl: avatar,
+            photoMediumUrl: avatar,
+            photoSmallUrl: avatar,
+            searchable: false,
+          }),
+        );
+      }
       const name = actor.displayName || actor.username;
       const avatar = actor.avatarUrl ? new URL(actor.avatarUrl, base).href : defaultAvatarUrl(ctx);
       return reply.type('text/html; charset=utf-8').send(
@@ -135,7 +162,10 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
       const body = typeof request.body === 'string' ? request.body : '';
       if (!body) return reply.status(422).send();
       const known = await bridge.enqueuePrivate(request.params.guid, body);
-      return reply.status(known ? 202 : 404).send();
+      if (known) return reply.status(202).send();
+      // Bridge identities only speak: what is sent to them is accepted and dropped.
+      const bridged = await bridgedAccountByGuid(ctx, request.params.guid);
+      return reply.status(bridged ? 202 : 404).send();
     });
 
     scope.get<{ Params: { type: string; guid: string } }>(

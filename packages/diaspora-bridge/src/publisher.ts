@@ -1,28 +1,39 @@
 // Turns domain events into outgoing diaspora* deliveries, like ActivityPubPublisher does for
 // ActivityPub. Only people whose preferred protocol is diaspora* are addressed.
-import { acceptFollowRequest, type DomainEvent, type EventBus } from '@disbigle/core';
+import { randomBytes } from 'node:crypto';
+import {
+  acceptFollowRequest,
+  type DomainEvent,
+  type EventBus,
+  ensureBridgeIdentity,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
   type AccountDeletion,
+  type Comment,
   type Contact,
   type PollParticipation,
   type Profile,
   type Retraction,
   serializeEntity,
   signAccountMigration,
+  signRelayable,
 } from '@disbigle/diaspora';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import {
   type ActorRow,
   actorById,
   deliversViaDiaspora,
   diasporaIdOf,
+  isPublicVisibility,
+  type PostRow,
   postById,
   threadRootOf,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
 import {
   commentFor,
+  diasporaText,
   emptyRecipients,
   likeFor,
   recipientsFor,
@@ -138,6 +149,7 @@ export class DiasporaPublisher implements EventBus {
   private async postCreated(postId: string): Promise<void> {
     const ctx = this.ctx;
     const post = await postById(ctx, postId);
+    if (post && !post.local && post.inReplyToId) return this.bridgeReply(post);
     if (!post?.local || !post.diasporaGuid) return;
     const author = await this.localActor(post.actorId);
     const signer = author ? await signerFor(ctx, author) : null;
@@ -172,6 +184,53 @@ export class DiasporaPublisher implements EventBus {
       signer,
       await recipientsFor(ctx, post),
     );
+  }
+
+  /**
+   * A reply from someone diaspora* can't reach (an ActivityPub account) on a public thread
+   * started here. diaspora* needs comments signed by their author, so it goes out from the
+   * author's bridge identity, signed with its key, relayed by the thread's author like any comment.
+   */
+  private async bridgeReply(post: PostRow): Promise<void> {
+    const ctx = this.ctx;
+    if (!isPublicVisibility(post.visibility)) return;
+    const author = await actorById(ctx, post.actorId);
+    if (!author || author.domain === null || author.protocols.includes('diaspora')) return;
+    const root = await threadRootOf(ctx, post);
+    if (root.id === post.id || !root.local || !root.diasporaGuid) return;
+    if (!isPublicVisibility(root.visibility)) return;
+    const rootAuthor = await this.localActor(root.actorId);
+    const rootSigner = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
+    if (!rootSigner) return;
+
+    const bridge = await ensureBridgeIdentity(ctx, author);
+    let guid = post.diasporaGuid;
+    if (!guid) {
+      guid = randomBytes(16).toString('hex');
+      await ctx.db
+        .update(schema.posts)
+        .set({ diasporaGuid: guid })
+        .where(and(eq(schema.posts.id, post.id), isNull(schema.posts.diasporaGuid)));
+    }
+    const comment: Comment = {
+      type: 'Comment',
+      author: `${bridge.username}@${ctx.config.LOCAL_DOMAIN}`.toLowerCase(),
+      guid,
+      parentGuid: root.diasporaGuid,
+      text: await diasporaText(ctx, post),
+      createdAt: post.createdAt,
+    };
+    const xml = serializeEntity(signRelayable(comment, bridge.privateKeyPem));
+    // Kept like a received comment, so `/fetch` and late relaying serve the same signed copy.
+    await this.bridge.relayables.save({
+      guid,
+      entityType: 'Comment',
+      parentGuid: root.diasporaGuid,
+      author: comment.author,
+      xml,
+      postId: post.id,
+    });
+    await sendToRecipients(this.bridge, xml, rootSigner, await recipientsFor(ctx, root));
   }
 
   private async postDeleted(event: Extract<DomainEvent, { type: 'post.deleted' }>) {

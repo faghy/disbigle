@@ -1,4 +1,9 @@
-import type { CoreContext, DomainEvent, EventBus } from '@disbigle/core';
+import {
+  type CoreContext,
+  type DomainEvent,
+  type EventBus,
+  ensureBridgeIdentity,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Context, Federation } from '@fedify/fedify';
 import {
@@ -19,8 +24,9 @@ import {
   Undo,
   Update,
 } from '@fedify/vocab';
-import { eq, inArray } from 'drizzle-orm';
-import { addressing, localActorToPerson, postToNote } from './convert.ts';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { bridgedReplyOf } from './bridge.ts';
+import { addressing, bridgedNote, localActorToPerson, postToNote } from './convert.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
 type PostRow = typeof schema.posts.$inferSelect;
@@ -284,6 +290,7 @@ export class ActivityPubPublisher implements EventBus {
       .select()
       .from(schema.posts)
       .where(eq(schema.posts.id, postId));
+    if (post && !post.local && !edited) return this.bridgeReply(ctx, post);
     if (!post?.local || !post.apUri) return;
     const [author] = await this.core.db
       .select()
@@ -336,6 +343,57 @@ export class ActivityPubPublisher implements EventBus {
           ccs: note.ccIds,
           published: note.published,
         }),
+    );
+  }
+
+  /**
+   * A reply written on diaspora* by someone ActivityPub can't reach, on a public thread started
+   * here: sent from their bridge identity to the followers of the thread's author and to the
+   * ActivityPub people already in the thread, so both networks see the same conversation.
+   */
+  private async bridgeReply(ctx: Context<CoreContext>, post: PostRow): Promise<void> {
+    const reply = await bridgedReplyOf(this.core, post);
+    if (!reply) return;
+    const bridge = await ensureBridgeIdentity(this.core, reply.author);
+    let { apUri } = post;
+    if (!apUri) {
+      apUri = ctx.getObjectUri(Note, { identifier: bridge.username, id: post.id }).href;
+      await this.core.db
+        .update(schema.posts)
+        .set({ apUri })
+        .where(and(eq(schema.posts.id, post.id), isNull(schema.posts.apUri)));
+    }
+    const followers = await this.core.db
+      .select({ actor: schema.actors })
+      .from(schema.follows)
+      .innerJoin(schema.actors, eq(schema.actors.id, schema.follows.actorId))
+      .where(eq(schema.follows.targetActorId, reply.rootAuthor.id));
+    const participants = await this.core.db
+      .selectDistinct({ actor: schema.actors })
+      .from(schema.posts)
+      .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
+      .where(eq(schema.posts.threadRootId, reply.root.id));
+    const targets = new Map<string, ActorRow>();
+    for (const { actor } of [...followers, ...participants])
+      if (speaksActivityPub(actor)) targets.set(actor.id, actor);
+    if (targets.size === 0) return;
+    const parentAuthor = reply.parent ? targets.get(reply.parent.actorId) : undefined;
+    const note = bridgedNote(ctx, { ...post, apUri }, bridge, reply.parent?.apUri ?? null, [
+      ctx.getFollowersUri(reply.rootAuthor.username),
+      ...(parentAuthor?.apUri ? [new URL(parentAuthor.apUri)] : []),
+    ]);
+    await ctx.sendActivity(
+      { identifier: bridge.username },
+      [...targets.values()].map(recipient),
+      new Create({
+        id: new URL(`${apUri}/activity`),
+        actor: ctx.getActorUri(bridge.username),
+        object: note,
+        tos: note.toIds,
+        ccs: note.ccIds,
+        published: note.published,
+      }),
+      { preferSharedInbox: true },
     );
   }
 

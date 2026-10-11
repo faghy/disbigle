@@ -2,6 +2,7 @@ import {
   acceptFollowRequest,
   applyRemoteMove,
   block,
+  bridgedAccountByUsername,
   type CoreContext,
   deleteRemoteActor,
   deleteRemotePost,
@@ -13,6 +14,7 @@ import {
   getInstanceSettings,
   ingestRemoteAnnounce,
   ingestRemotePost,
+  isBridgeUsername,
   like,
   rejectFollowRequest,
   undoRemoteActivity,
@@ -52,14 +54,21 @@ import {
   Update,
 } from '@fedify/vocab';
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm';
+import { bridgedNoteById } from './bridge.ts';
 import {
+  bridgedPerson,
   localActorToPerson,
   noteToPostData,
   postToNote,
   questionPoll,
   remoteActorData,
 } from './convert.ts';
-import { getInstanceKeyPairs, getLocalKeyPairs, INSTANCE_ACTOR } from './keys.ts';
+import {
+  getBridgeKeyPairs,
+  getInstanceKeyPairs,
+  getLocalKeyPairs,
+  INSTANCE_ACTOR,
+} from './keys.ts';
 
 const PAGE_SIZE = 40;
 export const SOFTWARE_VERSION = '0.1.0';
@@ -81,6 +90,27 @@ async function storeActor(ctx: InboxContext<CoreContext>, actor: Actor | null) {
   // Servers suspended by the admins are ignored entirely.
   if ((await domainBlockSeverity(ctx.data, data.domain)) === 'suspend') return null;
   return upsertRemoteActor(ctx.data, data);
+}
+
+/**
+ * A reply to a public thread started here is forwarded, as signed by its author, to the followers
+ * of the thread's author (inbox forwarding, as Mastodon does), so they see the whole conversation.
+ */
+async function forwardToThreadFollowers(ctx: InboxContext<CoreContext>, postId: string) {
+  const [post] = await ctx.data.db.select().from(schema.posts).where(eq(schema.posts.id, postId));
+  if (!post?.threadRootId || post.threadRootId === post.id) return;
+  if (post.visibility !== 'public' && post.visibility !== 'unlisted') return;
+  const [root] = await ctx.data.db
+    .select({ post: schema.posts, author: schema.actors })
+    .from(schema.posts)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.posts.actorId))
+    .where(eq(schema.posts.id, post.threadRootId));
+  if (!root?.post.local || root.author.domain !== null) return;
+  if (root.post.visibility !== 'public' && root.post.visibility !== 'unlisted') return;
+  await ctx.forwardActivity({ identifier: root.author.username }, 'followers', {
+    skipIfUnsigned: true,
+    preferSharedInbox: true,
+  });
 }
 
 /** A local account whose owner asked for deletion (closed, not yet purged). */
@@ -165,6 +195,10 @@ export function createDisbigleFederation(options: FederationOptions): Federation
           url: new URL(`${ctx.data.config.PUBLIC_URL}/about`),
         });
       }
+      if (isBridgeUsername(identifier)) {
+        const bridged = await bridgedAccountByUsername(ctx.data, identifier);
+        return bridged ? bridgedPerson(ctx, bridged, await ctx.getActorKeyPairs(identifier)) : null;
+      }
       const actor = await localActorByIdentifier(ctx.data, identifier);
       if (actor) {
         const [moved] = actor.movedToActorId
@@ -195,10 +229,16 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       // before trusting its key: the instance actor is `<domain>@<domain>`, as on Mastodon.
       if (username.toLowerCase() === ctx.data.config.LOCAL_DOMAIN.toLowerCase())
         return INSTANCE_ACTOR;
+      if (isBridgeUsername(username))
+        return (await bridgedAccountByUsername(ctx.data, username))?.bridge.username ?? null;
       return (await localActorByIdentifier(ctx.data, username))?.username ?? null;
     })
     .setKeyPairsDispatcher(async (ctx, identifier) => {
       if (identifier === INSTANCE_ACTOR) return getInstanceKeyPairs(ctx.data);
+      if (isBridgeUsername(identifier)) {
+        const bridged = await bridgedAccountByUsername(ctx.data, identifier);
+        return bridged ? getBridgeKeyPairs(bridged.bridge) : [];
+      }
       // Deleted accounts keep their keys until purged, so their Delete activity can be signed.
       const actor =
         (await localActorByIdentifier(ctx.data, identifier)) ??
@@ -335,6 +375,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
   });
 
   federation.setObjectDispatcher(Note, '/users/{identifier}/statuses/{id}', async (ctx, values) => {
+    if (isBridgeUsername(values.identifier))
+      return bridgedNoteById(ctx, values.identifier, values.id);
     const actor = await localActorByIdentifier(ctx.data, values.identifier);
     if (!actor) return null;
     const [post] = await ctx.data.db
@@ -390,9 +432,23 @@ export function createDisbigleFederation(options: FederationOptions): Federation
   federation.setWebFingerLinksDispatcher(async (ctx, resource) => {
     const username = resource.protocol === 'acct:' ? resource.pathname.split('@')[0] : null;
     if (!username) return [];
+    const base = ctx.data.config.PUBLIC_URL;
+    if (isBridgeUsername(username)) {
+      const bridged = await bridgedAccountByUsername(ctx.data, username);
+      if (!bridged) return [];
+      const guid = bridged.bridge.diasporaGuid;
+      return [
+        {
+          rel: 'http://microformats.org/profile/hcard',
+          type: 'text/html',
+          href: `${base}/hcard/users/${guid}`,
+        },
+        { rel: 'http://joindiaspora.com/seed_location', type: 'text/html', href: `${base}/` },
+        { rel: 'salmon', href: `${base}/receive/users/${guid}` },
+      ];
+    }
     const actor = await localActorByIdentifier(ctx.data, username);
     if (!actor?.diasporaGuid) return [];
-    const base = ctx.data.config.PUBLIC_URL;
     return [
       {
         rel: 'http://microformats.org/profile/hcard',
@@ -531,7 +587,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       }
       await fetchMissingAncestors(ctx, object.replyTargetId);
       const data = await noteToPostData(ctx, object, author);
-      if (data) await ingestRemotePost(ctx.data, data);
+      const id = data ? await ingestRemotePost(ctx.data, data) : null;
+      if (id) await forwardToThreadFollowers(ctx, id);
     })
     .on(Update, async (ctx, activity) => {
       const object = await activity.getObject(ctx);

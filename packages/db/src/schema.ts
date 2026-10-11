@@ -800,3 +800,30 @@ export const oauthAccessTokens = pgTable(
     index('oauth_access_tokens_application_idx').on(t.applicationId),
   ],
 );
+
+/**
+ * Bridge identities: how a remote account appears on the network it doesn't speak. When someone
+ * on ActivityPub comments on a local post, diaspora* people see the comment from their bridge
+ * identity here (and the other way round), signed with these keys, which are ours.
+ */
+export const bridgeIdentities = pgTable(
+  'bridge_identities',
+  {
+    id: uuid('id').primaryKey(),
+    /** The remote account being bridged. */
+    actorId: uuid('actor_id')
+      .notNull()
+      .references(() => actors.id, { onDelete: 'cascade' }),
+    /** Local username of the bridge identity: `user_at_domain`. */
+    username: text('username').notNull(),
+    diasporaGuid: text('diaspora_guid').notNull(),
+    publicKeyPem: text('public_key_pem').notNull(),
+    privateKeyPem: text('private_key_pem').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('bridge_identities_actor_idx').on(t.actorId),
+    uniqueIndex('bridge_identities_username_idx').on(sql`lower(${t.username})`),
+    uniqueIndex('bridge_identities_guid_idx').on(t.diasporaGuid),
+  ],
+);

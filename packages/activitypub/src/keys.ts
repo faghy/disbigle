@@ -124,3 +124,20 @@ async function loadInstanceKeys(ctx: CoreContext): Promise<{ pairs: CryptoKeyPai
     ],
   };
 }
+
+const bridgeCache = new Map<string, Promise<CryptoKeyPair[]>>();
+
+/** Key pair of a bridge identity (RSA only: enough for HTTP Signatures). */
+export function getBridgeKeyPairs(bridge: {
+  id: string;
+  privateKeyPem: string;
+  publicKeyPem: string;
+}): Promise<CryptoKeyPair[]> {
+  let pairs = bridgeCache.get(bridge.id);
+  if (!pairs) {
+    pairs = importRsaKeyPair(bridge.privateKeyPem, bridge.publicKeyPem).then((pair) => [pair]);
+    bridgeCache.set(bridge.id, pairs);
+    pairs.catch(() => bridgeCache.delete(bridge.id));
+  }
+  return pairs;
+}
