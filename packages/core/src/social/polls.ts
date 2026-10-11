@@ -115,7 +115,10 @@ export async function votePoll(
     .from(pollVotes)
     .where(and(eq(pollVotes.pollId, poll.id), eq(pollVotes.actorId, actorId)))
     .limit(1);
-  if (already) throw new DomainError('conflict', 'You already voted');
+  // ActivityPub servers send one vote per choice of a multiple-choice poll: later ones add to
+  // the first. Everyone else votes once.
+  const remoteAddition = already && poll.multiple && options.apUris !== undefined;
+  if (already && !remoteAddition) throw new DomainError('conflict', 'You already voted');
 
   const [voter] = await ctx.db.select().from(actors).where(eq(actors.id, actorId));
   const rows = unique.map((choice, i) => {
@@ -130,7 +133,12 @@ export async function votePoll(
         options.diasporaGuid ?? (voter?.domain === null ? randomBytes(16).toString('hex') : null),
     };
   });
-  await ctx.db.insert(pollVotes).values(rows).onConflictDoNothing();
+  const inserted = await ctx.db
+    .insert(pollVotes)
+    .values(rows)
+    .onConflictDoNothing()
+    .returning({ id: pollVotes.id });
+  if (remoteAddition && inserted.length === 0) return getStatus(ctx, actorId, post.id);
   if (post.local) await recountPoll(ctx, poll.id);
   else {
     // Remote poll: count our vote locally until the author's server sends updated totals.

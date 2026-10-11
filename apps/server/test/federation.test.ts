@@ -456,6 +456,28 @@ describe('federation between two instances', () => {
       const poll = (await alice.client.get(`/api/v1/statuses/${received.id}`)).json().poll;
       return poll.votersCount === 1 && poll.options[1].votesCount === 1;
     });
+
+    // Multiple choice: one vote object per choice, all of them counted.
+    const multi = (
+      await bob.client.post('/api/v1/statuses', {
+        content: 'Cosa porti?',
+        poll: { options: ['Pane', 'Vino', 'Olio'], expiresIn: 3600, multiple: true },
+      })
+    ).json();
+    const multiReceived = await eventually(async () =>
+      (await alice.client.get('/api/v1/timelines/home'))
+        .json()
+        .find((s: { uri: string }) => s.uri === multi.uri),
+    );
+    await alice.client.post(`/api/v1/polls/${multiReceived.poll.id}/votes`, { choices: [0, 2] });
+    await eventually(async () => {
+      const poll = (await bob.client.get(`/api/v1/statuses/${multi.id}`)).json().poll;
+      return (
+        poll.votersCount === 1 &&
+        poll.options[0].votesCount === 1 &&
+        poll.options[2].votesCount === 1
+      );
+    });
   });
 
   it('imports a remote post by URL', async () => {
