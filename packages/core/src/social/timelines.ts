@@ -4,6 +4,7 @@ import { paginationQuerySchema } from '@disbigle/shared';
 import { and, eq, gt, isNull, lt, type SQL, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
+import { type FilterContext, notFilteredFor } from './filters.ts';
 import { hydrateStatuses } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
 
@@ -43,6 +44,7 @@ async function page(
   viewerActorId: string | null,
   where: SQL | undefined,
   query: PaginationQuery,
+  filterContext?: FilterContext,
 ): Promise<Status[]> {
   const { maxId, minId, limit } = paginationQuerySchema.parse(query);
   const rows = await ctx.db
@@ -53,6 +55,7 @@ async function page(
         where,
         visibleTo(viewerActorId),
         notSilenced(viewerActorId),
+        filterContext ? notFilteredFor(viewerActorId, filterContext) : undefined,
         maxId ? lt(posts.id, maxId) : undefined,
         minId ? gt(posts.id, minId) : undefined,
       ),
@@ -81,6 +84,7 @@ export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: Pag
       ))
     )`,
     query,
+    'home',
   );
 }
 
@@ -100,6 +104,7 @@ export function publicTimeline(
       sql`(${posts.inReplyToActorId} is null or ${posts.inReplyToActorId} = ${posts.actorId})`,
     ),
     query,
+    'public',
   );
 }
 
@@ -119,6 +124,7 @@ export function tagTimeline(
         where ${postTags.postId} = ${posts.id} and ${tags.name} = ${tag.toLowerCase()})`,
     ),
     query,
+    'public',
   );
 }
 
@@ -139,6 +145,7 @@ export async function aspectTimeline(
     ownerActorId,
     sql`exists (select 1 from ${aspectMemberships} where ${aspectMemberships.aspectId} = ${aspectId} and ${aspectMemberships.actorId} = ${posts.actorId})`,
     query,
+    'home',
   );
 }
 

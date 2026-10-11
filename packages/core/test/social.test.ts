@@ -574,3 +574,60 @@ describe('known instances', () => {
     });
   });
 });
+
+describe('keyword filters', () => {
+  it('hides matching posts from timelines, threads and notifications', async () => {
+    const { createKeywordFilter, deleteKeywordFilter, listKeywordFilters } = await import(
+      '../src/index.ts'
+    );
+    const me = await newActor();
+    const friend = await newActor();
+    await follow(ctx(), me.id, friend.id);
+    const spoiler = await createPost(ctx(), friend.id, {
+      content: 'Il finale di Dune è incredibile',
+    });
+    const partial = await createPost(ctx(), friend.id, { content: 'Ho visto le dunette al mare' });
+    const fine = await createPost(ctx(), friend.id, { content: 'Buongiorno a tutti' });
+    const filter = await createKeywordFilter(ctx(), me.id, {
+      phrase: 'dune',
+      contexts: ['home', 'thread'],
+    });
+
+    const home = (await homeTimeline(ctx(), me.id)).map((s) => s.id);
+    expect(home).toContain(fine.id);
+    expect(home).toContain(partial.id); // whole-word filter: "dunette" is not "dune"
+    expect(home).not.toContain(spoiler.id);
+    // Public timeline is not in this filter's contexts.
+    expect((await publicTimeline(ctx(), me.id, { limit: 40 })).map((s) => s.id)).toContain(
+      spoiler.id,
+    );
+
+    const reply = await createPost(ctx(), friend.id, {
+      content: `Dune! @${me.username}`,
+      inReplyToId: fine.id,
+    });
+    expect(
+      (await getStatusContext(ctx(), me.id, fine.id)).descendants.map((s) => s.id),
+    ).not.toContain(reply.id);
+    // Notifications were not filtered: the mention arrives.
+    expect((await listNotifications(ctx(), me.id)).some((n) => n.status?.id === reply.id)).toBe(
+      true,
+    );
+
+    await createKeywordFilter(ctx(), me.id, {
+      phrase: 'dun',
+      wholeWord: false,
+      contexts: ['notifications'],
+    });
+    expect((await listNotifications(ctx(), me.id)).some((n) => n.status?.id === reply.id)).toBe(
+      false,
+    );
+
+    expect((await listKeywordFilters(ctx(), me.id)).map((f) => f.phrase).sort()).toEqual([
+      'dun',
+      'dune',
+    ]);
+    await deleteKeywordFilter(ctx(), me.id, filter.id);
+    expect((await homeTimeline(ctx(), me.id)).map((s) => s.id)).toContain(spoiler.id);
+  });
+});

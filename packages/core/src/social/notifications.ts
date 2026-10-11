@@ -2,6 +2,7 @@ import { schema, uuidv7 } from '@disbigle/db';
 import type { NotificationType } from '@disbigle/shared';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
+import { notFilteredFor } from './filters.ts';
 
 const { notifications, actors, mutes, blocks } = schema;
 
@@ -63,6 +64,10 @@ export async function listNotificationRows(
         eq(notifications.actorId, actorId),
         options.maxId ? lt(notifications.id, options.maxId) : undefined,
         options.minId ? gt(notifications.id, options.minId) : undefined,
+        sql`(${notifications.postId} is null or exists (
+          select 1 from ${schema.posts} where ${schema.posts.id} = ${notifications.postId}
+          and ${notFilteredFor(actorId, 'notifications')}
+        ))`,
       ),
     )
     .orderBy(options.minId ? notifications.id : sql`${notifications.id} desc`)

@@ -702,3 +702,25 @@ export const pins = pgTable(
   },
   (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
 );
+
+export const filterContextEnum = pgEnum('filter_context', [
+  'home',
+  'public',
+  'notifications',
+  'thread',
+]);
+
+/** Muted words or phrases of a user. */
+export const keywordFilters = pgTable(
+  'keyword_filters',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    phrase: text('phrase').notNull(),
+    wholeWord: boolean('whole_word').notNull().default(true),
+    contexts: filterContextEnum('contexts').array().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('keyword_filters_actor_idx').on(t.actorId)],
+);

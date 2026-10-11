@@ -9,10 +9,11 @@ import {
   type StatusContext,
   type Visibility,
 } from '@disbigle/shared';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
+import { notFilteredFor } from './filters.ts';
 import { createNotification } from './notifications.ts';
 import { hydrateStatuses, type PostRow } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
@@ -396,7 +397,14 @@ export async function getStatusContext(
   const thread = await ctx.db
     .select()
     .from(posts)
-    .where(and(eq(posts.threadRootId, rootId), visibleTo(viewerActorId), isNull(posts.reblogOfId)))
+    .where(
+      and(
+        eq(posts.threadRootId, rootId),
+        visibleTo(viewerActorId),
+        isNull(posts.reblogOfId),
+        or(eq(posts.id, post.id), notFilteredFor(viewerActorId, 'thread')),
+      ),
+    )
     .orderBy(posts.id)
     .limit(1000);
   const byId = new Map(thread.map((p) => [p.id, p]));
