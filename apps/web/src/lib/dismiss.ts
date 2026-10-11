@@ -24,7 +24,9 @@ export function useDismiss(
     };
     const onFocusOut = (event: FocusEvent) => {
       const next = event.relatedTarget as Node | null;
-      if (next && !container?.contains(next)) close();
+      // A click on plain text inside the popover moves focus to the nearest focusable
+      // ancestor (<main> has tabIndex -1): that is not leaving it.
+      if (next && container && !container.contains(next) && !next.contains(container)) close();
     };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
