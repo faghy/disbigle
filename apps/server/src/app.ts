@@ -57,6 +57,11 @@ export interface AppOptions {
   disableRateLimit?: boolean;
 }
 
+const isFederationEndpoint = (url: string) =>
+  /^\/(inbox|receive\/|users\/[^/]+\/inbox|\.well-known\/|nodeinfo|users\/|hcard\/|fetch\/)/.test(
+    url,
+  );
+
 export async function buildApp(options: AppOptions) {
   const { ctx, redis, hub, logger = false, trustProxy = false, disableRateLimit = false } = options;
   const storage = options.storage ?? new LocalMediaStorage(ctx.config.MEDIA_DIR);
@@ -81,6 +86,16 @@ export async function buildApp(options: AppOptions) {
     reply.status(404).send({ error: 'not_found', message: 'Route not found' }),
   );
 
+  // Registered before the federation plugin so inboxes are limited too. Servers deliver many
+  // activities from few addresses, so federation endpoints get a higher allowance.
+  if (!disableRateLimit) {
+    await app.register(rateLimit, {
+      global: true,
+      max: (request) => (isFederationEndpoint(request.url) ? 3000 : 300),
+      timeWindow: '5 minutes',
+      ...(redis ? { redis, nameSpace: 'disbigle:ratelimit:' } : {}),
+    });
+  }
   if (options.federation) {
     await app.register(fedifyPlugin, {
       federation: options.federation,
@@ -100,14 +115,6 @@ export async function buildApp(options: AppOptions) {
   }
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cookie);
-  if (!disableRateLimit) {
-    await app.register(rateLimit, {
-      global: true,
-      max: 300,
-      timeWindow: '5 minutes',
-      ...(redis ? { redis, nameSpace: 'disbigle:ratelimit:' } : {}),
-    });
-  }
   await app.register(authPlugin, { ctx });
   await app.register(websocket, { options: { maxPayload: 4096 } });
   await app.register(multipart);
