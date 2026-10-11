@@ -41,6 +41,17 @@ export interface RemoteActorData {
   protocol: Protocol;
 }
 
+/** Keeps only http(s) URLs: remote data must never smuggle `javascript:` or `data:` links. */
+export function safeHttpUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function findActorByApUri(ctx: CoreContext, uri: string): Promise<ActorRow | null> {
   const [actor] = await ctx.db.select().from(actors).where(eq(actors.apUri, uri));
   return actor ?? null;
@@ -91,8 +102,8 @@ export async function upsertRemoteActor(
       data.summaryHtml !== undefined
         ? sanitizeRemoteHtml(data.summaryHtml).slice(0, 20000)
         : undefined,
-    avatarUrl: data.avatarUrl,
-    headerUrl: data.headerUrl,
+    avatarUrl: data.avatarUrl === undefined ? undefined : safeHttpUrl(data.avatarUrl),
+    headerUrl: data.headerUrl === undefined ? undefined : safeHttpUrl(data.headerUrl),
     fields: data.fields?.slice(0, 16).map((f) => ({
       name: f.name.slice(0, 255),
       value: sanitizeRemoteHtml(f.value).slice(0, 2047),
@@ -102,7 +113,7 @@ export async function upsertRemoteActor(
     discoverable: data.discoverable,
     publicKeyPem: data.publicKeyPem,
     apUri: data.apUri,
-    apUrl: data.apUrl,
+    apUrl: data.apUrl === undefined ? undefined : safeHttpUrl(data.apUrl),
     apInbox: data.apInbox,
     apSharedInbox: data.apSharedInbox,
     apOutbox: data.apOutbox,
@@ -261,7 +272,7 @@ export async function ingestRemotePost(
       inReplyToUri: parent ? null : (data.inReplyTo?.uri ?? null),
       threadRootId: parent ? (parent.threadRootId ?? parent.id) : id,
       apUri: data.apUri ?? null,
-      apUrl: data.apUrl ?? data.apUri ?? null,
+      apUrl: safeHttpUrl(data.apUrl ?? data.apUri),
       diasporaGuid: data.diasporaGuid ?? null,
       createdAt:
         data.publishedAt && data.publishedAt.getTime() < Date.now() ? data.publishedAt : new Date(),
@@ -285,7 +296,10 @@ export async function ingestRemotePost(
         .where(inArray(tags.name, tagNames));
       await tx.insert(postTags).values(tagRows.map((t) => ({ postId: id, tagId: t.id })));
     }
-    const attachments = (data.attachments ?? []).slice(0, 8);
+    const attachments = (data.attachments ?? [])
+      .map((a) => ({ ...a, url: safeHttpUrl(a.url) ?? '' }))
+      .filter((a) => a.url)
+      .slice(0, 8);
     if (attachments.length > 0) {
       await tx.insert(mediaAttachments).values(
         attachments.map((a, position) => ({

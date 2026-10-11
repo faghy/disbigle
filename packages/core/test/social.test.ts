@@ -481,3 +481,35 @@ describe('polls', () => {
     expect(voted.poll).toMatchObject({ ownVotes: [0, 2], votersCount: 1, votesCount: 2 });
   });
 });
+
+describe('remote data hygiene', () => {
+  it('drops non-http URLs from remote accounts and posts', async () => {
+    const { upsertRemoteActor, ingestRemotePost } = await import('../src/index.ts');
+    const remote = await upsertRemoteActor(ctx(), {
+      username: 'mallory',
+      domain: 'evil.example',
+      publicKeyPem: 'k',
+      apUri: 'https://evil.example/users/mallory',
+      apUrl: 'javascript:alert(1)',
+      avatarUrl: 'data:text/html,<script>alert(1)</script>',
+      apInbox: 'https://evil.example/inbox',
+      protocol: 'activitypub',
+    });
+    expect(remote.apUrl).toBeNull();
+    expect(remote.avatarUrl).toBeNull();
+    const id = await ingestRemotePost(ctx(), {
+      authorActorId: remote.id,
+      apUri: 'https://evil.example/notes/1',
+      apUrl: 'javascript:alert(2)',
+      contentHtml: '<p>hi</p>',
+      visibility: 'public',
+      attachments: [
+        { url: 'javascript:alert(3)', mimeType: 'image/png' },
+        { url: 'https://evil.example/ok.png', mimeType: 'image/png' },
+      ],
+    });
+    const status = await getStatus(ctx(), null, id ?? '');
+    expect(status.url).toBeNull();
+    expect(status.media.map((m) => m.url)).toEqual(['https://evil.example/ok.png']);
+  });
+});
