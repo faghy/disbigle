@@ -186,3 +186,8 @@ export const ExternalIcon = (p: IconProps) => (
     <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
   </Icon>
 );
+export const PollIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 6h10M4 12h16M4 18h7" />
+  </Icon>
+);

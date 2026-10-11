@@ -111,6 +111,10 @@ export const social = {
   unreadCount: () => api.get<{ count: number }>('/notifications/unread_count'),
   markNotificationsRead: () => api.post<Ok>('/notifications/read'),
 
+  // Polls
+  vote: (pollId: string, choices: number[]) =>
+    api.post<Status>(`/polls/${id(pollId)}/votes`, { choices }),
+
   // Hashtags
   tag: (name: string) => api.get<TagInfo>(`/tags/${id(name)}`),
   followTag: (name: string, follow: boolean) =>

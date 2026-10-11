@@ -705,5 +705,53 @@
         "suspend": "La federazione riprende e i suoi account non sono più sospesi."
       }
     }
+  },
+  "poll": {
+    "vote": "Vota",
+    "results": "Risultati del sondaggio",
+    "legendSingle": "Scegli una risposta",
+    "legendMultiple": "Scegli una o più risposte",
+    "multipleHint": "Puoi scegliere più di una risposta.",
+    "voters_one": "{{count}} persona",
+    "voters_other": "{{count}} persone",
+    "optionVotes_one": "{{count}} voto",
+    "optionVotes_other": "{{count}} voti",
+    "endsIn": "termina {{time}}",
+    "closed": "Chiuso",
+    "open": "Aperto",
+    "refresh": "Aggiorna",
+    "refreshing": "Aggiornamento…",
+    "seeResults": "Vedi i risultati",
+    "backToVoting": "Torna al voto",
+    "yourChoice": "La tua scelta",
+    "errors": {
+      "alreadyVoted": "Hai già votato in questo sondaggio.",
+      "closed": "Questo sondaggio è terminato.",
+      "optionRequired": "Scrivi questa opzione o rimuovila.",
+      "duplicate": "Questa opzione è già nel sondaggio.",
+      "question": "Scrivi la domanda del sondaggio."
+    },
+    "editor": {
+      "legend": "Sondaggio",
+      "add": "Aggiungi un sondaggio",
+      "option": "Opzione {{number}}",
+      "removeOption": "Rimuovi l'opzione {{number}}",
+      "addOption": "Aggiungi opzione",
+      "duration": "Termina tra",
+      "kind": "Tipo di risposta",
+      "single": "Una risposta",
+      "multiple": "Più risposte",
+      "noMediaWithPoll": "Un post con sondaggio non può avere allegati",
+      "noPollWithMedia": "Rimuovi gli allegati per aggiungere un sondaggio"
+    },
+    "durations": {
+      "m5": "5 minuti",
+      "m30": "30 minuti",
+      "h1": "1 ora",
+      "h6": "6 ore",
+      "d1": "1 giorno",
+      "d3": "3 giorni",
+      "d7": "7 giorni"
+    }
   }
 }

@@ -705,5 +705,53 @@
         "suspend": "Federation resumes and its accounts are no longer suspended."
       }
     }
+  },
+  "poll": {
+    "vote": "Vote",
+    "results": "Poll results",
+    "legendSingle": "Choose one answer",
+    "legendMultiple": "Choose one or more answers",
+    "multipleHint": "You can choose more than one answer.",
+    "voters_one": "{{count}} person",
+    "voters_other": "{{count}} people",
+    "optionVotes_one": "{{count}} vote",
+    "optionVotes_other": "{{count}} votes",
+    "endsIn": "ends {{time}}",
+    "closed": "Closed",
+    "open": "Open",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing…",
+    "seeResults": "See results",
+    "backToVoting": "Back to voting",
+    "yourChoice": "Your choice",
+    "errors": {
+      "alreadyVoted": "You have already voted in this poll.",
+      "closed": "This poll has ended.",
+      "optionRequired": "Write this option or remove it.",
+      "duplicate": "This option is already in the poll.",
+      "question": "Write the question of your poll."
+    },
+    "editor": {
+      "legend": "Poll",
+      "add": "Add a poll",
+      "option": "Option {{number}}",
+      "removeOption": "Remove option {{number}}",
+      "addOption": "Add option",
+      "duration": "Ends in",
+      "kind": "Kind of answer",
+      "single": "One answer",
+      "multiple": "Several answers",
+      "noMediaWithPoll": "A post with a poll can't have attachments",
+      "noPollWithMedia": "Remove the attachments to add a poll"
+    },
+    "durations": {
+      "m5": "5 minutes",
+      "m30": "30 minutes",
+      "h1": "1 hour",
+      "h6": "6 hours",
+      "d1": "1 day",
+      "d3": "3 days",
+      "d7": "7 days"
+    }
   }
 }

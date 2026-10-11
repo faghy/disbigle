@@ -23,6 +23,7 @@ import {
   WarningIcon,
 } from './icons.tsx';
 import { Lightbox } from './Lightbox.tsx';
+import { PollView } from './PollView.tsx';
 import { ReportDialog } from './ReportDialog.tsx';
 import { Alert, cx } from './ui.tsx';
 
@@ -554,6 +555,7 @@ export function StatusCard({
                 className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
               />
             )}
+            {status.poll && <PollView status={status} poll={status.poll} />}
             {status.media.length > 0 && (
               <MediaGrid media={status.media} sensitive={status.sensitive && !hasWarning} />
             )}

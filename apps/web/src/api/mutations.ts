@@ -1,4 +1,4 @@
-import type { CreatePostRequest, EditPostRequest, Status } from '@disbigle/shared';
+import type { CreatePostRequest, EditPostRequest, Poll, Status } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   prependToTimeline,
@@ -115,5 +115,48 @@ export function useEditStatus() {
     mutationFn: ({ id, body }: { id: string; body: EditPostRequest }) =>
       social.editStatus(id, body),
     onSuccess: (status) => storeStatus(queryClient, status),
+  });
+}
+
+/** The poll as it looks right after the viewer's vote, before the server answers. */
+export function applyVote(poll: Poll, choices: number[]): Poll {
+  return {
+    ...poll,
+    voted: true,
+    ownVotes: choices,
+    votesCount: poll.votesCount + choices.length,
+    votersCount: poll.votersCount + 1,
+    options: poll.options.map((option, index) =>
+      choices.includes(index) ? { ...option, votesCount: option.votesCount + 1 } : option,
+    ),
+  };
+}
+
+/** Votes in a poll: results show at once and are replaced by the server's counts. */
+export function useVotePoll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ poll, choices }: { status: Status; poll: Poll; choices: number[] }) =>
+      social.vote(poll.id, choices),
+    onMutate: ({ status, poll, choices }) => {
+      updateStatusEverywhere(queryClient, status.id, (s) =>
+        s.poll ? { ...s, poll: applyVote(s.poll, choices) } : s,
+      );
+      return { previous: poll };
+    },
+    onError: (_error, { status }, context) => {
+      if (!context) return;
+      updateStatusEverywhere(queryClient, status.id, (s) => ({ ...s, poll: context.previous }));
+    },
+    onSuccess: (updated) => storeStatus(queryClient, updated),
+  });
+}
+
+/** Fetches the latest counts of a poll (for example after others voted). */
+export function useRefreshStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (status: Status) => social.status(status.id),
+    onSuccess: (updated) => storeStatus(queryClient, updated),
   });
 }

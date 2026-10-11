@@ -17,7 +17,8 @@ import { useAspects } from '../api/socialQueries.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
-import { CloseIcon, ImageIcon, WarningIcon } from './icons.tsx';
+import { CloseIcon, ImageIcon, PollIcon, WarningIcon } from './icons.tsx';
+import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
 import { Alert, Button, cx, Spinner } from './ui.tsx';
 
 const MAX_DESCRIPTION = 1500;
@@ -85,6 +86,7 @@ export function Composer({
   const [warningOpen, setWarningOpen] = useState(false);
   const [summary, setSummary] = useState('');
   const [sensitive, setSensitive] = useState(false);
+  const [poll, setPoll] = useState<PollDraft | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [editingAlt, setEditingAlt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -188,12 +190,15 @@ export function Composer({
     setEditingAlt(null);
     setErrors({});
     setMediaError(null);
+    setPoll(null);
   };
 
   const validate = (): Record<string, string> => {
     const found: Record<string, string> = {};
     const ready = media.filter((item) => item.state === 'ready');
-    if (!content.trim() && ready.length === 0) found.content = t('composer.errors.empty');
+    if (!content.trim() && ready.length === 0)
+      found.content = poll ? t('poll.errors.question') : t('composer.errors.empty');
+    if (poll) Object.assign(found, validatePoll(poll, t));
     if (length > maxLength) found.content = t('composer.errors.tooLong', { max: maxLength });
     if (!lockedAudience && audience.visibility === 'limited' && audience.aspectIds.length === 0)
       found.aspectIds = t('composer.errors.aspectsRequired');
@@ -236,6 +241,15 @@ export function Composer({
       summary: warningOpen ? summary.trim() : '',
       sensitive: ready.length > 0 && sensitive,
       mediaIds: ready.map((item) => item.attachment.id),
+      ...(poll
+        ? {
+            poll: {
+              options: poll.options.map((option) => option.text.trim()),
+              expiresIn: poll.expiresIn,
+              multiple: poll.multiple,
+            },
+          }
+        : {}),
       ...(replyTo ? { inReplyToId: replyTo.id } : {}),
     };
     create.mutate(body, {
@@ -401,6 +415,22 @@ export function Composer({
 
           {(mediaError || allErrors.media) && <Alert>{mediaError ?? allErrors.media}</Alert>}
 
+          {poll && (
+            <PollEditor
+              value={poll}
+              onChange={(next) => {
+                setPoll(next);
+                // Clear option errors as soon as the options change.
+                setErrors((current) =>
+                  Object.fromEntries(
+                    Object.entries(current).filter(([key]) => !key.startsWith('poll')),
+                  ),
+                );
+              }}
+              errors={allErrors}
+            />
+          )}
+
           <AudiencePicker
             value={
               lockedAudience && replyTo
@@ -440,12 +470,28 @@ export function Composer({
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              disabled={media.length >= maxMedia}
+              disabled={media.length >= maxMedia || poll !== null}
               aria-label={t('composer.media.add')}
-              title={t('composer.media.add')}
+              title={poll ? t('poll.editor.noMediaWithPoll') : t('composer.media.add')}
               className="inline-flex size-9 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring disabled:opacity-40"
             >
               <ImageIcon />
+            </button>
+            <button
+              type="button"
+              aria-pressed={poll !== null}
+              disabled={media.length > 0}
+              onClick={() => setPoll((current) => (current ? null : emptyPoll()))}
+              aria-label={t('poll.editor.add')}
+              title={media.length > 0 ? t('poll.editor.noPollWithMedia') : t('poll.editor.add')}
+              className={cx(
+                'inline-flex size-9 items-center justify-center rounded-full focus-ring disabled:opacity-40',
+                poll
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-fg-muted hover:bg-surface-muted hover:text-fg',
+              )}
+            >
+              <PollIcon />
             </button>
             <button
               type="button"
