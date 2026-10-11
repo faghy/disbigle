@@ -10,14 +10,19 @@ import { useFollowedTags, useUnreadCount } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { Avatar } from './Avatar.tsx';
+import { ComposeButton } from './ComposeSheet.tsx';
+import { useFocusTrap } from './Dialog.tsx';
 import {
   AspectsIcon,
   BellIcon,
   BookmarkIcon,
+  CloseIcon,
   GlobeIcon,
   HomeIcon,
+  InfoIcon,
   LocalIcon,
   MailIcon,
+  MenuIcon,
   SearchIcon,
   SettingsIcon,
   ShieldIcon,
@@ -60,20 +65,18 @@ export function RootLayout() {
         {t('nav.skipToContent')}
       </a>
       <TopBar user={user} loading={me.isPending} />
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-0 sm:px-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 px-0 sm:px-6">
         {!me.isPending && <SideNav user={user} />}
         <main
           id="main"
           tabIndex={-1}
-          className={cx(
-            'min-w-0 flex-1 px-4 py-6 sm:px-0 lg:max-w-2xl xl:max-w-3xl',
-            user && 'pb-24 md:pb-6',
-          )}
+          className={cx('min-w-0 flex-1 px-4 py-6 sm:px-0', user && 'pb-24 md:pb-6')}
         >
           <Outlet />
         </main>
       </div>
       <Footer signedIn={Boolean(user)} />
+      {user && <ComposeButton />}
       {user && <BottomNav />}
     </div>
   );
@@ -222,41 +225,167 @@ function SideNav({ user }: { user: CurrentUser | null }) {
   );
 }
 
+/** Pages kept in the mobile "More" sheet (the bottom bar has room for four). */
+const morePaths = ['/public/local', '/public', '/aspects', '/bookmarks', '/settings', '/admin'];
+
+const bottomLinkClass = cx(
+  'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-fg-muted focus-ring',
+  'data-[status=active]:text-accent',
+);
+
 function BottomNav() {
   const { t } = useTranslation();
   const user = useMe().data ?? null;
   const items = useNavItems(user);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreButton = useRef<HTMLButtonElement>(null);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const byPath = (path: NavItem['to']) => items.find((item) => item.to === path);
+  const primary = [byPath('/'), byPath('/notifications'), byPath('/messages')].filter(
+    (item): item is NavItem => Boolean(item),
+  );
+  const more = items.filter((item) => morePaths.includes(item.to));
+  const moreBadge = more.reduce((sum, item) => sum + (item.badge ?? 0), 0);
+  const moreActive = more.some(
+    (item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
+  );
+
   return (
-    <nav
-      aria-label={t('nav.main')}
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
-    >
-      <ul className="flex">
-        {items.map((item) => (
-          <li key={item.to} className="flex-1">
-            <Link
-              to={item.to}
-              activeOptions={{ exact: item.exact ?? false }}
-              aria-label={item.label}
-              title={item.label}
-              className={cx(
-                'relative flex h-14 items-center justify-center text-fg-muted focus-ring',
-                'data-[status=active]:text-accent',
-              )}
-            >
-              <item.icon size={22} />
-              {item.badge !== undefined && (
-                <Badge
-                  count={item.badge}
-                  labelKey={item.badgeKey}
-                  className="absolute top-1.5 left-1/2 ml-1"
-                />
-              )}
+    <>
+      <nav
+        aria-label={t('nav.main')}
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      >
+        <ul className="flex">
+          {primary.map((item) => (
+            <li key={item.to} className="flex-1">
+              <Link
+                to={item.to}
+                activeOptions={{ exact: item.exact ?? false }}
+                className={bottomLinkClass}
+              >
+                <item.icon size={22} />
+                <span>{item.label}</span>
+                {item.badge !== undefined && (
+                  <Badge
+                    count={item.badge}
+                    labelKey={item.badgeKey}
+                    className="absolute top-1 left-1/2 ml-1.5"
+                  />
+                )}
+              </Link>
+            </li>
+          ))}
+          <li className="flex-1">
+            <Link to="/search" className={bottomLinkClass}>
+              <SearchIcon size={22} />
+              <span>{t('search.title')}</span>
             </Link>
           </li>
-        ))}
-      </ul>
-    </nav>
+          <li className="flex-1">
+            <button
+              ref={moreButton}
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen(true)}
+              data-status={moreActive ? 'active' : undefined}
+              className={cx(bottomLinkClass, 'w-full')}
+            >
+              <MenuIcon size={22} />
+              <span>{t('nav.more')}</span>
+              <Badge
+                count={moreBadge}
+                labelKey="nav.moderationPending"
+                className="absolute top-1 left-1/2 ml-1.5"
+              />
+            </button>
+          </li>
+        </ul>
+      </nav>
+      {moreOpen && (
+        <MoreSheet
+          items={more}
+          onClose={() => {
+            setMoreOpen(false);
+            moreButton.current?.focus();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/** Bottom sheet with the pages that do not fit in the mobile bar. */
+function MoreSheet({ items, onClose }: { items: NavItem[]; onClose: () => void }) {
+  const { t } = useTranslation();
+  const ref = useRef<HTMLDivElement>(null);
+  const trap = useFocusTrap(ref);
+  const titleId = useId();
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end bg-black/50 md:hidden"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            onClose();
+          }
+          trap(event);
+        }}
+        className="w-full rounded-t-2xl border-t border-border bg-surface px-3 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl"
+      >
+        <div aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-border-strong" />
+        <div className="flex items-center justify-between px-2 pb-1">
+          <h2 id={titleId} className="font-semibold">
+            {t('nav.more')}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('common.close')}
+            className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted focus-ring"
+          >
+            <CloseIcon size={18} />
+          </button>
+        </div>
+        <ul className="grid grid-cols-3 gap-2">
+          {[...items, { to: '/about' as const, label: t('footer.about'), icon: InfoIcon }].map(
+            (item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  activeOptions={{ exact: 'exact' in item ? (item.exact ?? false) : false }}
+                  onClick={onClose}
+                  className={cx(
+                    'relative flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-center text-xs font-medium text-fg-muted focus-ring',
+                    'hover:bg-surface-muted hover:text-fg data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
+                  )}
+                >
+                  <item.icon size={24} />
+                  <span>{item.label}</span>
+                  {'badge' in item && item.badge !== undefined && (
+                    <Badge
+                      count={item.badge}
+                      labelKey={item.badgeKey}
+                      className="absolute top-1.5 right-2"
+                    />
+                  )}
+                </Link>
+              </li>
+            ),
+          )}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -264,7 +393,7 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
   const { t } = useTranslation();
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-bg/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-5xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           to="/"
           className="flex items-center gap-2 rounded-lg text-lg font-bold tracking-tight focus-ring"
@@ -281,22 +410,27 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
         <TopSearch />
 
         <div className="ml-auto flex items-center gap-2">
-          <Link
-            to="/search"
-            aria-label={t('search.title')}
-            title={t('search.title')}
-            className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring md:hidden"
-          >
-            <SearchIcon />
-          </Link>
+          {!user && (
+            <Link
+              to="/search"
+              aria-label={t('search.title')}
+              title={t('search.title')}
+              className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring md:hidden"
+            >
+              <SearchIcon />
+            </Link>
+          )}
           {user ? (
             <UserMenu user={user} />
           ) : loading ? null : (
             <>
-              <Link to="/login" className={buttonClass('ghost', 'hidden sm:inline-flex')}>
+              <Link to="/login" className={buttonClass('ghost', 'max-sm:hidden')}>
                 {t('nav.signIn')}
               </Link>
-              <Link to="/register" className={buttonClass('primary')}>
+              <Link
+                to="/register"
+                className={buttonClass('primary', 'whitespace-nowrap px-3 sm:px-4')}
+              >
                 {t('nav.register')}
               </Link>
             </>
@@ -421,7 +555,7 @@ function Footer({ signedIn }: { signedIn: boolean }) {
   const id = useId();
   return (
     <footer className={cx('border-t border-border', signedIn && 'hidden md:block')}>
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{t('footer.tagline')}</span>
           <Link to="/about" className="rounded font-medium text-fg hover:underline focus-ring">

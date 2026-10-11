@@ -1,16 +1,13 @@
+import type { FilterContext, KeywordFilter } from '@disbigle/shared';
 import { api } from './client.ts';
 
-export const filterContexts = ['home', 'public', 'notifications', 'thread'] as const;
-export type FilterContext = (typeof filterContexts)[number];
-
-/** Mirrors `KeywordFilter` in `packages/core/src/social/filters.ts`. */
-export interface KeywordFilter {
-  id: string;
-  phrase: string;
-  wholeWord: boolean;
-  contexts: FilterContext[];
-  expiresAt: string | null;
-}
+export const filterContexts: readonly FilterContext[] = [
+  'home',
+  'public',
+  'notifications',
+  'thread',
+];
+export type { FilterContext, KeywordFilter };
 
 export interface KeywordFilterRequest {
   phrase: string;

@@ -1,14 +1,7 @@
+import type { AuthorizedApp } from '@disbigle/shared';
 import { api } from './client.ts';
 
-/** A third-party app (Tusky, Ivory, Elk…) the user let into their account. */
-export interface AuthorizedApp {
-  id: string;
-  name: string;
-  website: string | null;
-  scopes: string[];
-  createdAt: string;
-  lastUsedAt: string | null;
-}
+export type { AuthorizedApp };
 
 export const appKeys = { all: ['authorizedApps'] as const };
 

@@ -56,7 +56,10 @@ function HomeTimeline() {
   return (
     <div className="space-y-4">
       <FeedHeader title={t('timeline.home.title')} icon={HomeIcon} />
-      <Composer />
+      {/* On small screens the floating button opens the composer instead. */}
+      <div className="hidden md:block">
+        <Composer />
+      </div>
       <FeedSection>
         <Timeline
           queryKey={socialKeys.timeline('home')}

@@ -1,16 +1,5 @@
+import type { Invite } from '@disbigle/shared';
 import { api } from './client.ts';
-
-export interface Invite {
-  id: string;
-  code: string;
-  url: string;
-  /** `null` means unlimited. */
-  maxUses: number | null;
-  uses: number;
-  /** `null` means it never expires. */
-  expiresAt: string | null;
-  createdAt: string;
-}
 
 export interface InviteRequest {
   maxUses: number | null;
@@ -30,3 +19,5 @@ export function inviteActive(invite: Invite, now = Date.now()): boolean {
   if (invite.expiresAt && new Date(invite.expiresAt).getTime() <= now) return false;
   return invite.maxUses === null || invite.uses < invite.maxUses;
 }
+
+export type { Invite };

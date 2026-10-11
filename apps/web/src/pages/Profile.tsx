@@ -574,7 +574,7 @@ function ProfileTabs({
             tabIndex={tab === item.id ? 0 : -1}
             onClick={() => setTab(item.id)}
             className={cx(
-              'flex shrink-0 items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium focus-ring',
+              'flex shrink-0 items-center gap-1.5 border-b-2 px-2.5 py-3 text-sm font-medium focus-ring sm:px-4',
               tab === item.id
                 ? 'border-accent text-accent'
                 : 'border-transparent text-fg-muted hover:text-fg',

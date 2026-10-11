@@ -303,7 +303,7 @@ export function Composer({
       )}
     >
       <div className="flex gap-3">
-        {!compact && <Avatar account={user.account} size="md" className="hidden sm:inline-flex" />}
+        {!compact && <Avatar account={user.account} size="md" className="max-sm:hidden" />}
         <div className="min-w-0 flex-1 space-y-3">
           {header}
           {replyTo && lockedAudience && (

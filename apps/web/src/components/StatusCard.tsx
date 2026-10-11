@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useRouter } from '@tanstack/react-router';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { shownStatus, socialKeys, updateStatusEverywhere } from '../api/cache.ts';
+import { findCachedStatus, shownStatus, socialKeys, updateStatusEverywhere } from '../api/cache.ts';
 import { ApiError } from '../api/client.ts';
 import { errorMessage } from '../api/errors.ts';
 import { type ToggleKind, useDeleteStatus, useToggleStatus } from '../api/mutations.ts';
@@ -263,6 +263,7 @@ function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: 
 function ActionButton({
   label,
   count,
+  countLabel,
   active,
   activeClass,
   disabled,
@@ -272,6 +273,8 @@ function ActionButton({
 }: {
   label: string;
   count?: number;
+  /** Spoken with the count, e.g. "3 likes". */
+  countLabel?: string;
   active?: boolean;
   activeClass?: string;
   disabled?: boolean;
@@ -282,7 +285,7 @@ function ActionButton({
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={count && countLabel ? `${label}, ${countLabel}` : label}
       aria-pressed={pressed}
       title={label}
       disabled={disabled}
@@ -294,7 +297,11 @@ function ActionButton({
       )}
     >
       {children}
-      {count !== undefined && count > 0 && <span className="tabular-nums">{count}</span>}
+      {count !== undefined && count > 0 && (
+        <span aria-hidden="true" className="min-w-3 text-left text-xs font-medium tabular-nums">
+          {count}
+        </span>
+      )}
     </button>
   );
 }
@@ -508,6 +515,37 @@ function MoreMenu({
   );
 }
 
+/** "Replying to @user", linking to the post this one answers. */
+function ReplyContext({ status }: { status: Status }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  if (!status.inReplyToId) return null;
+  // The parent's author: the poster themselves, someone they mention, or a post we already
+  // have in the cache (replies do not always mention whom they answer).
+  const parentAuthor =
+    status.inReplyToAccountId === status.account.id
+      ? status.account
+      : (status.mentions.find((mention) => mention.id === status.inReplyToAccountId) ??
+        findCachedStatus(queryClient, status.inReplyToId)?.account);
+  return (
+    <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-fg-muted">
+      <ReplyIcon size={14} className="shrink-0" />
+      <Link
+        to="/@{$username}/$statusId"
+        params={{
+          username: parentAuthor?.acct ?? status.account.acct,
+          statusId: status.inReplyToId,
+        }}
+        className="truncate rounded hover:text-accent hover:underline focus-ring"
+      >
+        {parentAuthor
+          ? t('status.replyingTo', { acct: parentAuthor.acct })
+          : t('status.replyingToPost')}
+      </Link>
+    </p>
+  );
+}
+
 export interface StatusCardProps {
   status: Status;
   /** The post a thread page is about: larger text and the full date. */
@@ -584,9 +622,7 @@ export function StatusCard({
                 title={fullDateTime(status.createdAt, i18n.language)}
               >
                 <time dateTime={status.createdAt}>
-                  {highlighted
-                    ? fullDateTime(status.createdAt, i18n.language)
-                    : relativeTime(status.createdAt, i18n.language)}
+                  {relativeTime(status.createdAt, i18n.language)}
                 </time>
               </Link>
               {status.editedAt && (
@@ -602,6 +638,8 @@ export function StatusCard({
               <VisibilityBadge status={status} isAuthor={isAuthor} />
             </div>
           </header>
+
+          {status.inReplyToId && <ReplyContext status={status} />}
 
           {hasWarning && (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2">
@@ -634,10 +672,24 @@ export function StatusCard({
             )}
           </div>
 
+          {highlighted && (
+            <p className="mt-3 text-sm text-fg-muted">
+              <time dateTime={status.createdAt}>
+                {fullDateTime(status.createdAt, i18n.language)}
+              </time>
+              {status.editedAt && (
+                <>
+                  {' · '}
+                  {t('status.editedAt', { date: fullDateTime(status.editedAt, i18n.language) })}
+                </>
+              )}
+            </p>
+          )}
           <div className="-ml-2 mt-2 flex items-center gap-1 sm:gap-3">
             <ActionButton
               label={t('status.reply')}
               count={status.repliesCount}
+              countLabel={t('status.counts.replies', { count: status.repliesCount })}
               disabled={!signedIn}
               onClick={() => (onReply ? onReply() : setReplying((value) => !value))}
             >
@@ -645,13 +697,10 @@ export function StatusCard({
             </ActionButton>
             <ActionButton
               label={
-                canReshare(status.visibility)
-                  ? status.reblogged
-                    ? t('status.unreshare')
-                    : t('status.reshare')
-                  : t('status.reshareUnavailable')
+                canReshare(status.visibility) ? t('status.reshare') : t('status.reshareUnavailable')
               }
               count={status.reblogsCount}
+              countLabel={t('status.counts.reshares', { count: status.reblogsCount })}
               active={status.reblogged}
               pressed={status.reblogged}
               activeClass="text-success"
@@ -661,8 +710,9 @@ export function StatusCard({
               <ReshareIcon size={18} />
             </ActionButton>
             <ActionButton
-              label={status.liked ? t('status.unlike') : t('status.like')}
+              label={t('status.like')}
               count={status.likesCount}
+              countLabel={t('status.counts.likes', { count: status.likesCount })}
               active={status.liked}
               pressed={status.liked}
               activeClass="text-danger"
@@ -672,7 +722,7 @@ export function StatusCard({
               <HeartIcon size={18} filled={status.liked} />
             </ActionButton>
             <ActionButton
-              label={status.bookmarked ? t('status.unbookmark') : t('status.bookmark')}
+              label={t('status.bookmark')}
               active={status.bookmarked}
               pressed={status.bookmarked}
               activeClass="text-accent"

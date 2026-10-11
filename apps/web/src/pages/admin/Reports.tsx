@@ -1,3 +1,4 @@
+import type { Status } from '@disbigle/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -64,9 +65,14 @@ export function ReportsPage() {
   );
 }
 
-function ReportedPost({ id }: { id: string }) {
+/**
+ * A reported post. Reports carry the posts (also private ones) for moderators; only when one
+ * is missing is it fetched, with the usual visibility rules.
+ */
+function ReportedPost({ id, included }: { id: string; included?: Status | undefined }) {
   const { t } = useTranslation();
-  const status = useQuery({ ...statusQueryOptions(id), retry: false });
+  const status = useQuery({ ...statusQueryOptions(id), retry: false, enabled: !included });
+  if (included) return <PostExcerpt post={included} />;
   if (status.isPending) return <span className="text-sm text-fg-muted">{t('common.loading')}</span>;
   if (status.isError) {
     const gone = status.error instanceof ApiError && status.error.status === 404;
@@ -76,7 +82,11 @@ function ReportedPost({ id }: { id: string }) {
       </span>
     );
   }
-  const post = status.data;
+  return <PostExcerpt post={status.data} />;
+}
+
+function PostExcerpt({ post }: { post: Status }) {
+  const { t } = useTranslation();
   const text = new DOMParser().parseFromString(post.content, 'text/html').body.textContent ?? '';
   return (
     <Link
@@ -172,7 +182,7 @@ function ReportItem({ report }: { report: Report }) {
           <ul className="space-y-2">
             {report.statusIds.map((id) => (
               <li key={id}>
-                <ReportedPost id={id} />
+                <ReportedPost id={id} included={report.statuses?.find((s) => s.id === id)} />
               </li>
             ))}
           </ul>

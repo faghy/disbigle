@@ -31,7 +31,8 @@
     "moderation": "Moderazione",
     "moderationPending_one": "{{count}} elemento in attesa dei moderatori",
     "moderationPending_other": "{{count}} elementi in attesa dei moderatori",
-    "messages": "Messaggi"
+    "messages": "Messaggi",
+    "more": "Altro"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -465,7 +466,17 @@
     "pin": "Fissa sul profilo",
     "unpin": "Togli dal profilo",
     "pinned": "In evidenza",
-    "pinLimit": "Puoi fissare fino a 5 post pubblici o non in elenco. Togline prima uno."
+    "pinLimit": "Puoi fissare fino a 5 post pubblici o non in elenco. Togline prima uno.",
+    "replyingTo": "In risposta a @{{acct}}",
+    "replyingToPost": "In risposta a un post",
+    "counts": {
+      "replies_one": "{{count}} risposta",
+      "replies_other": "{{count}} risposte",
+      "reshares_one": "{{count}} ricondivisione",
+      "reshares_other": "{{count}} ricondivisioni",
+      "likes_one": "{{count}} mi piace",
+      "likes_other": "{{count}} mi piace"
+    }
   },
   "timeline": {
     "loadMore": "Carica altri",

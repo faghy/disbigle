@@ -1,6 +1,8 @@
+import type { PushAlertType, PushSubscriptionInfo } from '@disbigle/shared';
 import { api } from '../api/client.ts';
 
-export const pushAlertTypes = [
+/** Order of the toggles in settings. */
+export const pushAlertTypes: readonly PushAlertType[] = [
   'mention',
   'reply',
   'follow',
@@ -8,9 +10,9 @@ export const pushAlertTypes = [
   'reblog',
   'like',
   'poll',
-] as const;
-export type PushAlertType = (typeof pushAlertTypes)[number];
-export type PushAlerts = Record<PushAlertType, boolean>;
+];
+export type { PushAlertType };
+export type PushAlerts = PushSubscriptionInfo['alerts'];
 
 export const defaultPushAlerts: PushAlerts = {
   mention: true,
@@ -111,11 +113,11 @@ export const pushApi = {
   key: () => api.get<{ publicKey: string }>('/push/key'),
   /** What the server has saved for this device, or `null` if it does not know it. */
   get: (endpoint: string) =>
-    api.get<{ endpoint: string; alerts: Partial<PushAlerts> } | null>(
+    api.get<PushSubscriptionInfo | null>(
       `/push/subscription?endpoint=${encodeURIComponent(endpoint)}`,
     ),
   save: (subscription: PushSubscription, alerts: PushAlerts) =>
-    api.post<{ endpoint: string; alerts: PushAlerts }>('/push/subscription', {
+    api.post<PushSubscriptionInfo>('/push/subscription', {
       subscription: subscriptionBody(subscription),
       alerts,
     }),

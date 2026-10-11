@@ -111,3 +111,24 @@ export function prependToTimeline(qc: QueryClient, key: readonly unknown[], stat
     return { ...data, pages: [[...fresh, ...first], ...rest] };
   });
 }
+
+/** A post already in the cache (post pages, threads, timelines), without fetching it. */
+export function findCachedStatus(qc: QueryClient, statusId: string): Status | undefined {
+  const direct = qc.getQueryData<Status>(socialKeys.status(statusId));
+  if (direct) return direct;
+  const match = (status: Status | null | undefined) =>
+    status?.id === statusId ? status : status?.reblog?.id === statusId ? status.reblog : undefined;
+  for (const [, context] of qc.getQueriesData<StatusContext>({ queryKey: ['context'] })) {
+    for (const status of [...(context?.ancestors ?? []), ...(context?.descendants ?? [])]) {
+      const found = match(status);
+      if (found) return found;
+    }
+  }
+  for (const [, data] of qc.getQueriesData<TimelinePages>({ queryKey: socialKeys.timelines })) {
+    for (const status of data?.pages.flat() ?? []) {
+      const found = match(status);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}

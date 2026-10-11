@@ -34,14 +34,14 @@ describe('status card', () => {
     });
     const user = userEvent.setup();
 
-    await user.click(within(article).getByRole('button', { name: 'Like' }));
-    const pressed = within(article).getByRole('button', { name: 'Remove like' });
+    await user.click(within(article).getByRole('button', { name: 'Like, 2 likes' }));
+    const pressed = within(article).getByRole('button', { name: 'Like, 3 likes' });
     expect(pressed).toHaveAttribute('aria-pressed', 'true');
     expect(pressed).toHaveTextContent('3');
 
     response.release({ body: { ...status, liked: true, likesCount: 7 } });
     await waitFor(() =>
-      expect(within(article).getByRole('button', { name: 'Remove like' })).toHaveTextContent('7'),
+      expect(within(article).getByRole('button', { name: 'Like, 7 likes' })).toHaveTextContent('7'),
     );
   });
 
@@ -54,9 +54,9 @@ describe('status card', () => {
       },
     });
     const user = userEvent.setup();
-    await user.click(within(article).getByRole('button', { name: 'Like' }));
+    await user.click(within(article).getByRole('button', { name: 'Like, 2 likes' }));
     expect(await within(article).findByRole('alert')).toHaveTextContent('Something went wrong');
-    const like = within(article).getByRole('button', { name: 'Like' });
+    const like = within(article).getByRole('button', { name: 'Like, 2 likes' });
     expect(like).toHaveAttribute('aria-pressed', 'false');
     expect(like).toHaveTextContent('2');
   });
@@ -135,5 +135,62 @@ describe('editing a post', () => {
     expect(await within(article).findByText('again', { exact: false })).toBeInTheDocument();
     expect(within(article).getByText('edited')).toBeInTheDocument();
     expect(saved).toEqual({ content: '**Hello** again', summary: '', sensitive: false });
+  });
+});
+
+describe('card details', () => {
+  it('shows who a reply answers, linking to the parent thread', async () => {
+    const parentId = '01a12800-0000-7000-8000-0000000000e1';
+    const reply = makeStatus({
+      content: '<p>Thanks!</p>',
+      inReplyToId: parentId,
+      inReplyToAccountId: aliceUser.account.id,
+      mentions: [{ id: aliceUser.account.id, username: 'alice', acct: 'alice', url: null }],
+    });
+    const article = await renderHomeWith(reply, {});
+    const link = within(article).getByRole('link', { name: 'Replying to @alice' });
+    expect(link).toHaveAttribute('href', `/@alice/${parentId}`);
+  });
+
+  it('falls back to a generic reply line when the parent author is unknown', async () => {
+    const reply = makeStatus({
+      inReplyToId: '01a12800-0000-7000-8000-0000000000e2',
+      inReplyToAccountId: '01a12800-0000-7000-8000-0000000000e3',
+    });
+    const article = await renderHomeWith(reply, {});
+    expect(within(article).getByRole('link', { name: 'Replying to a post' })).toBeInTheDocument();
+  });
+
+  it('shows counts next to the actions and says them to screen readers', async () => {
+    const status = makeStatus({ repliesCount: 4, reblogsCount: 1, likesCount: 0 });
+    const article = await renderHomeWith(status, {});
+    expect(within(article).getByRole('button', { name: 'Reply, 4 replies' })).toHaveTextContent(
+      '4',
+    );
+    expect(within(article).getByRole('button', { name: 'Reshare, 1 reshare' })).toHaveTextContent(
+      '1',
+    );
+    // Zero counts are hidden.
+    const like = within(article).getByRole('button', { name: 'Like' });
+    expect(like).toHaveTextContent('');
+  });
+
+  it('names the parent author when the parent post is already loaded', async () => {
+    const parent = makeStatus({ account: aliceUser.account, content: '<p>Welcome!</p>' });
+    const reply = makeStatus({
+      content: '<p>Thanks</p>',
+      inReplyToId: parent.id,
+      inReplyToAccountId: aliceUser.account.id,
+    });
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/home': { body: [reply, parent] },
+    });
+    renderApp('/');
+    const [first] = await screen.findAllByRole('article');
+    expect(
+      within(first as HTMLElement).getByRole('link', { name: 'Replying to @alice' }),
+    ).toBeInTheDocument();
   });
 });

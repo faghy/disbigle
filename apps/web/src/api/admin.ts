@@ -1,7 +1,14 @@
-import type { Account, CurrentUser } from '@disbigle/shared';
+import type {
+  AdminAccount,
+  CurrentUser,
+  DomainBlock,
+  InstanceSettings,
+  KnownInstance,
+  PendingUser,
+  Report,
+} from '@disbigle/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { api, queryString } from './client.ts';
-import type { ReportCategory } from './social.ts';
 
 /** Response shapes of `/api/v1/admin/*` (see `packages/core/src/moderation.ts`). */
 export type Role = CurrentUser['role'];
@@ -11,54 +18,15 @@ export interface ModerationSummary {
   openReports: number;
 }
 
-export interface PendingUser {
-  userId: string;
-  email: string;
-  reason: string;
-  createdAt: string;
-  account: Account;
-}
-
-export interface AdminAccount {
-  account: Account;
-  domain: string | null;
-  suspended: boolean;
-  user: {
-    id: string;
-    email: string;
-    role: Role;
-    approved: boolean;
-    lastSignInAt: string | null;
-  } | null;
-}
-
 export interface AdminAccountFilter {
   q?: string | undefined;
   origin?: 'local' | 'remote' | undefined;
   status?: 'active' | 'suspended' | undefined;
 }
 
-export interface Report {
-  id: string;
-  category: ReportCategory;
-  comment: string;
-  statusIds: string[];
-  createdAt: string;
-  resolvedAt: string | null;
-  reporter: Account | null;
-  target: Account | null;
-}
-
-export type DomainBlockSeverity = 'silence' | 'suspend';
-
-export interface DomainBlock {
-  id: string;
-  domain: string;
-  severity: DomainBlockSeverity;
-  publicComment: string;
-  privateComment: string;
-  createdAt: string;
-}
+// Shapes come from the shared package; they are re-exported for the admin pages.
+export type { AdminAccount, DomainBlock, InstanceSettings, KnownInstance, PendingUser, Report };
+export type DomainBlockSeverity = DomainBlock['severity'];
 
 export interface DomainBlockRequest {
   domain: string;
@@ -67,24 +35,7 @@ export interface DomainBlockRequest {
   privateComment: string;
 }
 
-export type RegistrationMode = 'open' | 'approval' | 'invite' | 'closed';
-
-export interface InstanceSettings {
-  title: string;
-  description: string;
-  registrationMode: RegistrationMode;
-  rules: string[];
-  contactEmail: string;
-}
-
-export interface KnownInstance {
-  domain: string;
-  accounts: number;
-  protocols: ('activitypub' | 'diaspora')[];
-  followersOfLocalAccounts: number;
-  lastSeenAt: string | null;
-  block: DomainBlockSeverity | null;
-}
+export type RegistrationMode = InstanceSettings['registrationMode'];
 
 type Ok = { status: 'ok' };
 const id = (value: string) => encodeURIComponent(value);

@@ -1,6 +1,7 @@
 import type {
   Account,
   Aspect,
+  Conversation,
   CreatePostRequest,
   EditPostRequest,
   MediaAttachment,
@@ -28,13 +29,7 @@ export interface OffsetPage {
   offset?: number;
 }
 
-export interface Conversation {
-  /** Id of the thread's first post. */
-  id: string;
-  /** The other people in the conversation. */
-  accounts: Account[];
-  lastStatus: Status;
-}
+export type { Conversation };
 
 export interface TagInfo {
   name: string;

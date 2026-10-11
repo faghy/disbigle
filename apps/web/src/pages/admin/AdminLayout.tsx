@@ -8,8 +8,8 @@ import { ShieldIcon } from '../../components/icons.tsx';
 import { cx } from '../../components/ui.tsx';
 
 const tabClass = cx(
-  'inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition-colors focus-ring',
-  'hover:bg-surface-muted hover:text-fg',
+  'inline-flex shrink-0 items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-fg-muted transition-colors focus-ring',
+  'hover:bg-surface-muted hover:text-fg data-[status=active]:border-transparent',
   'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
 );
 
@@ -35,7 +35,7 @@ export function AdminLayout() {
         description={user?.role === 'admin' ? t('admin.roleAdmin') : t('admin.roleModerator')}
         icon={ShieldIcon}
       />
-      <nav aria-label={t('admin.sections')} className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+      <nav aria-label={t('admin.sections')} className="flex flex-wrap gap-2">
         <Link to="/admin/pending" className={tabClass}>
           {t('admin.tabs.pending')}
           <Count value={summary.data?.pendingUsers} />

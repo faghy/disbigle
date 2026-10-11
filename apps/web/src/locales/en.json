@@ -31,7 +31,8 @@
     "moderation": "Moderation",
     "moderationPending_one": "{{count}} item waiting for moderators",
     "moderationPending_other": "{{count}} items waiting for moderators",
-    "messages": "Messages"
+    "messages": "Messages",
+    "more": "More"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -465,7 +466,17 @@
     "pin": "Pin to profile",
     "unpin": "Unpin from profile",
     "pinned": "Pinned",
-    "pinLimit": "You can pin up to 5 public or unlisted posts. Unpin one first."
+    "pinLimit": "You can pin up to 5 public or unlisted posts. Unpin one first.",
+    "replyingTo": "Replying to @{{acct}}",
+    "replyingToPost": "Replying to a post",
+    "counts": {
+      "replies_one": "{{count}} reply",
+      "replies_other": "{{count}} replies",
+      "reshares_one": "{{count}} reshare",
+      "reshares_other": "{{count}} reshares",
+      "likes_one": "{{count}} like",
+      "likes_other": "{{count}} likes"
+    }
   },
   "timeline": {
     "loadMore": "Load more",

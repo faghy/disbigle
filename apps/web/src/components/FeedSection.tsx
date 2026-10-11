@@ -14,17 +14,19 @@ export function FeedHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-4 flex flex-wrap items-center gap-3">
-      {Icon && (
-        <span className="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <Icon size={22} />
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="text-sm text-fg-muted">{description}</p>}
+    <header className="mb-4 space-y-1">
+      <div className="flex items-center gap-3">
+        {Icon && (
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <Icon size={22} />
+          </span>
+        )}
+        <h1 className="min-w-0 flex-1 truncate text-2xl font-semibold tracking-tight">{title}</h1>
+        {actions && <div className="shrink-0">{actions}</div>}
       </div>
-      {actions}
+      {description && (
+        <p className={cx('text-sm text-fg-muted', Icon && 'sm:pl-[3.25rem]')}>{description}</p>
+      )}
     </header>
   );
 }
