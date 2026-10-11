@@ -631,3 +631,111 @@ describe('keyword filters', () => {
     expect((await homeTimeline(ctx(), me.id)).map((s) => s.id)).toContain(spoiler.id);
   });
 });
+
+describe('remote identity safety', () => {
+  it('refuses to attach a known guid or id to a different account', async () => {
+    const { upsertRemoteActor } = await import('../src/index.ts');
+    const bob = await upsertRemoteActor(ctx(), {
+      username: 'bob',
+      domain: 'good.pod',
+      publicKeyPem: 'bob-key',
+      diasporaGuid: 'b0b0b0b0b0b0b0b0',
+      diasporaReceiveUrl: 'https://good.pod/receive/users/b0b0b0b0b0b0b0b0',
+      protocol: 'diaspora',
+    });
+    await expect(
+      upsertRemoteActor(ctx(), {
+        username: 'mallory',
+        domain: 'evil.example',
+        publicKeyPem: 'evil-key',
+        diasporaGuid: 'b0b0b0b0b0b0b0b0',
+        diasporaReceiveUrl: 'https://evil.example/receive/users/x',
+        protocol: 'diaspora',
+      }),
+    ).rejects.toMatchObject({ code: 'conflict' });
+    await expect(
+      upsertRemoteActor(ctx(), {
+        username: 'bob',
+        domain: 'good.pod',
+        publicKeyPem: 'evil-key',
+        diasporaGuid: 'ffffffffffffffff',
+        protocol: 'diaspora',
+      }),
+    ).rejects.toMatchObject({ code: 'conflict' });
+    const [stored] = await ctx()
+      .db.select()
+      .from(schema.actors)
+      .where(eq(schema.actors.id, bob.id));
+    expect(stored?.publicKeyPem).toBe('bob-key');
+
+    const ap = await upsertRemoteActor(ctx(), {
+      username: 'eve',
+      domain: 'ap.example',
+      publicKeyPem: 'k',
+      apUri: 'https://ap.example/users/eve',
+      apInbox: 'https://ap.example/inbox',
+      protocol: 'activitypub',
+    });
+    await expect(
+      upsertRemoteActor(ctx(), {
+        username: 'eve',
+        domain: 'other.example',
+        publicKeyPem: 'k2',
+        apUri: 'https://ap.example/users/eve',
+        apInbox: 'https://other.example/inbox',
+        protocol: 'activitypub',
+      }),
+    ).rejects.toMatchObject({ code: 'conflict' });
+    // A rename on the same server keeps the same record.
+    const renamed = await upsertRemoteActor(ctx(), {
+      username: 'eve2',
+      domain: 'ap.example',
+      publicKeyPem: 'k',
+      apUri: 'https://ap.example/users/eve',
+      apInbox: 'https://ap.example/inbox',
+      protocol: 'activitypub',
+    });
+    expect(renamed.id).toBe(ap.id);
+  });
+
+  it("ignores Deletes and reused ids that target someone else's posts", async () => {
+    const { upsertRemoteActor, ingestRemotePost, deleteRemotePost } = await import(
+      '../src/index.ts'
+    );
+    const remote = (username: string, domain: string) =>
+      upsertRemoteActor(ctx(), {
+        username,
+        domain,
+        publicKeyPem: 'k',
+        apUri: `https://${domain}/users/${username}`,
+        apInbox: `https://${domain}/inbox`,
+        protocol: 'activitypub',
+      });
+    const mallory = await remote('mallory', 'evil.example');
+    const vic = await remote('vic', 'good.example');
+
+    // A Delete for a URI on another server, sent before the post arrives, blocks nothing.
+    const uri = 'https://good.example/users/vic/statuses/1';
+    expect(await deleteRemotePost(ctx(), mallory.id, { apUri: uri })).toBe(false);
+    const id = await ingestRemotePost(ctx(), {
+      authorActorId: vic.id,
+      apUri: uri,
+      contentHtml: '<p>hi</p>',
+      visibility: 'public',
+    });
+    expect(id).not.toBeNull();
+
+    // The same id sent again by someone else does not return (or touch) the victim's post.
+    expect(
+      await ingestRemotePost(ctx(), {
+        authorActorId: mallory.id,
+        apUri: uri,
+        contentHtml: '<p>mine</p>',
+        visibility: 'public',
+      }),
+    ).toBeNull();
+
+    // The author's own Delete still works.
+    expect(await deleteRemotePost(ctx(), vic.id, { apUri: uri })).toBe(true);
+  });
+});

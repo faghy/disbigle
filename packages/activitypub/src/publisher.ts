@@ -12,6 +12,7 @@ import {
   Move,
   Note,
   PUBLIC_COLLECTION,
+  type Question,
   type Recipient,
   Reject,
   Tombstone,
@@ -22,6 +23,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { addressing, localActorToPerson, postToNote } from './convert.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
+type PostRow = typeof schema.posts.$inferSelect;
 
 const speaksActivityPub = (actor: ActorRow | undefined): actor is ActorRow =>
   !!actor &&
@@ -318,35 +320,62 @@ export class ActivityPubPublisher implements EventBus {
       return;
     }
 
-    const note = await postToNote(ctx, post, author);
-    const { explicitRecipients } = await addressing(ctx, post, author);
     const Activity = edited ? Update : Create;
-    const create = new Activity({
-      id: edited
-        ? new URL(`${post.apUri}#updates/${Date.now()}`)
-        : new URL(`${post.apUri}/activity`),
-      actor: ctx.getActorUri(author.username),
-      object: note,
-      tos: note.toIds,
-      ccs: note.ccIds,
-      published: note.published,
-    });
+    await this.deliver(
+      ctx,
+      post,
+      author,
+      (note) =>
+        new Activity({
+          id: edited
+            ? new URL(`${post.apUri}#updates/${Date.now()}`)
+            : new URL(`${post.apUri}/activity`),
+          actor: ctx.getActorUri(author.username),
+          object: note,
+          tos: note.toIds,
+          ccs: note.ccIds,
+          published: note.published,
+        }),
+    );
+  }
+
+  /**
+   * Sends an activity about a local post to its audience: followers for public, unlisted and
+   * followers-only posts; the explicit recipients (and, for public replies, the parent's author)
+   * besides. Limited posts go to each recipient on its own, addressed to that recipient only.
+   */
+  private async deliver(
+    ctx: Context<CoreContext>,
+    post: PostRow,
+    author: ActorRow,
+    build: (note: Note | Question) => Create | Update,
+  ): Promise<void> {
+    const sender = { identifier: author.username };
+    const { explicitRecipients } = await addressing(ctx, post, author);
+    const direct = explicitRecipients.filter(speaksActivityPub);
+    if (post.visibility === 'limited') {
+      for (const target of direct) {
+        const activity = build(await postToNote(ctx, post, author, target));
+        await ctx.sendActivity(sender, recipient(target), activity);
+      }
+      return;
+    }
+    const activity = build(await postToNote(ctx, post, author));
     if (
       post.visibility === 'public' ||
       post.visibility === 'unlisted' ||
       post.visibility === 'followers'
     ) {
-      await ctx.sendActivity(sender, 'followers', create, { preferSharedInbox: true });
+      await ctx.sendActivity(sender, 'followers', activity, { preferSharedInbox: true });
     }
-    const direct = explicitRecipients.filter(speaksActivityPub);
     if (post.inReplyToActorId && (post.visibility === 'public' || post.visibility === 'unlisted')) {
       const [parentAuthor] = (await this.actors([post.inReplyToActorId])).values();
       if (speaksActivityPub(parentAuthor) && !direct.some((a) => a.id === parentAuthor.id))
         direct.push(parentAuthor);
     }
     if (direct.length > 0) {
-      await ctx.sendActivity(sender, direct.map(recipient), create, {
-        preferSharedInbox: post.visibility !== 'limited' && post.visibility !== 'direct',
+      await ctx.sendActivity(sender, direct.map(recipient), activity, {
+        preferSharedInbox: post.visibility !== 'direct',
       });
     }
   }
@@ -402,18 +431,19 @@ export class ActivityPubPublisher implements EventBus {
     }
 
     if (post.local && author.domain === null) {
-      const question = await postToNote(ctx, post, author);
-      await ctx.sendActivity(
-        { identifier: author.username },
-        'followers',
-        new Update({
-          id: new URL(`${post.apUri}#updates/${Date.now()}`),
-          actor: ctx.getActorUri(author.username),
-          object: question,
-          tos: question.toIds,
-          ccs: question.ccIds,
-        }),
-        { preferSharedInbox: true },
+      // The new totals reach the poll's audience, never more.
+      await this.deliver(
+        ctx,
+        post,
+        author,
+        (question) =>
+          new Update({
+            id: new URL(`${post.apUri}#updates/${Date.now()}`),
+            actor: ctx.getActorUri(author.username),
+            object: question,
+            tos: question.toIds,
+            ccs: question.ccIds,
+          }),
       );
     }
   }

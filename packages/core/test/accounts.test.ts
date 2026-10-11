@@ -140,6 +140,37 @@ describe('sign-in and sessions', () => {
     expect(await resolveSession(ctx(), token)).toBeNull();
   });
 
+  it('refuses suspended accounts and accounts being deleted, and drops their sessions', async () => {
+    const suspended = uniqueUser();
+    const { actorId } = await registerUser(ctx(), suspended);
+    const { token } = await login(ctx(), {
+      login: suspended.username,
+      password: suspended.password,
+    });
+    await ctx()
+      .db.update(schema.actors)
+      .set({ suspendedAt: new Date() })
+      .where(eq(schema.actors.id, actorId));
+    expect(await resolveSession(ctx(), token)).toBeNull();
+    await expectCode(
+      login(ctx(), { login: suspended.username, password: suspended.password }),
+      'account_disabled',
+    );
+
+    const leaving = uniqueUser();
+    const { userId } = await registerUser(ctx(), leaving);
+    const second = await login(ctx(), { login: leaving.username, password: leaving.password });
+    await ctx()
+      .db.update(schema.users)
+      .set({ deletionRequestedAt: new Date() })
+      .where(eq(schema.users.id, userId));
+    expect(await resolveSession(ctx(), second.token)).toBeNull();
+    await expectCode(
+      login(ctx(), { login: leaving.username, password: leaving.password }),
+      'account_disabled',
+    );
+  });
+
   it('changing the password signs out the other sessions', async () => {
     const input = uniqueUser();
     const { userId } = await registerUser(ctx(), input);

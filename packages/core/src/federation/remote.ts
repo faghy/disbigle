@@ -94,7 +94,33 @@ export async function upsertRemoteActor(
         ),
       ),
     );
-  const existing = matches.find((a) => a.domain !== null) ?? null;
+  // Identity rules: the account is username@domain. An ActivityPub id may move to a new username on
+  // the same server (rename), but a guid or id already owned by a different account is a conflict:
+  // accepting it would let one server take over another person's record and keys.
+  const sameHandle = (a: ActorRow) =>
+    a.domain !== null &&
+    a.domain.toLowerCase() === domain &&
+    a.username.toLowerCase() === data.username.toLowerCase();
+  const byHandle = matches.find(sameHandle);
+  const byApUri = data.apUri ? matches.find((a) => a.apUri === data.apUri) : undefined;
+  const byGuid = data.diasporaGuid
+    ? matches.find((a) => a.diasporaGuid === data.diasporaGuid)
+    : undefined;
+  const conflict = () => new DomainError('conflict', 'This identity belongs to another account');
+  if (byGuid && !sameHandle(byGuid)) throw conflict();
+  if (
+    byApUri &&
+    (byApUri.domain?.toLowerCase() !== domain || (byHandle && byHandle.id !== byApUri.id))
+  ) {
+    throw conflict();
+  }
+  const existing = byHandle ?? byApUri ?? null;
+  if (existing?.diasporaGuid && data.diasporaGuid && existing.diasporaGuid !== data.diasporaGuid)
+    throw conflict();
+  if (existing?.apUri && data.apUri && existing.apUri !== data.apUri && byHandle) {
+    // Same handle, different ActivityPub id: only accept it on the same origin.
+    if (new URL(existing.apUri).host !== new URL(data.apUri).host) throw conflict();
+  }
 
   const values = {
     displayName: data.displayName?.slice(0, 200),
@@ -218,12 +244,17 @@ export async function findPostByGuid(ctx: CoreContext, guid: string) {
   return post ?? null;
 }
 
-async function isTombstoned(ctx: CoreContext, uri: string | undefined): Promise<boolean> {
+async function isTombstoned(
+  ctx: CoreContext,
+  uri: string | undefined,
+  authorActorId: string,
+): Promise<boolean> {
   if (!uri) return false;
+  // Only the author's own Delete counts: a tombstone left by someone else blocks nothing.
   const [row] = await ctx.db
     .select({ id: tombstones.id })
     .from(tombstones)
-    .where(eq(tombstones.uri, uri));
+    .where(and(eq(tombstones.uri, uri), eq(tombstones.actorId, authorActorId)));
   return Boolean(row);
 }
 
@@ -246,11 +277,12 @@ export async function ingestRemotePost(
 ): Promise<string | null> {
   if (!data.apUri && !data.diasporaGuid)
     throw new DomainError('bad_request', 'Remote post has no id');
-  if (await isTombstoned(ctx, data.apUri)) return null;
+  if (await isTombstoned(ctx, data.apUri, data.authorActorId)) return null;
   const known = data.apUri
     ? await findPostByUri(ctx, data.apUri)
     : await findPostByGuid(ctx, data.diasporaGuid ?? '');
-  if (known) return known.id;
+  // Same id from someone else: never hand out (or widen the audience of) another author's post.
+  if (known) return known.actorId === data.authorActorId ? known.id : null;
 
   const parent = data.inReplyTo?.postId
     ? ((await ctx.db.select().from(posts).where(eq(posts.id, data.inReplyTo.postId)))[0] ?? null)
@@ -401,7 +433,18 @@ export async function deleteRemotePost(
   const post = ref.apUri
     ? await findPostByUri(ctx, ref.apUri)
     : await findPostByGuid(ctx, ref.diasporaGuid ?? '');
-  if (ref.apUri) {
+  // A tombstone for an object we don't have yet is kept only when the URI lives on the sender's
+  // own server, so nobody can pre-delete someone else's posts.
+  const [author] = await ctx.db.select().from(actors).where(eq(actors.id, authorActorId));
+  const sameOrigin = (uri: string, other: string | null | undefined) => {
+    try {
+      return !!other && new URL(uri).origin === new URL(other).origin;
+    } catch {
+      return false;
+    }
+  };
+  const owns = post ? post.actorId === authorActorId : sameOrigin(ref.apUri ?? '', author?.apUri);
+  if (ref.apUri && owns) {
     await ctx.db
       .insert(tombstones)
       .values({ id: uuidv7(), uri: ref.apUri, actorId: authorActorId })

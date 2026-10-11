@@ -2,6 +2,7 @@
 import {
   block,
   type CoreContext,
+  canView,
   DomainError,
   deletePost,
   deleteRemoteActor,
@@ -238,6 +239,10 @@ async function comment(
   recipient: ActorRow | undefined,
 ) {
   const ctx = bridge.ctx;
+  // Only people who can see a post may comment on it (knowing a private post's guid is not enough).
+  if (!(await canView(ctx, author.id, parent.id))) {
+    throw new DomainError('forbidden', 'Comment on a post the author cannot see');
+  }
   const rendered = await renderDiasporaText(ctx, entity.text);
   const { visibility, audience } = await replyAudience(ctx, parent, [
     ...rendered.mentionIds,

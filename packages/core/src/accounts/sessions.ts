@@ -85,7 +85,7 @@ export async function login(
     await verifyPassword(await getDummyPasswordHash(), credentials.password);
     throw new DomainError('invalid_credentials', 'Invalid login or password');
   }
-  const { user } = row;
+  const { user, actor } = row;
   if (!(await verifyPassword(user.passwordHash, credentials.password))) {
     throw new DomainError('invalid_credentials', 'Invalid login or password');
   }
@@ -96,7 +96,7 @@ export async function login(
       .set({ passwordHash: await hashPassword(credentials.password), updatedAt: new Date() })
       .where(eq(schema.users.id, user.id));
   }
-  assertCanSignIn(user);
+  assertCanSignIn(user, actor);
 
   if (user.totpEnabledAt) {
     const methods: SecondFactor[] = ['totp', 'recovery_code'];
@@ -115,8 +115,13 @@ export async function login(
   return { ...session, status: 'ok' };
 }
 
-export function assertCanSignIn(user: { disabledAt: Date | null; approved: boolean }): void {
-  if (user.disabledAt) throw new DomainError('account_disabled', 'This account has been disabled');
+export function assertCanSignIn(
+  user: { disabledAt: Date | null; approved: boolean; deletionRequestedAt: Date | null },
+  actor: { suspendedAt: Date | null },
+): void {
+  if (user.disabledAt || user.deletionRequestedAt || actor.suspendedAt) {
+    throw new DomainError('account_disabled', 'This account has been disabled');
+  }
   if (!user.approved) {
     throw new DomainError('account_pending_approval', 'This account is waiting for approval');
   }
@@ -175,15 +180,23 @@ export async function activateSession(
 
 /** Looks up a session by its token. Returns null when missing, expired, or the user can no longer sign in. */
 export async function resolveSession(ctx: CoreContext, token: string): Promise<SessionInfo | null> {
-  const { sessions, users } = schema;
+  const { sessions, users, actors } = schema;
   const [row] = await ctx.db
-    .select({ session: sessions, user: users })
+    .select({ session: sessions, user: users, suspendedAt: actors.suspendedAt })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
+    .innerJoin(actors, eq(actors.id, users.actorId))
     .where(eq(sessions.tokenHash, sha256(token)));
   if (!row) return null;
   const { session, user } = row;
-  if (session.expiresAt.getTime() <= Date.now() || user.disabledAt || !user.approved) return null;
+  if (
+    session.expiresAt.getTime() <= Date.now() ||
+    user.disabledAt ||
+    user.deletionRequestedAt ||
+    row.suspendedAt ||
+    !user.approved
+  )
+    return null;
 
   // Sliding expiry, written at most every 5 minutes.
   if (session.stage === 'active' && Date.now() - session.lastUsedAt.getTime() > 5 * 60 * 1000) {

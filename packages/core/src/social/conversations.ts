@@ -1,5 +1,5 @@
 import { schema } from '@disbigle/db';
-import type { Account, Conversation, Status } from '@disbigle/shared';
+import type { Account, Conversation } from '@disbigle/shared';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';

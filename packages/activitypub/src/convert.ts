@@ -81,6 +81,7 @@ export async function addressing(
   ctx: Context<CoreContext>,
   post: Pick<PostRow, 'id' | 'visibility'>,
   author: ActorRow,
+  only?: ActorRow,
 ): Promise<{ to: URL[]; cc: URL[]; explicitRecipients: ActorRow[] }> {
   const followers = ctx.getFollowersUri(author.username);
   const explicit = await ctx.data.db
@@ -89,7 +90,10 @@ export async function addressing(
     .innerJoin(schema.actors, eq(schema.actors.id, schema.postAudiences.actorId))
     .where(eq(schema.postAudiences.postId, post.id));
   const recipients = explicit.map((r) => r.actor);
-  const uris = recipients
+  // A limited (aspect) post names only the server's own recipient, so members of an aspect never
+  // learn who else is in it.
+  const named = only && post.visibility === 'limited' ? [only] : recipients;
+  const uris = named
     .map((a) => a.apUri)
     .filter((u): u is string => !!u)
     .map((u) => new URL(u));
@@ -110,9 +114,10 @@ export async function postToNote(
   ctx: Context<CoreContext>,
   post: PostRow,
   author: ActorRow,
+  only?: ActorRow,
 ): Promise<Note | Question> {
   const db = ctx.data.db;
-  const { to, cc } = await addressing(ctx, post, author);
+  const { to, cc } = await addressing(ctx, post, author, only);
   const [mentionRows, tagRows, mediaRows, parent] = await Promise.all([
     db
       .select({ actor: schema.actors })

@@ -191,11 +191,12 @@ export async function finishPasskeyAuthentication(
   if (!expectedChallenge) throw new DomainError('bad_request', 'Sign-in expired, start again');
   await ctx.kv.del(key);
 
-  const { webauthnCredentials: creds, users } = schema;
+  const { webauthnCredentials: creds, users, actors } = schema;
   const [row] = await ctx.db
-    .select({ cred: creds, user: users })
+    .select({ cred: creds, user: users, actor: actors })
     .from(creds)
     .innerJoin(users, eq(users.id, creds.userId))
+    .innerJoin(actors, eq(actors.id, users.actorId))
     .where(eq(creds.credentialId, input.response.id));
   if (!row) throw new DomainError('invalid_credentials', 'Unknown passkey');
 
@@ -225,7 +226,7 @@ export async function finishPasskeyAuthentication(
     .update(creds)
     .set({ counter: verification.authenticationInfo.newCounter, lastUsedAt: new Date() })
     .where(eq(creds.id, row.cred.id));
-  assertCanSignIn(row.user);
+  assertCanSignIn(row.user, row.actor);
 
   if (input.pendingSessionToken) {
     const session = await resolveSession(ctx, input.pendingSessionToken);
