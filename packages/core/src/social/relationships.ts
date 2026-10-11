@@ -1,6 +1,6 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { Relationship } from '@disbigle/shared';
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, type SQL, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { clearFollowRequestNotification, createNotification } from './notifications.ts';
@@ -351,4 +351,47 @@ export async function listFollowing(
     .limit(Math.min(options.limit ?? 40, 80))
     .offset(options.offset ?? 0)
     .then((rows) => rows.map((r) => r.actor));
+}
+
+/**
+ * The people you are connected with, as diaspora*'s contacts page: everyone you follow, who
+ * follows you or who is in one of your aspects. Narrow it to one aspect, or to the people who
+ * follow you without being followed back. Alphabetical; `offset` pages through the list.
+ */
+export async function listContacts(
+  ctx: CoreContext,
+  actorId: string,
+  options: { aspectId?: string; onlyFollowers?: boolean; limit?: number; offset?: number } = {},
+) {
+  const iFollow = sql`select ${follows.targetActorId} from ${follows} where ${follows.actorId} = ${actorId}`;
+  const followsMe = sql`select ${follows.actorId} from ${follows} where ${follows.targetActorId} = ${actorId}`;
+  const inMyAspects = sql`select ${aspectMemberships.actorId} from ${aspectMemberships}
+    join ${aspects} on ${aspects.id} = ${aspectMemberships.aspectId}
+    where ${aspects.ownerActorId} = ${actorId}`;
+  let condition: SQL;
+  if (options.aspectId) {
+    const [owned] = await ctx.db
+      .select({ id: aspects.id })
+      .from(aspects)
+      .where(and(eq(aspects.id, options.aspectId), eq(aspects.ownerActorId, actorId)));
+    if (!owned) throw new DomainError('not_found', 'Aspect not found');
+    condition = sql`${actors.id} in (select ${aspectMemberships.actorId} from ${aspectMemberships} where ${aspectMemberships.aspectId} = ${owned.id})`;
+  } else if (options.onlyFollowers) {
+    condition = sql`${actors.id} in (${followsMe}) and ${actors.id} not in (${iFollow})`;
+  } else {
+    condition = sql`(${actors.id} in (${iFollow}) or ${actors.id} in (${followsMe}) or ${actors.id} in (${inMyAspects}))`;
+  }
+  const rows = await ctx.db
+    .select()
+    .from(actors)
+    .where(and(condition, isNull(actors.suspendedAt), sql`${actors.id} <> ${actorId}`))
+    .orderBy(sql`lower(coalesce(nullif(${actors.displayName}, ''), ${actors.username}))`, actors.id)
+    .limit(Math.min(options.limit ?? 40, 80))
+    .offset(options.offset ?? 0);
+  const relationships = await getRelationships(
+    ctx,
+    actorId,
+    rows.map((r) => r.id),
+  );
+  return rows.map((actor, i) => ({ actor, relationship: relationships[i] as Relationship }));
 }

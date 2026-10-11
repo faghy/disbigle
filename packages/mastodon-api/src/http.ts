@@ -183,6 +183,7 @@ const statusByCode: Record<ErrorCode, number> = {
   invalid_invite: 422,
   account_pending_approval: 403,
   account_disabled: 403,
+  bot_check_failed: 400,
   internal_error: 500,
 };
 

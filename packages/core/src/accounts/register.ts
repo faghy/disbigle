@@ -9,6 +9,7 @@ import { DomainError } from '../errors.ts';
 import { getInstanceSettings } from '../settings.ts';
 import { createDefaultAspects } from '../social/aspects.ts';
 import { localActorUrls } from './urls.ts';
+import { welcomeNewAccount } from './welcome.ts';
 
 /** Usernames that would collide with routes or impersonate the instance. */
 export const reservedUsernames = new Set([
@@ -145,6 +146,7 @@ export async function registerUser(
     throw mapUniqueViolation(error);
   }
   await createDefaultAspects(ctx, actorId, input.locale);
+  if (approved && !isFirstUser) await welcomeNewAccount(ctx, actorId);
 
   return { userId, actorId, approved };
 }

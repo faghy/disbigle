@@ -8,6 +8,12 @@ export interface InstanceSettings {
   registrationMode: 'open' | 'approval' | 'invite' | 'closed';
   rules: string[];
   contactEmail: string;
+  /** Local username that welcomes new accounts ('' = nobody). */
+  welcomeAccount: string;
+  /** Aspect of the welcome account where newcomers are put ('' = none). */
+  welcomeAspect: string;
+  /** Private message sent to newcomers by the welcome account ('' = none). */
+  welcomeMessage: string;
 }
 
 /** A server known to this instance (admin federation view). */

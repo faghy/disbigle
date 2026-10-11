@@ -17,6 +17,7 @@ import {
   AspectsIcon,
   BookmarkIcon,
   CloseIcon,
+  ContactsIcon,
   GlobeIcon,
   HomeIcon,
   InfoIcon,
@@ -93,6 +94,7 @@ interface NavItem {
     | '/public'
     | '/messages'
     | '/aspects'
+    | '/contacts'
     | '/bookmarks'
     | '/settings'
     | '/admin';
@@ -118,6 +120,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     ...items,
     { to: '/messages', label: t('nav.messages'), icon: MailIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
+    { to: '/contacts', label: t('nav.contacts'), icon: ContactsIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
     { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
     ...(moderator
@@ -280,7 +283,7 @@ function SidePanel({ user }: { user: CurrentUser | null }) {
 }
 
 /** Pages kept in the mobile "More" sheet (the bottom bar has room for four). */
-const morePaths = ['/public/local', '/public', '/bookmarks', '/settings', '/admin'];
+const morePaths = ['/public/local', '/public', '/contacts', '/bookmarks', '/settings', '/admin'];
 
 const bottomLinkClass = cx(
   'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-bold text-fg-muted focus-ring',

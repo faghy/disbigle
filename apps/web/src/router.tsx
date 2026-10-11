@@ -19,6 +19,7 @@ import { FederationPage } from './pages/admin/Federation.tsx';
 import { InstanceSettingsPage } from './pages/admin/InstanceSettings.tsx';
 import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
+import { ContactsPage } from './pages/Contacts.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { HomePage } from './pages/Home.tsx';
 import { LoginPage } from './pages/Login.tsx';
@@ -230,6 +231,20 @@ const aspectsRoute = createRoute({
   component: AspectsPage,
 });
 
+const contactsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contacts',
+  beforeLoad: signedInOnly,
+  // `?aspect=<id>` shows one aspect, `?only=followers` those who follow you only.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { aspect?: string | undefined; only?: 'followers' | undefined } => ({
+    aspect: typeof search.aspect === 'string' ? search.aspect : undefined,
+    only: search.only === 'followers' ? 'followers' : undefined,
+  }),
+  component: ContactsPage,
+});
+
 const aspectTimelineRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/aspects/$aspectId',
@@ -365,6 +380,7 @@ export const routeTree = rootRoute.addChildren([
   bookmarksRoute,
   notificationsRoute,
   aspectsRoute,
+  contactsRoute,
   aspectTimelineRoute,
   searchRoute,
   aboutRoute,

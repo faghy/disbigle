@@ -696,6 +696,9 @@ export type InstanceSettingsData = {
   registrationMode?: 'open' | 'approval' | 'invite' | 'closed';
   rules?: string[];
   contactEmail?: string;
+  welcomeAccount?: string;
+  welcomeAspect?: string;
+  welcomeMessage?: string;
 };
 
 /** Settings an administrator can change at run time (one row); environment values are the defaults. */

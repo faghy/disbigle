@@ -45,6 +45,9 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
   const [registrationMode, setMode] = useState<RegistrationMode>(initial.registrationMode);
   const [rules, setRules] = useState(() => initial.rules.map(withKey));
   const [contactEmail, setContactEmail] = useState(initial.contactEmail);
+  const [welcomeAccount, setWelcomeAccount] = useState(initial.welcomeAccount ?? '');
+  const [welcomeAspect, setWelcomeAspect] = useState(initial.welcomeAspect ?? '');
+  const [welcomeMessage, setWelcomeMessage] = useState(initial.welcomeMessage ?? '');
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
   useFocusFirstError(formRef, clientErrors);
 
@@ -76,6 +79,9 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
       // Empty rules are dropped rather than rejected.
       rules: rules.map((rule) => rule.text.trim()).filter(Boolean),
       contactEmail: contactEmail.trim(),
+      welcomeAccount: welcomeAccount.trim().replace(/^@/, ''),
+      welcomeAspect: welcomeAspect.trim(),
+      welcomeMessage: welcomeMessage.trim(),
     });
   };
 
@@ -151,6 +157,40 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
             </label>
           ))}
         </fieldset>
+      </Card>
+
+      <Card className="space-y-4">
+        <div>
+          <h2 className="font-semibold">{t('admin.instance.welcome')}</h2>
+          <p className="text-sm text-fg-muted">{t('admin.instance.welcomeHint')}</p>
+        </div>
+        <TextField
+          label={t('admin.instance.welcomeAccount')}
+          hint={t('admin.instance.welcomeAccountHint')}
+          maxLength={30}
+          autoCapitalize="none"
+          spellCheck={false}
+          value={welcomeAccount}
+          onChange={(event) => setWelcomeAccount(event.target.value)}
+          error={errors.welcomeAccount}
+        />
+        <TextField
+          label={t('admin.instance.welcomeAspect')}
+          hint={t('admin.instance.welcomeAspectHint')}
+          maxLength={100}
+          value={welcomeAspect}
+          onChange={(event) => setWelcomeAspect(event.target.value)}
+          error={errors.welcomeAspect}
+        />
+        <TextAreaField
+          label={t('admin.instance.welcomeMessage')}
+          hint={t('admin.instance.welcomeMessageHint')}
+          rows={8}
+          maxLength={5000}
+          value={welcomeMessage}
+          onChange={(event) => setWelcomeMessage(event.target.value)}
+          error={errors.welcomeMessage}
+        />
       </Card>
 
       <Card aria-labelledby={ids.rules} className="space-y-3">

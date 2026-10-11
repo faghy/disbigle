@@ -14,7 +14,7 @@
   "nav": {
     "skipToContent": "Vai al contenuto",
     "main": "Principale",
-    "home": "Home",
+    "home": "Bacheca",
     "settings": "Impostazioni",
     "signIn": "Accedi",
     "register": "Crea un account",
@@ -34,7 +34,8 @@
     "messages": "Messaggi",
     "more": "Altro",
     "sidePanel": "Informazioni sul server e i tuoi hashtag",
-    "aboutServer": "Informazioni sul server"
+    "aboutServer": "Informazioni sul server",
+    "contacts": "Contatti"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -339,6 +340,7 @@
     "username_taken": "Questo nome utente è già in uso.",
     "email_taken": "Questo indirizzo email è già registrato.",
     "registrations_closed": "Le iscrizioni su questo server sono chiuse.",
+    "bot_check_failed": "Il controllo antirobot non è andato a buon fine. Ricarica la pagina e riprova.",
     "invalid_invite": "Il codice di invito non è valido o è scaduto.",
     "account_pending_approval": "Il tuo account è in attesa di approvazione da parte di un moderatore.",
     "account_disabled": "Questo account è stato disattivato.",
@@ -354,7 +356,7 @@
   "notFound": {
     "title": "Pagina non trovata",
     "description": "La pagina che cerchi non esiste o è stata spostata.",
-    "home": "Vai alla home"
+    "home": "Vai alla bacheca"
   },
   "errorPage": {
     "title": "Qualcosa è andato storto",
@@ -490,8 +492,8 @@
     "newPosts_one": "{{count}} nuovo post",
     "newPosts_other": "{{count}} nuovi post",
     "home": {
-      "title": "Home",
-      "emptyTitle": "La tua home è vuota",
+      "title": "Bacheca",
+      "emptyTitle": "La tua bacheca è vuota",
       "empty": "Segui delle persone o aggiungile ai tuoi aspetti per vedere qui i loro post.",
       "explore": "Esplora la timeline locale",
       "findPeople": "Trova persone da seguire: prova",
@@ -823,7 +825,15 @@
       "addRule": "Aggiungi regola",
       "removeRule": "Rimuovi la regola {{number}}",
       "moveUp": "Sposta su la regola {{number}}",
-      "moveDown": "Sposta giù la regola {{number}}"
+      "moveDown": "Sposta giù la regola {{number}}",
+      "welcome": "Benvenuto ai nuovi account",
+      "welcomeHint": "Quando un account diventa attivo, segue l'account di benvenuto, che ricambia, lo aggiunge all'aspetto e gli manda il messaggio in privato. Lascia vuoto l'account per disattivarlo.",
+      "welcomeAccount": "Account di benvenuto",
+      "welcomeAccountHint": "Un nome utente locale, per esempio l'amministratore.",
+      "welcomeAspect": "Aspetto",
+      "welcomeAspectHint": "Il nome di un aspetto dell'account di benvenuto. Lascia vuoto per saltare.",
+      "welcomeMessage": "Messaggio di benvenuto",
+      "welcomeMessageHint": "Inviato come messaggio privato. Lascia vuoto per saltare."
     },
     "federation": {
       "description": "I server che questo conosce, tramite follow, menzioni e consegne.",
@@ -970,7 +980,7 @@
     "contexts": "Nascondi in",
     "contextsRequired": "Scegli almeno un punto.",
     "context": {
-      "home": "Home e liste",
+      "home": "Bacheca e liste",
       "public": "Timeline pubbliche",
       "notifications": "Notifiche",
       "thread": "Conversazioni"
@@ -1023,5 +1033,14 @@
     "light": "Chiaro",
     "dark": "Scuro",
     "system": "Sistema"
+  },
+  "contacts": {
+    "title": "Contatti",
+    "description": "Le persone con cui sei collegato, su tutte le reti.",
+    "filters": "Mostra",
+    "all": "Tutti i contatti",
+    "onlyFollowers": "Solo chi ti segue",
+    "empty": "Ancora nessuno qui.",
+    "emptyAll": "Ancora nessun contatto. Cerca delle persone e seguile, o aggiungile a un aspetto."
   }
 }

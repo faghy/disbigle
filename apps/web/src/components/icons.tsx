@@ -48,6 +48,13 @@ export const AspectsIcon = (p: IconProps) => (
     <path d="M2.5 19a5.5 5.5 0 0 1 11 0M14 14.2a4.5 4.5 0 0 1 7.5 3.8" />
   </Icon>
 );
+export const ContactsIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="3" width="14" height="18" rx="2" />
+    <circle cx="11" cy="10" r="2.5" />
+    <path d="M7 17a4 4 0 0 1 8 0M18 7h2M18 12h2M18 17h2" />
+  </Icon>
+);
 export const AtIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="4" />

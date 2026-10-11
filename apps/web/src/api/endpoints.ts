@@ -34,7 +34,12 @@ export const endpoints = {
   lookupAccount: (username: string) =>
     api.get<Account>(`/accounts/lookup/${encodeURIComponent(username).replace(/%40/g, '@')}`),
 
-  register: (body: RegisterRequest) => api.post<RegisterResponse>('/auth/register', body),
+  registerChallenge: () =>
+    api.get<{ challenge: string | null; salt?: string; difficulty?: number }>(
+      '/auth/register/challenge',
+    ),
+  register: (body: RegisterRequest & { challenge?: string; nonce?: string; website?: string }) =>
+    api.post<RegisterResponse>('/auth/register', body),
   login: (body: LoginRequest) => api.post<LoginResponse>('/auth/login', body),
   mfa: (code: string) => api.post<Ok>('/auth/mfa', { code }),
   logout: () => api.post<Ok>('/auth/logout'),

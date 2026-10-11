@@ -52,7 +52,13 @@ async function startInstance(): Promise<Instance> {
     new LocalEventBus(hub),
     new ActivityPubPublisher(federation, ctx),
   ]);
-  const app = await buildApp({ ctx, hub, federation, disableRateLimit: true });
+  const app = await buildApp({
+    ctx,
+    hub,
+    federation,
+    disableRateLimit: true,
+    disableRegistrationGuard: true,
+  });
   await app.listen({ host: '127.0.0.1', port });
   return { app, domain, url, drop: testDb.drop };
 }

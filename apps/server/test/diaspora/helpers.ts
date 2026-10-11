@@ -82,7 +82,12 @@ export async function startInstance(
     kv: new MemoryKvStore(),
     allowPrivateAddress: true,
   });
-  const app = await buildApp({ ctx, federation, disableRateLimit: true });
+  const app = await buildApp({
+    ctx,
+    federation,
+    disableRateLimit: true,
+    disableRegistrationGuard: true,
+  });
   await app.register(diasporaRoutes, { ctx, bridge });
   await app.listen({ host: '127.0.0.1', port });
   return {

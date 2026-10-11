@@ -119,6 +119,10 @@ export const social = {
     api.patch<Aspect>(`/aspects/${id(aspectId)}`, { name }),
   deleteAspect: (aspectId: string) => api.delete<Ok>(`/aspects/${id(aspectId)}`),
   aspectMembers: (aspectId: string) => api.get<Account[]>(`/aspects/${id(aspectId)}/members`),
+  contacts: (filter: { aspectId?: string; only?: 'followers' }, page: OffsetPage = {}) =>
+    api.get<{ account: Account; relationship: Relationship }[]>(
+      `/me/contacts${queryString({ ...filter, ...page })}`,
+    ),
 
   // Notifications
   notifications: (page: PageParams) =>

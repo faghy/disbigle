@@ -10,6 +10,7 @@ import {
   exportAccount,
   finishPasskeyRegistration,
   getCurrentUser,
+  listContacts,
   listPasskeys,
   MAX_IMAGE_BYTES,
   type MediaStorage,
@@ -17,6 +18,7 @@ import {
   regenerateRecoveryCodes,
   removeProfileImage,
   requestAccountDeletion,
+  serializeAccount,
   updateProfile,
   updateProfileImage,
   updateSettings,
@@ -48,6 +50,30 @@ export async function meRoutes(
   app: FastifyInstance,
   { ctx, mediaCtx }: { ctx: CoreContext; mediaCtx: CoreContext & { storage: MediaStorage } },
 ) {
+  // The people you are connected with; ?aspectId= narrows to one aspect, ?only=followers to
+  // those who follow you without being followed back.
+  app.get('/contacts', async (request) => {
+    const query = parse(
+      z.object({
+        aspectId: z.uuid().optional(),
+        only: z.enum(['followers']).optional(),
+        offset: z.coerce.number().int().min(0).max(10_000).optional(),
+        limit: z.coerce.number().int().min(1).max(80).optional(),
+      }),
+      request.query,
+    );
+    const rows = await listContacts(ctx, requireUser(request).actorId, {
+      ...(query.aspectId ? { aspectId: query.aspectId } : {}),
+      onlyFollowers: query.only === 'followers',
+      ...(query.offset !== undefined ? { offset: query.offset } : {}),
+      ...(query.limit !== undefined ? { limit: query.limit } : {}),
+    });
+    return rows.map(({ actor, relationship }) => ({
+      account: serializeAccount(actor),
+      relationship,
+    }));
+  });
+
   for (const kind of ['avatar', 'header'] as const) {
     app.post(
       `/${kind}`,

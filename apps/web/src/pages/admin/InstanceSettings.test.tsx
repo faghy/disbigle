@@ -10,6 +10,9 @@ const settings = {
   registrationMode: 'open',
   rules: ['Be kind', 'No spam'],
   contactEmail: 'admin@example.com',
+  welcomeAccount: '',
+  welcomeAspect: '',
+  welcomeMessage: '',
 };
 
 describe('instance settings', () => {
@@ -36,6 +39,9 @@ describe('instance settings', () => {
     await user.click(screen.getByRole('button', { name: 'Add rule' }));
     await user.type(screen.getByRole('textbox', { name: 'Rule 3' }), 'Use content warnings');
     await user.click(screen.getByRole('button', { name: 'Add rule' }));
+    await user.type(screen.getByRole('textbox', { name: 'Welcome account' }), '@faghy');
+    await user.type(screen.getByRole('textbox', { name: 'Aspect' }), 'Fediverso');
+    await user.type(screen.getByRole('textbox', { name: 'Welcome message' }), 'Benvenuto!');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('Your changes have been saved.')).toBeInTheDocument();
@@ -46,6 +52,9 @@ describe('instance settings', () => {
       registrationMode: 'invite',
       rules: ['No spam', 'Be kind', 'Use content warnings'],
       contactEmail: 'admin@example.com',
+      welcomeAccount: 'faghy',
+      welcomeAspect: 'Fediverso',
+      welcomeMessage: 'Benvenuto!',
     });
   });
 

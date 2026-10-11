@@ -1,8 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 import i18n from '../lib/i18n.ts';
 import { MockWebSocket } from './mockWebSocket.ts';
+
+// findBy*/waitFor wait up to 1 s by default: too little when every package tests in parallel.
+configure({ asyncUtilTimeout: 5_000 });
 
 // jsdom does not implement scrolling; the router restores scroll positions on navigation.
 window.scrollTo = () => {};

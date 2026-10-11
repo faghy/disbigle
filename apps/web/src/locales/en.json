@@ -34,7 +34,8 @@
     "messages": "Messages",
     "more": "More",
     "sidePanel": "About this server and your hashtags",
-    "aboutServer": "About this server"
+    "aboutServer": "About this server",
+    "contacts": "Contacts"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -339,6 +340,7 @@
     "username_taken": "This username is already taken.",
     "email_taken": "This email address is already registered.",
     "registrations_closed": "Registrations are closed on this server.",
+    "bot_check_failed": "The anti-robot check failed. Reload the page and try again.",
     "invalid_invite": "The invitation code is invalid or has expired.",
     "account_pending_approval": "Your account is waiting for a moderator's approval.",
     "account_disabled": "This account has been disabled.",
@@ -823,7 +825,15 @@
       "addRule": "Add rule",
       "removeRule": "Remove rule {{number}}",
       "moveUp": "Move rule {{number}} up",
-      "moveDown": "Move rule {{number}} down"
+      "moveDown": "Move rule {{number}} down",
+      "welcome": "Welcome for new accounts",
+      "welcomeHint": "When an account becomes active, it follows the welcome account, which follows back, adds it to the aspect and sends the message privately. Leave the account empty to turn this off.",
+      "welcomeAccount": "Welcome account",
+      "welcomeAccountHint": "A local username, for example the admin.",
+      "welcomeAspect": "Aspect",
+      "welcomeAspectHint": "The name of an aspect of the welcome account. Leave empty to skip.",
+      "welcomeMessage": "Welcome message",
+      "welcomeMessageHint": "Sent as a private message. Leave empty to skip."
     },
     "federation": {
       "description": "Servers this one knows about, through follows, mentions and deliveries.",
@@ -1023,5 +1033,14 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "description": "The people you are connected with, on every network.",
+    "filters": "Show",
+    "all": "All contacts",
+    "onlyFollowers": "Following you only",
+    "empty": "Nobody here yet.",
+    "emptyAll": "No contacts yet. Search for people and follow them, or add them to an aspect."
   }
 }

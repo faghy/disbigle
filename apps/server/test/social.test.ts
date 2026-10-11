@@ -463,3 +463,40 @@ describe('streaming', () => {
     expect(strangerSocket.received).toEqual([]);
   });
 });
+
+describe('contacts', () => {
+  it('lists followed, following and aspect members, narrowed by aspect or to followers only', async () => {
+    const me = await signedIn();
+    const friend = await signedIn();
+    const fan = await signedIn();
+    const other = await signedIn();
+    await me.client.post(`/api/v1/accounts/${friend.account.id}/follow`);
+    await friend.client.post(`/api/v1/accounts/${me.account.id}/follow`);
+    await fan.client.post(`/api/v1/accounts/${me.account.id}/follow`);
+    const aspect = (await me.client.post('/api/v1/aspects', { name: 'Friends of friends' })).json();
+    await me.client.put(`/api/v1/accounts/${friend.account.id}/aspects`, {
+      aspectIds: [aspect.id],
+    });
+
+    const names = async (query = '') =>
+      (
+        (await me.client.get(`/api/v1/me/contacts${query}`)).json() as {
+          account: { username: string };
+        }[]
+      )
+        .map((c) => c.account.username)
+        .sort();
+    expect(await names()).toEqual([friend.account.username, fan.account.username].sort());
+    expect(await names(`?aspectId=${aspect.id}`)).toEqual([friend.account.username]);
+    expect(await names('?only=followers')).toEqual([fan.account.username]);
+    const [contact] = (await me.client.get(`/api/v1/me/contacts?aspectId=${aspect.id}`)).json();
+    expect(contact.relationship).toMatchObject({
+      following: true,
+      followedBy: true,
+      aspectIds: [aspect.id],
+    });
+    expect((await other.client.get(`/api/v1/me/contacts?aspectId=${aspect.id}`)).statusCode).toBe(
+      404,
+    );
+  });
+});

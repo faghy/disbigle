@@ -2,6 +2,7 @@ import { isLocalDomain } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { serializeAccount } from './accounts/serialize.ts';
+import { welcomeNewAccount } from './accounts/welcome.ts';
 import type { CoreContext } from './context.ts';
 import { DomainError } from './errors.ts';
 import { hydrateStatuses } from './social/statuses.ts';
@@ -63,9 +64,11 @@ export async function approveUser(
     .update(users)
     .set({ approved: true, updatedAt: new Date() })
     .where(and(eq(users.id, userId), eq(users.approved, false)))
-    .returning({ id: users.id });
-  if (updated.length === 0) throw new DomainError('not_found', 'Pending account not found');
+    .returning({ id: users.id, actorId: users.actorId });
+  const [approved] = updated;
+  if (!approved) throw new DomainError('not_found', 'Pending account not found');
   await logAdminAction(ctx, moderatorUserId, 'approve_user', { type: 'user', id: userId });
+  await welcomeNewAccount(ctx, approved.actorId);
 }
 
 /** Rejecting a pending registration deletes it entirely. */

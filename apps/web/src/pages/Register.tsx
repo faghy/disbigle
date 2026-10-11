@@ -1,7 +1,7 @@
 import { type InstanceInfo, registerRequestSchema } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { type FormEvent, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { endpoints } from '../api/endpoints.ts';
 import {
@@ -23,6 +23,7 @@ import {
   TextAreaField,
   TextField,
 } from '../components/ui.tsx';
+import { type BotCheckAnswer, prepareBotCheck } from '../lib/botCheck.ts';
 import { useFocusFirstError } from '../lib/forms.ts';
 import { currentLanguage } from '../lib/i18n.ts';
 import { fullNavigation } from '../lib/redirect.ts';
@@ -78,11 +79,30 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
     agreement: false,
   });
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
+  // Honeypot: hidden from people, filled in by form-filling robots.
+  const [website, setWebsite] = useState('');
+  // The anti-robot answer is computed in the background while the form is being filled in.
+  const botCheck = useRef<Promise<BotCheckAnswer | null> | null>(null);
+  useEffect(() => {
+    botCheck.current = prepareBotCheck();
+  }, []);
   const set = <K extends keyof typeof values>(key: K, value: (typeof values)[K]) =>
     setValues((previous) => ({ ...previous, [key]: value }));
 
   const register = useMutation({
-    mutationFn: endpoints.register,
+    mutationFn: async (body: Parameters<typeof endpoints.register>[0]) => {
+      const answer = await (botCheck.current ?? prepareBotCheck());
+      return endpoints.register({
+        ...body,
+        ...(answer ?? {}),
+        ...(website ? { website } : {}),
+      });
+    },
+    // A refused robot check needs a fresh challenge for the next attempt.
+    onError: (error) => {
+      if ((error as { code?: string }).code === 'bot_check_failed')
+        botCheck.current = prepareBotCheck();
+    },
     onSuccess: async (result) => {
       if (result.status !== 'ok') return;
       clearUserData(queryClient);
@@ -150,6 +170,19 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
 
         <form ref={formRef} onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
           <Alert>{generalError}</Alert>
+          <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+            <label>
+              Website
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+              />
+            </label>
+          </div>
           <TextField
             label={t('register.username')}
             name="username"

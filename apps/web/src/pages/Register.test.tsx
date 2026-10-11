@@ -79,4 +79,33 @@ describe('register page', () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText('Username')).not.toBeInTheDocument();
   });
+
+  it('sends the solved anti-robot challenge with the registration', async () => {
+    const fetchMock = mockApi({
+      'GET /me': signedOut,
+      'GET /instance': instance('open'),
+      'GET /auth/register/challenge': {
+        body: { challenge: 'signed-challenge', salt: 'salt', difficulty: 4 },
+      },
+      'POST /auth/register': { status: 202, body: { status: 'pending_approval' } },
+    });
+    renderApp('/register');
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Username'), 'alice');
+    await user.type(screen.getByLabelText('Email'), 'alice@example.com');
+    await user.type(screen.getByLabelText('Password'), 'a long enough password');
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    await screen.findByRole('heading', { name: 'Almost there' });
+    const call = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/auth/register'));
+    const body = JSON.parse(String(call?.[1]?.body));
+    expect(body.challenge).toBe('signed-challenge');
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`salt:${body.nonce}`),
+    );
+    expect((new Uint8Array(digest)[0] ?? 255) >> 4).toBe(0);
+    expect(body).not.toHaveProperty('website');
+  });
 });

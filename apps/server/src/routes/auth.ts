@@ -23,6 +23,11 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
 import { clearSessionCookie, setSessionCookie } from '../plugins/auth.ts';
+import {
+  issueChallenge,
+  registrationGuardSchema,
+  verifyRegistrationGuard,
+} from '../registration-guard.ts';
 
 const clientInfo = (request: FastifyRequest) => ({
   userAgent: request.headers['user-agent'],
@@ -41,13 +46,27 @@ const passkeyVerifySchema = z.object({
 
 export async function authRoutes(
   app: FastifyInstance,
-  { ctx, mailer }: { ctx: CoreContext; mailer: Mailer },
+  {
+    ctx,
+    mailer,
+    registrationGuard = true,
+  }: { ctx: CoreContext; mailer: Mailer; registrationGuard?: boolean },
 ) {
   const strict = { config: { rateLimit: { max: 10, timeWindow: '5 minutes' } } };
 
+  // A fresh anti-robot challenge for the sign-up form (see registration-guard.ts).
+  app.get('/register/challenge', strict, async (_request, reply) => {
+    reply.header('cache-control', 'no-store');
+    return registrationGuard ? issueChallenge(ctx) : { challenge: null };
+  });
+
   app.post('/register', strict, async (request, reply) => {
     const input = parse(registerRequestSchema, request.body);
+    const consumeChallenge = registrationGuard
+      ? await verifyRegistrationGuard(ctx, parse(registrationGuardSchema, request.body))
+      : null;
     const result = await registerUser(ctx, input);
+    await consumeChallenge?.();
     if (!result.approved) return reply.status(202).send({ status: 'pending_approval' });
     const signedIn = await login(
       ctx,

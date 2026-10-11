@@ -13,6 +13,14 @@ export const instanceSettingsPatchSchema = z.object({
   registrationMode: z.enum(['open', 'approval', 'invite', 'closed']).optional(),
   rules: z.array(z.string().trim().min(1).max(500)).max(30).optional(),
   contactEmail: z.union([z.email().max(320), z.literal('')]).optional(),
+  welcomeAccount: z
+    .string()
+    .trim()
+    .max(30)
+    .regex(/^[A-Za-z0-9_]*$/)
+    .optional(),
+  welcomeAspect: z.string().trim().max(100).optional(),
+  welcomeMessage: z.string().trim().max(5000).optional(),
 });
 export type InstanceSettingsPatch = z.infer<typeof instanceSettingsPatchSchema>;
 
@@ -29,6 +37,9 @@ export async function getInstanceSettings(ctx: CoreContext): Promise<InstanceSet
     registrationMode: data.registrationMode ?? ctx.config.REGISTRATION_MODE,
     rules: data.rules ?? [],
     contactEmail: data.contactEmail ?? '',
+    welcomeAccount: data.welcomeAccount ?? '',
+    welcomeAspect: data.welcomeAspect ?? '',
+    welcomeMessage: data.welcomeMessage ?? '',
   };
 }
 

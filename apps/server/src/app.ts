@@ -68,6 +68,8 @@ export interface AppOptions {
   mastodonPushStore?: MastodonPushStore;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
+  /** Skip the anti-robot check on sign-up (tests only). */
+  disableRegistrationGuard?: boolean;
 }
 
 const isFederationEndpoint = (url: string) =>
@@ -167,6 +169,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(authRoutes, {
         ctx,
         mailer: options.mailer ?? new MemoryMailer(true),
+        registrationGuard: !options.disableRegistrationGuard,
         prefix: '/auth',
       });
       await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });

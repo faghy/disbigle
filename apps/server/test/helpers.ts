@@ -27,7 +27,10 @@ export const testConfig: Config = {
 /** Emails sent by test apps, newest last. */
 export const testMailer = new MemoryMailer();
 
-export function useTestApp(overrides: Partial<Config> = {}) {
+export function useTestApp(
+  overrides: Partial<Config> = {},
+  options: { registrationGuard?: boolean } = {},
+) {
   let app: FastifyInstance | undefined;
   let core: CoreContext | undefined;
   let drop: (() => Promise<void>) | undefined;
@@ -48,7 +51,14 @@ export function useTestApp(overrides: Partial<Config> = {}) {
       allowPrivateAddress: true,
       origin: federationOrigin(ctx.config),
     });
-    app = await buildApp({ ctx, hub, federation, mailer: testMailer, disableRateLimit: true });
+    app = await buildApp({
+      ctx,
+      hub,
+      federation,
+      mailer: testMailer,
+      disableRateLimit: true,
+      disableRegistrationGuard: !options.registrationGuard,
+    });
   });
   afterAll(async () => {
     await app?.close();

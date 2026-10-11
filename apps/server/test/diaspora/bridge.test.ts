@@ -60,7 +60,12 @@ async function startHub(): Promise<Instance> {
     new DiasporaPublisher(bridge),
   ]);
   ctx.resolveAccount = bridge.resolveAccount;
-  const app = await buildApp({ ctx, federation, disableRateLimit: true });
+  const app = await buildApp({
+    ctx,
+    federation,
+    disableRateLimit: true,
+    disableRegistrationGuard: true,
+  });
   await app.register(diasporaRoutes, { ctx, bridge });
   await app.listen({ host: '127.0.0.1', port });
   return {
@@ -94,7 +99,12 @@ async function startActivityPubOnly(): Promise<Server> {
     allowPrivateAddress: true,
   });
   ctx.events = new ActivityPubPublisher(federation, ctx);
-  const app = await buildApp({ ctx, federation, disableRateLimit: true });
+  const app = await buildApp({
+    ctx,
+    federation,
+    disableRateLimit: true,
+    disableRegistrationGuard: true,
+  });
   await app.listen({ host: '127.0.0.1', port });
   return {
     app,

@@ -47,6 +47,7 @@ export function useMastodonApp(overrides: Partial<Config> = {}): MastodonTestApp
       federation,
       mailer: testMailer,
       disableRateLimit: true,
+      disableRegistrationGuard: true,
       oauthStore: store,
     });
   });
