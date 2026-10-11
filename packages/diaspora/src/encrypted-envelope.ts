@@ -85,11 +85,19 @@ export function decryptMagicEnvelope(
     if (typeof parsed.key !== 'string' || typeof parsed.iv !== 'string') {
       throw new Error('invalid AES key JSON');
     }
-    return aesDecrypt(
+    const plain = aesDecrypt(
       json.encrypted_magic_envelope,
       decode64(parsed.key),
       decode64(parsed.iv),
-    ).toString('utf8');
+    );
+    // A tampered last block passes the padding check about once in 256 tries: what comes out
+    // must still be a whole Magic Envelope, in valid UTF-8.
+    const xml = new TextDecoder('utf-8', { fatal: true }).decode(plain);
+    const trimmed = xml.trim();
+    if (!trimmed.startsWith('<') || !/<\/(?:me:)?env>$/.test(trimmed)) {
+      throw new Error('decrypted content is not a magic envelope');
+    }
+    return xml;
   } catch (error) {
     throw new DecryptionError(
       `cannot decrypt magic envelope: ${error instanceof Error ? error.message : String(error)}`,
