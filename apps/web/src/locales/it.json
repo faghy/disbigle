@@ -582,10 +582,10 @@
   },
   "search": {
     "title": "Cerca",
-    "label": "Cerca persone",
+    "label": "Cerca persone, post e hashtag",
     "description": "Trova persone qui e in tutto il fediverso.",
-    "placeholder": "Nome, @utente o @utente@server",
-    "shortPlaceholder": "Cerca persone",
+    "placeholder": "Nome, @utente@server, parole o #tag",
+    "shortPlaceholder": "Cerca",
     "people": "Persone",
     "searching": "Ricerca…",
     "noResults": "Nessuno qui corrisponde a «{{query}}».",
@@ -610,7 +610,18 @@
     "postTitle": "È il link a un post?",
     "postHint": "Portalo qui per rispondere, mettere mi piace o ricondividerlo.",
     "lookingUpPost": "Recupero il post… può volerci qualche secondo.",
-    "postNotFound": "Nessun post pubblico trovato a questo indirizzo."
+    "postNotFound": "Nessun post pubblico trovato a questo indirizzo.",
+    "tabs": {
+      "label": "Risultati della ricerca",
+      "accounts": "Persone",
+      "posts": "Post",
+      "hashtags": "Hashtag"
+    },
+    "noPosts": "Nessun post corrisponde a «{{query}}».",
+    "noHashtags": "Nessun hashtag corrisponde a «{{query}}».",
+    "tagPosts_one": "{{count}} post",
+    "tagPosts_other": "{{count}} post",
+    "followedTag": "Seguito"
   },
   "passwordReset": {
     "forgotTitle": "Reimposta la password",

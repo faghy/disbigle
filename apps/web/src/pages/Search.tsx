@@ -1,20 +1,26 @@
 import type { Account } from '@disbigle/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { type FormEvent, useEffect, useId, useState } from 'react';
+import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser } from '../api/queries.ts';
-import { social } from '../api/social.ts';
+import { social, type TagInfo } from '../api/social.ts';
 import { statusQueryOptions, useFollowedTags, useRelationships } from '../api/socialQueries.ts';
 import { AccountRow } from '../components/AccountList.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
-import { GlobeIcon, ReplyIcon, SearchIcon } from '../components/icons.tsx';
+import { GlobeIcon, HashIcon, ReplyIcon, SearchIcon } from '../components/icons.tsx';
 import { statusPath } from '../components/StatusCard.tsx';
-import { Alert, Button, LoadingState, Spinner } from '../components/ui.tsx';
+import { Timeline } from '../components/Timeline.tsx';
+import { Alert, Button, cx, LoadingState, Spinner } from '../components/ui.tsx';
 
 export const SEARCH_DEBOUNCE_MS = 300;
+
+export const searchTypes = ['accounts', 'posts', 'hashtags'] as const;
+export type SearchType = (typeof searchTypes)[number];
+export const isSearchType = (value: unknown): value is SearchType =>
+  typeof value === 'string' && (searchTypes as readonly string[]).includes(value);
 
 /** `@user@domain`, `user@domain` or a profile URL: something only another server can answer. */
 export function looksRemote(query: string): boolean {
@@ -30,7 +36,7 @@ const bareHandle = (q: string) => q.trim().replace(/^@/, '').toLowerCase();
 export function SearchPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { q = '' } = useSearch({ from: '/search' });
+  const { q = '', type = 'accounts' } = useSearch({ from: '/search' });
   const [text, setText] = useState(q);
   const inputId = useId();
 
@@ -42,7 +48,11 @@ export function SearchPage() {
     if (text.trim() === q) return;
     const timer = setTimeout(
       () =>
-        void navigate({ to: '/search', search: { q: text.trim() || undefined }, replace: true }),
+        void navigate({
+          to: '/search',
+          search: (prev) => ({ ...prev, q: text.trim() || undefined }),
+          replace: true,
+        }),
       SEARCH_DEBOUNCE_MS,
     );
     return () => clearTimeout(timer);
@@ -50,7 +60,11 @@ export function SearchPage() {
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    void navigate({ to: '/search', search: { q: text.trim() || undefined }, replace: true });
+    void navigate({
+      to: '/search',
+      search: (prev) => ({ ...prev, q: text.trim() || undefined }),
+      replace: true,
+    });
   };
 
   return (
@@ -84,7 +98,7 @@ export function SearchPage() {
           />
         </form>
       </search>
-      {q ? <SearchResults key={q} query={q} /> : <SearchTips />}
+      {q ? <SearchTabs query={q} type={type} /> : <SearchTips />}
     </div>
   );
 }
@@ -286,6 +300,161 @@ function PostLookup({ query }: { query: string }) {
         )}
       </div>
       {lookup.error && <Alert className="mt-3">{errorMessage(lookup.error)}</Alert>}
+    </FeedSection>
+  );
+}
+
+/** People, posts and hashtags for one query; the tab is kept in the address (`?type=`). */
+function SearchTabs({ query, type }: { query: string; type: SearchType }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const baseId = useId();
+  const select = (next: SearchType) =>
+    void navigate({
+      to: '/search',
+      search: (prev) => ({ ...prev, type: next === 'accounts' ? undefined : next }),
+      replace: true,
+    });
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    const index = searchTypes.indexOf(type);
+    const next =
+      searchTypes[
+        (index + (event.key === 'ArrowRight' ? 1 : -1) + searchTypes.length) % searchTypes.length
+      ];
+    if (!next) return;
+    select(next);
+    document.getElementById(`${baseId}-${next}`)?.focus();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div
+        role="tablist"
+        aria-label={t('search.tabs.label')}
+        onKeyDown={onKeyDown}
+        className="flex gap-1 border-b border-border"
+      >
+        {searchTypes.map((item) => (
+          <button
+            key={item}
+            id={`${baseId}-${item}`}
+            type="button"
+            role="tab"
+            aria-selected={type === item}
+            aria-controls={`${baseId}-panel`}
+            tabIndex={type === item ? 0 : -1}
+            onClick={() => select(item)}
+            className={cx(
+              '-mb-px border-b-2 px-3 py-2.5 text-sm font-medium focus-ring sm:px-4',
+              type === item
+                ? 'border-accent text-accent'
+                : 'border-transparent text-fg-muted hover:text-fg',
+            )}
+          >
+            {t(`search.tabs.${item}`)}
+          </button>
+        ))}
+      </div>
+      <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-${type}`}>
+        {type === 'accounts' && <SearchResults key={query} query={query} />}
+        {type === 'posts' && <PostResults query={query} />}
+        {type === 'hashtags' && <HashtagResults query={query} />}
+      </div>
+    </div>
+  );
+}
+
+function PostResults({ query }: { query: string }) {
+  const { t } = useTranslation();
+  return (
+    <FeedSection>
+      <Timeline
+        key={query}
+        queryKey={['timeline', 'search', query]}
+        fetchPage={(page) => social.searchStatuses(query, page)}
+        label={t('search.tabs.posts')}
+        empty={t('search.noPosts', { query })}
+      />
+    </FeedSection>
+  );
+}
+
+const TAG_WORD = /^[\p{L}\p{N}_]{1,100}$/u;
+
+/**
+ * Hashtags for the query. There is no hashtag search on the server yet, so each word of the
+ * query is checked as a tag, and followed hashtags that start with it are listed too.
+ */
+function HashtagResults({ query }: { query: string }) {
+  const { t } = useTranslation();
+  const followed = useFollowedTags();
+  const words = [
+    ...new Set(
+      query
+        .split(/\s+/)
+        .map((word) => word.replace(/^#/, '').toLowerCase())
+        .filter((word) => TAG_WORD.test(word)),
+    ),
+  ].slice(0, 5);
+  const tags = useQueries({
+    queries: words.map((name) => ({
+      queryKey: ['tag', name],
+      queryFn: () => social.tag(name),
+      staleTime: 60_000,
+    })),
+  });
+  const prefix = words[0] ?? '';
+  const fromFollowed = (followed.data ?? []).filter(
+    (name) => prefix && name.startsWith(prefix) && !words.includes(name),
+  );
+  const found = tags
+    .map((result) => result.data)
+    .filter((tag): tag is TagInfo => Boolean(tag && tag.postsCount > 0));
+  const loading = tags.some((result) => result.isPending);
+
+  if (loading) return <LoadingState label={t('search.searching')} />;
+  if (found.length === 0 && fromFollowed.length === 0) {
+    return (
+      <FeedSection>
+        <p className="px-5 py-10 text-center text-sm text-fg-muted">
+          {t('search.noHashtags', { query })}
+        </p>
+      </FeedSection>
+    );
+  }
+  return (
+    <FeedSection>
+      <ul aria-label={t('search.tabs.hashtags')} className="divide-y divide-border">
+        {found.map((tag) => (
+          <li key={tag.name}>
+            <Link
+              to="/tags/$tag"
+              params={{ tag: tag.name }}
+              className="flex items-center gap-3 px-5 py-3 hover:bg-surface-muted focus-ring"
+            >
+              <HashIcon size={18} className="text-fg-muted" />
+              <span className="flex-1 font-medium">#{tag.name}</span>
+              <span className="text-sm text-fg-muted">
+                {t('search.tagPosts', { count: tag.postsCount })}
+              </span>
+            </Link>
+          </li>
+        ))}
+        {fromFollowed.map((name) => (
+          <li key={name}>
+            <Link
+              to="/tags/$tag"
+              params={{ tag: name }}
+              className="flex items-center gap-3 px-5 py-3 hover:bg-surface-muted focus-ring"
+            >
+              <HashIcon size={18} className="text-fg-muted" />
+              <span className="flex-1 font-medium">#{name}</span>
+              <span className="text-sm text-fg-muted">{t('search.followedTag')}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </FeedSection>
   );
 }

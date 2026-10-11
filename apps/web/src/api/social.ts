@@ -141,6 +141,9 @@ export const social = {
   followedTags: () => api.get<string[]>('/tags/followed'),
 
   // Search and reports
+  /** Full-text search in posts the viewer may see, newest first. */
+  searchStatuses: (q: string, page: PageParams) =>
+    api.get<Status[]>(`/search/statuses${queryString({ q, ...page })}`),
   searchAccounts: (q: string) => api.get<Account[]>(`/search/accounts${queryString({ q })}`),
   /** Fetches a remote account by handle or URL; `null` when nothing was found. */
   resolveAccount: (q: string) => api.post<Account | null>('/search/resolve', { q }),

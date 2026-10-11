@@ -582,10 +582,10 @@
   },
   "search": {
     "title": "Search",
-    "label": "Search people",
+    "label": "Search people, posts and hashtags",
     "description": "Find people here and across the fediverse.",
-    "placeholder": "Name, @user or @user@server",
-    "shortPlaceholder": "Search people",
+    "placeholder": "Name, @user@server, words or #tag",
+    "shortPlaceholder": "Search",
     "people": "People",
     "searching": "Searching…",
     "noResults": "Nobody here matches “{{query}}”.",
@@ -610,7 +610,18 @@
     "postTitle": "Is this a link to a post?",
     "postHint": "Bring it here to reply, like or reshare it.",
     "lookingUpPost": "Fetching the post… this can take a few seconds.",
-    "postNotFound": "No public post was found at this address."
+    "postNotFound": "No public post was found at this address.",
+    "tabs": {
+      "label": "Search results",
+      "accounts": "People",
+      "posts": "Posts",
+      "hashtags": "Hashtags"
+    },
+    "noPosts": "No posts match “{{query}}”.",
+    "noHashtags": "No hashtags match “{{query}}”.",
+    "tagPosts_one": "{{count}} post",
+    "tagPosts_other": "{{count}} posts",
+    "followedTag": "Followed"
   },
   "passwordReset": {
     "forgotTitle": "Reset your password",

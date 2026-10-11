@@ -28,7 +28,10 @@ describe('search', () => {
     });
     renderApp('/search');
     const user = userEvent.setup();
-    await user.type(await screen.findByRole('searchbox', { name: 'Search people' }), 'dav');
+    await user.type(
+      await screen.findByRole('searchbox', { name: 'Search people, posts and hashtags' }),
+      'dav',
+    );
 
     const results = await screen.findByRole('list', { name: 'People' });
     expect(within(results).getByText('Dave')).toBeInTheDocument();
@@ -142,5 +145,66 @@ describe('search', () => {
     expect(await screen.findByText('Hello from far away')).toBeInTheDocument();
     const call = fetchMock.mock.calls.find(([u]) => String(u) === '/api/v1/search/resolve_status');
     expect(JSON.parse(String(call?.[1]?.body))).toEqual({ q: url });
+  });
+
+  it('searches posts in their own tab and loads older results', async () => {
+    const page1 = Array.from({ length: 20 }, (_, i) =>
+      makeStatus({ content: `<p>Gita in montagna ${i}</p>` }),
+    );
+    const older = makeStatus({ content: '<p>Montagna, prima gita</p>' });
+    const pages: string[] = [];
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /search/accounts': { body: [] },
+      'GET /search/statuses': (_body, url) => {
+        pages.push(`${url.searchParams.get('q')}|${url.searchParams.get('maxId') ?? ''}`);
+        return { body: url.searchParams.get('maxId') ? [older] : page1 };
+      },
+    });
+    const { router } = renderApp('/search?q=montagna');
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('tab', { name: 'Posts' }));
+    expect(screen.getByRole('tab', { name: 'Posts' })).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ type: 'posts' }));
+    expect(await screen.findByText('Gita in montagna 0')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    expect(await screen.findByText('Montagna, prima gita')).toBeInTheDocument();
+    expect(pages).toEqual(['montagna|', `montagna|${page1[19]?.id}`]);
+  });
+
+  it('opens on the tab in the address and shows hashtags for the query', async () => {
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /tags/followed': { body: ['ciclismo', 'cinema'] },
+      'GET /tags/ciclismo': { body: { name: 'ciclismo', following: true, postsCount: 2 } },
+    });
+    renderApp('/search?q=ciclismo&type=hashtags');
+    const list = await screen.findByRole('list', { name: 'Hashtags' });
+    expect(within(list).getByRole('link', { name: /#ciclismo/ })).toHaveAttribute(
+      'href',
+      '/tags/ciclismo',
+    );
+    expect(within(list).getByText('2 posts')).toBeInTheDocument();
+  });
+
+  it('keeps the tab when the query changes', async () => {
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /search/statuses': { body: [] },
+    });
+    const { router } = renderApp('/search?q=uno&type=posts');
+    const user = userEvent.setup();
+    const box = await screen.findByRole('searchbox', { name: 'Search people, posts and hashtags' });
+    await user.clear(box);
+    await user.type(box, 'due');
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({ q: 'due', type: 'posts' }),
+    );
+    expect(await screen.findByText('No posts match “due”.')).toBeInTheDocument();
   });
 });

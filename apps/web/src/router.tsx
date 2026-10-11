@@ -27,7 +27,7 @@ import { NotificationsPage } from './pages/Notifications.tsx';
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx';
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
-import { SearchPage } from './pages/Search.tsx';
+import { isSearchType, SearchPage, type SearchType } from './pages/Search.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
 import { AuthorizedAppsPage } from './pages/settings/AuthorizedApps.tsx';
@@ -253,8 +253,11 @@ const aboutRoute = createRoute({
 const searchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/search',
-  validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { q?: string | undefined; type?: SearchType | undefined } => ({
     q: typeof search.q === 'string' && search.q.trim() ? search.q.slice(0, 500) : undefined,
+    type: isSearchType(search.type) && search.type !== 'accounts' ? search.type : undefined,
   }),
   component: SearchPage,
 });
