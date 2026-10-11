@@ -6,6 +6,17 @@ A federated social network that speaks ActivityPub and stays compatible with the
 - **diaspora\* compatible**: talk to existing diaspora pods, and migrate a pod in place without losing identities.
 - **Aspects**: share with the people you choose (family, friends, work…), not only "public" or "followers".
 
+## Features
+
+- **Accounts**: registration (open, approval, invite-only, closed), passkeys, two-factor authentication, password reset, data export, account deletion and moves between servers.
+- **Sharing**: posts in Markdown with media, content warnings, polls and hashtags; five audiences (public, unlisted, followers, aspects, direct); replies, reshares, likes, bookmarks, edits; private conversations.
+- **Timelines**: home, local, federated, hashtags (followable), aspects, bookmarks; live updates over WebSocket; notifications, including Web Push.
+- **Federation**: ActivityPub (Mastodon, Misskey, Pixelfed, Lemmy…) and the diaspora\* protocol (diaspora, Friendica, Hubzilla); one account record per person even when they speak both.
+- **Migration**: import an existing diaspora\* pod on the same domain, keeping handles, keys and contacts.
+- **Moderation**: approval queue, reports, suspensions, domain blocks, roles, audit log, editable instance settings and rules.
+- **Privacy**: images stripped of metadata, remote media cached locally, visibility enforced in one place.
+- **Web client** in English and Italian, installable as a PWA.
+
 Status: early development. See [docs/architettura.md](docs/architettura.md) (Italian) for the design and [docs/decisions.md](docs/decisions.md) for implementation decisions.
 
 ## The name

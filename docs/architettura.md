@@ -308,3 +308,20 @@ Le cerchie entrano già nella fase 1: la visibilità è nel modello dati fin dal
 | Spam e abusi dopo l'apertura | Alto | Moderazione nella fase 4 prima della beta; registrazioni su invito all'inizio |
 | Privacy delle cerchie verso server terzi | Medio | Avviso chiaro nell'interfaccia; estensioni Disbigle tra istanze compatibili |
 | Prestazioni delle timeline | Basso | Fan-out in Redis come Mastodon; indici dedicati in PostgreSQL |
+
+## Stato dell'implementazione (11 ottobre 2026)
+
+La prima versione completa le fasi 0–2 della roadmap e buona parte delle fasi 3 e 4. È sul branch `phase-0-foundations`, PR #1 verso `main`.
+
+| Area | Stato |
+| --- | --- |
+| Account | Registrazione nelle 4 modalità, password, passkey, TOTP con codici di recupero, reset via email, export, cancellazione federata, trasferimento tra server |
+| Core social | Follow, cerchie (aspects), 5 livelli di visibilità, post, risposte, reshare, like, segnalibri, modifiche, sondaggi, hashtag seguibili, conversazioni private, notifiche, streaming WebSocket, Web Push |
+| ActivityPub | Fedify: attori, collezioni, WebFinger, NodeInfo, attore di istanza per l'authorized fetch, recupero dei thread e degli outbox remoti, sondaggi (`Question`), `Move` |
+| diaspora* | Libreria del protocollo verificata sui fixture della gem, bridge con relayable, consegne cifrate, coda Redis persistente, sondaggi, `AccountMigration`, protezione SSRF |
+| Migrazione pod | `packages/diaspora-import`: utenti, chiavi, GUID, contatti, cerchie, post, foto, commenti, like, sondaggi, conversazioni; password bcrypt convertite al primo accesso |
+| Moderazione | Coda di approvazione, segnalazioni, sospensioni, ruoli, blocco domini, log, impostazioni d'istanza modificabili, elenco dei server conosciuti |
+| Web | React 19, italiano e inglese, PWA |
+| Deploy | systemd + nginx senza Docker: `docs/deploy.md` |
+
+Ancora da verificare dal vivo: federazione con server reali (serve un dominio pubblico) e import da un pod reale (diaspo.it).
