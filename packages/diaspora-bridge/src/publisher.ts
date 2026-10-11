@@ -7,6 +7,7 @@ import {
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
+  postsForNewFollower,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
@@ -29,6 +30,7 @@ import {
   isPublicVisibility,
   type PostRow,
   postById,
+  publicReceiveUrl,
   threadRootOf,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
@@ -421,9 +423,28 @@ export class DiasporaPublisher implements EventBus {
    * for the request (cores that create diaspora* follows directly emit only this event).
    */
   private async followCreated(actorId: string, targetActorId: string) {
+    await this.sendRecentPosts(actorId, targetActorId);
     const key = `${actorId}:${targetActorId}`;
     if (this.contactsSent.delete(key)) return;
     await this.sendContact(actorId, targetActorId, { following: true, sharing: true });
+  }
+
+  /** The latest public posts of a local account, sent to the pod of a new diaspora* follower. */
+  private async sendRecentPosts(followerId: string, localId: string) {
+    const ctx = this.ctx;
+    const [follower, local] = await Promise.all([
+      actorById(ctx, followerId),
+      this.localActor(localId),
+    ]);
+    const url = deliversViaDiaspora(follower) ? publicReceiveUrl(follower) : null;
+    const signer = local ? await signerFor(ctx, local) : null;
+    if (!follower || !local || !url || !signer) return;
+    const recipients = { publicUrls: new Map([[url, new Set([follower.id])]]), privateActors: [] };
+    for (const post of await postsForNewFollower(ctx, 'diaspora', follower.id, local.id)) {
+      if (!post.diasporaGuid) continue;
+      const entity = await statusMessageFor(ctx, post, local);
+      await sendToRecipients(this.bridge, serializeEntity(entity), signer, recipients);
+    }
   }
 
   private async sendContact(

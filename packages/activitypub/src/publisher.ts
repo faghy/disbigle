@@ -4,6 +4,7 @@ import {
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
+  postsForNewFollower,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Context, Federation } from '@fedify/fedify';
@@ -132,6 +133,7 @@ export class ActivityPubPublisher implements EventBus {
             object: followActivity,
           }),
         );
+        if (event.type === 'follow.created') await this.sendRecentPosts(ctx, local, follower);
         return;
       }
       case 'follow.removed': {
@@ -387,6 +389,27 @@ export class ActivityPubPublisher implements EventBus {
       }),
       { preferSharedInbox: true },
     );
+  }
+
+  /** The latest public posts of `local`, sent to a new follower's inbox only. */
+  private async sendRecentPosts(ctx: Context<CoreContext>, local: ActorRow, follower: ActorRow) {
+    const recent = await postsForNewFollower(this.core, 'activitypub', follower.id, local.id);
+    for (const post of recent) {
+      if (!post.apUri) continue;
+      const note = await postToNote(ctx, post, local);
+      await ctx.sendActivity(
+        { identifier: local.username },
+        recipient(follower),
+        new Create({
+          id: new URL(`${post.apUri}/activity`),
+          actor: ctx.getActorUri(local.username),
+          object: note,
+          tos: note.toIds,
+          ccs: note.ccIds,
+          published: note.published,
+        }),
+      );
+    }
   }
 
   /**

@@ -252,4 +252,38 @@ describe('bridge identities', () => {
         !(await replies(paul.client, onAp.id)).some((t: string) => t.includes('diaspora')),
     );
   }, 120_000);
+
+  it('sends recent public posts to new followers on both networks', async () => {
+    const carla = await signUp(hub);
+    await carla.client.post('/api/v1/statuses', { content: 'Scritto prima di avere follower' });
+    await carla.client.post('/api/v1/statuses', {
+      content: 'Solo per i follower',
+      visibility: 'followers',
+    });
+    const dora = await signUp(pod);
+    const paul = await signUp(ap as unknown as Instance);
+
+    const carlaOnPod = await pod.bridge.resolvePerson(`${carla.account.username}@${hub.domain}`);
+    if (!carlaOnPod) throw new Error('carla not found from the pod');
+    await dora.client.post(`/api/v1/accounts/${carlaOnPod.id}/follow`);
+    const carlaOnAp = (
+      await paul.client.post('/api/v1/search/resolve', {
+        q: `${hub.url}/users/${carla.account.username}`,
+      })
+    ).json();
+    await paul.client.post(`/api/v1/accounts/${carlaOnAp.id}/follow`);
+
+    for (const reader of [dora, paul]) {
+      const home = await eventually(async () => {
+        const list = (await reader.client.get('/api/v1/timelines/home')).json();
+        return list.some((s: { content: string }) => s.content.includes('prima di avere follower'))
+          ? list
+          : null;
+      });
+      // Only public posts are sent this way.
+      expect(home.some((s: { content: string }) => s.content.includes('Solo per i follower'))).toBe(
+        false,
+      );
+    }
+  }, 90_000);
 });
