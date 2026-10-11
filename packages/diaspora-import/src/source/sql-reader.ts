@@ -249,23 +249,43 @@ export class SqlDiasporaReader implements DiasporaReader {
     );
 
     const pollRows = await this.qIn(
-      'select id, question, status_message_id from polls where status_message_id in (:ids)',
+      'select id, guid, question, status_message_id from polls where status_message_id in (:ids)',
       ids,
     );
+    const pollIds = pollRows.map((p) => p.id);
     const answers = groupBy(
       await this.qIn(
-        'select poll_id, answer, vote_count from poll_answers where poll_id in (:ids) order by id',
-        pollRows.map((p) => p.id),
+        'select id, guid, poll_id, answer, vote_count from poll_answers where poll_id in (:ids) order by id',
+        pollIds,
       ),
       (a) => num(a.poll_id),
+    );
+    const participations = groupBy(
+      await this.qIn(
+        `select id, guid, poll_id, poll_answer_id, author_id, created_at from poll_participations
+          where poll_id in (:ids) order by id`,
+        pollIds,
+      ),
+      (p) => num(p.poll_id),
     );
     const polls = new Map<number, PollRow>();
     for (const p of pollRows) {
       polls.set(num(p.status_message_id), {
+        id: num(p.id),
+        guid: strOrNull(p.guid),
         question: str(p.question),
         answers: (answers.get(num(p.id)) ?? []).map((a) => ({
+          id: num(a.id),
+          guid: strOrNull(a.guid),
           answer: str(a.answer),
           voteCount: num(a.vote_count ?? 0),
+        })),
+        participations: (participations.get(num(p.id)) ?? []).map((v) => ({
+          id: num(v.id),
+          guid: strOrNull(v.guid),
+          authorId: num(v.author_id),
+          pollAnswerId: num(v.poll_answer_id),
+          createdAt: date(v.created_at),
         })),
       });
     }

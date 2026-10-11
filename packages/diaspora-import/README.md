@@ -151,8 +151,16 @@ person) become `aspect_memberships` of the person's actor, whatever the flags.
   `ap_url = <PUBLIC_URL>/@user/<id>`; remote posts have none.
 - Mentions: `mentions` rows (`mentions_container_type = 'Post'`). Tags: `taggings` plus the tags
   found in the text, lowercased.
-- Polls are appended as text with their final results (`**question**` and one line per
-  answer); individual votes are not imported.
+- Polls (`polls`, `poll_answers`, `poll_participations`) become real Disbigle polls: options in
+  answer order (`poll_answers.id`), `multiple = false` and `expires_at = null` (diaspora\* polls
+  allow one answer and never close), the poll GUID in `polls.diaspora_guid`. The question is
+  appended to the post text as `**question**` (Disbigle polls have no question field). Each
+  participation becomes a `poll_votes` row with its GUID (`ap_uri = <actor>#votes/<id>` for
+  local voters); the choice is the position of the answer. Votes are imported for new and
+  already imported posts, so a later run adds votes cast in between. Option and voter counts
+  are recomputed from the votes at the end (diaspora's cached `vote_count` is ignored). A poll
+  with fewer than two answers cannot be represented and is appended as text with its results.
+  Per-answer GUIDs are not stored (`PollOption` has no field for them yet).
 - Photos (`photos.status_message_guid`) → `media_attachments` in order, with `text` as
   description and the stored width/height. Local photos: the original (`unprocessed_image`) is
   copied to `diaspora/images/<file>` and `scaled_full_` (or `thumb_large_`) as preview; when
@@ -180,12 +188,13 @@ participant (`conversation_visibilities`); replies add the root's author.
 
 ### Counters, notifications
 
-`replies_count`, `reblogs_count` and `likes_count` are recomputed from the data at the end.
+`replies_count`, `reblogs_count` and `likes_count`, and the option and voter counts of imported
+polls, are recomputed from the data at the end.
 Notifications are **not** imported: users start with an empty notification list.
 
 ### Not imported
 
-Notifications, poll votes, post locations, open graph/oEmbed caches, profile tags, tag
+Notifications, post locations, open graph/oEmbed caches, profile tags, tag
 followings, blocks, reports, two-factor secrets, OAuth applications, invitation codes,
 participations, exports. The first message GUID of a conversation is not kept (the root carries
 the conversation GUID).
@@ -193,7 +202,7 @@ the conversation GUID).
 ## Idempotency
 
 Everything is matched on stable keys: actors by diaspora\* GUID (remote ones also by handle),
-aspects by owner and name, follows and likes by their pair, memberships by their key, posts,
+aspects by owner and name, follows, likes and poll votes by their key, memberships by their key, posts,
 comments, reshares, conversations and messages by GUID. A second run creates only what is new.
 Each batch of posts is written in one transaction with its audience, mentions, tags and media, so
 an interrupted run resumes cleanly.

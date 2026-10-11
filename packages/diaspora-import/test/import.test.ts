@@ -27,8 +27,18 @@ import {
 } from '../src/index.ts';
 import { createDiasporaPod, deviseHash, PASSWORDS, POD_DOMAIN, type Pod } from './pod.ts';
 
-const { actors, users, posts, follows, aspects, aspectMemberships, postAudiences, postAspects } =
-  schema;
+const {
+  actors,
+  users,
+  posts,
+  follows,
+  aspects,
+  aspectMemberships,
+  postAudiences,
+  postAspects,
+  polls,
+  pollVotes,
+} = schema;
 
 const config: Config = {
   NODE_ENV: 'test',
@@ -333,16 +343,60 @@ describe('posts', () => {
     expect(status.media[0]?.url).toBe('https://remote.example/uploads/images/carolpic.png');
   });
 
-  it('turns reshares into reblogs and polls into text', async () => {
+  it('turns reshares into reblogs', async () => {
     const { bob } = await ids();
     const reshare = await postByGuid(pod.guids.posts.reshare);
     const original = await postByGuid(pod.guids.posts.p1);
     expect(reshare.reblogOfId).toBe(original.id);
     expect(reshare.actorId).toBe(bob.id);
     expect(reshare.apUri).toBe(`${bob.apUri}/statuses/${reshare.id}/activity`);
-    const poll = await postByGuid(pod.guids.posts.poll);
-    expect(poll.source).toContain('**Pizza o pasta?**');
-    expect(poll.source).toContain('- Pizza (3 votes)');
+  });
+
+  it('imports polls with their votes', async () => {
+    const { alice, bob, carol, dave } = await ids();
+    const post = await postByGuid(pod.guids.posts.poll);
+    expect(post.source).toBe('Che ne dite?\n\n**Pizza o pasta?**');
+    const [poll] = await ctx.db.select().from(polls).where(eq(polls.postId, post.id));
+    expect(poll?.diasporaGuid).toBe(pod.guids.polls.poll);
+    expect(poll?.multiple).toBe(false);
+    expect(poll?.expiresAt).toBeNull();
+
+    const forAlice = (await getStatus(ctx, alice.id, post.id)).poll;
+    expect(forAlice).toMatchObject({
+      expired: false,
+      multiple: false,
+      votersCount: 3,
+      votesCount: 3,
+      voted: false,
+      ownVotes: [],
+      options: [
+        { title: 'Pizza', votesCount: 2 },
+        { title: 'Pasta', votesCount: 1 },
+      ],
+    });
+    expect((await getStatus(ctx, bob.id, post.id)).poll).toMatchObject({
+      voted: true,
+      ownVotes: [0],
+    });
+    expect((await getStatus(ctx, dave.id, post.id)).poll?.ownVotes).toEqual([1]);
+    expect((await getStatus(ctx, null, post.id)).poll?.voted).toBe(false);
+
+    const votes = await ctx.db
+      .select()
+      .from(pollVotes)
+      .where(eq(pollVotes.pollId, poll?.id ?? ''));
+    const byActor = new Map(votes.map((v) => [v.actorId, v]));
+    expect(byActor.get(bob.id)?.diasporaGuid).toBe(pod.guids.votes.bob);
+    expect(byActor.get(bob.id)?.apUri).toBe(`${bob.apUri}#votes/${byActor.get(bob.id)?.id}`);
+    expect(byActor.get(carol.id)?.diasporaGuid).toBe(pod.guids.votes.carol);
+    expect(byActor.get(carol.id)?.apUri).toBeNull();
+  });
+
+  it('keeps polls with fewer than two answers as text', async () => {
+    const post = await postByGuid(pod.guids.posts.shortPoll);
+    expect(post.source).toContain('**Only one?**');
+    expect(post.source).toContain('- Yes (0 votes)');
+    expect((await getStatus(ctx, null, post.id)).poll).toBeNull();
   });
 });
 
@@ -397,7 +451,9 @@ describe('runs', () => {
   it('reports what it imported', () => {
     expect(first.counts.localUsers.created).toBe(2);
     expect(first.counts.remotePeople.created).toBe(2);
-    expect(first.counts.posts.created).toBe(6);
+    expect(first.counts.posts.created).toBe(7);
+    expect(first.counts.polls.created).toBe(1);
+    expect(first.counts.pollVotes.created).toBe(3);
     expect(first.counts.reshares.created).toBe(1);
     expect(first.counts.comments.created).toBe(3);
     expect(first.counts.likes.created).toBe(3);
@@ -412,10 +468,16 @@ describe('runs', () => {
       expect({ name, created: counts.created }).toEqual({ name, created: 0 });
     }
     expect(second.counts.localUsers.existing).toBe(2);
-    expect(second.counts.posts.existing).toBe(6);
+    expect(second.counts.posts.existing).toBe(7);
+    expect(second.counts.polls.existing).toBe(1);
+    expect(second.counts.pollVotes.existing).toBe(3);
     const [{ n } = { n: 0 }] = await ctx.db.select({ n: sql<number>`count(*)::int` }).from(posts);
-    // 6 status messages + 1 reshare + 3 comments + 2 conversation posts.
-    expect(n).toBe(12);
+    // 7 status messages + 1 reshare + 3 comments + 2 conversation posts.
+    expect(n).toBe(13);
+    const [{ v } = { v: 0 }] = await ctx.db
+      .select({ v: sql<number>`count(*)::int` })
+      .from(pollVotes);
+    expect(v).toBe(3);
   });
 
   it('refreshes the password of accounts not yet used on Disbigle', async () => {
@@ -433,9 +495,24 @@ describe('runs', () => {
     await source`update users set encrypted_password = ${deviseHash('new-bob-password')} where id = 2`;
     await source`insert into comments (id, text, commentable_id, author_id, guid, created_at, updated_at)
       values (100, 'Late comment', 1, 2, ${newGuid}, ${'2024-02-01T00:00:00Z'}, ${'2024-02-01T00:00:00Z'})`;
+    // Alice votes in her own poll after the first import.
+    await source`insert into poll_participations (poll_answer_id, author_id, poll_id, guid, created_at, updated_at)
+      values (2, 1, 1, ${'e'.repeat(32)}, ${'2024-02-01T00:00:00Z'}, ${'2024-02-01T00:00:00Z'})`;
     await source.end();
     const third = await runImport(ctx);
     expect(third.counts.comments.created).toBe(1);
+    expect(third.counts.pollVotes.created).toBe(1);
+    expect(third.counts.pollVotes.existing).toBe(3);
+    const pollPost = await postByGuid(pod.guids.posts.poll);
+    const { alice } = await ids();
+    expect((await getStatus(ctx, alice.id, pollPost.id)).poll).toMatchObject({
+      votersCount: 4,
+      ownVotes: [1],
+      options: [
+        { title: 'Pizza', votesCount: 2 },
+        { title: 'Pasta', votesCount: 2 },
+      ],
+    });
     expect(third.counts.posts.created).toBe(0);
     const { bob } = await ids();
     const [user] = await ctx.db.select().from(users).where(eq(users.actorId, bob.id));
@@ -458,7 +535,7 @@ describe('runs', () => {
       },
     }).finally(() => reader.close());
     expect(summary.dryRun).toBe(true);
-    expect(summary.counts.posts.created).toBe(6);
+    expect(summary.counts.posts.created).toBe(7);
     expect(summary.counts.follows.created).toBe(5);
     for (const table of [actors, users, posts, follows, aspects]) {
       const [{ n } = { n: -1 }] = await target.db

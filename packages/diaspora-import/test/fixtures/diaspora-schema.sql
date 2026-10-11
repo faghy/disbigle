@@ -205,6 +205,18 @@ create table poll_answers (
   vote_count integer default 0
 );
 
+create table poll_participations (
+  id serial primary key,
+  poll_answer_id integer not null,
+  author_id integer not null,
+  poll_id integer not null,
+  guid varchar(255),
+  created_at timestamp,
+  updated_at timestamp
+);
+create unique index index_poll_participations_on_poll_id_and_author_id
+  on poll_participations (poll_id, author_id);
+
 create table aspect_visibilities (
   id serial primary key,
   shareable_id integer not null,

@@ -53,7 +53,7 @@ export function convertMentions(
   });
 }
 
-/** Polls are not modelled yet: they are appended to the post as text, with the final results. */
+/** Fallback for polls Disbigle cannot represent (fewer than 2 answers): text with the results. */
 export function pollToMarkdown(poll: PollRow): string {
   const total = poll.answers.reduce((sum, a) => sum + a.voteCount, 0);
   const lines = poll.answers.map(

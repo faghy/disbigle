@@ -81,9 +81,28 @@ export interface PhotoRow {
   height: number | null;
 }
 
+export interface PollAnswerRow {
+  id: number;
+  guid: string | null;
+  answer: string;
+  voteCount: number;
+}
+
+export interface PollParticipationRow {
+  id: number;
+  guid: string | null;
+  authorId: number;
+  pollAnswerId: number;
+  createdAt: Date;
+}
+
 export interface PollRow {
+  id: number;
+  guid: string | null;
   question: string;
-  answers: { answer: string; voteCount: number }[];
+  /** In diaspora's order (`poll_answers.id`), which is the order of the options. */
+  answers: PollAnswerRow[];
+  participations: PollParticipationRow[];
 }
 
 export interface StatusMessageRow {

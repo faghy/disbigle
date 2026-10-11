@@ -38,7 +38,9 @@ export interface Pod {
   keys: Record<'alice' | 'bob' | 'carol' | 'dave', ReturnType<typeof rubyKeyPair>>;
   guids: {
     people: Record<'alice' | 'bob' | 'carol' | 'dave', string>;
-    posts: Record<'p1' | 'p2' | 'p3' | 'p4' | 'p5' | 'reshare' | 'poll', string>;
+    posts: Record<'p1' | 'p2' | 'p3' | 'p4' | 'p5' | 'reshare' | 'poll' | 'shortPoll', string>;
+    polls: Record<'poll' | 'shortPoll', string>;
+    votes: Record<'bob' | 'carol' | 'dave', string>;
     comments: Record<'c1' | 'c2' | 'c3', string>;
     conversation: string;
     messages: Record<'m1' | 'm2', string>;
@@ -75,7 +77,10 @@ export async function createDiasporaPod(): Promise<Pod> {
     p5: postGuid(),
     reshare: postGuid(),
     poll: postGuid(),
+    shortPoll: postGuid(),
   };
+  const polls = { poll: postGuid(), shortPoll: postGuid() };
+  const votes = { bob: postGuid(), carol: postGuid(), dave: postGuid() };
   const comments = { c1: postGuid(), c2: postGuid(), c3: postGuid() };
   const conversation = postGuid();
   const messages = { m1: postGuid(), m2: postGuid() };
@@ -132,13 +137,23 @@ export async function createDiasporaPod(): Promise<Pod> {
     (4, 3, true, ${posts.p4}, 'StatusMessage', 'Carol public post with a picture', null, ${t('2020-06-04 12:00:00')}, ${now}),
     (5, 3, false, ${posts.p5}, 'StatusMessage', 'Carol private note for bob', null, ${t('2020-06-05 12:00:00')}, ${now}),
     (6, 2, true, ${posts.reshare}, 'Reshare', null, ${posts.p1}, ${t('2020-06-06 12:00:00')}, ${now}),
-    (7, 1, true, ${posts.poll}, 'StatusMessage', 'Che ne dite?', null, ${t('2020-06-07 12:00:00')}, ${now})`;
+    (7, 1, true, ${posts.poll}, 'StatusMessage', 'Che ne dite?', null, ${t('2020-06-07 12:00:00')}, ${now}),
+    (8, 2, true, ${posts.shortPoll}, 'StatusMessage', 'Odd poll', null, ${t('2020-06-08 12:00:00')}, ${now})`;
   await sql`insert into photos (author_id, public, guid, remote_photo_path, remote_photo_name, random_string, unprocessed_image, status_message_guid, width, height, text, created_at, updated_at) values
     (1, true, ${postGuid()}, ${`https://${POD_DOMAIN}/uploads/images/`}, 'abc123.jpg', 'abc123', 'abc123.jpg', ${posts.p1}, 800, 600, 'Il Colosseo', ${now}, ${now}),
     (3, true, ${postGuid()}, 'https://remote.example/uploads/images/', 'carolpic.png', null, null, ${posts.p4}, 640, 480, null, ${now}, ${now}),
     (1, false, ${postGuid()}, ${`https://${POD_DOMAIN}/uploads/images/`}, 'missing1.jpg', 'missing1', 'missing1.jpg', ${posts.p3}, null, null, null, ${now}, ${now})`;
-  await sql`insert into polls (id, question, status_message_id, status, guid, created_at, updated_at) values (1, 'Pizza o pasta?', 7, true, ${postGuid()}, ${now}, ${now})`;
-  await sql`insert into poll_answers (answer, poll_id, guid, vote_count) values ('Pizza', 1, ${postGuid()}, 3), ('Pasta', 1, ${postGuid()}, 1)`;
+  // Alice's poll (answers 1 Pizza, 2 Pasta), voted by bob, carol and dave; bob's poll with a
+  // single answer, which Disbigle cannot represent. vote_count is diaspora's cached counter.
+  await sql`insert into polls (id, question, status_message_id, status, guid, created_at, updated_at) values
+    (1, 'Pizza o pasta?', 7, true, ${polls.poll}, ${now}, ${now}),
+    (2, 'Only one?', 8, true, ${polls.shortPoll}, ${now}, ${now})`;
+  await sql`insert into poll_answers (id, answer, poll_id, guid, vote_count) values
+    (1, 'Pizza', 1, ${postGuid()}, 2), (2, 'Pasta', 1, ${postGuid()}, 1), (3, 'Yes', 2, ${postGuid()}, 0)`;
+  await sql`insert into poll_participations (poll_answer_id, author_id, poll_id, guid, created_at, updated_at) values
+    (1, 2, 1, ${votes.bob}, ${t('2020-06-07 13:00:00')}, ${now}),
+    (1, 3, 1, ${votes.carol}, ${t('2020-06-07 14:00:00')}, ${now}),
+    (2, 4, 1, ${votes.dave}, ${t('2020-06-07 15:00:00')}, ${now})`;
   await sql`insert into aspect_visibilities (shareable_id, aspect_id, shareable_type) values (2, 2, 'Post'), (3, 1, 'Post')`;
   // Local users who received private posts: bob got alice's family post and carol's note.
   await sql`insert into share_visibilities (shareable_id, user_id, shareable_type) values (3, 2, 'Post'), (5, 2, 'Post')`;
@@ -178,7 +193,7 @@ export async function createDiasporaPod(): Promise<Pod> {
     url: url.toString(),
     uploadsDir,
     keys,
-    guids: { people, posts, comments, conversation, messages },
+    guids: { people, posts, polls, votes, comments, conversation, messages },
     times: { p1: new Date('2020-06-01T12:00:00Z') },
     drop: async () => {
       await adminClient.unsafe(`drop database if exists "${name}" with (force)`);

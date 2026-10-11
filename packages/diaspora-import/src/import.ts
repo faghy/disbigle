@@ -57,6 +57,8 @@ const {
   postTags,
   likes,
   mediaAttachments,
+  polls,
+  pollVotes,
 } = schema;
 
 type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -128,7 +130,9 @@ export interface ImportSummary {
     | 'likes'
     | 'conversations'
     | 'messages'
-    | 'media',
+    | 'media'
+    | 'polls'
+    | 'pollVotes',
     EntityCounts
   >;
   /** Local media files copied (or, in a dry run, found). */
@@ -225,6 +229,8 @@ class Importer {
         conversations: emptyCounts(),
         messages: emptyCounts(),
         media: emptyCounts(),
+        polls: emptyCounts(),
+        pollVotes: emptyCounts(),
       },
       filesCopied: 0,
       filesMissing: 0,
@@ -917,12 +923,15 @@ class Importer {
       mentionIds: string[];
       tags: string[];
       media?: PreparedMedia[];
+      poll?: typeof polls.$inferInsert;
     }[],
   ): Promise<void> {
     if (items.length === 0) return;
     const tagNames = uniq(items.flatMap((i) => i.tags)).filter((t) => t.length <= 100);
     await this.db.transaction(async (tx) => {
       await tx.insert(posts).values(items.map((i) => i.row));
+      const pollRows = items.flatMap((i) => (i.poll ? [i.poll] : []));
+      if (pollRows.length > 0) await tx.insert(polls).values(pollRows);
       const audienceRows = items.flatMap((i) =>
         uniq(i.audience)
           .filter((a) => a !== i.row.actorId)
@@ -1069,8 +1078,27 @@ class Importer {
         this.warn(`Post ${message.guid}: author (person ${message.authorId}) not imported`);
         continue;
       }
+      const id = idAt(message.createdAt);
       let text = message.text;
-      if (message.poll) text = `${text.trim()}\n\n${pollToMarkdown(message.poll)}`.trim();
+      let poll: typeof polls.$inferInsert | undefined;
+      if (message.poll && message.poll.answers.length >= 2) {
+        // A real poll: the question stays in the text, as on ActivityPub; diaspora* polls never
+        // close and allow one answer. Counts are filled in at the end from the imported votes.
+        const question = message.poll.question.trim();
+        if (question) text = `${text.trim()}\n\n**${question}**`.trim();
+        poll = {
+          id: idAt(message.createdAt),
+          postId: id,
+          options: message.poll.answers.map((a) => ({ title: a.answer, votesCount: 0 })),
+          multiple: false,
+          expiresAt: null,
+          votersCount: 0,
+          diasporaGuid: message.poll.guid,
+          createdAt: message.createdAt,
+        };
+      } else if (message.poll) {
+        text = `${text.trim()}\n\n${pollToMarkdown(message.poll)}`.trim();
+      }
       const rendered = this.render(text);
       const mentionIds = this.actorIdsOfPeople(message.mentionedPersonIds);
       const aspectIds = author.local ? mappedAspects(message) : [];
@@ -1085,7 +1113,6 @@ class Importer {
         const prepared = await this.prepareMedia(photo, author);
         if (prepared) media.push(prepared);
       }
-      const id = idAt(message.createdAt);
       items.push({
         row: {
           id,
@@ -1105,11 +1132,80 @@ class Importer {
         mentionIds,
         tags: uniq([...rendered.tags, ...message.tags.map((t) => t.toLowerCase())]),
         media,
+        ...(poll ? { poll } : {}),
       });
     }
     await this.storeFiles(items.flatMap((i) => i.media));
     await this.writePosts(items);
     counts.created += items.length;
+    this.summary.counts.polls.created += items.filter((i) => i.poll).length;
+    await this.importPollVotes(
+      rows.filter((r) => (r.poll?.answers.length ?? 0) >= 2),
+      existing,
+    );
+  }
+
+  /**
+   * Votes (`poll_participations`) of the polls in a batch, for new and already imported posts,
+   * so a later run picks up votes cast in between. One vote per participation; the choice is the
+   * position of the answer in the poll.
+   */
+  private async importPollVotes(
+    rows: StatusMessageRow[],
+    existingPosts: Set<string>,
+  ): Promise<void> {
+    const counts = this.summary.counts.pollVotes;
+    if (rows.length === 0) return;
+    const found = await this.db
+      .select({ id: polls.id, guid: posts.diasporaGuid })
+      .from(polls)
+      .innerJoin(posts, eq(posts.id, polls.postId))
+      .where(
+        inArray(
+          posts.diasporaGuid,
+          rows.map((r) => r.guid),
+        ),
+      );
+    const pollIdOf = new Map(found.map((p) => [p.guid, p.id]));
+    const values: (typeof pollVotes.$inferInsert)[] = [];
+    for (const message of rows) {
+      const poll = message.poll;
+      const pollId = pollIdOf.get(message.guid);
+      if (!poll) continue;
+      if (!pollId) {
+        // The post was skipped, or imported earlier without a poll.
+        counts.skipped += poll.participations.length;
+        this.summary.counts.polls.skipped += 1;
+        continue;
+      }
+      if (existingPosts.has(message.guid)) this.summary.counts.polls.existing += 1;
+      for (const vote of poll.participations) {
+        const voter = this.people.get(vote.authorId);
+        const choice = poll.answers.findIndex((a) => a.id === vote.pollAnswerId);
+        if (!voter || choice < 0) {
+          counts.skipped += 1;
+          continue;
+        }
+        const id = idAt(vote.createdAt);
+        values.push({
+          id,
+          pollId,
+          actorId: voter.actorId,
+          choice,
+          apUri: voter.local ? `${voter.apUri}#votes/${id}` : null,
+          diasporaGuid: vote.guid,
+          createdAt: vote.createdAt,
+        });
+      }
+    }
+    if (values.length === 0) return;
+    const inserted = await this.db
+      .insert(pollVotes)
+      .values(values)
+      .onConflictDoNothing()
+      .returning({ id: pollVotes.id });
+    counts.created += inserted.length;
+    counts.existing += values.length - inserted.length;
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -1356,6 +1452,20 @@ class Importer {
       update ${posts} p set likes_count = c.n
         from (select post_id as id, count(*)::int as n from ${likes} group by post_id) c
        where p.id = c.id and p.likes_count <> c.n`);
+    // Polls imported from diaspora*: option and voter counts from the imported votes. jsonb_set
+    // keeps any other key of the options.
+    await this.db.execute(sql`
+      update ${polls} p set
+        options = coalesce((
+          select jsonb_agg(
+                   jsonb_set(o.value, '{votesCount}', to_jsonb(coalesce(v.n, 0))) order by o.ord)
+            from jsonb_array_elements(p.options) with ordinality as o(value, ord)
+            left join (select choice, count(*)::int as n from ${pollVotes}
+                        where poll_id = p.id group by choice) v on v.choice = o.ord - 1
+        ), p.options),
+        voters_count = (select count(distinct actor_id)::int from ${pollVotes} where poll_id = p.id)
+      where p.diaspora_guid is not null
+        and exists (select 1 from ${posts} where ${posts.id} = p.post_id and ${posts.diasporaGuid} is not null)`);
   }
 }
 
