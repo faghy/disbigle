@@ -10,8 +10,9 @@ import {
   type MediaStorage,
   MemoryMailer,
 } from '@disbigle/core';
-import { mastodonApi, type OAuthStore } from '@disbigle/mastodon-api';
+import { type MastodonPushStore, mastodonApi, type OAuthStore } from '@disbigle/mastodon-api';
 import { DrizzleOAuthStore } from '@disbigle/mastodon-api/drizzle-store';
+import { DrizzleMastodonPushStore } from '@disbigle/mastodon-api/push-drizzle-store';
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
@@ -64,6 +65,8 @@ export interface AppOptions {
   mailer?: Mailer;
   /** OAuth persistence for Mastodon-compatible apps; PostgreSQL by default. */
   oauthStore?: OAuthStore;
+  /** Push subscriptions of Mastodon apps; PostgreSQL by default. */
+  mastodonPushStore?: MastodonPushStore;
   /** Disable rate limiting (tests only). */
   disableRateLimit?: boolean;
 }
@@ -196,6 +199,7 @@ export async function buildApp(options: AppOptions) {
     ctx,
     storage,
     store: oauthStore,
+    pushStore: options.mastodonPushStore ?? new DrizzleMastodonPushStore(ctx.db),
     ...(hub ? { hub } : {}),
     ...(federation
       ? {

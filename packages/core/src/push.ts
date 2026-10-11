@@ -1,6 +1,6 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { PushAlerts } from '@disbigle/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import webpush from 'web-push';
 import type { CoreContext } from './context.ts';
 import { generateActorKeyPair, generateEd25519KeyPair } from './crypto/keys.ts';
@@ -96,7 +96,14 @@ export async function subscribePush(
     })
     .onConflictDoUpdate({
       target: webPushSubscriptions.endpoint,
-      set: { userId, p256dh: input.keys.p256dh, auth: input.keys.auth, alerts },
+      set: {
+        userId,
+        p256dh: input.keys.p256dh,
+        auth: input.keys.auth,
+        alerts,
+        tokenId: null,
+        mastodon: null,
+      },
     });
   return { endpoint: input.endpoint, alerts };
 }
@@ -109,7 +116,11 @@ export async function unsubscribePush(
   await ctx.db
     .delete(webPushSubscriptions)
     .where(
-      and(eq(webPushSubscriptions.userId, userId), eq(webPushSubscriptions.endpoint, endpoint)),
+      and(
+        eq(webPushSubscriptions.userId, userId),
+        eq(webPushSubscriptions.endpoint, endpoint),
+        isNull(webPushSubscriptions.tokenId),
+      ),
     );
 }
 
@@ -178,7 +189,7 @@ export class PushPublisher implements EventBus {
     const subscriptions = await db
       .select()
       .from(webPushSubscriptions)
-      .where(eq(webPushSubscriptions.userId, user.id));
+      .where(and(eq(webPushSubscriptions.userId, user.id), isNull(webPushSubscriptions.tokenId)));
     if (subscriptions.length === 0) return 0;
     const [row] = await db
       .select({ notification: notifications, from: actors })
@@ -244,7 +255,11 @@ export async function getPushSubscription(ctx: CoreContext, userId: string, endp
     .select()
     .from(webPushSubscriptions)
     .where(
-      and(eq(webPushSubscriptions.userId, userId), eq(webPushSubscriptions.endpoint, endpoint)),
+      and(
+        eq(webPushSubscriptions.userId, userId),
+        eq(webPushSubscriptions.endpoint, endpoint),
+        isNull(webPushSubscriptions.tokenId),
+      ),
     );
   return row ? { endpoint: row.endpoint, alerts: { ...defaultPushAlerts, ...row.alerts } } : null;
 }

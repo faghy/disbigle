@@ -14,12 +14,14 @@ import {
   hydrateStatuses,
   like,
   listConversations,
+  pinPost,
   publicTimeline,
   reblog,
   serializeAccount,
   tagTimeline,
   unbookmark,
   unlike,
+  unpinPost,
   unreblog,
   visibleTo,
   votePoll,
@@ -260,9 +262,22 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
     const [status] = await hydrateStatuses(ctx, actor, [wrapper]);
     return status ?? original;
   });
-  for (const path of ['pin', 'unpin', 'mute', 'unmute']) {
+  // Pins: core refuses non-public posts and more than five pins with bad_request; Mastodon says 422.
+  const pinAction = (run: typeof pinPost) => async (actor: string, id: string) => {
+    try {
+      return await run(ctx, actor, id);
+    } catch (error) {
+      if (error instanceof DomainError && error.code === 'bad_request') {
+        throw new MastodonError(422, `Validation failed: ${error.message}`);
+      }
+      throw error;
+    }
+  };
+  statusAction('pin', ['write:accounts'], pinAction(pinPost));
+  statusAction('unpin', ['write:accounts'], pinAction(unpinPost));
+  for (const path of ['mute', 'unmute']) {
     app.post(`/api/v1/statuses/:id/${path}`, async (request) => {
-      requireUser(request, 'write:accounts', 'write:mutes');
+      requireUser(request, 'write:mutes');
       idParam(request);
       throw new MastodonError(422, `Validation failed: ${path} is not supported on this server`);
     });

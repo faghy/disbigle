@@ -1,11 +1,12 @@
 import {
   acceptFollowRequest,
   countUnreadNotifications,
+  notFilteredFor,
   rejectFollowRequest,
   serializeNotifications,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
-import { and, eq, inArray, isNull, lte, notInArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte, notInArray, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { requireUser } from '../auth.ts';
 import { nativeNotificationTypes } from '../entities/mappers.ts';
@@ -57,6 +58,11 @@ export async function notificationRoutes(app: FastifyInstance, deps: Deps) {
           types ? inArray(notifications.type, types) : undefined,
           exclude.length > 0 ? notInArray(notifications.type, exclude) : undefined,
           accountId ? eq(notifications.fromActorId, accountId) : undefined,
+          // Posts matching the user's filters for notifications are left out, as in core.
+          sql`(${notifications.postId} is null or exists (
+            select 1 from ${schema.posts} where ${schema.posts.id} = ${notifications.postId}
+            and ${notFilteredFor(user.actorId, 'notifications')}
+          ))`,
           cursorWhere(notifications.id, page),
         ),
       )

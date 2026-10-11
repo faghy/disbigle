@@ -175,14 +175,6 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
   app.get('/api/v1/trends', async () => []);
 
   // Features we do not have: answered with empty collections so clients degrade gracefully.
-  app.get('/api/v1/filters', async (request) => {
-    requireUser(request, 'read:filters');
-    return [];
-  });
-  app.get('/api/v2/filters', anyFlavour, async (request) => {
-    requireUser(request, 'read:filters');
-    return [];
-  });
   app.get('/api/v1/scheduled_statuses', async (request) => {
     requireUser(request, 'read:statuses');
     return [];

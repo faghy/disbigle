@@ -245,7 +245,7 @@ export function mapStatus(
     result.reblogged = status.reblogged;
     result.bookmarked = status.bookmarked;
     result.muted = false;
-    result.pinned = false;
+    result.pinned = status.pinned ?? false;
     result.filtered = [];
   }
   if (options.includeSource) result.text = status.source ?? null;

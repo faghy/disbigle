@@ -6,10 +6,12 @@ import { mastodonErrorHandler, parseFormBody } from './http.ts';
 import { oauthRoutes } from './oauth/routes.ts';
 import type { Deps, MastodonApiOptions } from './options.ts';
 import { accountRoutes } from './routes/accounts.ts';
+import { filterRoutes } from './routes/filters.ts';
 import { instanceRoutes } from './routes/instance.ts';
 import { listRoutes } from './routes/lists.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { notificationRoutes } from './routes/notifications.ts';
+import { pushRoutes } from './routes/push.ts';
 import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
@@ -104,5 +106,7 @@ export async function mastodonApi(app: FastifyInstance, opts: MastodonApiOptions
   await mediaRoutes(app, deps);
   await searchRoutes(app, deps);
   await instanceRoutes(app, deps);
+  await filterRoutes(app, deps);
+  await pushRoutes(app, deps);
   if (opts.hub) await streamingRoutes(app, { ...deps, hub: opts.hub });
 }

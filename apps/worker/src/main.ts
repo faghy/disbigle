@@ -13,6 +13,9 @@ import {
   RedisJobQueue,
   startDiasporaQueue,
 } from '@disbigle/diaspora-bridge';
+import { MastodonPushPublisher } from '@disbigle/mastodon-api';
+import { DrizzleOAuthStore } from '@disbigle/mastodon-api/drizzle-store';
+import { DrizzleMastodonPushStore } from '@disbigle/mastodon-api/push-drizzle-store';
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { scheduledJobs } from './jobs.ts';
@@ -51,6 +54,10 @@ ctx.events = new CompositeEventBus([
   new ActivityPubPublisher(federation, ctx),
   new DiasporaPublisher(diaspora),
   new PushPublisher(ctx),
+  new MastodonPushPublisher(ctx, {
+    push: new DrizzleMastodonPushStore(db),
+    oauth: new DrizzleOAuthStore(db),
+  }),
 ]);
 
 const abort = new AbortController();

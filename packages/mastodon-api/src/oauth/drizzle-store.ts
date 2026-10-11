@@ -90,6 +90,14 @@ export class DrizzleOAuthStore implements OAuthStore {
     return row ?? null;
   }
 
+  async findToken(id: string) {
+    const [row] = await this.db
+      .select()
+      .from(oauthAccessTokens)
+      .where(eq(oauthAccessTokens.id, id));
+    return row ?? null;
+  }
+
   async touchToken(id: string, at: Date) {
     await this.db
       .update(oauthAccessTokens)

@@ -456,6 +456,7 @@ export async function oauthRoutes(app: FastifyInstance, deps: Deps) {
           );
         }
         await store.revokeToken(token.id);
+        await options.pushStore?.deleteByToken(token.id);
       }
       return {};
     } catch (error) {

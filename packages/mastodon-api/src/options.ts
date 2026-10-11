@@ -1,6 +1,7 @@
 import type { ActorRow, CoreContext, MediaStorage } from '@disbigle/core';
 import type { Flavour } from './dispatch.ts';
 import type { OAuthStore } from './oauth/store.ts';
+import type { MastodonPushStore } from './push/store.ts';
 
 /** A socket as the streaming hub sees it. */
 export interface HubSocket {
@@ -22,6 +23,11 @@ export interface MastodonApiOptions {
   ctx: CoreContext;
   /** OAuth persistence: `DrizzleOAuthStore` in production, `MemoryOAuthStore` in tests. */
   store: OAuthStore;
+  /**
+   * Mastodon Web Push subscriptions (`DrizzleMastodonPushStore` once the columns exist). Without
+   * it, `/api/v1/push/subscription` answers that push is not available.
+   */
+  pushStore?: MastodonPushStore;
   /** Where uploads go; local `MEDIA_DIR` by default (same default as the server). */
   storage?: MediaStorage;
   /** Streaming hub; without it `/api/v1/streaming` is not served by this plugin. */

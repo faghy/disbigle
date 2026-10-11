@@ -61,6 +61,8 @@ export interface OAuthStore {
   createToken(input: NewToken): Promise<OAuthToken>;
   /** A token that has not been revoked. */
   findActiveToken(tokenHash: string): Promise<OAuthToken | null>;
+  /** A token by id, revoked or not. */
+  findToken(id: string): Promise<OAuthToken | null>;
   touchToken(id: string, at: Date): Promise<void>;
   revokeToken(id: string): Promise<void>;
   /** Revokes every token of a user (password change, account disabled). Returns how many. */
@@ -121,6 +123,11 @@ export class MemoryOAuthStore implements OAuthStore {
       if (token.tokenHash === tokenHash && !token.revokedAt) return { ...token };
     }
     return null;
+  }
+
+  async findToken(id: string) {
+    const token = this.tokens.get(id);
+    return token ? { ...token } : null;
   }
 
   async touchToken(id: string, at: Date) {

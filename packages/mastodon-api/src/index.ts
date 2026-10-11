@@ -9,4 +9,12 @@ export * from './oauth/store.ts';
 export type { HubSocket, MastodonApiOptions, StreamingHubLike } from './options.ts';
 export { MASTODON_COMPAT_VERSION } from './options.ts';
 export { mastodonApi } from './plugin.ts';
+export {
+  type MastodonPushPayload,
+  MastodonPushPublisher,
+  mastodonAlerts,
+  nativeAlerts,
+  type PushSender,
+} from './push/publisher.ts';
+export * from './push/store.ts';
 export { MastodonStreamEncoder, type Subscription, toSubscription } from './streaming.ts';

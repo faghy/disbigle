@@ -13,6 +13,8 @@ import {
   listFollowedTags,
   MAX_IMAGE_BYTES,
   mute,
+  notFilteredFor,
+  pinnedStatuses,
   rejectFollowRequest,
   serializeAccount,
   unblock,
@@ -269,7 +271,11 @@ export async function accountRoutes(app: FastifyInstance, deps: Deps) {
     const viewer = viewerId(request, 'read:statuses');
     const query = parseQuery(request);
     const page = pageParams(query, 20, 40);
-    if (bool(query.pinned)) return [];
+    if (bool(query.pinned)) {
+      // At most five, so no pagination (and no Link header), as on Mastodon.
+      if (page.maxId || page.minId || page.sinceId) return [];
+      return new Presenter(ctx, viewer).statuses(await pinnedStatuses(ctx, viewer, actor.id));
+    }
     if (options.backfillAccount && actor.domain !== null && !page.maxId && !page.minId) {
       // First look at a remote profile: fetch its recent public posts (bounded wait).
       const backfill = options.backfillAccount(actor).catch((error) => {
@@ -285,6 +291,8 @@ export async function accountRoutes(app: FastifyInstance, deps: Deps) {
         and(
           eq(posts.actorId, actor.id),
           visibleTo(viewer),
+          // Mastodon's `account` filter context is folded into `home` (not on your own profile).
+          viewer === actor.id ? undefined : notFilteredFor(viewer, 'home'),
           bool(query.exclude_replies)
             ? sql`(${posts.inReplyToActorId} is null or ${posts.inReplyToActorId} = ${posts.actorId})`
             : undefined,

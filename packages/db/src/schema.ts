@@ -655,6 +655,13 @@ export type PushAlerts = Partial<
   Record<'follow' | 'follow_request' | 'mention' | 'reply' | 'reblog' | 'like' | 'poll', boolean>
 >;
 
+export type MastodonPushData = {
+  policy: 'all' | 'followed' | 'follower' | 'none';
+  standard: boolean;
+  /** The access token, encrypted: Mastodon push payloads carry it. */
+  sealedToken: string;
+};
+
 /** Browser push subscriptions (Web Push). */
 export const webPushSubscriptions = pgTable(
   'web_push_subscriptions',
@@ -667,10 +674,14 @@ export const webPushSubscriptions = pgTable(
     p256dh: text('p256dh').notNull(),
     auth: text('auth').notNull(),
     alerts: jsonb('alerts').$type<PushAlerts>().notNull().default({}),
+    /** Set for subscriptions made by a Mastodon app: the access token they belong to. */
+    tokenId: uuid('token_id').references(() => oauthAccessTokens.id, { onDelete: 'cascade' }),
+    mastodon: jsonb('mastodon').$type<MastodonPushData>(),
     createdAt: createdAt(),
   },
   (t) => [
     uniqueIndex('web_push_subscriptions_endpoint_idx').on(t.endpoint),
+    uniqueIndex('web_push_subscriptions_token_idx').on(t.tokenId),
     index('web_push_subscriptions_user_idx').on(t.userId),
   ],
 );

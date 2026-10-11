@@ -16,6 +16,9 @@ import {
   RedisJobQueue,
   startDiasporaQueue,
 } from '@disbigle/diaspora-bridge';
+import { MastodonPushPublisher } from '@disbigle/mastodon-api';
+import { DrizzleOAuthStore } from '@disbigle/mastodon-api/drizzle-store';
+import { DrizzleMastodonPushStore } from '@disbigle/mastodon-api/push-drizzle-store';
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
@@ -35,6 +38,8 @@ const federation = createDisbigleFederation({
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
 });
+const oauthStore = new DrizzleOAuthStore(db);
+const mastodonPushStore = new DrizzleMastodonPushStore(db);
 const diaspora = new DiasporaBridge({
   ctx,
   queue: new RedisJobQueue(redis),
@@ -56,6 +61,7 @@ ctx.events = new CompositeEventBus([
   new ActivityPubPublisher(federation, ctx),
   new DiasporaPublisher(diaspora),
   new PushPublisher(ctx),
+  new MastodonPushPublisher(ctx, { push: mastodonPushStore, oauth: oauthStore }),
 ]);
 const hub = new StreamingHub(ctx);
 await subscribeHubToRedis(subscriber, hub);
@@ -65,6 +71,8 @@ const app = await buildApp({
   redis,
   hub,
   federation,
+  oauthStore,
+  mastodonPushStore,
   ...(config.SMTP_URL ? { mailer: new SmtpMailer(config.SMTP_URL, config.MAIL_FROM) } : {}),
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
   trustProxy: process.env.TRUST_PROXY === 'true',

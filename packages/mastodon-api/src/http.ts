@@ -36,10 +36,20 @@ export function parseBracketPairs(pairs: Iterable<[string, string]>): FormObject
       const last = i === path.length - 1;
       const nextKey = path[i + 1];
       if (Array.isArray(node)) {
-        // `[]` followed by more keys (`a[][b]=1`) is rare; treat each as a new element.
         if (last) {
           node.push(value);
           break;
+        }
+        // `a[][b]=1&a[][c]=2` builds one object; a key seen again starts the next one (Rails).
+        const previous: FormValue | undefined = node[node.length - 1];
+        if (
+          nextKey !== '' &&
+          nextKey !== undefined &&
+          isObject(previous) &&
+          !(nextKey in previous && i + 2 === path.length)
+        ) {
+          node = previous;
+          continue;
         }
         const child: FormObject | FormValue[] = nextKey === '' ? [] : {};
         node.push(child);
