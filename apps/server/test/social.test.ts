@@ -1,3 +1,5 @@
+import { schema } from '@disbigle/db';
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { Client, newUser, useTestApp } from './helpers.ts';
 
@@ -138,10 +140,22 @@ describe('accounts and notifications', () => {
   });
 
   it('redirects old diaspora* URLs to the new pages', async () => {
-    const { account } = await signedIn();
+    const { account, client } = await signedIn();
     const profile = await new Client(app).get(`/u/${account.username}`);
     expect(profile.statusCode).toBe(301);
     expect(profile.headers.location).toBe(`/@${account.username}`);
+    const guidOf = async (id: string) =>
+      (await app.ctx().db.select().from(schema.posts).where(eq(schema.posts.id, id)))[0]
+        ?.diasporaGuid;
+    const open = (await client.post('/api/v1/statuses', { content: 'old link' })).json();
+    const closed = (
+      await client.post('/api/v1/statuses', { content: 'friends only', visibility: 'followers' })
+    ).json();
+    const redirect = await new Client(app).get(`/posts/${await guidOf(open.id)}`);
+    expect(redirect.headers.location).toBe(`/@${account.username}/${open.id}`);
+    // A private post's guid doesn't reveal the post (or its author) to others.
+    expect((await new Client(app).get(`/posts/${await guidOf(closed.id)}`)).statusCode).toBe(404);
+    expect((await client.get(`/posts/${await guidOf(closed.id)}`)).statusCode).toBe(301);
     expect((await new Client(app).get('/posts/0123456789abcdef0123456789abcdef')).statusCode).toBe(
       404,
     );

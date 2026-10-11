@@ -29,16 +29,17 @@ export const testMailer = new MemoryMailer();
 
 export function useTestApp(overrides: Partial<Config> = {}) {
   let app: FastifyInstance | undefined;
+  let core: CoreContext | undefined;
   let drop: (() => Promise<void>) | undefined;
   beforeAll(async () => {
     const testDb = await createTestDatabase();
     drop = testDb.drop;
-    const ctx: CoreContext = {
+    const ctx: CoreContext = (core = {
       db: testDb.db,
       config: { ...testConfig, ...overrides },
       kv: new MemoryKeyValueStore(),
       rsaKeyBits: 1024,
-    };
+    });
     const hub = new StreamingHub(ctx);
     ctx.events = new LocalEventBus(hub);
     const federation = createDisbigleFederation({
@@ -51,10 +52,16 @@ export function useTestApp(overrides: Partial<Config> = {}) {
     await app?.close();
     await drop?.();
   });
-  return () => {
+  const get = () => {
     if (!app) throw new Error('App not initialised');
     return app;
   };
+  /** The app's core context, to look at the database directly. */
+  const ctx = () => {
+    if (!core) throw new Error('App not initialised');
+    return core;
+  };
+  return Object.assign(get, { ctx });
 }
 
 /** A tiny cookie-jar client around fastify.inject. */

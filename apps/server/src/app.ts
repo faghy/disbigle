@@ -134,7 +134,10 @@ export async function buildApp(options: AppOptions) {
   await app.register(cookie);
   await app.register(authPlugin, { ctx });
   await app.register(websocket, { options: { maxPayload: 4096 } });
-  await app.register(multipart);
+  // Per-route calls add file size and count; these bound everything else in a form.
+  await app.register(multipart, {
+    limits: { fieldNameSize: 200, fieldSize: 64 * 1024, fields: 100, parts: 110 },
+  });
   if (options.serveMedia) {
     const { mkdir } = await import('node:fs/promises');
     const { resolve } = await import('node:path');

@@ -1,4 +1,10 @@
-import { type CoreContext, type DomainEvent, type EventBus, getVapidKeys } from '@disbigle/core';
+import {
+  assertPublicUrl,
+  type CoreContext,
+  type DomainEvent,
+  type EventBus,
+  getVapidKeys,
+} from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { PushAlerts } from '@disbigle/db/schema';
 import type { NotificationType } from '@disbigle/shared';
@@ -106,8 +112,10 @@ export class MastodonPushPublisher implements EventBus {
   constructor(
     private readonly ctx: CoreContext,
     private readonly stores: { push: MastodonPushStore; oauth: OAuthStore },
-    private readonly send: PushSender = (subscription, payload, options) =>
-      webpush.sendNotification(subscription, payload, options),
+    private readonly send: PushSender = async (subscription, payload, options) => {
+      await assertPublicUrl(subscription.endpoint);
+      return webpush.sendNotification(subscription, payload, options);
+    },
   ) {}
 
   async publish(event: DomainEvent): Promise<void> {

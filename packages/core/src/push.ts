@@ -6,6 +6,7 @@ import type { CoreContext } from './context.ts';
 import { generateActorKeyPair, generateEd25519KeyPair } from './crypto/keys.ts';
 import { DomainError } from './errors.ts';
 import type { DomainEvent, EventBus } from './events.ts';
+import { assertPublicUrl } from './net.ts';
 
 const { instanceKeys, webPushSubscriptions, notifications, actors, users } = schema;
 
@@ -170,8 +171,10 @@ type Sender = (
 export class PushPublisher implements EventBus {
   constructor(
     private readonly ctx: CoreContext,
-    private readonly send: Sender = (subscription, payload, options) =>
-      webpush.sendNotification(subscription, payload, options),
+    private readonly send: Sender = async (subscription, payload, options) => {
+      await assertPublicUrl(subscription.endpoint);
+      return webpush.sendNotification(subscription, payload, options);
+    },
   ) {}
 
   async publish(event: DomainEvent): Promise<void> {
