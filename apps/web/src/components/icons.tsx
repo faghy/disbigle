@@ -191,3 +191,22 @@ export const PollIcon = (p: IconProps) => (
     <path d="M4 6h10M4 12h16M4 18h7" />
   </Icon>
 );
+export const MailIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 7l9 6 9-6" />
+  </Icon>
+);
+export const ServerIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="7" rx="2" />
+    <rect x="3" y="13" width="18" height="7" rx="2" />
+    <path d="M7 7.5h.01M7 16.5h.01" />
+  </Icon>
+);
+export const PinIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 4h6l-1 6 4 3v2H6v-2l4-3z" />
+    <path d="M12 15v6" />
+  </Icon>
+);

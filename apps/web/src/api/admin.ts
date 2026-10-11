@@ -67,6 +67,25 @@ export interface DomainBlockRequest {
   privateComment: string;
 }
 
+export type RegistrationMode = 'open' | 'approval' | 'invite' | 'closed';
+
+export interface InstanceSettings {
+  title: string;
+  description: string;
+  registrationMode: RegistrationMode;
+  rules: string[];
+  contactEmail: string;
+}
+
+export interface KnownInstance {
+  domain: string;
+  accounts: number;
+  protocols: ('activitypub' | 'diaspora')[];
+  followersOfLocalAccounts: number;
+  lastSeenAt: string | null;
+  block: DomainBlockSeverity | null;
+}
+
 type Ok = { status: 'ok' };
 const id = (value: string) => encodeURIComponent(value);
 
@@ -85,6 +104,11 @@ export const admin = {
   reports: (resolved: boolean) =>
     api.get<Report[]>(`/admin/reports${queryString({ resolved: resolved ? 'true' : 'false' })}`),
   resolveReport: (reportId: string) => api.post<Ok>(`/admin/reports/${id(reportId)}/resolve`),
+  instances: (q?: string) =>
+    api.get<KnownInstance[]>(`/admin/instances${queryString({ q: q || undefined })}`),
+  settings: () => api.get<InstanceSettings>('/admin/settings'),
+  updateSettings: (patch: Partial<InstanceSettings>) =>
+    api.put<InstanceSettings>('/admin/settings', patch),
   domainBlocks: () => api.get<DomainBlock[]>('/admin/domain_blocks'),
   blockDomain: (body: DomainBlockRequest) => api.post<Ok>('/admin/domain_blocks', body),
   unblockDomain: (domain: string) => api.delete<Ok>(`/admin/domain_blocks/${id(domain)}`),
@@ -97,6 +121,8 @@ export const adminKeys = {
   reports: (resolved: boolean) => ['admin', 'reports', resolved] as const,
   accounts: (filter: AdminAccountFilter) => ['admin', 'accounts', filter] as const,
   domainBlocks: ['admin', 'domainBlocks'] as const,
+  settings: ['admin', 'settings'] as const,
+  instances: (q: string) => ['admin', 'instances', q] as const,
 };
 
 export const summaryQueryOptions = queryOptions({

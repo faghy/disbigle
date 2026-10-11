@@ -1,16 +1,17 @@
 import type { Account } from '@disbigle/shared';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser } from '../api/queries.ts';
 import { social } from '../api/social.ts';
-import { useFollowedTags, useRelationships } from '../api/socialQueries.ts';
+import { statusQueryOptions, useFollowedTags, useRelationships } from '../api/socialQueries.ts';
 import { AccountRow } from '../components/AccountList.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
-import { GlobeIcon, SearchIcon } from '../components/icons.tsx';
+import { GlobeIcon, ReplyIcon, SearchIcon } from '../components/icons.tsx';
+import { statusPath } from '../components/StatusCard.tsx';
 import { Alert, Button, LoadingState, Spinner } from '../components/ui.tsx';
 
 export const SEARCH_DEBOUNCE_MS = 300;
@@ -18,8 +19,10 @@ export const SEARCH_DEBOUNCE_MS = 300;
 /** `@user@domain`, `user@domain` or a profile URL: something only another server can answer. */
 export function looksRemote(query: string): boolean {
   const q = query.trim();
-  return /^@?[^@\s/]+@[^@\s/]+\.[^@\s/]+$/.test(q) || /^https?:\/\/\S+\.\S+/.test(q);
+  return /^@?[^@\s/]+@[^@\s/]+\.[^@\s/]+$/.test(q) || isUrl(q);
 }
+
+const isUrl = (q: string) => /^https?:\/\/\S+\.\S+/.test(q.trim());
 
 /** The handle without its leading `@`, lower-cased, for comparing with `acct`. */
 const bareHandle = (q: string) => q.trim().replace(/^@/, '').toLowerCase();
@@ -139,6 +142,7 @@ function SearchResults({ query }: { query: string }) {
   return (
     <div className="space-y-4">
       {remote && !exact && (user ? <RemoteLookup query={query} /> : <SignInToLookUp />)}
+      {user && isUrl(query) && <PostLookup query={query} />}
 
       <FeedSection>
         <h2 className="border-b border-border px-5 py-3 text-sm font-semibold">
@@ -208,7 +212,7 @@ function RemoteLookup({ query }: { query: string }) {
         </div>
         {!lookup.isSuccess && (
           <Button onClick={() => lookup.mutate()} loading={lookup.isPending}>
-            {t('search.lookUp')}
+            {isUrl(query) ? t('search.lookUpAccount') : t('search.lookUp')}
           </Button>
         )}
       </div>
@@ -236,6 +240,49 @@ function RemoteLookup({ query }: { query: string }) {
               actions={<FollowButton account={lookup.data} compact />}
             />
           </div>
+        )}
+      </div>
+      {lookup.error && <Alert className="mt-3">{errorMessage(lookup.error)}</Alert>}
+    </FeedSection>
+  );
+}
+
+/** Imports a public post from another server by its address and opens its thread. */
+function PostLookup({ query }: { query: string }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const lookup = useMutation({
+    mutationFn: () => social.resolveStatus(query.trim()),
+    onSuccess: (status) => {
+      if (!status) return;
+      queryClient.setQueryData(statusQueryOptions(status.id).queryKey, status);
+      void navigate(statusPath(status));
+    },
+  });
+  return (
+    <FeedSection className="p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <ReplyIcon size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{t('search.postTitle')}</p>
+          <p className="text-sm text-fg-muted">{t('search.postHint')}</p>
+        </div>
+        <Button variant="secondary" onClick={() => lookup.mutate()} loading={lookup.isPending}>
+          {t('search.lookUpPost')}
+        </Button>
+      </div>
+      <div aria-live="polite" className="mt-3 empty:hidden">
+        {lookup.isPending && (
+          <p className="flex items-center gap-2 text-sm text-fg-muted">
+            <Spinner />
+            {t('search.lookingUpPost')}
+          </p>
+        )}
+        {lookup.isSuccess && lookup.data === null && (
+          <p className="text-sm">{t('search.postNotFound')}</p>
         )}
       </div>
       {lookup.error && <Alert className="mt-3">{errorMessage(lookup.error)}</Alert>}

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Disbigle · Offline</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fbfbfc;
+        --fg: #1f1d24;
+        --muted: #66636e;
+        --accent: #6d4aff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #19181d;
+          --fg: #f1f0f4;
+          --muted: #a9a6b1;
+          --accent: #a993ff;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+        padding: 1.5rem;
+      }
+      img {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin: 1.25rem 0 0.5rem;
+      }
+      p {
+        color: var(--muted);
+        margin: 0.25rem 0;
+      }
+      a {
+        display: inline-block;
+        margin-top: 1.25rem;
+        color: var(--accent);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>You're offline · Sei offline</h1>
+      <p>Disbigle will be back as soon as you are connected.</p>
+      <p lang="it">Disbigle tornerà appena sarai di nuovo in linea.</p>
+      <a href="/">Try again · Riprova</a>
+    </main>
+  </body>
+</html>

@@ -28,6 +28,14 @@ export interface OffsetPage {
   offset?: number;
 }
 
+export interface Conversation {
+  /** Id of the thread's first post. */
+  id: string;
+  /** The other people in the conversation. */
+  accounts: Account[];
+  lastStatus: Status;
+}
+
 export interface TagInfo {
   name: string;
   following: boolean;
@@ -46,7 +54,15 @@ export interface ReportRequest {
 
 const id = (value: string) => encodeURIComponent(value);
 
-export type StatusAction = 'like' | 'unlike' | 'reblog' | 'unreblog' | 'bookmark' | 'unbookmark';
+export type StatusAction =
+  | 'like'
+  | 'unlike'
+  | 'reblog'
+  | 'unreblog'
+  | 'bookmark'
+  | 'unbookmark'
+  | 'pin'
+  | 'unpin';
 export type AccountAction = 'follow' | 'unfollow' | 'block' | 'unblock' | 'mute' | 'unmute';
 
 export const social = {
@@ -81,6 +97,10 @@ export const social = {
       })}`,
     ),
 
+  /** An account's pinned posts (up to 5), each with `pinned: true`. */
+  pinnedStatuses: (accountId: string) =>
+    api.get<Status[]>(`/accounts/${id(accountId)}/statuses?pinned=true`),
+
   // Accounts
   relationships: (ids: string[]) =>
     api.get<Relationship[]>(`/accounts/relationships${queryString({ 'id[]': ids })}`),
@@ -111,6 +131,10 @@ export const social = {
   unreadCount: () => api.get<{ count: number }>('/notifications/unread_count'),
   markNotificationsRead: () => api.post<Ok>('/notifications/read'),
 
+  // Private conversations (direct and limited threads)
+  conversations: (page: PageParams) =>
+    api.get<Conversation[]>(`/timelines/conversations${queryString({ ...page })}`),
+
   // Polls
   vote: (pollId: string, choices: number[]) =>
     api.post<Status>(`/polls/${id(pollId)}/votes`, { choices }),
@@ -125,6 +149,8 @@ export const social = {
   searchAccounts: (q: string) => api.get<Account[]>(`/search/accounts${queryString({ q })}`),
   /** Fetches a remote account by handle or URL; `null` when nothing was found. */
   resolveAccount: (q: string) => api.post<Account | null>('/search/resolve', { q }),
+  /** Imports a public remote post by its URL; `null` when nothing was found. */
+  resolveStatus: (q: string) => api.post<Status | null>('/search/resolve_status', { q }),
   report: (body: ReportRequest) => api.post<{ id: string }>('/reports', body),
 
   // Media

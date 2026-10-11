@@ -32,6 +32,15 @@ export function SettingsLayout() {
           <Link to="/settings/security" className={tabClass}>
             {t('settings.security.tab')}
           </Link>
+          <Link to="/settings/notifications" className={tabClass}>
+            {t('settings.notifications.tab')}
+          </Link>
+          <Link to="/settings/muted-words" className={tabClass}>
+            {t('filters.tab')}
+          </Link>
+          <Link to="/settings/invites" className={tabClass}>
+            {t('invites.tab')}
+          </Link>
         </nav>
       </div>
       <div className="min-w-0">{user ? <Outlet /> : null}</div>

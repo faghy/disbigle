@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearch } from '@tanstack/react-router';
 import { type FormEvent, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -76,7 +77,9 @@ function AddDomainBlock() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const group = useId();
-  const [domain, setDomain] = useState('');
+  // The Federation tab links here with ?domain= to block a server quickly.
+  const { domain: prefill } = useSearch({ from: '/admin/domains' });
+  const [domain, setDomain] = useState(prefill ?? '');
   const [severity, setSeverity] = useState<DomainBlockSeverity>('silence');
   const [publicComment, setPublicComment] = useState('');
   const [privateComment, setPrivateComment] = useState('');
@@ -107,6 +110,7 @@ function AddDomainBlock() {
       <form onSubmit={onSubmit} noValidate className="mt-3 space-y-4">
         <TextField
           label={t('admin.domains.domain')}
+          autoFocus={Boolean(prefill)}
           placeholder="spam.example"
           autoCapitalize="none"
           spellCheck={false}

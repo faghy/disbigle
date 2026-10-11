@@ -47,9 +47,17 @@ export function AdminLayout() {
         <Link to="/admin/accounts" className={tabClass}>
           {t('admin.tabs.accounts')}
         </Link>
+        <Link to="/admin/federation" className={tabClass}>
+          {t('admin.tabs.federation')}
+        </Link>
         <Link to="/admin/domains" className={tabClass}>
           {t('admin.tabs.domains')}
         </Link>
+        {user?.role === 'admin' && (
+          <Link to="/admin/instance" className={tabClass}>
+            {t('admin.tabs.instance')}
+          </Link>
+        )}
       </nav>
       <Outlet />
     </div>

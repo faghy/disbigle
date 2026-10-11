@@ -2,6 +2,7 @@ import type { CreatePostRequest, MediaAttachment, Status, Visibility } from '@di
 import {
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   type RefObject,
   useEffect,
   useId,
@@ -50,6 +51,10 @@ export interface ComposerProps {
   onPosted?: (status: Status) => void;
   onCancel?: () => void;
   textareaRef?: RefObject<HTMLTextAreaElement | null>;
+  /** Lets a parent edit the text (e.g. a recipient picker adding @mentions). */
+  editContentRef?: RefObject<((edit: (content: string) => string) => void) | null>;
+  /** Shown above the text, e.g. a recipient picker. */
+  header?: ReactNode;
 }
 
 export function Composer({
@@ -60,6 +65,8 @@ export function Composer({
   onPosted,
   onCancel,
   textareaRef,
+  editContentRef,
+  header,
 }: ComposerProps) {
   const { t } = useTranslation();
   const user = useCurrentUser();
@@ -78,6 +85,9 @@ export function Composer({
     replyTo && replyTo.account.id !== user?.account.id ? `@${replyTo.account.acct} ` : '';
 
   const [content, setContent] = useState(mention);
+  useEffect(() => {
+    if (editContentRef) editContentRef.current = (edit) => setContent(edit);
+  }, [editContentRef]);
   const [audience, setAudience] = useState<AudienceValue>(
     replyTo
       ? { visibility: initialReplyVisibility(replyTo), aspectIds: [] }
@@ -295,6 +305,7 @@ export function Composer({
       <div className="flex gap-3">
         {!compact && <Avatar account={user.account} size="md" className="hidden sm:inline-flex" />}
         <div className="min-w-0 flex-1 space-y-3">
+          {header}
           {replyTo && lockedAudience && (
             <p className="flex items-center gap-2 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
               <WarningIcon size={16} className="shrink-0" />

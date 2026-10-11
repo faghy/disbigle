@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { aliceUser, makeAccount, relationship } from '../test/fixtures.ts';
+import { aliceUser, makeAccount, makeStatus, relationship } from '../test/fixtures.ts';
 import { instance, mockApi, renderApp } from '../test/utils.tsx';
 
 const remote = makeAccount({
@@ -117,5 +117,30 @@ describe('search', () => {
     expect(screen.getByRole('button', { name: '1,200 followers' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '1 post' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('No posts yet.')).toBeInTheDocument());
+  });
+
+  it('imports a post from its URL and opens the thread', async () => {
+    const post = makeStatus({ account: remote, content: '<p>Hello from far away</p>' });
+    const url = 'https://mastodon.example/@carol/123';
+    const fetchMock = mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /search/accounts': { body: [] },
+      'POST /search/resolve_status': { body: post },
+      [`GET /statuses/${post.id}`]: { body: post },
+      [`GET /statuses/${post.id}/context`]: { body: { ancestors: [], descendants: [] } },
+    });
+    const { router } = renderApp(`/search?q=${encodeURIComponent(url)}`);
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole('button', { name: 'Look up account' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Look up post' }));
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/@carol@mastodon.example/${post.id}`),
+    );
+    expect(await screen.findByText('Hello from far away')).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(([u]) => String(u) === '/api/v1/search/resolve_status');
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ q: url });
   });
 });

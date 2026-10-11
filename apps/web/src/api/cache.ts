@@ -16,6 +16,7 @@ export const socialKeys = {
   followers: (accountId: string) => ['followers', accountId] as const,
   following: (accountId: string) => ['following', accountId] as const,
   notifications: ['notifications'] as const,
+  pinned: (accountId: string) => ['pinned', accountId] as const,
   unreadCount: ['unreadCount'] as const,
 };
 

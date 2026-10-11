@@ -17,6 +17,7 @@ import {
   GlobeIcon,
   HomeIcon,
   LocalIcon,
+  MailIcon,
   SearchIcon,
   SettingsIcon,
   ShieldIcon,
@@ -84,6 +85,7 @@ interface NavItem {
     | '/public/local'
     | '/public'
     | '/notifications'
+    | '/messages'
     | '/aspects'
     | '/bookmarks'
     | '/settings'
@@ -114,6 +116,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
       icon: BellIcon,
       badge: unread.data ?? 0,
     },
+    { to: '/messages', label: t('nav.messages'), icon: MailIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
     { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
@@ -393,6 +396,9 @@ function UserMenu({ user }: { user: CurrentUser }) {
         <Link to="/settings/profile" className={itemClass} onClick={() => setOpen(false)}>
           {t('nav.settings')}
         </Link>
+        <Link to="/about" className={itemClass} onClick={() => setOpen(false)}>
+          {t('footer.about')}
+        </Link>
         <hr className="my-1 border-border" />
         <button
           type="button"
@@ -416,7 +422,12 @@ function Footer({ signedIn }: { signedIn: boolean }) {
   return (
     <footer className={cx('border-t border-border', signedIn && 'hidden md:block')}>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-fg-muted sm:px-6">
-        <p>{t('footer.tagline')}</p>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>{t('footer.tagline')}</span>
+          <Link to="/about" className="rounded font-medium text-fg hover:underline focus-ring">
+            {t('footer.about')}
+          </Link>
+        </p>
         {!signedIn && (
           <div className="flex items-center gap-2">
             <label htmlFor={id}>{t('footer.language')}</label>

@@ -6,18 +6,22 @@ import {
   type RouterHistory,
   redirect,
 } from '@tanstack/react-router';
-import { isModerator } from './api/admin.ts';
+import { isAdmin, isModerator } from './api/admin.ts';
 import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
+import { AboutPage } from './pages/About.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
 import { AdminLayout } from './pages/admin/AdminLayout.tsx';
 import { DomainBlocksPage } from './pages/admin/DomainBlocks.tsx';
+import { FederationPage } from './pages/admin/Federation.tsx';
+import { InstanceSettingsPage } from './pages/admin/InstanceSettings.tsx';
 import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { HomePage } from './pages/Home.tsx';
 import { LoginPage } from './pages/Login.tsx';
+import { MessagesPage } from './pages/Messages.tsx';
 import { NotificationsPage } from './pages/Notifications.tsx';
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx';
 import { ProfilePage } from './pages/Profile.tsx';
@@ -25,6 +29,9 @@ import { RegisterPage } from './pages/Register.tsx';
 import { SearchPage } from './pages/Search.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
+import { InvitesPage } from './pages/settings/Invites.tsx';
+import { MutedWordsPage } from './pages/settings/MutedWords.tsx';
+import { NotificationSettingsPage } from './pages/settings/NotificationSettings.tsx';
 import { ProfileSettingsPage } from './pages/settings/ProfileSettings.tsx';
 import { SecuritySettingsPage } from './pages/settings/SecuritySettings.tsx';
 import { SettingsLayout } from './pages/settings/SettingsLayout.tsx';
@@ -84,6 +91,12 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
+  validateSearch: (search: Record<string, unknown>): { invite?: string | undefined } => ({
+    invite:
+      typeof search.invite === 'string' && search.invite.trim()
+        ? search.invite.trim().slice(0, 64)
+        : undefined,
+  }),
   beforeLoad: guestOnly,
   component: RegisterPage,
 });
@@ -113,6 +126,24 @@ const settingsAccountRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: '/account',
   component: AccountSettingsPage,
+});
+
+const settingsMutedWordsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/muted-words',
+  component: MutedWordsPage,
+});
+
+const settingsInvitesRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/invites',
+  component: InvitesPage,
+});
+
+const settingsNotificationsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/notifications',
+  component: NotificationSettingsPage,
 });
 
 const settingsSecurityRoute = createRoute({
@@ -179,6 +210,19 @@ const aspectTimelineRoute = createRoute({
   component: AspectTimelinePage,
 });
 
+const messagesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/messages',
+  beforeLoad: signedInOnly,
+  component: MessagesPage,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+  component: AboutPage,
+});
+
 const searchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/search',
@@ -221,9 +265,28 @@ const adminAccountsRoute = createRoute({
   component: AccountsPage,
 });
 
+const adminInstanceRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/instance',
+  beforeLoad: async ({ context }) => {
+    const me = await context.queryClient.ensureQueryData(meQueryOptions);
+    if (!isAdmin(me)) throw redirect({ to: '/admin/pending' });
+  },
+  component: InstanceSettingsPage,
+});
+
+const adminFederationRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/federation',
+  component: FederationPage,
+});
+
 const adminDomainsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/domains',
+  validateSearch: (search: Record<string, unknown>): { domain?: string | undefined } => ({
+    domain: typeof search.domain === 'string' ? search.domain.slice(0, 253) : undefined,
+  }),
   component: DomainBlocksPage,
 });
 
@@ -252,6 +315,9 @@ export const routeTree = rootRoute.addChildren([
     settingsProfileRoute,
     settingsAccountRoute,
     settingsSecurityRoute,
+    settingsNotificationsRoute,
+    settingsInvitesRoute,
+    settingsMutedWordsRoute,
   ]),
   profileRoute,
   statusRoute,
@@ -263,6 +329,8 @@ export const routeTree = rootRoute.addChildren([
   aspectsRoute,
   aspectTimelineRoute,
   searchRoute,
+  aboutRoute,
+  messagesRoute,
   forgotPasswordRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
@@ -271,6 +339,8 @@ export const routeTree = rootRoute.addChildren([
     adminReportsRoute,
     adminAccountsRoute,
     adminDomainsRoute,
+    adminFederationRoute,
+    adminInstanceRoute,
   ]),
 ]);
 

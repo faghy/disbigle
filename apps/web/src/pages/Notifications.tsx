@@ -5,6 +5,7 @@ import { type ComponentType, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
 import { errorMessage } from '../api/errors.ts';
+import { useCurrentUser } from '../api/queries.ts';
 import { PAGE_SIZE, social } from '../api/social.ts';
 import { Avatar } from '../components/Avatar.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
@@ -12,6 +13,7 @@ import {
   AtIcon,
   BellIcon,
   HeartIcon,
+  PollIcon,
   ReplyIcon,
   ReshareIcon,
   UserPlusIcon,
@@ -30,6 +32,7 @@ const typeStyle: Record<
   reply: { icon: ReplyIcon, tone: 'bg-surface-muted text-fg' },
   reblog: { icon: ReshareIcon, tone: 'bg-success-soft text-success' },
   like: { icon: HeartIcon, tone: 'bg-danger-soft text-danger' },
+  poll: { icon: PollIcon, tone: 'bg-accent-soft text-accent' },
 };
 
 /** Plain-text excerpt of a post for one-line summaries. */
@@ -100,13 +103,15 @@ export function NotificationsPage() {
 
 function NotificationItem({ notification }: { notification: Notification }) {
   const { t, i18n } = useTranslation();
+  const me = useCurrentUser();
   const { account, status, type } = notification;
   const style = typeStyle[type];
   const Icon = style.icon;
   const name = displayName(account);
 
   // Mentions and replies are conversations: show the whole post.
-  if ((type === 'mention' || type === 'reply') && status) {
+  // Mentions, replies and ended polls show the whole post (with the final poll results).
+  if ((type === 'mention' || type === 'reply' || type === 'poll') && status) {
     return (
       <div className={cx(!notification.read && 'bg-accent-soft/20')}>
         <p className="flex items-center gap-2 px-4 pt-3 text-sm text-fg-muted sm:px-5">
@@ -118,7 +123,11 @@ function NotificationItem({ notification }: { notification: Notification }) {
           >
             <Icon size={14} />
           </span>
-          {t(`notifications.types.${type}`, { name })}
+          {type === 'poll'
+            ? status.account.id === me?.account.id
+              ? t('notifications.pollOwnEnded')
+              : t('notifications.pollEnded')
+            : t(`notifications.types.${type}`, { name })}
         </p>
         <StatusCard status={status} />
       </div>

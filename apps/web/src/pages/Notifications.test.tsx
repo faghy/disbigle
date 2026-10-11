@@ -56,3 +56,40 @@ describe('notifications page', () => {
     expect(screen.queryByText(/unread notification/)).not.toBeInTheDocument();
   });
 });
+
+describe('poll notifications', () => {
+  it('says the poll ended and shows its final results', async () => {
+    const own = makeNotification({
+      type: 'poll',
+      account: aliceUser.account,
+      status: makeStatus({
+        account: aliceUser.account,
+        content: '<p>Tea or coffee?</p>',
+        poll: {
+          id: '01a12800-0000-7000-8000-0000000000b1',
+          expiresAt: new Date(Date.now() - 1000).toISOString(),
+          expired: true,
+          multiple: false,
+          votesCount: 4,
+          votersCount: 4,
+          options: [
+            { title: 'Tea', votesCount: 3 },
+            { title: 'Coffee', votesCount: 1 },
+          ],
+          voted: false,
+          ownVotes: [],
+        },
+      }),
+    });
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /notifications': { body: [own] },
+      'POST /notifications/read': { body: { status: 'ok' } },
+    });
+    renderApp('/notifications');
+    expect(await screen.findByText('Your poll has ended')).toBeInTheDocument();
+    const results = screen.getByRole('list', { name: 'Poll results' });
+    expect(within(results).getAllByRole('listitem')[0]).toHaveTextContent('75%');
+  });
+});

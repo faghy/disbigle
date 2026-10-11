@@ -1,11 +1,14 @@
 import type { Account, MediaAttachment, Mention, Status } from '@disbigle/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useRouter } from '@tanstack/react-router';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { shownStatus } from '../api/cache.ts';
+import { shownStatus, socialKeys, updateStatusEverywhere } from '../api/cache.ts';
+import { ApiError } from '../api/client.ts';
 import { errorMessage } from '../api/errors.ts';
 import { type ToggleKind, useDeleteStatus, useToggleStatus } from '../api/mutations.ts';
 import { useCurrentUser } from '../api/queries.ts';
+import { social } from '../api/social.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { fullDateTime, relativeTime } from '../lib/time.ts';
@@ -18,6 +21,7 @@ import {
   BookmarkIcon,
   HeartIcon,
   MoreIcon,
+  PinIcon,
   ReplyIcon,
   ReshareIcon,
   WarningIcon,
@@ -295,6 +299,47 @@ function ActionButton({
   );
 }
 
+/**
+ * Pin/unpin for your own public posts. The pinned list is fetched when the menu opens,
+ * because timeline posts do not say whether they are pinned.
+ */
+function usePinToggle(status: Status, enabled: boolean) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const user = useCurrentUser();
+  const accountId = status.account.id;
+  const available =
+    user?.account.id === accountId && status.account.local && canReshare(status.visibility);
+  const pinnedList = useQuery({
+    queryKey: socialKeys.pinned(accountId),
+    queryFn: () => social.pinnedStatuses(accountId),
+    enabled: enabled && available,
+    staleTime: 60_000,
+  });
+  const pinned =
+    Boolean(status.pinned) || Boolean(pinnedList.data?.some((s) => s.id === status.id));
+  const change = useMutation({
+    mutationFn: (pin: boolean) => social.statusAction(status.id, pin ? 'pin' : 'unpin'),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: socialKeys.pinned(accountId) });
+      // Clear the marker on cards in the pinned list right away.
+      if (pinned) updateStatusEverywhere(queryClient, status.id, (s) => ({ ...s, pinned: false }));
+    },
+  });
+  const error = change.error
+    ? change.error instanceof ApiError && change.error.code === 'bad_request'
+      ? t('status.pinLimit')
+      : errorMessage(change.error)
+    : null;
+  return {
+    available,
+    pinned,
+    loading: change.isPending || (enabled && pinnedList.isPending),
+    toggle: () => change.mutate(!pinned),
+    error,
+  };
+}
+
 function MoreMenu({
   status,
   isAuthor,
@@ -310,6 +355,7 @@ function MoreMenu({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const pin = usePinToggle(status, isAuthor && open);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -374,6 +420,19 @@ function MoreMenu({
             {t('status.edit')}
           </button>
         )}
+        {pin.available && (
+          <button
+            type="button"
+            className={itemClass}
+            disabled={pin.loading}
+            onClick={() => {
+              setOpen(false);
+              pin.toggle();
+            }}
+          >
+            {pin.pinned ? t('status.unpin') : t('status.pin')}
+          </button>
+        )}
         {isAuthor && (
           <button
             type="button"
@@ -399,6 +458,14 @@ function MoreMenu({
           </button>
         )}
       </div>
+      {pin.error && (
+        <p
+          role="alert"
+          className="absolute right-0 bottom-full mb-1 w-60 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2 text-xs text-danger shadow"
+        >
+          {pin.error}
+        </p>
+      )}
       {reporting && (
         <ReportDialog
           account={status.account}
@@ -479,6 +546,12 @@ export function StatusCard({
       aria-setsize={position !== undefined ? -1 : undefined}
       className={cx('border-b border-border px-4 py-4 sm:px-5', highlighted && 'bg-accent-soft/30')}
     >
+      {item.pinned && !item.reblog && (
+        <p className="mb-2 flex items-center gap-2 pl-6 text-sm font-medium text-fg-muted">
+          <PinIcon size={16} />
+          {t('status.pinned')}
+        </p>
+      )}
       {item.reblog && (
         <p className="mb-2 flex items-center gap-2 pl-6 text-sm text-fg-muted">
           <ReshareIcon size={16} />

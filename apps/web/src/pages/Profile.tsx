@@ -16,6 +16,7 @@ import { FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
 import { AspectsIcon, CheckIcon, ChevronDownIcon, MoreIcon } from '../components/icons.tsx';
 import { ReportDialog } from '../components/ReportDialog.tsx';
+import { StatusCard } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { Alert, Button, buttonClass, Card, cx, LoadingState } from '../components/ui.tsx';
 import { useDismiss } from '../lib/dismiss.ts';
@@ -589,6 +590,7 @@ function ProfileTabs({
         ))}
       </div>
       <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-${tab}-tab`}>
+        {tab === 'posts' && <PinnedPosts account={account} />}
         {tab === 'posts' || tab === 'replies' ? (
           <Timeline
             key={tab}
@@ -665,5 +667,22 @@ function PagedAccountList({
         </div>
       )}
     </>
+  );
+}
+
+/** Up to five posts the account chose to keep at the top of its profile. */
+function PinnedPosts({ account }: { account: Account }) {
+  const { t } = useTranslation();
+  const pinned = useQuery({
+    queryKey: socialKeys.pinned(account.id),
+    queryFn: () => social.pinnedStatuses(account.id),
+  });
+  if (!pinned.data || pinned.data.length === 0) return null;
+  return (
+    <section aria-label={t('profile.pinned')} className="border-b-4 border-border">
+      {pinned.data.map((status) => (
+        <StatusCard key={status.id} status={{ ...status, pinned: true }} />
+      ))}
+    </section>
   );
 }

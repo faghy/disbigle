@@ -30,11 +30,13 @@
     "unread_other": "{{count}} notifiche non lette",
     "moderation": "Moderazione",
     "moderationPending_one": "{{count}} elemento in attesa dei moderatori",
-    "moderationPending_other": "{{count}} elementi in attesa dei moderatori"
+    "moderationPending_other": "{{count}} elementi in attesa dei moderatori",
+    "messages": "Messaggi"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
-    "language": "Lingua"
+    "language": "Lingua",
+    "about": "Informazioni"
   },
   "landing": {
     "tagline": "Un angolo accogliente del fediverso, aperto a Mastodon, diaspora* e oltre.",
@@ -84,7 +86,9 @@
     "pendingTitle": "Ci siamo quasi",
     "pendingBody": "Abbiamo ricevuto la tua richiesta. Potrai accedere non appena un moderatore avrà approvato il tuo account.",
     "closedTitle": "Le iscrizioni sono chiuse",
-    "closedBody": "Al momento {{domain}} non accetta nuovi account."
+    "closedBody": "Al momento {{domain}} non accetta nuovi account.",
+    "rulesTitle": "Regole di {{domain}}",
+    "agreementRules": "Accetto le regole qui sopra e l'informativa sulla privacy di {{domain}}"
   },
   "profile": {
     "bot": "Bot",
@@ -136,7 +140,8 @@
       "followers_other": "<strong>{{formatted}}</strong> follower",
       "following_one": "<strong>{{formatted}}</strong> seguito",
       "following_other": "<strong>{{formatted}}</strong> seguiti"
-    }
+    },
+    "pinned": "Post in evidenza"
   },
   "settings": {
     "title": "Impostazioni",
@@ -268,6 +273,35 @@
       },
       "headerPreview": "La tua immagine di copertina",
       "unsupported": "{{name}} non è un tipo di immagine supportato."
+    },
+    "notifications": {
+      "tab": "Notifiche",
+      "title": "Notifiche",
+      "description": "Scegli cosa ti raggiunge quando Disbigle è chiuso.",
+      "pushTitle": "Notifiche push su questo dispositivo",
+      "pushHint": "Ogni browser o telefono ha la sua impostazione.",
+      "enable": "Attiva le notifiche",
+      "disable": "Disattiva su questo dispositivo",
+      "offHint": "Ricevi un avviso per menzioni, risposte, nuovi follower e altro, anche quando Disbigle è chiuso. Il browser ti chiederà il permesso.",
+      "on": "Le notifiche sono attive su questo dispositivo.",
+      "typesLegend": "Avvisami per",
+      "types": {
+        "mention": "Menzioni",
+        "reply": "Risposte ai miei post",
+        "follow": "Nuovi follower",
+        "follow_request": "Richieste di follow",
+        "reblog": "Ricondivisioni dei miei post",
+        "like": "Mi piace",
+        "poll": "Sondaggi terminati"
+      },
+      "unsupported": "Questo browser non può ricevere notifiche push. Prova una versione recente di Firefox, Chrome, Edge o Safari.",
+      "denied": "Le notifiche sono bloccate per questo sito. Consentile nelle impostazioni del sito del browser, poi ricarica la pagina.",
+      "notAllowed": "Le notifiche non sono state consentite. Puoi riprovare quando vuoi.",
+      "subscribeFailed": "Il browser non è riuscito a contattare il suo servizio push. Controlla la connessione e riprova.",
+      "iosIntro": "Su iPhone e iPad le notifiche funzionano dopo aver aggiunto Disbigle alla schermata Home:",
+      "iosStep1": "Tocca il pulsante Condividi in Safari.",
+      "iosStep2": "Scegli «Aggiungi alla schermata Home».",
+      "iosStep3": "Apri Disbigle dalla schermata Home e torna su questa pagina."
     }
   },
   "validation": {
@@ -427,7 +461,11 @@
     "edit": "Modifica",
     "edited": "modificato",
     "editedAt": "Modificato il {{date}}",
-    "report": "Segnala @{{acct}}"
+    "report": "Segnala @{{acct}}",
+    "pin": "Fissa sul profilo",
+    "unpin": "Togli dal profilo",
+    "pinned": "In evidenza",
+    "pinLimit": "Puoi fissare fino a 5 post pubblici o non in elenco. Togline prima uno."
   },
   "timeline": {
     "loadMore": "Carica altri",
@@ -489,7 +527,8 @@
       "follow": "{{name}} ha iniziato a seguirti",
       "follow_request": "{{name}} vuole seguirti",
       "reblog": "{{name}} ha ricondiviso il tuo post",
-      "like": "A {{name}} piace il tuo post"
+      "like": "A {{name}} piace il tuo post",
+      "poll": "Un sondaggio è terminato"
     },
     "verbs": {
       "mention": "ti ha menzionato",
@@ -497,8 +536,11 @@
       "follow": "ha iniziato a seguirti",
       "follow_request": "ha chiesto di seguirti",
       "reblog": "ha ricondiviso il tuo post",
-      "like": "ha messo mi piace al tuo post"
-    }
+      "like": "ha messo mi piace al tuo post",
+      "poll": "ha chiuso un sondaggio"
+    },
+    "pollEnded": "Un sondaggio a cui hai votato è terminato",
+    "pollOwnEnded": "Il tuo sondaggio è terminato"
   },
   "aspects": {
     "title": "Aspetti",
@@ -551,7 +593,13 @@
       "names": "Cerca persone su questo server per nome o nome utente.",
       "remote": "Per trovare qualcuno su un altro server (Mastodon, diaspora*, Friendica…), scrivi il suo indirizzo completo, per esempio",
       "url": "Puoi anche incollare l'indirizzo della sua pagina profilo."
-    }
+    },
+    "lookUpAccount": "Cerca account",
+    "lookUpPost": "Cerca post",
+    "postTitle": "È il link a un post?",
+    "postHint": "Portalo qui per rispondere, mettere mi piace o ricondividerlo.",
+    "lookingUpPost": "Recupero il post… può volerci qualche secondo.",
+    "postNotFound": "Nessun post pubblico trovato a questo indirizzo."
   },
   "passwordReset": {
     "forgotTitle": "Reimposta la password",
@@ -611,7 +659,9 @@
       "pending": "In attesa",
       "reports": "Segnalazioni",
       "accounts": "Account",
-      "domains": "Domini bloccati"
+      "domains": "Domini bloccati",
+      "instance": "Istanza",
+      "federation": "Federazione"
     },
     "roles": {
       "user": "Utente",
@@ -704,6 +754,59 @@
         "silence": "I suoi post pubblici torneranno nelle timeline pubbliche.",
         "suspend": "La federazione riprende e i suoi account non sono più sospesi."
       }
+    },
+    "instance": {
+      "title": "Nome del server",
+      "description": "Descrizione",
+      "descriptionHint": "Mostrata nella pagina iniziale e in quella informativa.",
+      "contactEmail": "Email di contatto",
+      "contactHint": "Mostrata nella pagina informativa. Lascia vuoto per nasconderla.",
+      "registration": "Iscrizioni",
+      "modes": {
+        "open": {
+          "label": "Aperte",
+          "description": "Chiunque può creare un account e usarlo subito."
+        },
+        "approval": {
+          "label": "Con approvazione",
+          "description": "Chi si iscrive spiega perché; un moderatore approva ogni account."
+        },
+        "invite": {
+          "label": "Solo su invito",
+          "description": "Può iscriversi solo chi ha un link di invito di un membro."
+        },
+        "closed": {
+          "label": "Chiuse",
+          "description": "Nessuno può iscriversi. Gli account esistenti continuano a funzionare."
+        }
+      },
+      "rules": "Regole",
+      "rulesHint": "Mostrate all'iscrizione e nella pagina informativa. Fino a {{max}} regole; quelle vuote vengono scartate.",
+      "noRules": "Ancora nessuna regola.",
+      "rule": "Regola {{number}}",
+      "addRule": "Aggiungi regola",
+      "removeRule": "Rimuovi la regola {{number}}",
+      "moveUp": "Sposta su la regola {{number}}",
+      "moveDown": "Sposta giù la regola {{number}}"
+    },
+    "federation": {
+      "description": "I server che questo conosce, tramite follow, menzioni e consegne.",
+      "search": "Cerca server",
+      "empty": "Ancora nessun altro server conosciuto.",
+      "noMatch": "Nessun server conosciuto corrisponde a «{{query}}».",
+      "accounts_one": "{{count}} account",
+      "accounts_other": "{{count}} account",
+      "followers_one": "{{count}} follower di account locali",
+      "followers_other": "{{count}} follower di account locali",
+      "lastSeen": "visto l'ultima volta {{time}}",
+      "blocked": {
+        "silence": "Silenziato",
+        "suspend": "Sospeso"
+      },
+      "block": "Blocca dominio",
+      "changeBlock": "Modifica blocco",
+      "blockLabel": "Blocca {{domain}}",
+      "changeBlockLabel": "Modifica il blocco su {{domain}}"
     }
   },
   "poll": {
@@ -753,5 +856,106 @@
       "d3": "3 giorni",
       "d7": "7 giorni"
     }
+  },
+  "about": {
+    "rules": "Regole",
+    "noRules": "Questo server non ha ancora pubblicato regole.",
+    "contact": "Contatti",
+    "contactText": "Domande o problemi? Scrivi a",
+    "noContact": "Nessun indirizzo di contatto pubblicato.",
+    "join": "Iscriviti a questo server",
+    "software": "ActivityPub e diaspora*",
+    "version": "versione {{version}}",
+    "registration": {
+      "open": "Chiunque può iscriversi.",
+      "approval": "I nuovi account vengono esaminati da un moderatore.",
+      "invite": "Ci si iscrive solo su invito.",
+      "closed": "Le iscrizioni sono chiuse al momento."
+    }
+  },
+  "invites": {
+    "tab": "Invita amici",
+    "title": "Invita amici",
+    "description": "Condividi un link per invitare persone su {{domain}}. Sui server solo su invito è l'unico modo per entrare.",
+    "maxUses": "Utilizzabile",
+    "expiresIn": "Scade dopo",
+    "unlimited": "Senza limiti",
+    "uses_one": "{{count}} volta",
+    "uses_other": "{{count}} volte",
+    "expiry": {
+      "h1": "1 ora",
+      "h6": "6 ore",
+      "d1": "1 giorno",
+      "d7": "7 giorni",
+      "d30": "30 giorni",
+      "never": "Mai"
+    },
+    "create": "Crea link",
+    "created": "Link di invito creato.",
+    "yourLinks": "I tuoi link di invito",
+    "empty": "Non hai ancora link di invito.",
+    "link": "Link di invito",
+    "copy": "Copia link",
+    "copied": "Copiato",
+    "delete": "Elimina",
+    "deleteLabel": "Elimina l'invito {{code}}",
+    "deleteTitle": "Eliminare questo link di invito?",
+    "deleteDescription": "Il link smette di funzionare. Gli account già creati non cambiano.",
+    "used_one": "Usato {{count}} volta su {{max}}",
+    "used_other": "Usato {{count}} volte su {{max}}",
+    "usedUnlimited_one": "Usato {{count}} volta, senza limiti",
+    "usedUnlimited_other": "Usato {{count}} volte, senza limiti",
+    "expires": "scade {{time}}",
+    "expired": "Scaduto",
+    "neverExpires": "Non scade mai",
+    "inactive": "Non più valido"
+  },
+  "messages": {
+    "title": "Messaggi",
+    "description": "Conversazioni private: messaggi diretti e post condivisi con i tuoi aspetti.",
+    "new": "Nuovo messaggio",
+    "empty": "Ancora nessuna conversazione. Iniziane una con «Nuovo messaggio».",
+    "you": "Tu",
+    "to": "A",
+    "searchPlaceholder": "Cerca persone per nome o @utente@server",
+    "recipients": "Destinatari",
+    "removeRecipient": "Rimuovi @{{acct}}",
+    "suggestions": "Suggerimenti",
+    "noMatches": "Nessun risultato."
+  },
+  "filters": {
+    "tab": "Parole silenziate",
+    "title": "Parole silenziate",
+    "description": "Nascondi i post che contengono parole o frasi che non vuoi vedere.",
+    "phrase": "Parola o frase",
+    "phraseHint": "Maiuscole e minuscole non contano.",
+    "wholeWord": "Solo parola intera",
+    "wholeWordHint": "«gatto» non nasconderà «gattopardo».",
+    "contexts": "Nascondi in",
+    "contextsRequired": "Scegli almeno un punto.",
+    "context": {
+      "home": "Home e liste",
+      "public": "Timeline pubbliche",
+      "notifications": "Notifiche",
+      "thread": "Conversazioni"
+    },
+    "duration": "Per",
+    "durations": {
+      "forever": "Sempre",
+      "day": "1 giorno",
+      "week": "1 settimana",
+      "month": "1 mese"
+    },
+    "add": "Silenzia",
+    "added": "Silenziata.",
+    "yourWords": "Le tue parole silenziate",
+    "empty": "Non hai silenziato nessuna parola.",
+    "wholeWordShort": "parola intera",
+    "partialShort": "anche dentro le parole",
+    "forever": "per sempre",
+    "expires": "fino a {{time}}",
+    "expired": "scaduta",
+    "remove": "Riattiva",
+    "removeLabel": "Riattiva «{{phrase}}»"
   }
 }

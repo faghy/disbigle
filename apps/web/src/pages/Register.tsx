@@ -1,6 +1,6 @@
 import { type InstanceInfo, registerRequestSchema } from '@disbigle/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { type FormEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { endpoints } from '../api/endpoints.ts';
@@ -12,6 +12,7 @@ import {
   issuesToFieldErrors,
 } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance } from '../api/queries.ts';
+import { InstanceRules } from '../components/InstanceRules.tsx';
 import {
   Alert,
   Button,
@@ -63,13 +64,16 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   const mode = instance.registrationMode;
+  // Invitation links look like /register?invite=CODE.
+  const { invite } = useSearch({ from: '/register' });
+  const showInvite = mode === 'invite' || Boolean(invite);
 
   const [values, setValues] = useState({
     username: '',
     email: '',
     password: '',
     reason: '',
-    inviteCode: '',
+    inviteCode: invite ?? '',
     agreement: false,
   });
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
@@ -98,7 +102,7 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
       locale: currentLanguage(),
       agreement: values.agreement,
       ...(mode === 'approval' && values.reason.trim() ? { reason: values.reason } : {}),
-      ...(mode === 'invite' ? { inviteCode: values.inviteCode } : {}),
+      ...(showInvite && values.inviteCode.trim() ? { inviteCode: values.inviteCode } : {}),
     });
     const found = parsed.success ? {} : issuesToFieldErrors(parsed.error.issues);
     if (mode === 'invite' && !values.inviteCode.trim()) found.inviteCode = t('validation.required');
@@ -176,7 +180,7 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
             onChange={(event) => set('password', event.target.value)}
             error={errors.password}
           />
-          {mode === 'invite' && (
+          {showInvite && (
             <TextField
               label={t('register.inviteCode')}
               name="inviteCode"
@@ -200,8 +204,23 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
               error={errors.reason}
             />
           )}
+          {(instance.rules ?? []).length > 0 && (
+            <section
+              aria-labelledby="register-rules"
+              className="rounded-xl border border-border bg-surface-muted/50 p-4"
+            >
+              <h2 id="register-rules" className="mb-3 text-sm font-semibold">
+                {t('register.rulesTitle', { domain: instance.domain })}
+              </h2>
+              <InstanceRules rules={instance.rules} headingId="register-rules" />
+            </section>
+          )}
           <CheckboxField
-            label={t('register.agreement', { domain: instance.domain })}
+            label={
+              (instance.rules ?? []).length > 0
+                ? t('register.agreementRules', { domain: instance.domain })
+                : t('register.agreement', { domain: instance.domain })
+            }
             name="agreement"
             required
             checked={values.agreement}
