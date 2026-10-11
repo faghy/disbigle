@@ -12,6 +12,7 @@ const alerts = z
     reply: z.boolean(),
     reblog: z.boolean(),
     like: z.boolean(),
+    poll: z.boolean(),
   })
   .partial();
 

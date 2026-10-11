@@ -1,9 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import { schema, uuidv7 } from '@disbigle/db';
 import type { Poll, Status } from '@disbigle/shared';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
+import { createNotification } from './notifications.ts';
 import { getStatus, getVisiblePost } from './posts.ts';
 
 const { polls, pollVotes, actors } = schema;
@@ -172,4 +173,37 @@ export async function updateRemotePollCounts(
       ...(counts.votersCount !== undefined ? { votersCount: counts.votersCount } : {}),
     })
     .where(eq(polls.id, poll.id));
+}
+
+/**
+ * Tells local voters and the local author that polls have ended (once per poll).
+ * Returns how many polls were processed. Run periodically by the worker.
+ */
+export async function notifyEndedPolls(ctx: CoreContext, limit = 100): Promise<number> {
+  const { posts } = schema;
+  const ended = await ctx.db
+    .select({ poll: polls, post: posts })
+    .from(polls)
+    .innerJoin(posts, eq(posts.id, polls.postId))
+    .where(and(sql`${polls.expiresAt} <= now()`, isNull(polls.endNotifiedAt)))
+    .limit(limit);
+  for (const { poll, post } of ended) {
+    const voters = await ctx.db
+      .selectDistinct({ actorId: pollVotes.actorId })
+      .from(pollVotes)
+      .innerJoin(actors, eq(actors.id, pollVotes.actorId))
+      .where(and(eq(pollVotes.pollId, poll.id), isNull(actors.domain)));
+    const recipients = new Set(voters.map((v) => v.actorId));
+    if (post.local) recipients.add(post.actorId);
+    for (const actorId of recipients) {
+      await createNotification(ctx, {
+        actorId,
+        type: 'poll',
+        fromActorId: post.actorId,
+        postId: post.id,
+      });
+    }
+    await ctx.db.update(polls).set({ endNotifiedAt: new Date() }).where(eq(polls.id, poll.id));
+  }
+  return ended.length;
 }

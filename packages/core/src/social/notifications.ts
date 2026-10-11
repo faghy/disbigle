@@ -13,7 +13,8 @@ export async function createNotification(
   ctx: CoreContext,
   input: { actorId: string; type: NotificationType; fromActorId: string; postId?: string | null },
 ): Promise<string | null> {
-  if (input.actorId === input.fromActorId) return null;
+  // The only notification about yourself: your poll has ended.
+  if (input.actorId === input.fromActorId && input.type !== 'poll') return null;
   const [recipient] = await ctx.db
     .select({ domain: actors.domain })
     .from(actors)

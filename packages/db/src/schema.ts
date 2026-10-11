@@ -48,6 +48,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'reply',
   'reblog',
   'like',
+  'poll',
 ]);
 
 export type ProfileField = { name: string; value: string };
@@ -622,6 +623,8 @@ export const polls = pgTable(
     multiple: boolean('multiple').notNull().default(false),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
     votersCount: integer('voters_count').notNull().default(0),
+    /** Set once voters and the author were told that the poll ended. */
+    endNotifiedAt: timestamp('end_notified_at', { withTimezone: true }),
     /** diaspora poll guid. */
     diasporaGuid: text('diaspora_guid'),
     createdAt: createdAt(),
@@ -649,7 +652,7 @@ export const pollVotes = pgTable(
 );
 
 export type PushAlerts = Partial<
-  Record<'follow' | 'follow_request' | 'mention' | 'reply' | 'reblog' | 'like', boolean>
+  Record<'follow' | 'follow_request' | 'mention' | 'reply' | 'reblog' | 'like' | 'poll', boolean>
 >;
 
 /** Browser push subscriptions (Web Push). */

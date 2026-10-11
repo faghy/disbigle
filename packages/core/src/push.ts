@@ -16,6 +16,7 @@ export const defaultPushAlerts: Required<PushAlerts> = {
   reply: true,
   reblog: true,
   like: true,
+  poll: true,
 };
 
 /** The instance's VAPID key pair, created on first use (needs the instance_keys row). */
@@ -115,6 +116,7 @@ const titles: Record<string, Record<string, string>> = {
     reply: '{name} replied to you',
     reblog: '{name} reshared your post',
     like: '{name} liked your post',
+    poll: 'A poll you took part in has ended',
   },
   it: {
     follow: '{name} ha iniziato a seguirti',
@@ -123,6 +125,7 @@ const titles: Record<string, Record<string, string>> = {
     reply: '{name} ti ha risposto',
     reblog: '{name} ha condiviso il tuo post',
     like: '{name} ha apprezzato il tuo post',
+    poll: 'Un sondaggio a cui hai partecipato è terminato',
   },
 };
 

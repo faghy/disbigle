@@ -168,7 +168,8 @@ export type NotificationType =
   | 'mention'
   | 'reply'
   | 'reblog'
-  | 'like';
+  | 'like'
+  | 'poll';
 
 export interface Notification {
   id: string;

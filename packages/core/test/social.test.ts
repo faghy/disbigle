@@ -469,6 +469,34 @@ describe('polls', () => {
     });
   });
 
+  it('notifies voters and the author once when a poll ends', async () => {
+    const { votePoll, notifyEndedPolls } = await import('../src/index.ts');
+    const author = await newActor();
+    const voter = await newActor();
+    const post = await createPost(ctx(), author.id, {
+      content: 'Si o no?',
+      poll: { options: ['Si', 'No'], expiresIn: 3600, multiple: false },
+    });
+    await votePoll(ctx(), voter.id, post.poll?.id ?? '', [0]);
+    await ctx()
+      .db.update(schema.polls)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(schema.polls.id, post.poll?.id ?? ''));
+    expect(await notifyEndedPolls(ctx())).toBeGreaterThanOrEqual(1);
+    expect((await listNotifications(ctx(), voter.id))[0]).toMatchObject({
+      type: 'poll',
+      status: { id: post.id },
+    });
+    expect((await listNotifications(ctx(), author.id))[0]).toMatchObject({
+      type: 'poll',
+      status: { id: post.id },
+    });
+    await notifyEndedPolls(ctx());
+    expect(
+      (await listNotifications(ctx(), voter.id)).filter((n) => n.type === 'poll'),
+    ).toHaveLength(1);
+  });
+
   it('allows several choices in multiple-choice polls', async () => {
     const { votePoll } = await import('../src/index.ts');
     const author = await newActor();

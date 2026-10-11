@@ -6,6 +6,7 @@ import {
   listUncachedRemoteProfileImages,
   MAX_IMAGE_BYTES,
   type MediaStorage,
+  notifyEndedPolls,
   purgeDeletedAccounts,
   storeCachedProfileImage,
   storeCachedRemoteImage,
@@ -77,6 +78,11 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
         }
         return `cached ${cached} remote images (${pending.length} attachments checked)`;
       },
+    },
+    {
+      name: 'notify-ended-polls',
+      every: 60 * 1000 + 1000,
+      run: async () => `notified ${await notifyEndedPolls(ctx)} ended polls`,
     },
     {
       name: 'purge-deleted-accounts',
