@@ -1,3 +1,5 @@
+<img src="apps/web/public/icons/icon-192.png" width="96" alt="The Disbigle logo: a winking speech bubble">
+
 # Disbigle
 
 A federated social network that speaks ActivityPub and stays compatible with the diaspora* network.

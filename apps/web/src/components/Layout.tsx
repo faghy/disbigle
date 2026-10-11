@@ -27,6 +27,7 @@ import {
   SettingsIcon,
   ShieldIcon,
 } from './icons.tsx';
+import { Logo } from './Logo.tsx';
 import { NotificationBell } from './NotificationBell.tsx';
 import { buttonClass, cx } from './ui.tsx';
 
@@ -147,7 +148,7 @@ function Badge({
   return (
     <span
       className={cx(
-        'inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] leading-5 font-semibold text-accent-fg',
+        'inline-flex min-w-5 items-center justify-center rounded-full border-2 border-ink bg-accent px-1.5 text-[11px] leading-4 font-extrabold text-accent-fg',
         className,
       )}
     >
@@ -200,9 +201,9 @@ function SideNav({ user }: { user: CurrentUser | null }) {
                   to={item.to}
                   activeOptions={{ exact: item.exact ?? false }}
                   className={cx(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium text-fg-muted transition-colors focus-ring',
+                    'flex items-center gap-3 rounded-2xl border-2 border-transparent px-3 py-2.5 font-display text-[1.05rem] font-semibold text-fg-muted transition focus-ring',
                     'hover:bg-surface-muted hover:text-fg',
-                    'data-[status=active]:bg-accent-soft data-[status=active]:text-accent',
+                    'data-[status=active]:border-ink data-[status=active]:bg-sun data-[status=active]:text-ink data-[status=active]:shadow-[3px_3px_0_0_var(--ink)]',
                   )}
                 >
                   <item.icon size={22} />
@@ -231,7 +232,7 @@ function FollowedTagsCard() {
   const tags = useFollowedTags();
   if (!tags.data || tags.data.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-border bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
+    <div className="sticker-soft rounded-3xl bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
       <FollowedTags />
     </div>
   );
@@ -247,7 +248,7 @@ function SidePanel({ user }: { user: CurrentUser | null }) {
         {instance && (
           <section
             aria-labelledby="side-instance-title"
-            className="rounded-2xl border border-border bg-surface p-4"
+            className="sticker-soft rounded-3xl bg-surface p-4"
           >
             {/* Not a heading: the page itself often names the server already. */}
             <p id="side-instance-title" className="font-semibold">
@@ -282,8 +283,8 @@ function SidePanel({ user }: { user: CurrentUser | null }) {
 const morePaths = ['/public/local', '/public', '/bookmarks', '/settings', '/admin'];
 
 const bottomLinkClass = cx(
-  'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-fg-muted focus-ring',
-  'data-[status=active]:text-accent',
+  'relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-bold text-fg-muted focus-ring',
+  'data-[status=active]:text-accent [&[data-status=active]>svg]:-rotate-6 [&>svg]:transition-transform',
 );
 
 function BottomNav() {
@@ -449,15 +450,10 @@ function TopBar({ user, loading }: { user: CurrentUser | null; loading: boolean 
       <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-4 lg:px-6">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-lg text-lg font-bold tracking-tight focus-ring"
+          aria-label="Disbigle"
+          className="group rounded-xl focus-ring [&_svg]:transition-transform hover:[&_svg]:rotate-6"
         >
-          <span
-            aria-hidden="true"
-            className="inline-flex size-8 items-center justify-center rounded-lg bg-accent text-accent-fg"
-          >
-            D
-          </span>
-          <span>Disbigle</span>
+          <Logo />
         </Link>
 
         <TopSearch />
@@ -572,7 +568,7 @@ function UserMenu({ user }: { user: CurrentUser }) {
       <div
         id={menuId}
         hidden={!open}
-        className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
+        className="absolute right-0 mt-2 w-56 sticker rounded-2xl bg-surface p-1.5"
       >
         <p className="truncate px-3 py-2 text-xs text-fg-muted">@{account.username}</p>
         <Link

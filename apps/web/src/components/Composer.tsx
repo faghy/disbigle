@@ -297,10 +297,7 @@ export function Composer({
       onSubmit={onSubmit}
       noValidate
       aria-label={replyTo ? t('composer.replyLabel') : t('composer.label')}
-      className={cx(
-        'rounded-2xl border border-border bg-surface',
-        compact ? 'p-3' : 'p-4 shadow-sm',
-      )}
+      className={cx('sticker-soft rounded-3xl bg-surface', compact ? 'p-3' : 'p-4 shadow-sm')}
     >
       <div className="flex gap-3">
         {!compact && <Avatar account={user.account} size="md" className="max-sm:hidden" />}

@@ -42,7 +42,7 @@
     "about": "About"
   },
   "landing": {
-    "tagline": "A friendly corner of the fediverse, open to Mastodon, diaspora* and beyond.",
+    "tagline": "The fediverse's town square: chats, friends and a bit of mischief, from Mastodon, diaspora* and beyond.",
     "register": "Create account",
     "signIn": "Sign in",
     "explore": "Look around the local timeline"
@@ -382,8 +382,8 @@
   "composer": {
     "label": "New post",
     "replyLabel": "Reply",
-    "placeholder": "What's on your mind? Markdown, #tags and @mentions work.",
-    "replyPlaceholder": "Write your reply…",
+    "placeholder": "What's buzzing in your head? Markdown, #tags and @mentions welcome.",
+    "replyPlaceholder": "Have your say…",
     "publish": "Post",
     "reply": "Reply",
     "shortcut": "Ctrl+Enter or Cmd+Enter to send",
@@ -482,8 +482,8 @@
   },
   "timeline": {
     "loadMore": "Load more",
-    "end": "You're all caught up.",
-    "empty": "Nothing here yet.",
+    "end": "You've seen it all. Time for a coffee ☕",
+    "empty": "All quiet here… for now.",
     "newPosts_one": "{{count}} new post",
     "newPosts_other": "{{count}} new posts",
     "home": {

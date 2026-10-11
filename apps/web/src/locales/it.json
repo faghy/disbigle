@@ -42,7 +42,7 @@
     "about": "Informazioni"
   },
   "landing": {
-    "tagline": "Un angolo accogliente del fediverso, aperto a Mastodon, diaspora* e oltre.",
+    "tagline": "La piazza del fediverso: chiacchiere, amici e qualche disbiglio, da Mastodon, diaspora* e oltre.",
     "register": "Crea un account",
     "signIn": "Accedi",
     "explore": "Dai un'occhiata alla timeline locale"
@@ -382,8 +382,8 @@
   "composer": {
     "label": "Nuovo post",
     "replyLabel": "Rispondi",
-    "placeholder": "A cosa stai pensando? Puoi usare Markdown, #tag e @menzioni.",
-    "replyPlaceholder": "Scrivi la tua risposta…",
+    "placeholder": "Che ti frulla in testa? Markdown, #tag e @menzioni sono i benvenuti.",
+    "replyPlaceholder": "Di' la tua…",
     "publish": "Pubblica",
     "reply": "Rispondi",
     "shortcut": "Ctrl+Invio o Cmd+Invio per inviare",
@@ -482,8 +482,8 @@
   },
   "timeline": {
     "loadMore": "Carica altri",
-    "end": "Sei in pari.",
-    "empty": "Ancora niente qui.",
+    "end": "Hai visto tutto. Vai a prenderti un caffè ☕",
+    "empty": "Qui è tutto tranquillo… per ora.",
     "newPosts_one": "{{count}} nuovo post",
     "newPosts_other": "{{count}} nuovi post",
     "home": {

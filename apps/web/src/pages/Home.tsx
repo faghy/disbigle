@@ -6,6 +6,7 @@ import { social } from '../api/social.ts';
 import { Composer } from '../components/Composer.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { HomeIcon } from '../components/icons.tsx';
+import { LogoMark } from '../components/Logo.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { buttonClass, LoadingState } from '../components/ui.tsx';
 
@@ -21,12 +22,7 @@ function Landing() {
   const instance = useInstance();
   return (
     <div className="flex flex-col items-center py-12 text-center sm:py-20">
-      <span
-        aria-hidden="true"
-        className="mb-6 inline-flex size-16 items-center justify-center rounded-2xl bg-accent text-3xl font-bold text-accent-fg shadow-sm"
-      >
-        D
-      </span>
+      <LogoMark className="mb-6 size-24 -rotate-6" />
       <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
         {instance.data?.title || 'Disbigle'}
       </h1>

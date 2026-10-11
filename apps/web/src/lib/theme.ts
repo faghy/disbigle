@@ -4,7 +4,7 @@ export const themes = ['light', 'dark', 'system'] as const;
 export type Theme = (typeof themes)[number];
 
 const STORAGE_KEY = 'disbigle-theme';
-const THEME_COLORS = { light: '#6d4aff', dark: '#19181d' };
+const THEME_COLORS = { light: '#cf3200', dark: '#170e0b' };
 const listeners = new Set<() => void>();
 
 const isTheme = (value: unknown): value is Theme => themes.includes(value as Theme);

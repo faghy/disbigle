@@ -1,73 +1,99 @@
 @import "tailwindcss";
+@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/bricolage-grotesque";
 
 /*
- * Design tokens. Neutral palette with a single accent colour. Light by default; the user can
- * choose dark or "same as the system" (`data-theme` on <html>, see lib/theme.ts). Utilities such
- * as `bg-surface` or `text-accent` read these variables.
+ * Design tokens: "la piazza". Warm cream and tomato, with sun, mint, sky and lilac for the
+ * playful bits (logo, avatars, badges, section tiles). Light by default; the user can choose dark
+ * or "same as the system" (`data-theme` on <html>, see lib/theme.ts). Utilities such as
+ * `bg-surface` or `text-accent` read these variables.
  */
 :root {
-  --bg: oklch(98.5% 0.002 286);
-  --surface: oklch(100% 0 0);
-  --surface-muted: oklch(96.5% 0.004 286);
-  --fg: oklch(21% 0.006 286);
-  --fg-muted: oklch(48% 0.012 286);
-  --border: oklch(91% 0.005 286);
-  --border-strong: oklch(80% 0.008 286);
-  --accent: oklch(52% 0.22 285);
-  --accent-hover: oklch(46% 0.22 285);
-  --accent-soft: oklch(95% 0.03 285);
-  --accent-fg: oklch(99% 0 0);
-  --danger: oklch(52% 0.2 25);
-  --danger-soft: oklch(96% 0.03 25);
-  --success: oklch(50% 0.13 155);
-  --success-soft: oklch(96% 0.04 155);
+  --bg: oklch(97.4% 0.017 80);
+  --surface: oklch(99.4% 0.006 85);
+  --surface-muted: oklch(94.8% 0.022 78);
+  --fg: oklch(24% 0.035 40);
+  --fg-muted: oklch(48% 0.035 45);
+  --border: oklch(88.5% 0.028 70);
+  --border-strong: oklch(76% 0.04 58);
+  --accent: oklch(56% 0.2 36);
+  --accent-hover: oklch(50% 0.19 34);
+  --accent-soft: oklch(93.5% 0.045 42);
+  --accent-fg: oklch(99% 0.005 85);
+  --sun: oklch(86% 0.155 88);
+  --mint: oklch(78% 0.11 172);
+  --sky: oklch(80% 0.09 235);
+  --lilac: oklch(81% 0.08 305);
+  --peach: oklch(85% 0.075 45);
+  --ink: oklch(24% 0.035 40);
+  --shade: oklch(82% 0.045 62);
+  --danger: oklch(47% 0.18 12);
+  --danger-soft: oklch(94% 0.035 12);
+  --success: oklch(48% 0.12 160);
+  --success-soft: oklch(94% 0.045 160);
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --bg: oklch(16% 0.006 286);
-  --surface: oklch(20.5% 0.007 286);
-  --surface-muted: oklch(24% 0.008 286);
-  --fg: oklch(95% 0.003 286);
-  --fg-muted: oklch(72% 0.012 286);
-  --border: oklch(30% 0.01 286);
-  --border-strong: oklch(40% 0.012 286);
-  --accent: oklch(72% 0.16 285);
-  --accent-hover: oklch(78% 0.14 285);
-  --accent-soft: oklch(28% 0.06 285);
-  --accent-fg: oklch(18% 0.03 285);
-  --danger: oklch(72% 0.17 25);
-  --danger-soft: oklch(27% 0.06 25);
-  --success: oklch(76% 0.14 155);
-  --success-soft: oklch(26% 0.05 155);
+  --bg: oklch(17.5% 0.016 45);
+  --surface: oklch(21.5% 0.02 45);
+  --surface-muted: oklch(25.5% 0.024 45);
+  --fg: oklch(95% 0.015 80);
+  --fg-muted: oklch(74% 0.03 70);
+  --border: oklch(31% 0.026 45);
+  --border-strong: oklch(42% 0.03 50);
+  --accent: oklch(72% 0.16 38);
+  --accent-hover: oklch(78% 0.14 42);
+  --accent-soft: oklch(30% 0.07 35);
+  --accent-fg: oklch(20% 0.035 40);
+  --sun: oklch(84% 0.15 88);
+  --mint: oklch(76% 0.11 172);
+  --sky: oklch(78% 0.09 235);
+  --lilac: oklch(78% 0.08 305);
+  --peach: oklch(82% 0.075 45);
+  --ink: oklch(15% 0.02 40);
+  --shade: oklch(11% 0.015 40);
+  --danger: oklch(72% 0.16 15);
+  --danger-soft: oklch(28% 0.06 15);
+  --success: oklch(76% 0.13 160);
+  --success-soft: oklch(27% 0.05 160);
   color-scheme: dark;
 }
 
 /* "Same as the system": dark only when the system asks for it. */
 @media (prefers-color-scheme: dark) {
   :root[data-theme="system"] {
-    --bg: oklch(16% 0.006 286);
-    --surface: oklch(20.5% 0.007 286);
-    --surface-muted: oklch(24% 0.008 286);
-    --fg: oklch(95% 0.003 286);
-    --fg-muted: oklch(72% 0.012 286);
-    --border: oklch(30% 0.01 286);
-    --border-strong: oklch(40% 0.012 286);
-    --accent: oklch(72% 0.16 285);
-    --accent-hover: oklch(78% 0.14 285);
-    --accent-soft: oklch(28% 0.06 285);
-    --accent-fg: oklch(18% 0.03 285);
-    --danger: oklch(72% 0.17 25);
-    --danger-soft: oklch(27% 0.06 25);
-    --success: oklch(76% 0.14 155);
-    --success-soft: oklch(26% 0.05 155);
+    --bg: oklch(17.5% 0.016 45);
+    --surface: oklch(21.5% 0.02 45);
+    --surface-muted: oklch(25.5% 0.024 45);
+    --fg: oklch(95% 0.015 80);
+    --fg-muted: oklch(74% 0.03 70);
+    --border: oklch(31% 0.026 45);
+    --border-strong: oklch(42% 0.03 50);
+    --accent: oklch(72% 0.16 38);
+    --accent-hover: oklch(78% 0.14 42);
+    --accent-soft: oklch(30% 0.07 35);
+    --accent-fg: oklch(20% 0.035 40);
+    --sun: oklch(84% 0.15 88);
+    --mint: oklch(76% 0.11 172);
+    --sky: oklch(78% 0.09 235);
+    --lilac: oklch(78% 0.08 305);
+    --peach: oklch(82% 0.075 45);
+    --ink: oklch(15% 0.02 40);
+    --shade: oklch(11% 0.015 40);
+    --danger: oklch(72% 0.16 15);
+    --danger-soft: oklch(28% 0.06 15);
+    --success: oklch(76% 0.13 160);
+    --success-soft: oklch(27% 0.05 160);
     color-scheme: dark;
   }
 }
 
 @theme inline {
   --font-sans:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    "Nunito Variable", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Nunito Variable", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
   --color-bg: var(--bg);
@@ -81,6 +107,13 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-fg: var(--accent-fg);
+  --color-sun: var(--sun);
+  --color-mint: var(--mint);
+  --color-sky: var(--sky);
+  --color-lilac: var(--lilac);
+  --color-peach: var(--peach);
+  --color-ink: var(--ink);
+  --color-shade: var(--shade);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
@@ -107,7 +140,50 @@
   }
 
   ::selection {
-    background-color: var(--accent-soft);
+    background-color: var(--sun);
+    color: var(--ink);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* "Sticker" look: a solid edge and a flat offset shadow, Disbigle's signature. */
+@utility sticker {
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+
+@utility sticker-soft {
+  border: 1.5px solid var(--border-strong);
+  box-shadow: 4px 4px 0 0 var(--shade);
+}
+
+/* The heart of a like pops when pressed. */
+@keyframes like-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.45) rotate(-12deg);
+  }
+  70% {
+    transform: scale(0.9) rotate(4deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@utility like-pop {
+  animation: like-pop 420ms cubic-bezier(0.3, 1.6, 0.5, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }
 
@@ -121,8 +197,8 @@
 @utility input-base {
   display: block;
   width: 100%;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border-strong);
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--border-strong);
   background-color: var(--surface);
   color: var(--fg);
   padding: 0.5rem 0.75rem;

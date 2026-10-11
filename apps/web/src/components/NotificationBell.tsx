@@ -78,7 +78,7 @@ export function NotificationBell() {
         {unread > 0 && (
           <span
             aria-hidden="true"
-            className="absolute top-0.5 right-0.5 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-[1.15rem] font-semibold text-accent-fg ring-2 ring-bg"
+            className="absolute -top-0.5 -right-0.5 inline-flex min-w-5 items-center justify-center rounded-full border-2 border-ink bg-accent px-1 text-[10px] leading-4 font-extrabold text-accent-fg"
           >
             {unread > 99 ? '99+' : unread}
           </span>
@@ -88,9 +88,12 @@ export function NotificationBell() {
         id={panelId}
         hidden={!open}
         aria-labelledby={titleId}
-        className="absolute right-0 mt-2 flex max-h-[min(36rem,calc(100dvh-6rem))] w-[min(26rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg max-sm:-right-12"
+        className="sticker absolute right-0 mt-2 flex max-h-[min(36rem,calc(100dvh-6rem))] w-[min(26rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-surface max-sm:-right-12"
       >
-        <h2 id={titleId} className="border-b border-border px-4 py-3 font-semibold">
+        <h2
+          id={titleId}
+          className="border-b-2 border-ink bg-sun px-4 py-3 text-lg font-extrabold text-ink"
+        >
           {t('notifications.title')}
         </h2>
         <div className="min-h-0 flex-1 overflow-y-auto">

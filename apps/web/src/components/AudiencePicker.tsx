@@ -94,7 +94,7 @@ export function AudiencePicker({
       <div
         id={panelId}
         hidden={!open}
-        className="absolute left-0 z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface p-2 shadow-xl"
+        className="absolute left-0 z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] sticker-soft rounded-3xl bg-surface p-2"
       >
         <fieldset>
           <legend className="sr-only">{t('composer.audience.legend')}</legend>

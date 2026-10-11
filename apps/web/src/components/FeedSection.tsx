@@ -17,15 +17,15 @@ export function FeedHeader({
     <header className="mb-4 space-y-1">
       <div className="flex items-center gap-3">
         {Icon && (
-          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <span className="inline-flex size-11 shrink-0 -rotate-6 items-center justify-center rounded-2xl border-2 border-ink bg-sun text-ink shadow-[2px_2px_0_0_var(--ink)]">
             <Icon size={22} />
           </span>
         )}
-        <h1 className="min-w-0 flex-1 truncate text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-3xl font-extrabold tracking-tight">{title}</h1>
         {actions && <div className="shrink-0">{actions}</div>}
       </div>
       {description && (
-        <p className={cx('text-sm text-fg-muted', Icon && 'sm:pl-[3.25rem]')}>{description}</p>
+        <p className={cx('text-sm text-fg-muted', Icon && 'sm:pl-14')}>{description}</p>
       )}
     </header>
   );
@@ -36,7 +36,7 @@ export function FeedSection({ children, className }: { children: ReactNode; clas
   return (
     <section
       className={cx(
-        'overflow-visible rounded-2xl border border-border bg-surface shadow-sm [&>*:last-child>article:last-child]:border-b-0',
+        'sticker-soft overflow-visible rounded-3xl bg-surface [&>*:last-child>article:last-child]:border-b-0',
         className,
       )}
     >

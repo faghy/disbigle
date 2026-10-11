@@ -393,7 +393,7 @@ function MoreMenu({
       <div
         id={menuId}
         hidden={!open}
-        className="absolute right-0 bottom-full z-20 mb-1 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-lg"
+        className="absolute right-0 bottom-full z-20 mb-1 w-52 sticker rounded-2xl bg-surface p-1.5"
       >
         <button
           type="button"
@@ -578,6 +578,8 @@ export function StatusCard({
   const signedIn = Boolean(user);
 
   const act = (kind: ToggleKind, value: boolean) => toggle.mutate({ status, kind, value });
+  // Bumped on each new like: the heart pops then, not for posts already liked on load.
+  const [likePops, setLikePops] = useState(0);
 
   return (
     <article
@@ -717,11 +719,16 @@ export function StatusCard({
               countLabel={t('status.counts.likes', { count: status.likesCount })}
               active={status.liked}
               pressed={status.liked}
-              activeClass="text-danger"
+              activeClass="text-accent"
               disabled={!signedIn}
-              onClick={() => act('like', !status.liked)}
+              onClick={() => {
+                if (!status.liked) setLikePops((n) => n + 1);
+                act('like', !status.liked);
+              }}
             >
-              <HeartIcon size={18} filled={status.liked} />
+              <span key={likePops} className={cx('inline-flex', likePops > 0 && 'like-pop')}>
+                <HeartIcon size={18} filled={status.liked} />
+              </span>
             </ActionButton>
             <ActionButton
               label={t('status.bookmark')}
