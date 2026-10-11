@@ -3,6 +3,7 @@ import {
   bookmarksTimeline,
   type CoreContext,
   homeTimeline,
+  listConversations,
   publicTimeline,
   tagTimeline,
 } from '@disbigle/core';
@@ -56,4 +57,12 @@ export async function timelineRoutes(app: FastifyInstance, { ctx }: { ctx: CoreC
       parse(paginationQuerySchema, request.query),
     ),
   );
+
+  app.get('/conversations', async (request) => {
+    const { maxId, limit } = parse(paginationQuerySchema, request.query);
+    return listConversations(ctx, requireUser(request).actorId, {
+      ...(maxId ? { maxId } : {}),
+      limit,
+    });
+  });
 }

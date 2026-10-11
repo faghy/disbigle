@@ -146,6 +146,33 @@ describe('accounts and notifications', () => {
     );
   });
 
+  it('groups direct messages into conversations', async () => {
+    const a = await signedIn();
+    const b = await signedIn();
+    const c = await signedIn();
+    const first = (
+      await a.client.post('/api/v1/statuses', {
+        content: `ciao @${b.account.username}`,
+        visibility: 'direct',
+      })
+    ).json();
+    const reply = (
+      await b.client.post('/api/v1/statuses', {
+        content: `ciao a te @${a.account.username}`,
+        inReplyToId: first.id,
+      })
+    ).json();
+    await a.client.post('/api/v1/statuses', {
+      content: `altro @${c.account.username}`,
+      visibility: 'direct',
+    });
+    const forB = (await b.client.get('/api/v1/timelines/conversations')).json();
+    expect(forB).toHaveLength(1);
+    expect(forB[0]).toMatchObject({ id: first.id, lastStatus: { id: reply.id } });
+    expect(forB[0].accounts.map((x: { id: string }) => x.id)).toEqual([a.account.id]);
+    expect((await a.client.get('/api/v1/timelines/conversations')).json()).toHaveLength(2);
+  });
+
   it('manages personal invitation links', async () => {
     const { client } = await signedIn();
     const created = await client.post('/api/v1/invites', { maxUses: 1 });

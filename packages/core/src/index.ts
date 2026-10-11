@@ -26,6 +26,7 @@ export * from './push.ts';
 export * from './settings.ts';
 export * from './social/aspects.ts';
 export * from './social/content.ts';
+export * from './social/conversations.ts';
 export * from './social/notification-list.ts';
 export * from './social/notifications.ts';
 export * from './social/polls.ts';
