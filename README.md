@@ -19,6 +19,12 @@ A federated social network that speaks ActivityPub and stays compatible with the
 
 Status: early development. See [docs/architettura.md](docs/architettura.md) (Italian) for the design and [docs/decisions.md](docs/decisions.md) for implementation decisions.
 
+## Screenshots
+
+| Home | Profile with a poll | Mobile, dark theme |
+| --- | --- | --- |
+| ![Home timeline with the composer](docs/screenshots/home.png) | ![Profile page with a poll](docs/screenshots/profile.png) | ![Home on a phone in dark mode](docs/screenshots/mobile-dark.png) |
+
 ## The name
 
 *Disbigle* (Italian: *disbiglio*) is a made-up word. It was born when an angry father started to call his son *disgraziato*, changed his mind halfway through, and ended up with a brand new insult. Among friends it stuck as a fond way to tell someone they messed up.
@@ -34,7 +40,7 @@ pnpm db:migrate               # creates the database if needed and applies migra
 pnpm dev                      # API on :3000, web client on :5173, worker
 ```
 
-Open http://localhost:5173. The first account registered becomes the administrator.
+Open http://localhost:5173. The first account registered becomes the administrator. `pnpm seed` adds demo accounts (alice, bruno, carla; password `disbigle-demo`).
 
 Useful commands:
 
