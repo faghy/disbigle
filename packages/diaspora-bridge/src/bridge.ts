@@ -38,7 +38,9 @@ import {
 } from './actors.ts';
 import { type DeliverFn, DeliveryHttpError, httpDeliver } from './delivery.ts';
 import { applyEntity } from './incoming.ts';
+import { checkUrl, guardedFetch, type NetOptions, readLimited, UnsafeUrlError } from './net.ts';
 import { localActorByGuid } from './outgoing.ts';
+import { pollByGuid } from './polls.ts';
 import {
   type DiasporaJob,
   type FailureListener,
@@ -57,6 +59,10 @@ export interface DiasporaBridgeOptions {
   fetch?: typeof globalThis.fetch;
   /** Discovery over plain HTTP (tests and development only). */
   allowHttp?: boolean;
+  /** Contact private, loopback and link-local addresses (tests and development only). */
+  allowPrivateAddress?: boolean;
+  /** Replaces the public-address check (tests). */
+  validateUrl?: (url: string) => Promise<void>;
   /**
    * Background job queue. Defaults to an in-memory queue consumed in this process; pass a
    * `RedisJobQueue` for persistence and consume it with `startDiasporaQueue` (server or worker).
@@ -93,11 +99,16 @@ export class DiasporaBridge {
   private readonly deliverFn: DeliverFn;
   private readonly fetchFn: typeof globalThis.fetch;
   private readonly allowHttp: boolean;
+  private readonly net: NetOptions;
   private readonly refreshAfterMs: number;
 
   constructor(options: DiasporaBridgeOptions) {
     this.ctx = options.ctx;
-    this.deliverFn = options.deliver ?? httpDeliver();
+    this.net = {
+      ...(options.allowPrivateAddress ? { allowPrivateAddress: true } : {}),
+      ...(options.validateUrl ? { validateUrl: options.validateUrl } : {}),
+    };
+    this.deliverFn = options.deliver ?? httpDeliver(this.net);
     this.fetchFn = options.fetch ?? globalThis.fetch;
     this.allowHttp = options.allowHttp ?? false;
     this.refreshAfterMs = options.refreshAfterMs ?? DAY;
@@ -136,6 +147,8 @@ export class DiasporaBridge {
     try {
       switch (job.type) {
         case 'deliver':
+          // Receive URLs come from remote documents: never POST to a private address.
+          await checkUrl(job.url, this.net);
           await this.deliverFn(job.url, job.body, job.contentType);
           return;
         case 'receive-public':
@@ -163,14 +176,19 @@ export class DiasporaBridge {
   // ---------------------------------------------------------------------------
   // Discovery
 
-  private async get(url: string, accept: string): Promise<Response> {
-    const response = await this.fetchFn(url, {
-      headers: { accept },
-      signal: AbortSignal.timeout(15_000),
-      redirect: 'follow',
-    });
-    if (!response.ok) throw new Error(`GET ${url} answered ${response.status}`);
-    return response;
+  /** Guarded GET of a remote document (URL check on every hop, 1 MB cap). */
+  private async get(url: string, accept: string): Promise<string> {
+    const response = await guardedFetch(
+      this.fetchFn,
+      url,
+      { headers: { accept }, signal: AbortSignal.timeout(15_000) },
+      this.net,
+    );
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new Error(`GET ${url} answered ${response.status}`);
+    }
+    return readLimited(response);
   }
 
   /**
@@ -217,13 +235,13 @@ export class DiasporaBridge {
       `${scheme}://${id.host}/.well-known/webfinger?resource=acct:${id.id}`,
       'application/jrd+json, application/json',
     );
-    const info = parseWebFinger(await finger.text(), {
+    const info = parseWebFinger(finger, {
       expectedDiasporaId: id.id,
       requireDiaspora: true,
     });
     const hcardUrl = info.hcardUrl ?? '';
     const seedUrl = info.seedUrl ?? '';
-    const hcard = parseHCard(await (await this.get(hcardUrl, 'text/html')).text());
+    const hcard = parseHCard(await this.get(hcardUrl, 'text/html'));
     const seed = seedUrl.endsWith('/') ? seedUrl : `${seedUrl}/`;
     const name =
       hcard.fullName ?? [hcard.firstName, hcard.lastName].filter(Boolean).join(' ').trim();
@@ -293,6 +311,12 @@ export class DiasporaBridge {
         ...(parent ? { parent } : {}),
       };
     }
+    if (type === 'Poll') {
+      // A poll belongs to its post: same author and locality.
+      const poll = await pollByGuid(ctx, guid);
+      const post = poll ? await postById(ctx, poll.postId) : null;
+      return post ? this.relatedOfPost(post) : null;
+    }
     if (!['Post', 'StatusMessage', 'Reshare', 'Comment'].includes(type)) return null;
     let post = await findPostByGuid(ctx, guid);
     if (!post && senderId && depth < 1 && type !== 'Comment') {
@@ -311,7 +335,7 @@ export class DiasporaBridge {
       `${base}fetch/${type}/${guid}`,
       'application/magic-envelope+xml',
     );
-    await this.process(await response.text(), { isPublic: true, depth: depth + 1 });
+    await this.process(response, { isPublic: true, depth: depth + 1 });
   }
 
   // ---------------------------------------------------------------------------
@@ -404,7 +428,7 @@ export class DiasporaBridge {
 
 /** Errors that will not go away by retrying the job. */
 function isPermanent(error: unknown): boolean {
-  if (error instanceof PermanentJobError) return true;
+  if (error instanceof PermanentJobError || error instanceof UnsafeUrlError) return true;
   if (error instanceof DeliveryHttpError) return error.permanent;
   // A parent or target may still arrive (or be fetched) later.
   if (error instanceof RelatedEntityNotFoundError) return false;

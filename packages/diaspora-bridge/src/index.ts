@@ -13,7 +13,9 @@ export {
   renderDiasporaText,
 } from './incoming.ts';
 export * from './moves.ts';
+export * from './net.ts';
 export * from './outgoing.ts';
+export * from './polls.ts';
 export * from './publisher.ts';
 export * from './queue.ts';
 export * from './relayables.ts';

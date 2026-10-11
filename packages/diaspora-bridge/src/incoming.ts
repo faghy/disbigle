@@ -17,6 +17,7 @@ import {
   unfollow,
   unlike,
   upsertRemoteActor,
+  votePoll,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
@@ -28,6 +29,7 @@ import {
   type Entity,
   type Like,
   type Message,
+  type PollParticipation,
   type Profile,
   parseDiasporaId,
   parseEntity,
@@ -50,6 +52,7 @@ import {
 import type { DiasporaBridge } from './bridge.ts';
 import { moveVerified } from './moves.ts';
 import { recipientsFor, sendToRecipients, signerFor } from './outgoing.ts';
+import { answerGuids, pollByGuid, pollOfPost, storeAnswerGuids } from './polls.ts';
 import { diasporaMentionsToMarkdown, mimeTypeFromName, parseDiasporaMentions } from './text.ts';
 
 const { postAudiences, likes } = schema;
@@ -129,7 +132,7 @@ const ignoreDomainErrors = (error: unknown) => {
 /** Keeps a received relayable exactly as signed (order, unknown elements, signature). */
 async function storeRelayable(
   bridge: DiasporaBridge,
-  entity: Comment | Like,
+  entity: Comment | Like | PollParticipation,
   links: { postId?: string | null; likeId?: string | null },
 ): Promise<void> {
   await bridge.relayables.save({
@@ -181,10 +184,7 @@ async function statusMessage(
   recipient: ActorRow | undefined,
 ) {
   const ctx = bridge.ctx;
-  let text = entity.text ?? '';
-  if (entity.poll) {
-    text += `\n\n**${entity.poll.question}**\n\n${entity.poll.pollAnswers.map((a) => `- ${a.answer}`).join('\n')}`;
-  }
+  const text = entity.text ?? '';
   const rendered = await renderDiasporaText(ctx, text);
   const attachments: RemoteAttachment[] = (entity.photos ?? []).map((photo) => ({
     url: `${photo.remotePhotoPath}${photo.remotePhotoName}`,
@@ -203,8 +203,29 @@ async function statusMessage(
     mentionActorIds: rendered.mentionIds,
     tags: rendered.tags,
     attachments,
+    ...(entity.poll
+      ? {
+          // diaspora* polls are single choice and never close.
+          poll: {
+            options: entity.poll.pollAnswers.map((a) => ({ title: a.answer, votesCount: 0 })),
+            multiple: false,
+            expiresAt: null,
+            diasporaGuid: entity.poll.guid,
+          },
+        }
+      : {}),
     ...(entity.createdAt ? { publishedAt: entity.createdAt } : {}),
   });
+  if (id && entity.poll) {
+    const poll = await pollOfPost(ctx, id);
+    if (poll && poll.options.length === entity.poll.pollAnswers.length) {
+      await storeAnswerGuids(
+        ctx,
+        poll.id,
+        entity.poll.pollAnswers.map((a) => a.guid),
+      );
+    }
+  }
   // Private posts arrive once per recipient: later copies extend the audience.
   if (id && !entity.public && recipient) await addAudience(ctx, id, [recipient.id]);
 }
@@ -354,6 +375,26 @@ async function conversation(
   for (const message of rest) await comment(bridge, message, author, root, recipient);
 }
 
+/** A vote on a poll: counted, kept as signed, and relayed when the poll is ours. */
+async function pollParticipation(
+  bridge: DiasporaBridge,
+  entity: PollParticipation,
+  author: ActorRow,
+) {
+  const ctx = bridge.ctx;
+  const poll = await pollByGuid(ctx, entity.parentGuid);
+  const post = poll ? await postById(ctx, poll.postId) : null;
+  if (!poll || !post) return;
+  const choice = answerGuids(poll, post.local).indexOf(entity.pollAnswerGuid);
+  if (choice < 0) return;
+  // Local polls count the vote for real; remote ones keep a local tally of relayed votes.
+  await votePoll(ctx, author.id, poll.id, [choice], { diasporaGuid: entity.guid }).catch(
+    ignoreDomainErrors,
+  );
+  await storeRelayable(bridge, entity, {});
+  await relay(bridge, entity, await threadRootOf(ctx, post), author.id);
+}
+
 /**
  * A person moved to a new identity; the protocol layer verified the migration signature.
  * Local followers of the old identity now follow the new one.
@@ -414,8 +455,10 @@ export async function applyEntity(
     }
     case 'AccountMigration':
       return accountMigration(bridge, entity);
+    case 'PollParticipation':
+      return pollParticipation(bridge, entity, author);
     default:
-      // Participation, PollParticipation, EventParticipation, Photo, Event:
+      // Participation, EventParticipation, Photo, Event:
       // nothing to store yet.
       return;
   }

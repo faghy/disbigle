@@ -20,6 +20,7 @@ type Status = {
   likesCount: number;
   visibility: string;
   account: { acct: string };
+  poll: { id: string } | null;
 };
 
 const findIn = (list: Status[], text: string) => list.find((s) => s.content.includes(text));
@@ -163,6 +164,50 @@ describe('federation over diaspora* between three Disbigle instances', () => {
     await eventually(async () => {
       const list = (await bob.client.get(`/api/v1/accounts/${bob.account.id}/followers`)).json();
       return list.length === 1;
+    });
+  }, 90_000);
+
+  it('votes on a poll: counted by the author and relayed to the other pods', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const carol = await signUp(c);
+    const bobOnA = await a.bridge.resolvePerson(bob.diasporaId);
+    const bobOnC = await c.bridge.resolvePerson(bob.diasporaId);
+    await alice.client.post(`/api/v1/accounts/${bobOnA?.id}/follow`);
+    await carol.client.post(`/api/v1/accounts/${bobOnC?.id}/follow`);
+    await eventually(async () => {
+      const list = (await bob.client.get(`/api/v1/accounts/${bob.account.id}/followers`)).json();
+      return list.length === 2;
+    });
+
+    const post = (
+      await bob.client.post('/api/v1/statuses', {
+        content: 'Mare o montagna?',
+        poll: { options: ['Mare', 'Montagna'], expiresIn: 3600 },
+      })
+    ).json();
+    const onA = await eventually(async () =>
+      findIn((await alice.client.get('/api/v1/timelines/home')).json(), 'Mare o montagna'),
+    );
+    expect(onA.poll).toMatchObject({
+      multiple: false,
+      expiresAt: null,
+      options: [{ title: 'Mare' }, { title: 'Montagna' }],
+    });
+    const onC = await eventually(async () =>
+      findIn((await carol.client.get('/api/v1/timelines/home')).json(), 'Mare o montagna'),
+    );
+
+    const voted = await alice.client.post(`/api/v1/polls/${onA.poll?.id}/votes`, { choices: [1] });
+    expect(voted.json().poll).toMatchObject({ voted: true, ownVotes: [1] });
+    await eventually(
+      async () =>
+        (await bob.client.get(`/api/v1/statuses/${post.id}`)).json().poll.options[1].votesCount ===
+        1,
+    );
+    await eventually(async () => {
+      const poll = (await carol.client.get(`/api/v1/statuses/${onC.id}`)).json().poll;
+      return poll.votersCount === 1 && poll.options[1].votesCount === 1;
     });
   }, 90_000);
 });

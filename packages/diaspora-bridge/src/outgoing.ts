@@ -28,6 +28,7 @@ import {
   publicReceiveUrl,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
+import { diasporaPollOf, pollOfPost } from './polls.ts';
 import { htmlToText, mentionsToDiaspora } from './text.ts';
 
 const { actors, follows, postAudiences, mentions, mediaAttachments } = schema;
@@ -271,6 +272,9 @@ export async function statusMessageFor(
   const authorId = diasporaIdOf(ctx, author);
   const isPublic = isPublicVisibility(post.visibility);
   const photos = await photosOf(ctx, post, authorId, isPublic);
+  const pollRow = await pollOfPost(ctx, post.id);
+  const poll = pollRow ? diasporaPollOf(post, pollRow) : null;
+  const text = await diasporaText(ctx, post);
   return {
     type: 'StatusMessage',
     author: authorId,
@@ -278,9 +282,10 @@ export async function statusMessageFor(
     createdAt: post.createdAt,
     public: isPublic,
     providerDisplayName: 'Disbigle',
-    text: await diasporaText(ctx, post),
+    text: poll && 'fallbackText' in poll ? `${text}\n\n${poll.fallbackText}` : text,
     ...(post.editedAt ? { editedAt: post.editedAt } : {}),
     ...(photos.length > 0 ? { photos } : {}),
+    ...(poll && 'poll' in poll ? { poll: poll.poll } : {}),
   };
 }
 

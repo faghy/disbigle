@@ -1,4 +1,5 @@
 import { generateKeyPairSync } from 'node:crypto';
+import { isIP } from 'node:net';
 import {
   type CoreContext,
   createPost,
@@ -6,6 +7,7 @@ import {
   follow,
   MemoryKeyValueStore,
   registerUser,
+  votePoll,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { createTestDatabase } from '@disbigle/db/testing';
@@ -18,14 +20,19 @@ import {
   parseEntity,
   serializeEntity,
   signAccountMigration,
+  signRelayable,
   unenvelop,
   verifyAccountMigrationSignature,
+  verifyRelayableSignature,
 } from '@disbigle/diaspora';
+import { validatePublicUrl } from '@fedify/vocab-runtime';
 import { and, eq } from 'drizzle-orm';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DiasporaBridge } from '../src/bridge.ts';
 import { relayStored } from '../src/incoming.ts';
+import { UnsafeUrlError } from '../src/net.ts';
+import { answerGuid, answerGuids, pollOfPost } from '../src/polls.ts';
 import { DiasporaPublisher } from '../src/publisher.ts';
 import { diasporaRoutes } from '../src/routes.ts';
 import { ALICE_PRIVATE_KEY, ALICE_PUBLIC_KEY, COMMENT_XML_ALICE } from './gem-fixtures.ts';
@@ -35,6 +42,9 @@ import { newUser, testConfig } from './helpers.ts';
 interface FakePerson {
   id: string;
   guid: string;
+  /** Overrides for hostile WebFinger documents. */
+  hcardUrl?: string;
+  seedUrl?: string;
   publicKey: string;
   privateKey: string;
   name: string;
@@ -68,8 +78,8 @@ const fakeFetch: typeof fetch = async (input) => {
     return Response.json(
       buildWebFinger({
         diasporaId: id,
-        hcardUrl: `https://${host}/hcard/users/${person.guid}`,
-        seedUrl: `https://${host}/`,
+        hcardUrl: person.hcardUrl ?? `https://${host}/hcard/users/${person.guid}`,
+        seedUrl: person.seedUrl ?? `https://${host}/`,
       }),
     );
   }
@@ -105,6 +115,12 @@ let drop: () => Promise<void>;
 let bridge: DiasporaBridge;
 let app: FastifyInstance;
 const sent: Array<{ url: string; body: string; contentType: string }> = [];
+const failures: unknown[] = [];
+
+/** Real address check for IP literals; names are accepted without DNS (offline tests). */
+const validateUrl = async (url: string) => {
+  if (isIP(new URL(url).hostname.replace(/^\[|\]$/g, ''))) await validatePublicUrl(url);
+};
 
 beforeAll(async () => {
   const testDb = await createTestDatabase();
@@ -121,8 +137,9 @@ beforeAll(async () => {
     deliver: async (url, body, contentType) => {
       sent.push({ url, body, contentType });
     },
+    validateUrl,
     onError: (error) => {
-      throw error;
+      failures.push(error);
     },
   });
   ctx.events = new DiasporaPublisher(bridge);
@@ -572,5 +589,161 @@ describe('AccountMigration', () => {
     expect(entity.author).toBe(origin.id);
     expect(entity.profile.author).toBe(target.id);
     expect(verifyAccountMigrationSignature(entity, target.actor.publicKeyPem)).toBe(true);
+  });
+});
+
+describe('SSRF protection', () => {
+  it('refuses a WebFinger that points the hCard at a private address', async () => {
+    const eve = fakePerson('evil@pod-x.org', 'eeeeeeeeeeee0001');
+    eve.hcardUrl = 'http://127.0.0.1:6380/hcard/users/eeeeeeeeeeee0001';
+    people.set(eve.id, eve);
+    await expect(bridge.resolvePerson(eve.id)).rejects.toThrow(UnsafeUrlError);
+  });
+
+  it('never POSTs to a receive URL on a private address', async () => {
+    const mallory = fakePerson('mallory@pod-m.org', 'mmmmmmmmmmmm0001');
+    mallory.seedUrl = 'https://10.0.0.5/';
+    people.set(mallory.id, mallory);
+    const bob = await localUser();
+    await bridge.receivePublic(
+      envelopeFrom(mallory, {
+        type: 'Contact',
+        author: mallory.id,
+        recipient: bob.id,
+        following: true,
+        sharing: true,
+      }),
+    );
+    sent.length = 0;
+    failures.length = 0;
+    await createPost(ctx, bob.actor.id, { content: 'for my followers' });
+    await bridge.idle();
+    expect(sent.some((s) => s.url.includes('10.0.0.5'))).toBe(false);
+    expect(failures.some((e) => (e as Error).cause instanceof UnsafeUrlError)).toBe(true);
+  });
+});
+
+describe('polls', () => {
+  it('stores incoming diaspora* polls as single choice, without expiry, with answer guids', async () => {
+    const guid = 'c0000000000000000000000000000001';
+    await bridge.receivePublic(
+      envelopeFrom(dave, {
+        type: 'StatusMessage',
+        author: dave.id,
+        guid,
+        public: true,
+        text: 'Mare o montagna?',
+        poll: {
+          type: 'Poll',
+          guid: 'c0000000000000000000000000000002',
+          question: 'Mare o montagna?',
+          pollAnswers: [
+            { type: 'PollAnswer', guid: 'c0000000000000000000000000000003', answer: 'Mare' },
+            { type: 'PollAnswer', guid: 'c0000000000000000000000000000004', answer: 'Montagna' },
+          ],
+        },
+      }),
+    );
+    const post = await postByGuid(guid);
+    expect(post?.contentHtml).not.toContain('Montagna');
+    const poll = await pollOfPost(ctx, post?.id ?? '');
+    expect(poll).toMatchObject({
+      multiple: false,
+      expiresAt: null,
+      diasporaGuid: 'c0000000000000000000000000000002',
+    });
+    expect(poll?.options.map((o) => o.title)).toEqual(['Mare', 'Montagna']);
+    expect(poll && answerGuids(poll, false)).toEqual([
+      'c0000000000000000000000000000003',
+      'c0000000000000000000000000000004',
+    ]);
+
+    // A local vote goes to the author's pod as a signed PollParticipation.
+    const voter = await localUser();
+    sent.length = 0;
+    await votePoll(ctx, voter.actor.id, poll?.id ?? '', [1]);
+    await bridge.idle();
+    const delivery = sent.find((s) => s.url === 'https://pod-d.org/receive/public');
+    const opened = await unenvelop(delivery?.body ?? '', {
+      fetchPublicKey: () => voter.actor.publicKeyPem,
+    });
+    const participation = parseEntity(opened.payloadXml);
+    if (participation.type !== 'PollParticipation') throw new Error('not a vote');
+    expect(participation).toMatchObject({
+      author: voter.id,
+      parentGuid: 'c0000000000000000000000000000002',
+      pollAnswerGuid: 'c0000000000000000000000000000004',
+    });
+    expect(verifyRelayableSignature(participation, voter.actor.publicKeyPem)).toBe(true);
+  });
+
+  it('sends local single-choice polls as <poll> and multiple choice as text', async () => {
+    const bob = await localUser();
+    const daveRow = await bridge.resolvePerson(dave.id);
+    await follow(ctx, daveRow?.id ?? '', bob.actor.id);
+    await bridge.idle();
+    sent.length = 0;
+    await createPost(ctx, bob.actor.id, {
+      content: 'Pizza o pasta?',
+      poll: { options: ['Pizza', 'Pasta'], expiresIn: 3600, multiple: false },
+    });
+    await createPost(ctx, bob.actor.id, {
+      content: 'Cosa porti?',
+      poll: { options: ['Vino', 'Dolce'], expiresIn: 3600, multiple: true },
+    });
+    await bridge.idle();
+    const entities = await Promise.all(
+      sent.map(async (s) =>
+        parseEntity(
+          (await unenvelop(s.body, { fetchPublicKey: () => bob.actor.publicKeyPem })).payloadXml,
+        ),
+      ),
+    );
+    const single = entities.find((e) => e.type === 'StatusMessage' && e.text?.includes('Pizza'));
+    const multiple = entities.find((e) => e.type === 'StatusMessage' && e.text?.includes('Cosa'));
+    if (single?.type !== 'StatusMessage' || multiple?.type !== 'StatusMessage') {
+      throw new Error('posts not sent');
+    }
+    expect(single.poll?.question).toBe('Pizza o pasta?');
+    expect(single.poll?.pollAnswers.map((a) => a.answer)).toEqual(['Pizza', 'Pasta']);
+    expect(single.poll?.pollAnswers[0]?.guid).toBe(answerGuid(single.poll?.guid ?? '', 0));
+    expect(multiple.poll).toBeUndefined();
+    expect(multiple.text).toContain('- [ ] Vino');
+  });
+
+  it('counts a diaspora* vote on a local poll and relays it', async () => {
+    const bob = await localUser();
+    const daveRow = await bridge.resolvePerson(dave.id);
+    await follow(ctx, daveRow?.id ?? '', bob.actor.id);
+    const post = await createPost(ctx, bob.actor.id, {
+      content: 'Si o no?',
+      poll: { options: ['Si', 'No'], expiresIn: 3600, multiple: false },
+    });
+    const poll = await pollOfPost(ctx, post.id);
+    await bridge.idle();
+    sent.length = 0;
+    const vote = signRelayable(
+      {
+        type: 'PollParticipation',
+        author: alice.id,
+        guid: 'c0000000000000000000000000000010',
+        parentGuid: poll?.diasporaGuid ?? '',
+        pollAnswerGuid: answerGuid(poll?.diasporaGuid ?? '', 1),
+      },
+      alice.privateKey,
+    );
+    await bridge.receivePublic(envelopeFrom(alice, vote));
+    await bridge.idle();
+    const counted = await pollOfPost(ctx, post.id);
+    expect(counted?.options.map((o) => o.votesCount)).toEqual([0, 1]);
+    expect(counted?.votersCount).toBe(1);
+    const relay = sent.find((s) => s.url === 'https://pod-d.org/receive/public');
+    const opened = await unenvelop(relay?.body ?? '', {
+      fetchPublicKey: () => bob.actor.publicKeyPem,
+    });
+    expect(opened.payloadXml).toBe(serializeEntity(vote));
+    expect(await bridge.relayables.get(vote.guid)).toMatchObject({
+      entityType: 'PollParticipation',
+    });
   });
 });

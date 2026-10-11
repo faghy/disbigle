@@ -66,6 +66,9 @@ export const actors = pgTable(
     summary: text('summary').notNull().default(''),
     avatarUrl: text('avatar_url'),
     headerUrl: text('header_url'),
+    /** Original URLs of a remote account's images; avatar_url/header_url point to the local cache once stored. */
+    avatarRemoteUrl: text('avatar_remote_url'),
+    headerRemoteUrl: text('header_remote_url'),
     fields: jsonb('fields').$type<ProfileField[]>().notNull().default([]),
     locked: boolean('locked').notNull().default(false),
     discoverable: boolean('discoverable').notNull().default(true),
@@ -600,7 +603,12 @@ export const diasporaRelayables = pgTable(
   (t) => [index('diaspora_relayables_parent_idx').on(t.parentGuid)],
 );
 
-export type PollOption = { title: string; votesCount: number };
+export type PollOption = {
+  title: string;
+  votesCount: number;
+  /** diaspora* answer guid (remote polls). */
+  diasporaGuid?: string;
+};
 
 /** A poll attached to a post (ActivityPub Question, diaspora Poll). */
 export const polls = pgTable(

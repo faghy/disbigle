@@ -15,6 +15,7 @@
     "@disbigle/core": "workspace:*",
     "@disbigle/db": "workspace:*",
     "@disbigle/diaspora": "workspace:*",
+    "@fedify/vocab-runtime": "2.4.2",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "ioredis": "^5.11.1"

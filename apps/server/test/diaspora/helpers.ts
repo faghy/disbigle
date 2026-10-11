@@ -69,6 +69,8 @@ export async function startInstance(
   const bridge = new DiasporaBridge({
     ctx,
     allowHttp: true,
+    // The instances listen on 127.0.0.1: the SSRF guard must let them talk.
+    allowPrivateAddress: true,
     ...(options.deliver ? { deliver: options.deliver } : {}),
     ...(options.queue ? { queue: options.queue } : {}),
     ...(options.consume !== undefined ? { consume: options.consume } : {}),

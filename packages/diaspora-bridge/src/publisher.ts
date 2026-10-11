@@ -5,12 +5,13 @@ import { schema } from '@disbigle/db';
 import {
   type AccountDeletion,
   type Contact,
+  type PollParticipation,
   type Profile,
   type Retraction,
   serializeEntity,
   signAccountMigration,
 } from '@disbigle/diaspora';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import {
   type ActorRow,
   actorById,
@@ -31,6 +32,7 @@ import {
   signerFor,
   statusMessageFor,
 } from './outgoing.ts';
+import { answerGuids } from './polls.ts';
 import { htmlToText } from './text.ts';
 
 async function followedIds(ctx: DiasporaBridge['ctx'], actorId: string): Promise<string[]> {
@@ -118,6 +120,8 @@ export class DiasporaPublisher implements EventBus {
         return this.accountDeleted(event.actorId);
       case 'account.moved':
         return this.accountMoved(event.actorId, event.targetActorId);
+      case 'poll.voted':
+        return this.pollVoted(event);
       case 'follow.created':
         return this.followCreated(event.actorId, event.targetActorId);
       default:
@@ -291,6 +295,32 @@ export class DiasporaPublisher implements EventBus {
     recipients.privateActors.push(target);
     await sendToRecipients(this.bridge, serializeEntity(contact), signer, recipients);
     return true;
+  }
+
+  /** A local vote: a signed PollParticipation, routed like a comment on the poll's post. */
+  private async pollVoted(event: Extract<DomainEvent, { type: 'poll.voted' }>) {
+    const ctx = this.ctx;
+    const voter = await this.localActor(event.actorId);
+    const post = await postById(ctx, event.postId);
+    const [poll] = await ctx.db
+      .select()
+      .from(schema.polls)
+      .where(eq(schema.polls.id, event.pollId));
+    if (!voter || !post || !poll?.diasporaGuid || poll.multiple) return;
+    const [vote] = await ctx.db
+      .select()
+      .from(schema.pollVotes)
+      .where(inArray(schema.pollVotes.id, event.voteIds));
+    const answer = vote ? answerGuids(poll, post.local)[vote.choice] : null;
+    if (!vote?.diasporaGuid || !answer) return;
+    const participation: PollParticipation = {
+      type: 'PollParticipation',
+      author: diasporaIdOf(ctx, voter),
+      guid: vote.diasporaGuid,
+      parentGuid: poll.diasporaGuid,
+      pollAnswerGuid: answer,
+    };
+    await sendInteraction(this.bridge, participation, voter, await threadRootOf(ctx, post));
   }
 
   /**

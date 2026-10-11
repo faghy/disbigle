@@ -73,7 +73,7 @@ export async function recountPoll(ctx: CoreContext, pollId: string): Promise<voi
     .update(polls)
     .set({
       options: poll.options.map((o, i) => ({
-        title: o.title,
+        ...o,
         votesCount: counts.find((c) => c.choice === i)?.n ?? 0,
       })),
       votersCount: voters?.n ?? 0,
@@ -166,7 +166,7 @@ export async function updateRemotePollCounts(
     .update(polls)
     .set({
       options: poll.options.map((o, i) => ({
-        title: o.title,
+        ...o,
         votesCount: counts.options[i]?.votesCount ?? o.votesCount,
       })),
       ...(counts.votersCount !== undefined ? { votersCount: counts.votersCount } : {}),

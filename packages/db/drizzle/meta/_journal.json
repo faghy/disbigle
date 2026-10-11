@@ -71,6 +71,13 @@
       "when": 1791677486846,
       "tag": "0009_web_push",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791677669086,
+      "tag": "0010_remote_image_cache",
+      "breakpoints": true
     }
   ]
 }

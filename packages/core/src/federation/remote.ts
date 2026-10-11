@@ -190,7 +190,7 @@ export interface RemotePostData {
   attachments?: RemoteAttachment[];
   publishedAt?: Date;
   poll?: {
-    options: { title: string; votesCount: number }[];
+    options: { title: string; votesCount: number; diasporaGuid?: string }[];
     multiple: boolean;
     expiresAt: Date | null;
     votersCount?: number;
@@ -321,9 +321,11 @@ export async function ingestRemotePost(
       await tx.insert(schema.polls).values({
         id: uuidv7(),
         postId: id,
-        options: data.poll.options
-          .slice(0, 20)
-          .map((o) => ({ title: o.title.slice(0, 200), votesCount: o.votesCount })),
+        options: data.poll.options.slice(0, 20).map((o) => ({
+          title: o.title.slice(0, 200),
+          votesCount: o.votesCount,
+          ...(o.diasporaGuid ? { diasporaGuid: o.diasporaGuid } : {}),
+        })),
         multiple: data.poll.multiple,
         expiresAt: data.poll.expiresAt,
         votersCount: data.poll.votersCount ?? 0,
