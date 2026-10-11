@@ -627,7 +627,15 @@
     "noHashtags": "Nessun hashtag corrisponde a «{{query}}».",
     "tagPosts_one": "{{count}} post",
     "tagPosts_other": "{{count}} post",
-    "followedTag": "Seguito"
+    "followedTag": "Seguito",
+    "networkTitle": "Non è chi cercavi? Cerca «{{query}}» sugli altri server",
+    "networkHint": "Chiediamo ai server con cui siamo già in contatto (Mastodon, diaspora*, Hubzilla…) se hanno qualcuno con questo nome. Nel fediverso non esiste un elenco unico delle persone.",
+    "networkButton": "Cerca fuori",
+    "networkSearching": "Cerchiamo «{{query}}» sugli altri server…",
+    "networkNone_one": "Nessuno di nome «{{query}}» sull'unico server contattato. Se conosci il suo server, cerca nome@server.",
+    "networkNone_other": "Nessuno di nome «{{query}}» sui {{count}} server contattati. Se conosci il suo server, cerca nome@server.",
+    "networkFound_one": "Trovato su {{count}} server contattato:",
+    "networkFound_other": "Trovati sui {{count}} server contattati:"
   },
   "passwordReset": {
     "forgotTitle": "Reimposta la password",

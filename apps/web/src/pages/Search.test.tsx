@@ -228,4 +228,27 @@ describe('search', () => {
     );
     expect(await screen.findByText('No posts match “due”.')).toBeInTheDocument();
   });
+
+  it('looks for a bare nickname on other servers when asked', async () => {
+    let asked: unknown;
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /search/accounts': { body: [] },
+      'GET /search/tags': { body: [] },
+      'POST /search/network': (body) => {
+        asked = body;
+        return { body: { accounts: [remote], servers: 12 } };
+      },
+      'GET /accounts/relationships': { body: [relationship(remote.id)] },
+    });
+    renderApp('/search?q=carol');
+    const user = userEvent.setup();
+    const button = await screen.findByRole('button', { name: 'Search outside' });
+    expect(screen.getByText(/Search «carol» on other servers/)).toBeInTheDocument();
+    await user.click(button);
+    expect(await screen.findByText('Found on the 12 servers asked:')).toBeInTheDocument();
+    expect(screen.getAllByText('Carol').length).toBeGreaterThan(0);
+    expect(asked).toEqual({ q: 'carol' });
+  });
 });

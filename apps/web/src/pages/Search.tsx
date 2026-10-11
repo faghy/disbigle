@@ -174,7 +174,61 @@ function SearchResults({ query }: { query: string }) {
           <AccountResults accounts={results.data} />
         )}
       </FeedSection>
+      {user && !remote && !isUrl(query) && NICK.test(query.trim().replace(/^@/, '')) && (
+        <NetworkSearch query={query.trim().replace(/^@/, '')} key={query} />
+      )}
     </div>
+  );
+}
+
+const NICK = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$/;
+
+/**
+ * "Not who you were looking for?": the nickname tried on the servers this one already knows
+ * (`nick@server`). The fediverse has no global directory of people.
+ */
+function NetworkSearch({ query }: { query: string }) {
+  const { t } = useTranslation();
+  const search = useMutation({ mutationFn: () => social.searchNetwork(query) });
+  return (
+    <FeedSection className="p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex size-10 -rotate-6 items-center justify-center rounded-xl border-2 border-ink bg-mint text-ink">
+          <GlobeIcon size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">{t('search.networkTitle', { query })}</p>
+          <p className="text-sm text-fg-muted">{t('search.networkHint')}</p>
+        </div>
+        {!search.isSuccess && (
+          <Button onClick={() => search.mutate()} loading={search.isPending}>
+            {t('search.networkButton')}
+          </Button>
+        )}
+      </div>
+      <div aria-live="polite" className="mt-3 empty:hidden">
+        {search.isPending && (
+          <p className="flex items-center gap-2 text-sm text-fg-muted">
+            <Spinner />
+            {t('search.networkSearching', { query })}
+          </p>
+        )}
+        {search.isSuccess && search.data.accounts.length === 0 && (
+          <p className="text-sm">
+            {t('search.networkNone', { query, count: search.data.servers })}
+          </p>
+        )}
+        {search.isSuccess && search.data.accounts.length > 0 && (
+          <>
+            <p className="mb-1 text-sm text-fg-muted">
+              {t('search.networkFound', { count: search.data.servers })}
+            </p>
+            <AccountResults accounts={search.data.accounts} />
+          </>
+        )}
+      </div>
+      {search.error && <Alert className="mt-3">{errorMessage(search.error)}</Alert>}
+    </FeedSection>
   );
 }
 

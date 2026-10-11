@@ -627,7 +627,15 @@
     "noHashtags": "No hashtags match “{{query}}”.",
     "tagPosts_one": "{{count}} post",
     "tagPosts_other": "{{count}} posts",
-    "followedTag": "Followed"
+    "followedTag": "Followed",
+    "networkTitle": "Not who you were looking for? Search «{{query}}» on other servers",
+    "networkHint": "We ask the servers we already talk to (Mastodon, diaspora*, Hubzilla…) whether they have someone by that name. The fediverse has no single directory of people.",
+    "networkButton": "Search outside",
+    "networkSearching": "Looking for «{{query}}» on other servers…",
+    "networkNone_one": "Nobody called «{{query}}» on the one server asked. If you know their server, search name@server.",
+    "networkNone_other": "Nobody called «{{query}}» on the {{count}} servers asked. If you know their server, search name@server.",
+    "networkFound_one": "Found on the {{count}} server asked:",
+    "networkFound_other": "Found on the {{count}} servers asked:"
   },
   "passwordReset": {
     "forgotTitle": "Reset your password",

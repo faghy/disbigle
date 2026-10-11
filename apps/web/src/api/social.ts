@@ -150,6 +150,9 @@ export const social = {
   searchAccounts: (q: string) => api.get<Account[]>(`/search/accounts${queryString({ q })}`),
   /** Fetches a remote account by handle or URL; `null` when nothing was found. */
   resolveAccount: (q: string) => api.post<Account | null>('/search/resolve', { q }),
+  /** A bare nickname tried as `nick@server` on the servers this one already knows. */
+  searchNetwork: (q: string) =>
+    api.post<{ accounts: Account[]; servers: number }>('/search/network', { q }),
   /** Imports a public remote post by its URL; `null` when nothing was found. */
   resolveStatus: (q: string) => api.post<Status | null>('/search/resolve_status', { q }),
   report: (body: ReportRequest) => api.post<{ id: string }>('/reports', body),

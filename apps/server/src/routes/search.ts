@@ -14,6 +14,7 @@ import { and, ilike, isNull, or, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
+import { searchNetwork } from '../network-search.ts';
 import { requireUser } from '../plugins/auth.ts';
 import { findRemoteAccount } from '../resolve.ts';
 
@@ -75,6 +76,23 @@ export async function searchRoutes(
     const actor = await findRemoteAccount(federation, ctx, q, { refresh: true });
     return actor ? serializeAccount(actor) : null;
   });
+
+  /**
+   * A bare nickname tried on the servers we already know (`nick@server`), on request: the
+   * fediverse has no global people directory.
+   */
+  app.post(
+    '/network',
+    { config: { rateLimit: { max: 6, timeWindow: '1 minute' } } },
+    async (request) => {
+      requireUser(request);
+      const { q } = parse(z.object({ q: z.string().trim().min(1).max(64) }), request.body);
+      const { accounts, servers } = await searchNetwork(ctx, q.replace(/^@/, ''), (handle) =>
+        findRemoteAccount(federation, ctx, handle),
+      );
+      return { accounts: accounts.map(serializeAccount), servers };
+    },
+  );
 
   /** Imports a remote post by URL so it can be read and interacted with here. */
   app.post('/resolve_status', async (request) => {
