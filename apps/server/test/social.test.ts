@@ -275,6 +275,16 @@ describe('accounts and notifications', () => {
     ).json();
     expect(results.map((r: { id: string }) => r.id)).toContain(account.id);
     expect((await new Client(app).get('/api/v1/search/accounts?q=zzzznobody')).json()).toEqual([]);
+
+    // Opting out of discovery: found by exact username only.
+    const hidden = await signedIn();
+    await hidden.client.patch('/api/v1/me/profile', { discoverable: false });
+    const ids = async (q: string) =>
+      (await new Client(app).get(`/api/v1/search/accounts?q=${q}`))
+        .json()
+        .map((r: { id: string }) => r.id);
+    expect(await ids(hidden.account.username.slice(0, -2))).not.toContain(hidden.account.id);
+    expect(await ids(hidden.account.username)).toContain(hidden.account.id);
   });
 
   it('manages aspects', async () => {

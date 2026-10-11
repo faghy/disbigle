@@ -57,7 +57,8 @@ export async function searchRoutes(
           and(
             or(ilike(schema.actors.username, term), ilike(schema.actors.displayName, term)),
             isNull(schema.actors.suspendedAt),
-            sql`(${schema.actors.discoverable} or ${schema.actors.domain} is null)`,
+            // Accounts that opted out of discovery are found only by their exact username.
+            sql`(${schema.actors.discoverable} or lower(${schema.actors.username}) = lower(${q.replace(/^@/, '')}))`,
           ),
         )
         .orderBy(sql`${schema.actors.domain} is not null`, schema.actors.username)

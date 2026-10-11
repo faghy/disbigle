@@ -510,7 +510,8 @@ export async function searchAccounts(
       and(
         or(ilike(actors.username, term), ilike(actors.displayName, term)),
         isNull(actors.suspendedAt),
-        sql`(${actors.discoverable} or ${actors.domain} is null)`,
+        // Accounts that opted out of discovery are found only by their exact username.
+        sql`(${actors.discoverable} or lower(${actors.username}) = lower(${q.replace(/^@/, '')}))`,
         input.following && viewerActorId
           ? inArray(
               actors.id,
