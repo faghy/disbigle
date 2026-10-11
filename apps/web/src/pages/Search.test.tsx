@@ -175,20 +175,41 @@ describe('search', () => {
     expect(pages).toEqual(['montagna|', `montagna|${page1[19]?.id}`]);
   });
 
-  it('opens on the tab in the address and shows hashtags for the query', async () => {
+  it('opens on the tab in the address and lists hashtags by prefix', async () => {
+    const asked: string[] = [];
     mockApi({
       'GET /me': { body: aliceUser },
       'GET /instance': instance(),
-      'GET /tags/followed': { body: ['ciclismo', 'cinema'] },
-      'GET /tags/ciclismo': { body: { name: 'ciclismo', following: true, postsCount: 2 } },
+      'GET /search/tags': (_body, url) => {
+        asked.push(url.searchParams.get('q') ?? '');
+        return {
+          body: [
+            { name: 'ciclismo', postsCount: 12, following: true },
+            { name: 'cinema', postsCount: 1, following: false },
+          ],
+        };
+      },
     });
-    renderApp('/search?q=ciclismo&type=hashtags');
+    renderApp('/search?q=%23ci&type=hashtags');
     const list = await screen.findByRole('list', { name: 'Hashtags' });
-    expect(within(list).getByRole('link', { name: /#ciclismo/ })).toHaveAttribute(
-      'href',
-      '/tags/ciclismo',
-    );
-    expect(within(list).getByText('2 posts')).toBeInTheDocument();
+    const [first, second] = within(list).getAllByRole('link');
+    expect(first).toHaveAttribute('href', '/tags/ciclismo');
+    expect(first).toHaveTextContent('#ciclismo');
+    expect(first).toHaveTextContent('Followed');
+    expect(first).toHaveTextContent('12 posts');
+    expect(second).toHaveTextContent('1 post');
+    expect(second).not.toHaveTextContent('Followed');
+    expect(asked).toEqual(['#ci']);
+  });
+
+  it('says when no hashtag matches', async () => {
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /search/tags': { body: [] },
+    });
+    renderApp('/search?q=zzz&type=hashtags');
+    expect(await screen.findByText('No hashtags match “zzz”.')).toBeInTheDocument();
   });
 
   it('keeps the tab when the query changes', async () => {

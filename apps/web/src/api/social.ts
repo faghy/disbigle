@@ -144,6 +144,9 @@ export const social = {
   /** Full-text search in posts the viewer may see, newest first. */
   searchStatuses: (q: string, page: PageParams) =>
     api.get<Status[]>(`/search/statuses${queryString({ q, ...page })}`),
+  /** Hashtags starting with `q` (a leading `#` is ignored), most used first. */
+  searchTags: (q: string, limit = 20) =>
+    api.get<TagInfo[]>(`/search/tags${queryString({ q, limit })}`),
   searchAccounts: (q: string) => api.get<Account[]>(`/search/accounts${queryString({ q })}`),
   /** Fetches a remote account by handle or URL; `null` when nothing was found. */
   resolveAccount: (q: string) => api.post<Account | null>('/search/resolve', { q }),

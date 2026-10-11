@@ -1,11 +1,11 @@
 import type { Account } from '@disbigle/shared';
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser } from '../api/queries.ts';
-import { social, type TagInfo } from '../api/social.ts';
+import { social } from '../api/social.ts';
 import { statusQueryOptions, useFollowedTags, useRelationships } from '../api/socialQueries.ts';
 import { AccountRow } from '../components/AccountList.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
@@ -380,41 +380,18 @@ function PostResults({ query }: { query: string }) {
   );
 }
 
-const TAG_WORD = /^[\p{L}\p{N}_]{1,100}$/u;
-
-/**
- * Hashtags for the query. There is no hashtag search on the server yet, so each word of the
- * query is checked as a tag, and followed hashtags that start with it are listed too.
- */
+/** Hashtags starting with the query, most used first, with a mark on the ones you follow. */
 function HashtagResults({ query }: { query: string }) {
   const { t } = useTranslation();
-  const followed = useFollowedTags();
-  const words = [
-    ...new Set(
-      query
-        .split(/\s+/)
-        .map((word) => word.replace(/^#/, '').toLowerCase())
-        .filter((word) => TAG_WORD.test(word)),
-    ),
-  ].slice(0, 5);
-  const tags = useQueries({
-    queries: words.map((name) => ({
-      queryKey: ['tag', name],
-      queryFn: () => social.tag(name),
-      staleTime: 60_000,
-    })),
+  const tags = useQuery({
+    queryKey: ['search', 'tags', query],
+    queryFn: () => social.searchTags(query),
+    staleTime: 30_000,
   });
-  const prefix = words[0] ?? '';
-  const fromFollowed = (followed.data ?? []).filter(
-    (name) => prefix && name.startsWith(prefix) && !words.includes(name),
-  );
-  const found = tags
-    .map((result) => result.data)
-    .filter((tag): tag is TagInfo => Boolean(tag && tag.postsCount > 0));
-  const loading = tags.some((result) => result.isPending);
 
-  if (loading) return <LoadingState label={t('search.searching')} />;
-  if (found.length === 0 && fromFollowed.length === 0) {
+  if (tags.isPending) return <LoadingState label={t('search.searching')} />;
+  if (tags.isError) return <Alert>{errorMessage(tags.error)}</Alert>;
+  if (tags.data.length === 0) {
     return (
       <FeedSection>
         <p className="px-5 py-10 text-center text-sm text-fg-muted">
@@ -426,31 +403,23 @@ function HashtagResults({ query }: { query: string }) {
   return (
     <FeedSection>
       <ul aria-label={t('search.tabs.hashtags')} className="divide-y divide-border">
-        {found.map((tag) => (
+        {tags.data.map((tag) => (
           <li key={tag.name}>
             <Link
               to="/tags/$tag"
               params={{ tag: tag.name }}
               className="flex items-center gap-3 px-5 py-3 hover:bg-surface-muted focus-ring"
             >
-              <HashIcon size={18} className="text-fg-muted" />
-              <span className="flex-1 font-medium">#{tag.name}</span>
-              <span className="text-sm text-fg-muted">
+              <HashIcon size={18} className="shrink-0 text-fg-muted" />
+              <span className="min-w-0 flex-1 truncate font-medium">#{tag.name}</span>
+              {tag.following && (
+                <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+                  {t('search.followedTag')}
+                </span>
+              )}
+              <span className="shrink-0 text-sm text-fg-muted">
                 {t('search.tagPosts', { count: tag.postsCount })}
               </span>
-            </Link>
-          </li>
-        ))}
-        {fromFollowed.map((name) => (
-          <li key={name}>
-            <Link
-              to="/tags/$tag"
-              params={{ tag: name }}
-              className="flex items-center gap-3 px-5 py-3 hover:bg-surface-muted focus-ring"
-            >
-              <HashIcon size={18} className="text-fg-muted" />
-              <span className="flex-1 font-medium">#{name}</span>
-              <span className="text-sm text-fg-muted">{t('search.followedTag')}</span>
             </Link>
           </li>
         ))}
