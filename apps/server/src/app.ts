@@ -21,6 +21,7 @@ import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { adminRoutes, reportRoutes } from './routes/admin.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
+import { inviteRoutes } from './routes/invites.ts';
 import { legacyDiasporaRoutes } from './routes/legacy.ts';
 import { meRoutes } from './routes/me.ts';
 import { mediaRoutes } from './routes/media.ts';
@@ -150,6 +151,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(tagRoutes, { ctx, prefix: '/tags' });
       await api.register(pollRoutes, { ctx, prefix: '/polls' });
       await api.register(pushRoutes, { ctx, prefix: '/push' });
+      await api.register(inviteRoutes, { ctx, prefix: '/invites' });
       await api.register(adminRoutes, { ctx, prefix: '/admin' });
       if (options.federation) {
         await api.register(searchRoutes, {

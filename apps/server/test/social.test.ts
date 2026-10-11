@@ -146,6 +146,19 @@ describe('accounts and notifications', () => {
     );
   });
 
+  it('manages personal invitation links', async () => {
+    const { client } = await signedIn();
+    const created = await client.post('/api/v1/invites', { maxUses: 1 });
+    expect(created.statusCode).toBe(201);
+    const invite = created.json();
+    expect(invite.url).toContain(`/register?invite=${invite.code}`);
+    expect((await client.get('/api/v1/invites')).json().map((i: { id: string }) => i.id)).toEqual([
+      invite.id,
+    ]);
+    expect((await client.delete(`/api/v1/invites/${invite.id}`)).statusCode).toBe(200);
+    expect((await client.get('/api/v1/invites')).json()).toEqual([]);
+  });
+
   it('searches accounts by name only', async () => {
     const { account } = await signedIn();
     const results = (
