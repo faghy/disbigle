@@ -99,9 +99,67 @@ sudo -u disbigle bash -c 'set -a; . /etc/disbigle/env; set +a; pnpm db:migrate'
 sudo systemctl restart disbigle-server disbigle-worker
 ```
 
-## 7. Backups
+## 7. Email
 
-Back up the PostgreSQL database (`pg_dump`) and `/var/lib/disbigle/media`. The database holds the private keys of every account: keep backups encrypted.
+Disbigle sends password resets and alerts. The simplest setup uses the mail server already on the
+machine (Postfix, as on Plesk) through localhost:
+
+```sh
+SMTP_URL=smtp://127.0.0.1:25/?ignoreTLS=true
+MAIL_FROM="Example <noreply@example.org>"
+```
+
+Mail from your domain only reaches inboxes when the domain vouches for the server, in the DNS
+that is actually public (check with `dig NS example.org`: on Cloudflare, add them there, as
+"DNS only"):
+
+| Name | Type | Value |
+| --- | --- | --- |
+| `example.org` | TXT | `v=spf1 ip4:<server IPv4> -all` |
+| `default._domainkey.example.org` | TXT | `v=DKIM1; p=<public key>` (Plesk shows it in the domain's DNS settings when "DKIM" is on) |
+| `_dmarc.example.org` | TXT | `v=DMARC1; p=none` (move to `quarantine` once reports look right) |
+| `example.org` | MX | `10 <server host name>` (for bounces) |
+
+The server's reverse DNS (PTR) should name a host that resolves back to its address.
+
+## 8. Backups
+
+`deploy/backup.sh` saves the database (`pg_dump -Fc`), the media directory and the configuration
+to `/var/backups/disbigle`, keeping the last 14:
+
+```sh
+sudo cp deploy/disbigle-backup.service deploy/disbigle-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now disbigle-backup.timer
+sudo systemctl start disbigle-backup.service   # a first backup now
+```
+
+The database holds the private keys of every account: backups stay readable by root only, and a
+copy should leave the server (another machine, encrypted storage) so a lost disk doesn't take
+them along.
+
+To restore (try it once on a scratch database, and compare a few counts):
+
+```sh
+B=/var/backups/disbigle/<date>
+sudo -u postgres createdb --maintenance-db=template1 -w disbigle_restore
+cat $B/database.dump | sudo -u postgres pg_restore -w --no-owner -d disbigle_restore
+sudo tar -C /var/lib/disbigle -xzf $B/media.tar.gz      # media
+```
+
+(`--maintenance-db=template1 -w`: on Plesk, connecting to the `postgres` database asks for a
+password; `-w` makes the command fail instead of waiting for one.)
+
+## 9. Monitoring
+
+`deploy/healthcheck.sh` runs every 5 minutes: it checks the services, the app (locally and at its
+public address) and failed diaspora* deliveries, restarts what is down, and mails an alert once
+per problem and once when it is over. Put the recipient in `/etc/disbigle/alert-to`:
+
+```sh
+sudo cp deploy/disbigle-health.service deploy/disbigle-health.timer /etc/systemd/system/
+echo admin@example.org | sudo tee /etc/disbigle/alert-to
+sudo systemctl daemon-reload && sudo systemctl enable --now disbigle-health.timer
+```
 
 ## Migrating a diaspora\* pod in place
 

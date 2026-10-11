@@ -1,0 +1,6 @@
+[Unit]
+Description=Disbigle health check
+
+[Service]
+Type=oneshot
+ExecStart=/opt/disbigle/deploy/healthcheck.sh

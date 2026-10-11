@@ -1,0 +1,7 @@
+[Unit]
+Description=Disbigle backup (database, media, configuration)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/disbigle/deploy/backup.sh
