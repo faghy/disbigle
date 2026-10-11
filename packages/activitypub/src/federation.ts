@@ -16,8 +16,10 @@ import {
   rejectFollowRequest,
   undoRemoteActivity,
   unfollow,
+  updateRemotePollCounts,
   updateRemotePost,
   upsertRemoteActor,
+  votePoll,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import {
@@ -42,13 +44,20 @@ import {
   Move,
   Note,
   Person,
+  Question,
   Reject,
   Tombstone,
   Undo,
   Update,
 } from '@fedify/vocab';
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm';
-import { localActorToPerson, noteToPostData, postToNote, remoteActorData } from './convert.ts';
+import {
+  localActorToPerson,
+  noteToPostData,
+  postToNote,
+  questionPoll,
+  remoteActorData,
+} from './convert.ts';
 import { getInstanceKeyPairs, getLocalKeyPairs, INSTANCE_ACTOR } from './keys.ts';
 
 const PAGE_SIZE = 40;
@@ -468,9 +477,32 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     })
     .on(Create, async (ctx, activity) => {
       const object = await activity.getObject(ctx);
-      if (!(object instanceof Note)) return;
+      if (!(object instanceof Note) && !(object instanceof Question)) return;
       const author = await storeActor(ctx, await activity.getActor(ctx));
       if (!author || object.attributionId?.href !== author.apUri) return;
+      // A poll vote: a Note with a name (the option) and no content, answering one of our polls.
+      if (
+        object instanceof Note &&
+        object.name &&
+        !object.content &&
+        object.replyTargetId &&
+        object.id
+      ) {
+        const target = await findPostByUri(ctx.data, object.replyTargetId.href);
+        if (target?.local) {
+          const [poll] = await ctx.data.db
+            .select()
+            .from(schema.polls)
+            .where(eq(schema.polls.postId, target.id));
+          const choice = poll?.options.findIndex((o) => o.title === object.name?.toString()) ?? -1;
+          if (poll && choice >= 0) {
+            await votePoll(ctx.data, author.id, poll.id, [choice], {
+              apUris: [object.id.href],
+            }).catch(() => undefined);
+          }
+          return;
+        }
+      }
       await fetchMissingAncestors(ctx, object.replyTargetId);
       const data = await noteToPostData(ctx, object, author);
       if (data) await ingestRemotePost(ctx.data, data);
@@ -485,6 +517,13 @@ export function createDisbigleFederation(options: FederationOptions): Federation
           summary: object.summary?.toString() ?? '',
           sensitive: object.sensitive ?? false,
         });
+      }
+      if (object instanceof Question && object.id && object.attributionId?.href === sender.apUri) {
+        const post = await findPostByUri(ctx.data, object.id.href);
+        if (post && !post.local) {
+          const poll = await questionPoll(ctx, object);
+          await updateRemotePollCounts(ctx.data, post.id, poll);
+        }
       }
       // An Update of the actor itself is handled by storeActor above, which refreshes the profile.
     })

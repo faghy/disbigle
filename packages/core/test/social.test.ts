@@ -422,3 +422,62 @@ describe('remote mentions', () => {
     }
   });
 });
+
+describe('polls', () => {
+  it('creates a poll, counts votes once per person and closes on time', async () => {
+    const { votePoll } = await import('../src/index.ts');
+    const author = await newActor();
+    const voter = await newActor();
+    const other = await newActor();
+    const post = await createPost(ctx(), author.id, {
+      content: 'Pizza o pasta?',
+      poll: { options: ['Pizza', 'Pasta', 'Entrambe'], expiresIn: 3600, multiple: false },
+    });
+    expect(post.poll).toMatchObject({
+      multiple: false,
+      expired: false,
+      voted: false,
+      votesCount: 0,
+    });
+    const pollId = post.poll?.id ?? '';
+
+    await expect(votePoll(ctx(), voter.id, pollId, [0, 1])).rejects.toMatchObject({
+      code: 'validation_failed',
+    });
+    await expect(votePoll(ctx(), voter.id, pollId, [7])).rejects.toMatchObject({
+      code: 'validation_failed',
+    });
+    const afterVote = await votePoll(ctx(), voter.id, pollId, [1]);
+    expect(afterVote.poll).toMatchObject({ voted: true, ownVotes: [1], votersCount: 1 });
+    expect(afterVote.poll?.options.map((o) => o.votesCount)).toEqual([0, 1, 0]);
+    await expect(votePoll(ctx(), voter.id, pollId, [0])).rejects.toMatchObject({
+      code: 'conflict',
+    });
+    await votePoll(ctx(), other.id, pollId, [1]);
+    expect((await getStatus(ctx(), author.id, post.id)).poll).toMatchObject({
+      votersCount: 2,
+      voted: false,
+    });
+
+    await ctx()
+      .db.update(schema.polls)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(schema.polls.id, pollId));
+    expect((await getStatus(ctx(), null, post.id)).poll?.expired).toBe(true);
+    await expect(votePoll(ctx(), author.id, pollId, [0])).rejects.toMatchObject({
+      code: 'bad_request',
+    });
+  });
+
+  it('allows several choices in multiple-choice polls', async () => {
+    const { votePoll } = await import('../src/index.ts');
+    const author = await newActor();
+    const voter = await newActor();
+    const post = await createPost(ctx(), author.id, {
+      content: 'Cosa porti?',
+      poll: { options: ['Vino', 'Dolce', 'Pane'], expiresIn: 3600, multiple: true },
+    });
+    const voted = await votePoll(ctx(), voter.id, post.poll?.id ?? '', [0, 2]);
+    expect(voted.poll).toMatchObject({ ownVotes: [0, 2], votersCount: 1, votesCount: 2 });
+  });
+});

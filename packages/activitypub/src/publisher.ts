@@ -10,6 +10,7 @@ import {
   Follow,
   Like,
   Move,
+  Note,
   PUBLIC_COLLECTION,
   type Recipient,
   Reject,
@@ -229,6 +230,8 @@ export class ActivityPubPublisher implements EventBus {
         );
         return;
       }
+      case 'poll.voted':
+        return this.pollVoted(ctx, event);
       case 'account.deleted': {
         const [actor] = (await this.actors([event.actorId])).values();
         if (!actor || actor.domain !== null) return;
@@ -345,6 +348,73 @@ export class ActivityPubPublisher implements EventBus {
       await ctx.sendActivity(sender, direct.map(recipient), create, {
         preferSharedInbox: post.visibility !== 'limited' && post.visibility !== 'direct',
       });
+    }
+  }
+
+  /**
+   * A local vote on a remote poll goes to the poll's author as one Note per choice; any vote on a
+   * local poll is followed by an Update of the Question with the new totals.
+   */
+  private async pollVoted(
+    ctx: Context<CoreContext>,
+    event: Extract<DomainEvent, { type: 'poll.voted' }>,
+  ) {
+    const [post] = await this.core.db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.id, event.postId));
+    const [poll] = await this.core.db
+      .select()
+      .from(schema.polls)
+      .where(eq(schema.polls.id, event.pollId));
+    if (!post?.apUri || !poll) return;
+    const actors = await this.actors([event.actorId, post.actorId]);
+    const voter = actors.get(event.actorId);
+    const author = actors.get(post.actorId);
+    if (!voter || !author) return;
+
+    if (!post.local && voter.domain === null && speaksActivityPub(author)) {
+      const votes = await this.core.db
+        .select()
+        .from(schema.pollVotes)
+        .where(inArray(schema.pollVotes.id, event.voteIds));
+      for (const vote of votes) {
+        if (!vote.apUri) continue;
+        const note = new Note({
+          id: new URL(vote.apUri),
+          attribution: ctx.getActorUri(voter.username),
+          name: poll.options[vote.choice]?.title ?? '',
+          replyTarget: new URL(post.apUri),
+          to: new URL(author.apUri ?? ''),
+        });
+        await ctx.sendActivity(
+          { identifier: voter.username },
+          recipient(author),
+          new Create({
+            id: new URL(`${vote.apUri}/activity`),
+            actor: ctx.getActorUri(voter.username),
+            object: note,
+            to: new URL(author.apUri ?? ''),
+          }),
+        );
+      }
+      return;
+    }
+
+    if (post.local && author.domain === null) {
+      const question = await postToNote(ctx, post, author);
+      await ctx.sendActivity(
+        { identifier: author.username },
+        'followers',
+        new Update({
+          id: new URL(`${post.apUri}#updates/${Date.now()}`),
+          actor: ctx.getActorUri(author.username),
+          object: question,
+          tos: question.toIds,
+          ccs: question.ccIds,
+        }),
+        { preferSharedInbox: true },
+      );
     }
   }
 

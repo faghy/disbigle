@@ -37,7 +37,8 @@ export type DomainEvent =
   | { type: 'block.created'; actorId: string; targetActorId: string }
   | { type: 'account.deleted'; actorId: string }
   | { type: 'post.updated'; postId: string; actorId: string }
-  | { type: 'account.moved'; actorId: string; targetActorId: string };
+  | { type: 'account.moved'; actorId: string; targetActorId: string }
+  | { type: 'poll.voted'; pollId: string; postId: string; actorId: string; voteIds: string[] };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

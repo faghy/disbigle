@@ -596,3 +596,43 @@ export const diasporaRelayables = pgTable(
   },
   (t) => [index('diaspora_relayables_parent_idx').on(t.parentGuid)],
 );
+
+export type PollOption = { title: string; votesCount: number };
+
+/** A poll attached to a post (ActivityPub Question, diaspora Poll). */
+export const polls = pgTable(
+  'polls',
+  {
+    id: uuid('id').primaryKey(),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    options: jsonb('options').$type<PollOption[]>().notNull(),
+    multiple: boolean('multiple').notNull().default(false),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    votersCount: integer('voters_count').notNull().default(0),
+    /** diaspora poll guid. */
+    diasporaGuid: text('diaspora_guid'),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('polls_post_idx').on(t.postId)],
+);
+
+export const pollVotes = pgTable(
+  'poll_votes',
+  {
+    id: uuid('id').primaryKey(),
+    pollId: uuid('poll_id')
+      .notNull()
+      .references(() => polls.id, { onDelete: 'cascade' }),
+    actorId: actorRef('actor_id'),
+    choice: integer('choice').notNull(),
+    apUri: text('ap_uri'),
+    diasporaGuid: text('diaspora_guid'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('poll_votes_unique_idx').on(t.pollId, t.actorId, t.choice),
+    index('poll_votes_actor_idx').on(t.actorId),
+  ],
+);

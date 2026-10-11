@@ -3,6 +3,7 @@ import type { MediaAttachment, Status } from '@disbigle/shared';
 import { and, eq, inArray } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
+import { loadPolls } from './polls.ts';
 
 export type PostRow = typeof schema.posts.$inferSelect;
 type MediaRow = typeof schema.mediaAttachments.$inferSelect;
@@ -99,6 +100,7 @@ export async function hydrateStatuses(
   ]);
 
   const actorsById = new Map(actorRows.map((a) => [a.id, serializeAccount(a)]));
+  const pollsByPost = await loadPolls(ctx, viewerActorId, postIds);
   const liked = new Set(likedRows.map((r) => r.postId));
   const reblogged = new Set(rebloggedRows.map((r) => r.postId));
   const bookmarked = new Set(bookmarkedRows.map((r) => r.postId));
@@ -134,6 +136,7 @@ export async function hydrateStatuses(
         }),
       tags: tagRows.filter((t) => t.postId === post.id).map((t) => ({ name: t.name })),
       media: mediaRows.filter((m) => m.postId === post.id).map((m) => serializeMedia(ctx, m)),
+      poll: pollsByPost.get(post.id) ?? null,
       liked: liked.has(post.id),
       reblogged: reblogged.has(post.id),
       bookmarked: bookmarked.has(post.id),

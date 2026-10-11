@@ -206,6 +206,16 @@ export async function createPost(
         .where(inArray(tags.name, tagNames));
       await tx.insert(postTags).values(tagRows.map((t) => ({ postId: id, tagId: t.id })));
     }
+    if (input.poll) {
+      await tx.insert(schema.polls).values({
+        id: uuidv7(),
+        postId: id,
+        options: input.poll.options.map((title) => ({ title, votesCount: 0 })),
+        multiple: input.poll.multiple,
+        expiresAt: new Date(Date.now() + input.poll.expiresIn * 1000),
+        diasporaGuid: randomBytes(16).toString('hex'),
+      });
+    }
     for (const [position, mediaId] of mediaIds.entries()) {
       await tx
         .update(mediaAttachments)

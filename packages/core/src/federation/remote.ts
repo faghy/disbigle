@@ -178,6 +178,13 @@ export interface RemotePostData {
   inReplyTo?: { postId?: string | null; uri?: string | null };
   attachments?: RemoteAttachment[];
   publishedAt?: Date;
+  poll?: {
+    options: { title: string; votesCount: number }[];
+    multiple: boolean;
+    expiresAt: Date | null;
+    votersCount?: number;
+    diasporaGuid?: string;
+  };
 }
 
 export async function findPostByUri(ctx: CoreContext, uri: string) {
@@ -295,6 +302,19 @@ export async function ingestRemotePost(
           position,
         })),
       );
+    }
+    if (data.poll && data.poll.options.length >= 2) {
+      await tx.insert(schema.polls).values({
+        id: uuidv7(),
+        postId: id,
+        options: data.poll.options
+          .slice(0, 20)
+          .map((o) => ({ title: o.title.slice(0, 200), votesCount: o.votesCount })),
+        multiple: data.poll.multiple,
+        expiresAt: data.poll.expiresAt,
+        votersCount: data.poll.votersCount ?? 0,
+        diasporaGuid: data.poll.diasporaGuid ?? null,
+      });
     }
     if (parent) {
       await tx

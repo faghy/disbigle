@@ -7,6 +7,7 @@ import { exportSpki } from '@fedify/fedify';
 import {
   type Actor,
   Application,
+  Collection,
   Document,
   Endpoints,
   Hashtag,
@@ -17,6 +18,7 @@ import {
   Person,
   PropertyValue,
   PUBLIC_COLLECTION,
+  Question,
   Service,
 } from '@fedify/vocab';
 import { and, asc, eq } from 'drizzle-orm';
@@ -107,7 +109,7 @@ export async function postToNote(
   ctx: Context<CoreContext>,
   post: PostRow,
   author: ActorRow,
-): Promise<Note> {
+): Promise<Note | Question> {
   const db = ctx.data.db;
   const { to, cc } = await addressing(ctx, post, author);
   const [mentionRows, tagRows, mediaRows, parent] = await Promise.all([
@@ -153,7 +155,8 @@ export async function postToNote(
     ),
   ];
   const replyTarget = parent[0]?.apUri ?? post.inReplyToUri;
-  return new Note({
+  const [poll] = await db.select().from(schema.polls).where(eq(schema.polls.postId, post.id));
+  const values = {
     id: new URL(post.apUri ?? ''),
     attribution: ctx.getActorUri(author.username),
     content: post.contentHtml,
@@ -179,6 +182,19 @@ export async function postToNote(
             height: m.height,
           }),
       ),
+  };
+  if (!poll) return new Note(values);
+  // A post with a poll is an ActivityPub Question; options are Notes with a vote count.
+  const optionNotes = poll.options.map(
+    (o) => new Note({ name: o.title, replies: new Collection({ totalItems: o.votesCount }) }),
+  );
+  const ended = poll.expiresAt !== null && poll.expiresAt.getTime() <= Date.now();
+  return new Question({
+    ...values,
+    ...(poll.multiple ? { inclusiveOptions: optionNotes } : { exclusiveOptions: optionNotes }),
+    endTime: poll.expiresAt ? instant(poll.expiresAt) : null,
+    closed: ended && poll.expiresAt ? instant(poll.expiresAt) : null,
+    voters: poll.votersCount,
   });
 }
 
@@ -240,7 +256,7 @@ async function localActorFromUri(ctx: Context<CoreContext>, uri: URL): Promise<A
 /** Converts an incoming Note into the protocol-neutral form the core stores. */
 export async function noteToPostData(
   ctx: Context<CoreContext>,
-  note: Note,
+  note: Note | Question,
   author: ActorRow,
 ): Promise<RemotePostData | null> {
   if (!note.id) return null;
@@ -311,5 +327,32 @@ export async function noteToPostData(
     inReplyTo: { postId: replyPostId, uri: replyUri },
     attachments,
     publishedAt: note.published ? new Date(note.published.epochMilliseconds) : new Date(),
+    ...(note instanceof Question ? { poll: await questionPoll(ctx, note) } : {}),
+  };
+}
+
+/** Options and totals of an incoming Question. */
+export async function questionPoll(ctx: Context<CoreContext>, question: Question) {
+  const options: { title: string; votesCount: number }[] = [];
+  let multiple = false;
+  const read = async (iterable: AsyncIterable<unknown>) => {
+    for await (const option of iterable) {
+      if (!(option instanceof Note) || !option.name) continue;
+      const replies = await option.getReplies(ctx).catch(() => null);
+      options.push({ title: option.name.toString(), votesCount: replies?.totalItems ?? 0 });
+    }
+  };
+  await read(question.getExclusiveOptions(ctx));
+  if (options.length === 0) {
+    multiple = true;
+    await read(question.getInclusiveOptions(ctx));
+  }
+  const end =
+    question.endTime ?? (question.closed instanceof Temporal.Instant ? question.closed : null);
+  return {
+    options,
+    multiple,
+    expiresAt: end ? new Date(end.epochMilliseconds) : null,
+    votersCount: question.voters ?? undefined,
   };
 }

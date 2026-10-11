@@ -410,4 +410,51 @@ describe('federation between two instances', () => {
     const statuses = (await alice.client.get(`/api/v1/accounts/${remoteBob.id}/statuses`)).json();
     expect(statuses.map((s: { uri: string }) => s.uri)).toEqual([older.uri]);
   });
+
+  it('federates polls and their votes', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const remoteBob = (
+      await alice.client.post('/api/v1/search/resolve', {
+        q: `${b.url}/users/${bob.account.username}`,
+      })
+    ).json();
+    await alice.client.post(`/api/v1/accounts/${remoteBob.id}/follow`);
+    await eventually(
+      async () =>
+        (await alice.client.get(`/api/v1/accounts/relationships?id[]=${remoteBob.id}`)).json()[0]
+          ?.following,
+    );
+
+    const post = (
+      await bob.client.post('/api/v1/statuses', {
+        content: 'Mare o montagna?',
+        poll: { options: ['Mare', 'Montagna'], expiresIn: 3600 },
+      })
+    ).json();
+    const received = await eventually(async () =>
+      (await alice.client.get('/api/v1/timelines/home'))
+        .json()
+        .find((s: { uri: string }) => s.uri === post.uri),
+    );
+    expect(received.poll).toMatchObject({
+      multiple: false,
+      options: [{ title: 'Mare' }, { title: 'Montagna' }],
+    });
+
+    const voted = await alice.client.post(`/api/v1/polls/${received.poll.id}/votes`, {
+      choices: [1],
+    });
+    expect(voted.json().poll).toMatchObject({ voted: true, ownVotes: [1] });
+    // Bob's server counts the vote and sends back the new totals.
+    await eventually(
+      async () =>
+        (await bob.client.get(`/api/v1/statuses/${post.id}`)).json().poll.options[1].votesCount ===
+        1,
+    );
+    await eventually(async () => {
+      const poll = (await alice.client.get(`/api/v1/statuses/${received.id}`)).json().poll;
+      return poll.votersCount === 1 && poll.options[1].votesCount === 1;
+    });
+  });
 });

@@ -48,6 +48,7 @@ export function makeStatus(overrides: Partial<Status> = {}): Status {
     url: null,
     createdAt: new Date().toISOString(),
     editedAt: null,
+    poll: null,
     account: bob,
     content: '<p>Hello from Bob</p>',
     summary: '',
