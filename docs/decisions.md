@@ -15,7 +15,7 @@ Choices made during implementation that the architecture document leaves open. N
 | 2026-10-11 | TOTP secrets are stored unencrypted for now | To revisit: encrypt at rest with a dedicated key (Mastodon uses `OTP_SECRET`). |
 | 2026-10-11 | Usernames: 1–30 letters, digits or underscores, case-insensitive unique; a small list is reserved | Same rule as Mastodon, compatible with diaspora handles. |
 | 2026-10-11 | UI languages: English (default) and Italian from day one | International project with an Italian community. |
-| 2026-10-11 | Work happens on feature branches with a pull request to `main` | The maintainer reviews before merging. |
+| 2026-10-11 | ~~Work happens on feature branches with a pull request to `main`~~ (replaced below) | The maintainer reviews before merging. |
 | 2026-10-11 | Visibility is one SQL predicate (`visibleTo`) used by every read path | Timelines, single posts, threads, notifications and streaming cannot disagree about who sees what. |
 | 2026-10-11 | Limited (aspect) posts resolve their audience at publish time; followers-only posts follow the live follower list | Same as diaspora for aspects; same as Mastodon for followers-only. |
 | 2026-10-11 | Home timeline is a query, not a Redis fan-out, for now | Simpler and always correct; fan-out can be added when instances grow. |
@@ -56,3 +56,4 @@ Choices made during implementation that the architecture document leaves open. N
 | 2026-10-11 | Comments cross between diaspora* and ActivityPub through bridge identities (`user_at_domain@<our domain>`, own key, clearly labelled), on public threads started here | Each protocol needs comments signed by an identity it can verify; a bridge account is honest about what it is and lets both networks see the whole conversation. Likes, unlikes and deletions follow the same path; private threads are not bridged yet. |
 | 2026-10-11 | Replies received over ActivityPub on a public local thread are forwarded, as signed, to the thread author's followers | Inbox forwarding, as Mastodon does, so ActivityPub followers see replies from other ActivityPub servers. |
 | 2026-10-11 | Retractions of bridged comments and likes are relayed by the thread's author, naming the bridge identity as author | diaspora* accepts retractions of comments and likes from their author or from the thread root's author (`Retraction#sender_valid?`), the same path relayed comments take. |
+| 2026-10-11 | Commits go straight to `main`, no pull requests | Asked by the maintainer once the first version was merged; CI still runs on every push. |
