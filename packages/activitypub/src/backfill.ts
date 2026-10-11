@@ -7,7 +7,9 @@ import { INSTANCE_ACTOR } from './keys.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
 
-const BACKFILL_TTL_SECONDS = 24 * 60 * 60;
+// Often enough that a new public post shows up when the profile is opened again; known posts
+// are skipped, so a refresh is cheap.
+const BACKFILL_TTL_SECONDS = 10 * 60;
 
 /**
  * Imports the most recent public posts of a remote account from its outbox, at most once a day,

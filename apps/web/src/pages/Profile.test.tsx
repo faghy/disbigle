@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { aliceUser, makeAccount, relationship } from '../test/fixtures.ts';
 import { instance, mockApi, renderApp, signedOut } from '../test/utils.tsx';
 
 describe('public profile', () => {
@@ -46,5 +47,32 @@ describe('public profile', () => {
     const { router } = renderApp('/settings/profile');
     expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
+  });
+
+  it('explains on a remote profile why followers-only posts are missing', async () => {
+    const dora = makeAccount({
+      id: 'dora-1',
+      username: 'dora',
+      acct: 'dora@remote.example',
+      displayName: 'Dora',
+      local: false,
+    });
+    const routes = (following: boolean) => ({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /accounts/lookup/dora@remote.example': { body: dora },
+      'GET /accounts/relationships': { body: [relationship(dora.id, { following })] },
+      [`GET /accounts/${dora.id}/statuses`]: { body: [] },
+    });
+    mockApi(routes(false));
+    const first = renderApp('/@dora@remote.example');
+    expect(await screen.findByText(/You only see Dora's public posts here/)).toBeInTheDocument();
+    first.unmount();
+
+    mockApi(routes(true));
+    renderApp('/@dora@remote.example');
+    expect(await screen.findByRole('heading', { name: 'Dora' })).toBeInTheDocument();
+    await screen.findByRole('button', { name: /Unfollow/ });
+    expect(screen.queryByText(/You only see Dora's public posts here/)).not.toBeInTheDocument();
   });
 });

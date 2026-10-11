@@ -75,7 +75,7 @@ export async function accountRoutes(
     );
     const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
     if (query.pinned) return pinnedStatuses(ctx, viewer, id);
-    // First look at a remote profile: fetch its recent public posts (bounded wait).
+    // Opening a remote profile fetches its recent public posts (every 10 minutes at most, bounded wait).
     if (federation && actor.domain !== null && !query.maxId && !query.minId) {
       const backfill = backfillRemoteOutbox(federation, ctx, actor).catch((error) => {
         request.log.warn({ err: error }, 'outbox backfill failed');

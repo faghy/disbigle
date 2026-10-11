@@ -14,9 +14,15 @@ import { Avatar } from '../components/Avatar.tsx';
 import { ConfirmDialog } from '../components/Dialog.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
-import { AspectsIcon, CheckIcon, ChevronDownIcon, MoreIcon } from '../components/icons.tsx';
+import {
+  AspectsIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  InfoIcon,
+  MoreIcon,
+} from '../components/icons.tsx';
 import { ReportDialog } from '../components/ReportDialog.tsx';
-import { StatusCard } from '../components/StatusCard.tsx';
+import { displayName, StatusCard } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { Alert, Button, buttonClass, Card, cx, LoadingState } from '../components/ui.tsx';
 import { useDismiss } from '../lib/dismiss.ts';
@@ -47,10 +53,31 @@ function Profile({ account }: { account: Account }) {
   return (
     <div className="space-y-4">
       <ProfileView account={account} onShowTab={showTab} />
+      <RemoteNotice account={account} />
       <div ref={tabsRef} className="scroll-mt-20">
         <ProfileTabs account={account} tab={tab} onTabChange={setTab} />
       </div>
     </div>
+  );
+}
+
+/**
+ * Someone on another server you don't follow: only their public posts can be here. Their
+ * followers-only posts are delivered once you follow them, and only from then on.
+ */
+function RemoteNotice({ account }: { account: Account }) {
+  const { t } = useTranslation();
+  const me = useCurrentUser();
+  const relationship = useQuery({
+    ...relationshipQueryOptions(account.id),
+    enabled: Boolean(me) && !account.local,
+  });
+  if (!me || account.local || !relationship.data || relationship.data.following) return null;
+  return (
+    <p className="flex items-start gap-2 rounded-2xl border-2 border-dashed border-border-strong px-4 py-3 text-sm text-fg-muted">
+      <InfoIcon size={18} className="mt-0.5 shrink-0" />
+      <span>{t('profile.remoteNotice', { name: displayName(account) })}</span>
+    </p>
   );
 }
 
@@ -95,8 +122,10 @@ export function ProfileView({
 
   return (
     <article className="space-y-6" aria-labelledby="profile-name">
-      <Card as="div" className="overflow-hidden">
-        <div className="-mx-5 -mt-5 mb-4 sm:-mx-6 sm:-mt-6">
+      {/* No overflow-hidden here: the actions menu must be free to open over the posts below.
+          The banner rounds its own top corners instead. */}
+      <Card as="div" className="relative z-10">
+        <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[calc(1.5rem-1.5px)] sm:-mx-6 sm:-mt-6">
           {account.headerUrl ? (
             <img
               src={account.headerUrl}

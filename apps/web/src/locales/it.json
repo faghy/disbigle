@@ -144,7 +144,8 @@
       "following_one": "<strong>{{formatted}}</strong> seguito",
       "following_other": "<strong>{{formatted}}</strong> seguiti"
     },
-    "pinned": "Post in evidenza"
+    "pinned": "Post in evidenza",
+    "remoteNotice": "Qui vedi solo i post pubblici di {{name}}. I post riservati ai follower arrivano dopo che inizi a seguire, e solo quelli nuovi: lo decide il server di {{name}}."
   },
   "settings": {
     "title": "Impostazioni",

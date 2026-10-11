@@ -144,7 +144,8 @@
       "following_one": "<strong>{{formatted}}</strong> following",
       "following_other": "<strong>{{formatted}}</strong> following"
     },
-    "pinned": "Pinned posts"
+    "pinned": "Pinned posts",
+    "remoteNotice": "You only see {{name}}'s public posts here. Followers-only posts arrive once you follow, and only new ones: {{name}}'s server decides that."
   },
   "settings": {
     "title": "Settings",
