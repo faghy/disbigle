@@ -1,11 +1,11 @@
 import { schema, uuidv7 } from '@disbigle/db';
+import type { FilterContext, KeywordFilter } from '@disbigle/shared';
 import { and, desc, eq, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
 
 const { keywordFilters, posts } = schema;
-export type FilterContext = 'home' | 'public' | 'notifications' | 'thread';
 
 export const keywordFilterRequestSchema = z.object({
   phrase: z.string().trim().min(1).max(100),
@@ -25,13 +25,7 @@ export const keywordFilterRequestSchema = z.object({
 });
 export type KeywordFilterRequest = z.input<typeof keywordFilterRequestSchema>;
 
-export interface KeywordFilter {
-  id: string;
-  phrase: string;
-  wholeWord: boolean;
-  contexts: FilterContext[];
-  expiresAt: string | null;
-}
+export type { FilterContext, KeywordFilter };
 
 const serialize = (row: typeof keywordFilters.$inferSelect): KeywordFilter => ({
   id: row.id,

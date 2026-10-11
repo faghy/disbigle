@@ -1,5 +1,5 @@
 import { schema } from '@disbigle/db';
-import type { Account, Status } from '@disbigle/shared';
+import type { Account, Conversation, Status } from '@disbigle/shared';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
@@ -8,12 +8,7 @@ import { visibleTo } from './visibility.ts';
 
 const { posts, postAudiences, actors } = schema;
 
-export interface Conversation {
-  /** Id of the first post of the thread. */
-  id: string;
-  accounts: Account[];
-  lastStatus: Status;
-}
+export type { Conversation };
 
 /**
  * Private conversations of the viewer: threads of direct posts they wrote or received, newest

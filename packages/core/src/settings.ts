@@ -1,16 +1,11 @@
 import { schema } from '@disbigle/db';
+import type { InstanceSettings } from '@disbigle/shared';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import type { CoreContext } from './context.ts';
 import { logAdminAction } from './moderation.ts';
 
-export interface InstanceSettings {
-  title: string;
-  description: string;
-  registrationMode: 'open' | 'approval' | 'invite' | 'closed';
-  rules: string[];
-  contactEmail: string;
-}
+export type { InstanceSettings };
 
 export const instanceSettingsPatchSchema = z.object({
   title: z.string().trim().min(1).max(100).optional(),

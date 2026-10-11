@@ -1,20 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { schema, uuidv7 } from '@disbigle/db';
+import type { Invite } from '@disbigle/shared';
 import { and, desc, eq } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
 
 const { invites } = schema;
 
-export interface Invite {
-  id: string;
-  code: string;
-  url: string;
-  maxUses: number | null;
-  uses: number;
-  expiresAt: string | null;
-  createdAt: string;
-}
+export type { Invite };
 
 function serialize(ctx: CoreContext, row: typeof invites.$inferSelect): Invite {
   return {

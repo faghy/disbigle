@@ -188,3 +188,11 @@ export type StreamEvent =
   | { event: 'status.update'; stream: string; payload: Status }
   | { event: 'delete'; stream: string; payload: string }
   | { event: 'notification'; stream: string; payload: Notification };
+
+/** A private conversation: a thread of direct posts. */
+export interface Conversation {
+  /** Id of the first post of the thread. */
+  id: string;
+  accounts: Account[];
+  lastStatus: Status;
+}
