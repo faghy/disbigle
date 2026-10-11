@@ -1,7 +1,7 @@
 // Outgoing HTTP delivery. Long-term retries are the job queue's business (see queue.ts);
 // `httpDeliver` only retries quickly once for transient network hiccups.
 
-import { guardedFetch, type NetOptions, UnsafeUrlError } from './net.ts';
+import { guardedFetch, type NetOptions, podFetch, UnsafeUrlError } from './net.ts';
 
 /** Sends a body to a remote URL; must throw when the delivery failed. */
 export type DeliverFn = (url: string, body: string, contentType: string) => Promise<void>;
@@ -36,7 +36,7 @@ export interface HttpDeliverOptions extends NetOptions {
 /** Default `deliver`: `fetch` with a timeout. */
 export function httpDeliver(options: HttpDeliverOptions = {}): DeliverFn {
   const { timeoutMs = 15_000, retries = 1, backoffMs = 1_000, userAgent = 'Disbigle' } = options;
-  const fetchFn = options.fetch ?? globalThis.fetch;
+  const fetchFn = options.fetch ?? podFetch;
   return async (url, body, contentType) => {
     let lastError: unknown;
     for (let attempt = 0; attempt <= retries; attempt++) {

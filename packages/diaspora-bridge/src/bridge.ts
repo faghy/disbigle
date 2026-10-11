@@ -38,7 +38,14 @@ import {
 } from './actors.ts';
 import { type DeliverFn, DeliveryHttpError, httpDeliver } from './delivery.ts';
 import { applyEntity } from './incoming.ts';
-import { checkUrl, guardedFetch, type NetOptions, readLimited, UnsafeUrlError } from './net.ts';
+import {
+  checkUrl,
+  guardedFetch,
+  type NetOptions,
+  podFetch,
+  readLimited,
+  UnsafeUrlError,
+} from './net.ts';
 import { localActorByGuid } from './outgoing.ts';
 import { pollByGuid } from './polls.ts';
 import {
@@ -55,7 +62,7 @@ export interface DiasporaBridgeOptions {
   ctx: CoreContext;
   /** Outgoing POST; defaults to `fetch` with timeout and retries. Tests can intercept it. */
   deliver?: DeliverFn;
-  /** HTTP GET used for discovery and fetching; defaults to the global `fetch`. */
+  /** HTTP GET used for discovery and fetching; defaults to `podFetch` (HTTP/2 allowed). */
   fetch?: typeof globalThis.fetch;
   /** Discovery over plain HTTP (tests and development only). */
   allowHttp?: boolean;
@@ -109,7 +116,7 @@ export class DiasporaBridge {
       ...(options.validateUrl ? { validateUrl: options.validateUrl } : {}),
     };
     this.deliverFn = options.deliver ?? httpDeliver(this.net);
-    this.fetchFn = options.fetch ?? globalThis.fetch;
+    this.fetchFn = options.fetch ?? podFetch;
     this.allowHttp = options.allowHttp ?? false;
     this.refreshAfterMs = options.refreshAfterMs ?? DAY;
     const onFailure: FailureListener | undefined = options.onError

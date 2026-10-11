@@ -2,6 +2,7 @@
 // (http/https only, no private, loopback or link-local addresses), redirects are followed by
 // hand with the same check on each hop, and response bodies are size-capped.
 import { UrlError, validatePublicUrl } from '@fedify/vocab-runtime';
+import { Agent, fetch as undiciFetch } from 'undici';
 
 export interface NetOptions {
   /** Skip the private-address check (tests and local development only). */
@@ -45,6 +46,14 @@ export async function checkUrl(url: string, options: NetOptions = {}): Promise<v
     throw new UnsafeUrlError(`refusing to contact ${parsed.host}`, { cause: error });
   }
 }
+
+/**
+ * Default `fetch` for talking to pods: undici with HTTP/2 allowed. Some pods only answer HTTP/2
+ * (diaspora-fr.org closes HTTP/1.1 connections), and Node's global `fetch` speaks HTTP/1.1 only.
+ */
+const agent = new Agent({ allowH2: true, connect: { timeout: 15_000 } });
+export const podFetch = ((input: string | URL, init?: RequestInit) =>
+  undiciFetch(input, { ...(init as object), dispatcher: agent })) as unknown as typeof fetch;
 
 export const MAX_REDIRECTS = 3;
 /** Size cap for documents we download (WebFinger, hCard, fetched entities). */
