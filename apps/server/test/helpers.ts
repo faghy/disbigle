@@ -34,12 +34,13 @@ export function useTestApp(overrides: Partial<Config> = {}) {
   beforeAll(async () => {
     const testDb = await createTestDatabase();
     drop = testDb.drop;
-    const ctx: CoreContext = (core = {
+    const ctx: CoreContext = {
       db: testDb.db,
       config: { ...testConfig, ...overrides },
       kv: new MemoryKeyValueStore(),
       rsaKeyBits: 1024,
-    });
+    };
+    core = ctx;
     const hub = new StreamingHub(ctx);
     ctx.events = new LocalEventBus(hub);
     const federation = createDisbigleFederation({
