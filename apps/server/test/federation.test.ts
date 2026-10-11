@@ -392,4 +392,22 @@ describe('federation between two instances', () => {
       remoteCarla.id,
     );
   });
+
+  it("shows a remote account's earlier public posts on first visit", async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const older = (await bob.client.post('/api/v1/statuses', { content: 'scritto prima' })).json();
+    await bob.client.post('/api/v1/statuses', {
+      content: 'solo follower',
+      visibility: 'followers',
+    });
+
+    const remoteBob = (
+      await alice.client.post('/api/v1/search/resolve', {
+        q: `${b.url}/users/${bob.account.username}`,
+      })
+    ).json();
+    const statuses = (await alice.client.get(`/api/v1/accounts/${remoteBob.id}/statuses`)).json();
+    expect(statuses.map((s: { uri: string }) => s.uri)).toEqual([older.uri]);
+  });
 });

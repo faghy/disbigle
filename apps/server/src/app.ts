@@ -135,7 +135,11 @@ export async function buildApp(options: AppOptions) {
       await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });
       await api.register(statusRoutes, { ctx, prefix: '/statuses' });
       await api.register(timelineRoutes, { ctx, prefix: '/timelines' });
-      await api.register(accountRoutes, { ctx, prefix: '/accounts' });
+      await api.register(accountRoutes, {
+        ctx,
+        ...(options.federation ? { federation: options.federation } : {}),
+        prefix: '/accounts',
+      });
       await api.register(followRequestRoutes, { ctx, prefix: '/follow_requests' });
       await api.register(aspectRoutes, { ctx, prefix: '/aspects' });
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });

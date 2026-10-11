@@ -1,3 +1,4 @@
+import { backfillRemoteOutbox } from '@disbigle/activitypub';
 import {
   acceptFollowRequest,
   accountTimeline,
@@ -20,6 +21,7 @@ import {
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { aspectMembershipsRequestSchema, paginationQuerySchema } from '@disbigle/shared';
+import type { Federation } from '@fedify/fedify';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -32,7 +34,10 @@ const pageQuery = z.object({
   offset: z.coerce.number().int().min(0).max(100_000).default(0),
 });
 
-export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
+export async function accountRoutes(
+  app: FastifyInstance,
+  { ctx, federation }: { ctx: CoreContext; federation?: Federation<CoreContext> },
+) {
   const loadActor = async (id: string) => {
     const [actor] = await ctx.db.select().from(schema.actors).where(eq(schema.actors.id, id));
     if (!actor || actor.suspendedAt) throw new DomainError('not_found', 'Account not found');
@@ -53,7 +58,7 @@ export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCo
 
   app.get('/:id/statuses', async (request) => {
     const { id } = parse(idParams, request.params);
-    await loadActor(id);
+    const actor = await loadActor(id);
     const query = parse(
       paginationQuerySchema.extend({
         excludeReplies: z
@@ -64,6 +69,14 @@ export async function accountRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCo
       request.query,
     );
     const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+    // First look at a remote profile: fetch its recent public posts (bounded wait).
+    if (federation && actor.domain !== null && !query.maxId && !query.minId) {
+      const backfill = backfillRemoteOutbox(federation, ctx, actor).catch((error) => {
+        request.log.warn({ err: error }, 'outbox backfill failed');
+        return 0;
+      });
+      await Promise.race([backfill, new Promise((resolve) => setTimeout(resolve, 5000))]);
+    }
     return accountTimeline(ctx, viewer, id, query);
   });
 
