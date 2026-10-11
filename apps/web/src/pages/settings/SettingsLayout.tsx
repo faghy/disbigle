@@ -32,6 +32,9 @@ export function SettingsLayout() {
           <Link to="/settings/security" className={tabClass}>
             {t('settings.security.tab')}
           </Link>
+          <Link to="/settings/apps" className={tabClass}>
+            {t('apps.tab')}
+          </Link>
           <Link to="/settings/notifications" className={tabClass}>
             {t('settings.notifications.tab')}
           </Link>

@@ -25,6 +25,7 @@ import {
 } from '../components/ui.tsx';
 import { useFocusFirstError } from '../lib/forms.ts';
 import { currentLanguage } from '../lib/i18n.ts';
+import { fullNavigation } from '../lib/redirect.ts';
 
 export function RegisterPage() {
   const { t } = useTranslation();
@@ -65,7 +66,7 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
   const formRef = useRef<HTMLFormElement>(null);
   const mode = instance.registrationMode;
   // Invitation links look like /register?invite=CODE.
-  const { invite } = useSearch({ from: '/register' });
+  const { invite, redirect } = useSearch({ from: '/register' });
   const showInvite = mode === 'invite' || Boolean(invite);
 
   const [values, setValues] = useState({
@@ -86,6 +87,10 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
       if (result.status !== 'ok') return;
       clearUserData(queryClient);
       queryClient.setQueryData(queryKeys.me, result.user);
+      if (redirect) {
+        fullNavigation.assign(redirect);
+        return;
+      }
       await navigate({ to: '/' });
     },
   });
@@ -234,7 +239,11 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
       </Card>
       <p className="mt-6 text-center text-sm text-fg-muted">
         {t('register.haveAccount')}{' '}
-        <Link to="/login" className="rounded font-medium text-accent hover:underline focus-ring">
+        <Link
+          to="/login"
+          search={{ redirect }}
+          className="rounded font-medium text-accent hover:underline focus-ring"
+        >
           {t('register.signIn')}
         </Link>
       </p>

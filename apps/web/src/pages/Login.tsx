@@ -16,6 +16,7 @@ import {
 import { clearUserData, meQueryOptions } from '../api/queries.ts';
 import { Alert, Button, Card, TextField } from '../components/ui.tsx';
 import { useFocusFirstError } from '../lib/forms.ts';
+import { fullNavigation } from '../lib/redirect.ts';
 
 type MfaMethod = NonNullable<LoginResponse['methods']>[number];
 
@@ -31,13 +32,18 @@ export function LoginPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [mfaMethods, setMfaMethods] = useState<MfaMethod[] | null>(null);
-  const { reset } = useSearch({ from: '/login' });
+  const { reset, redirect } = useSearch({ from: '/login' });
   const [notice, setNotice] = useState<string | null>(
     reset === 'done' ? t('passwordReset.done') : null,
   );
 
   const finish = async () => {
     clearUserData(queryClient);
+    if (redirect) {
+      // e.g. the OAuth consent page of a third-party app, rendered by the server.
+      fullNavigation.assign(redirect);
+      return;
+    }
     await queryClient.fetchQuery({ ...meQueryOptions, staleTime: 0 });
     await navigate({ to: '/' });
   };
@@ -70,6 +76,7 @@ export function LoginPage() {
           {t('login.noAccount')}{' '}
           <Link
             to="/register"
+            search={{ redirect }}
             className="rounded font-medium text-accent hover:underline focus-ring"
           >
             {t('login.createAccount')}

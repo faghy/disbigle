@@ -957,5 +957,29 @@
     "expired": "scaduta",
     "remove": "Riattiva",
     "removeLabel": "Riattiva «{{phrase}}»"
+  },
+  "apps": {
+    "tab": "App autorizzate",
+    "title": "App autorizzate",
+    "description": "App come Tusky, Ivory o Elk funzionano con Disbigle: accedi indicando l'indirizzo {{domain}}. Qui trovi le app a cui hai dato accesso.",
+    "empty": "Nessuna app ha accesso al tuo account.",
+    "unnamed": "App senza nome",
+    "permissions": "Permessi",
+    "scopes": {
+      "read": "Lettura",
+      "write": "Scrittura",
+      "follow": "Follow",
+      "push": "Notifiche push",
+      "admin": "Amministrazione"
+    },
+    "partial": "{{scope}} (parziale)",
+    "authorized": "Autorizzata {{time}}",
+    "lastUsed": "ultimo uso {{time}}",
+    "neverUsed": "mai usata",
+    "revoke": "Revoca accesso",
+    "revokeLabel": "Revoca l'accesso a {{name}}",
+    "revokeTitle": "Revocare l'accesso a {{name}}?",
+    "revokeDescription": "{{name}} verrà disconnessa e dovrà chiederti di nuovo il permesso per usare il tuo account.",
+    "passwordNote": "Cambiare o reimpostare la password disconnette anche tutte le app."
   }
 }

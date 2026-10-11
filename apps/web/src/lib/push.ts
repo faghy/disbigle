@@ -68,7 +68,7 @@ export async function ensureServiceWorker(): Promise<ServiceWorkerRegistration> 
   return existing ?? navigator.serviceWorker.register(SERVICE_WORKER_URL, { scope: '/' });
 }
 
-/** Alert choices are remembered per subscription, because the API cannot read them back. */
+/** Alert choices are also kept locally, as a fallback when the server cannot be asked. */
 export function loadAlerts(endpoint: string): PushAlerts {
   try {
     const saved = JSON.parse(localStorage.getItem(ALERTS_KEY) ?? 'null') as {
@@ -109,6 +109,11 @@ export function subscriptionBody(subscription: PushSubscription) {
 
 export const pushApi = {
   key: () => api.get<{ publicKey: string }>('/push/key'),
+  /** What the server has saved for this device, or `null` if it does not know it. */
+  get: (endpoint: string) =>
+    api.get<{ endpoint: string; alerts: Partial<PushAlerts> } | null>(
+      `/push/subscription?endpoint=${encodeURIComponent(endpoint)}`,
+    ),
   save: (subscription: PushSubscription, alerts: PushAlerts) =>
     api.post<{ endpoint: string; alerts: PushAlerts }>('/push/subscription', {
       subscription: subscriptionBody(subscription),

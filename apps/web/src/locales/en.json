@@ -957,5 +957,29 @@
     "expired": "expired",
     "remove": "Unmute",
     "removeLabel": "Unmute “{{phrase}}”"
+  },
+  "apps": {
+    "tab": "Authorized apps",
+    "title": "Authorized apps",
+    "description": "Apps like Tusky, Ivory or Elk work with Disbigle: sign in to them with the address {{domain}}. The apps you allowed are listed here.",
+    "empty": "No apps have access to your account.",
+    "unnamed": "Unnamed app",
+    "permissions": "Permissions",
+    "scopes": {
+      "read": "Read",
+      "write": "Write",
+      "follow": "Follow",
+      "push": "Push notifications",
+      "admin": "Administration"
+    },
+    "partial": "{{scope}} (partial)",
+    "authorized": "Authorized {{time}}",
+    "lastUsed": "last used {{time}}",
+    "neverUsed": "never used",
+    "revoke": "Revoke access",
+    "revokeLabel": "Revoke access for {{name}}",
+    "revokeTitle": "Revoke access for {{name}}?",
+    "revokeDescription": "{{name}} will be signed out and will need your permission again to use your account.",
+    "passwordNote": "Changing or resetting your password also signs out every app."
   }
 }

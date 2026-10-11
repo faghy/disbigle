@@ -9,6 +9,7 @@ import {
 import { isAdmin, isModerator } from './api/admin.ts';
 import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
+import { fullNavigation, safeRedirect } from './lib/redirect.ts';
 import { AboutPage } from './pages/About.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
@@ -29,6 +30,7 @@ import { RegisterPage } from './pages/Register.tsx';
 import { SearchPage } from './pages/Search.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
+import { AuthorizedAppsPage } from './pages/settings/AuthorizedApps.tsx';
 import { InvitesPage } from './pages/settings/Invites.tsx';
 import { MutedWordsPage } from './pages/settings/MutedWords.tsx';
 import { NotificationSettingsPage } from './pages/settings/NotificationSettings.tsx';
@@ -54,9 +56,22 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 });
 
 /** Pages for visitors only: signed-in users go to the home page. */
-async function guestOnly({ context }: { context: RouterContext }) {
+async function guestOnly({
+  context,
+  search,
+}: {
+  context: RouterContext;
+  search: { redirect?: string | undefined };
+}) {
   const me = await context.queryClient.ensureQueryData(meQueryOptions);
-  if (me) throw redirect({ to: '/' });
+  if (!me) return;
+  if (search.redirect) {
+    // Already signed in: continue to the requested page (served by the server, e.g. OAuth).
+    fullNavigation.assign(search.redirect);
+    // Stay pending while the browser leaves the app.
+    await new Promise<never>(() => {});
+  }
+  throw redirect({ to: '/' });
 }
 
 /** Pages for signed-in users only. */
@@ -81,8 +96,11 @@ const indexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  validateSearch: (search: Record<string, unknown>): { reset?: 'done' | undefined } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { reset?: 'done' | undefined; redirect?: string | undefined } => ({
     reset: search.reset === 'done' ? 'done' : undefined,
+    redirect: safeRedirect(search.redirect),
   }),
   beforeLoad: guestOnly,
   component: LoginPage,
@@ -91,11 +109,14 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
-  validateSearch: (search: Record<string, unknown>): { invite?: string | undefined } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { invite?: string | undefined; redirect?: string | undefined } => ({
     invite:
       typeof search.invite === 'string' && search.invite.trim()
         ? search.invite.trim().slice(0, 64)
         : undefined,
+    redirect: safeRedirect(search.redirect),
   }),
   beforeLoad: guestOnly,
   component: RegisterPage,
@@ -126,6 +147,12 @@ const settingsAccountRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: '/account',
   component: AccountSettingsPage,
+});
+
+const settingsAppsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/apps',
+  component: AuthorizedAppsPage,
 });
 
 const settingsMutedWordsRoute = createRoute({
@@ -293,7 +320,7 @@ const adminDomainsRoute = createRoute({
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/forgot-password',
-  beforeLoad: guestOnly,
+  beforeLoad: ({ context }) => guestOnly({ context, search: {} }),
   component: ForgotPasswordPage,
 });
 
@@ -318,6 +345,7 @@ export const routeTree = rootRoute.addChildren([
     settingsNotificationsRoute,
     settingsInvitesRoute,
     settingsMutedWordsRoute,
+    settingsAppsRoute,
   ]),
   profileRoute,
   statusRoute,

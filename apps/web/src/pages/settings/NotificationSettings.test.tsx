@@ -193,4 +193,26 @@ describe('notification settings', () => {
     expect(push.current()?.unsubscribe).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Turn on notifications' })).toBeInTheDocument();
   });
+
+  it('shows the choices saved on the server for this device', async () => {
+    installPush({ permission: 'granted', subscribed: true });
+    const fetchMock = mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /push/subscription': (_body, url) => ({
+        body:
+          url.searchParams.get('endpoint') === ENDPOINT
+            ? { endpoint: ENDPOINT, alerts: { like: false, poll: false } }
+            : null,
+      }),
+    });
+    renderApp('/settings/notifications');
+    const fieldset = await screen.findByRole('group', { name: 'Notify me about' });
+    await waitFor(() =>
+      expect(within(fieldset).getByRole('checkbox', { name: 'Likes' })).not.toBeChecked(),
+    );
+    expect(within(fieldset).getByRole('checkbox', { name: 'Mentions' })).toBeChecked();
+    // Known to the server: nothing is re-sent.
+    expect(calls(fetchMock, 'POST', '/api/v1/push/subscription')).toHaveLength(0);
+  });
 });

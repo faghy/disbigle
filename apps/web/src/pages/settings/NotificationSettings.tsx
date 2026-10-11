@@ -67,10 +67,19 @@ function PushCard() {
       if (cancelled) return;
       setSubscription(existing);
       if (existing) {
-        const saved = loadAlerts(existing.endpoint);
-        setAlerts(saved);
-        // Tie the subscription to whoever is signed in now; keeps the server in sync.
-        void pushApi.save(existing, saved).catch(() => {});
+        const server = await pushApi.get(existing.endpoint).catch(() => undefined);
+        if (cancelled) return;
+        if (server) {
+          const alerts = { ...defaultPushAlerts, ...server.alerts };
+          setAlerts(alerts);
+          saveAlerts(existing.endpoint, alerts);
+        } else {
+          // Unknown to the server (or it could not be asked): send it again with the
+          // choices remembered on this device, tied to whoever is signed in now.
+          const saved = loadAlerts(existing.endpoint);
+          setAlerts(saved);
+          void pushApi.save(existing, saved).catch(() => {});
+        }
       }
     })()
       .catch(() => {})
