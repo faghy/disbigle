@@ -314,3 +314,45 @@ export async function storeCachedRemoteImage(
     .where(eq(schema.mediaAttachments.id, mediaId));
   return true;
 }
+
+/** Remote accounts whose avatar or header is still loaded from their server. */
+export async function listUncachedRemoteProfileImages(ctx: CoreContext, limit: number) {
+  const { actors } = schema;
+  return ctx.db
+    .select()
+    .from(actors)
+    .where(
+      sql`${actors.domain} is not null and ${actors.suspendedAt} is null and (
+        (${actors.avatarRemoteUrl} is not null and ${actors.avatarUrl} = ${actors.avatarRemoteUrl})
+        or (${actors.headerRemoteUrl} is not null and ${actors.headerUrl} = ${actors.headerRemoteUrl}))`,
+    )
+    .limit(limit);
+}
+
+/** Stores a local, re-encoded copy of a remote account's avatar or header. */
+export async function storeCachedProfileImage(
+  ctx: CoreContext & { storage: MediaStorage },
+  actorId: string,
+  kind: 'avatar' | 'header',
+  data: Buffer,
+): Promise<boolean> {
+  const size = profileImageSizes[kind];
+  let output: Buffer;
+  try {
+    output = await sharp(data, { failOn: 'error' })
+      .rotate()
+      .resize({ ...size, fit: 'cover', position: 'attention' })
+      .webp({ quality: 85 })
+      .toBuffer();
+  } catch {
+    return false;
+  }
+  const path = datedPath(`remote-${kind}-${uuidv7()}`, 'webp');
+  await ctx.storage.put(path, output);
+  const url = `${ctx.config.PUBLIC_URL}/media/${path}`;
+  await ctx.db
+    .update(schema.actors)
+    .set(kind === 'avatar' ? { avatarUrl: url } : { headerUrl: url })
+    .where(eq(schema.actors.id, actorId));
+  return true;
+}

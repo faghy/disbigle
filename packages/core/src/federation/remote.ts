@@ -124,6 +124,16 @@ export async function upsertRemoteActor(
     lastFetchedAt: new Date(),
   };
   const defined = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined));
+  // Images: remember the remote original; keep a cached local copy while the original is unchanged.
+  for (const [field, remoteField] of [
+    ['avatarUrl', 'avatarRemoteUrl'],
+    ['headerUrl', 'headerRemoteUrl'],
+  ] as const) {
+    if (!(field in defined)) continue;
+    const incoming = defined[field] as string | null;
+    defined[remoteField] = incoming;
+    if (existing && incoming !== null && existing[remoteField] === incoming) delete defined[field];
+  }
 
   if (existing) {
     const protocols = [...new Set([...existing.protocols, data.protocol])];

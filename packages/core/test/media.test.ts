@@ -147,3 +147,41 @@ describe('remote media cache', () => {
     ).toBe(false);
   });
 });
+
+describe('remote profile image cache', () => {
+  it('keeps the cached avatar until the remote one changes', async () => {
+    const { upsertRemoteActor, listUncachedRemoteProfileImages, storeCachedProfileImage } =
+      await import('../src/index.ts');
+    const data = {
+      username: 'dora',
+      domain: 'remote2.example',
+      publicKeyPem: 'k',
+      apUri: 'https://remote2.example/users/dora',
+      apInbox: 'https://remote2.example/inbox',
+      avatarUrl: 'https://remote2.example/a1.png',
+      protocol: 'activitypub' as const,
+    };
+    const actor = await upsertRemoteActor(base(), data);
+    expect(actor).toMatchObject({ avatarUrl: data.avatarUrl, avatarRemoteUrl: data.avatarUrl });
+    expect((await listUncachedRemoteProfileImages(base(), 100)).map((a) => a.id)).toContain(
+      actor.id,
+    );
+
+    expect(
+      await storeCachedProfileImage(ctx(), actor.id, 'avatar', await photoWithGps(600, 600)),
+    ).toBe(true);
+    const refreshed = await upsertRemoteActor(base(), data);
+    expect(refreshed.avatarUrl).toMatch(
+      /^https:\/\/disbigle\.test\/media\/.+remote-avatar-.+\.webp$/,
+    );
+    expect((await listUncachedRemoteProfileImages(base(), 100)).map((a) => a.id)).not.toContain(
+      actor.id,
+    );
+
+    const changed = await upsertRemoteActor(base(), {
+      ...data,
+      avatarUrl: 'https://remote2.example/a2.png',
+    });
+    expect(changed.avatarUrl).toBe('https://remote2.example/a2.png');
+  });
+});

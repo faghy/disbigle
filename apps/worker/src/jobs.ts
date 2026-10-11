@@ -3,9 +3,11 @@ import {
   cleanupUnattachedMedia,
   DELETION_GRACE_MS,
   listUncachedRemoteMedia,
+  listUncachedRemoteProfileImages,
   MAX_IMAGE_BYTES,
   type MediaStorage,
   purgeDeletedAccounts,
+  storeCachedProfileImage,
   storeCachedRemoteImage,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
@@ -54,7 +56,26 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
             // Unreachable or invalid: readers keep loading the remote URL.
           }
         }
-        return `cached ${cached}/${pending.length} remote images`;
+        for (const actor of await listUncachedRemoteProfileImages(ctx, 25)) {
+          for (const kind of ['avatar', 'header'] as const) {
+            const remote = kind === 'avatar' ? actor.avatarRemoteUrl : actor.headerRemoteUrl;
+            const current = kind === 'avatar' ? actor.avatarUrl : actor.headerUrl;
+            const key = `${actor.id}:${kind}:${remote}`;
+            if (!remote || current !== remote || failedMedia.has(key)) continue;
+            try {
+              const { data, type } = await safeFetch(remote, { maxBytes: MAX_IMAGE_BYTES });
+              if (
+                type.startsWith('image/') &&
+                (await storeCachedProfileImage(ctx, actor.id, kind, data))
+              )
+                cached += 1;
+              else failedMedia.add(key);
+            } catch {
+              failedMedia.add(key);
+            }
+          }
+        }
+        return `cached ${cached} remote images (${pending.length} attachments checked)`;
       },
     },
     {
