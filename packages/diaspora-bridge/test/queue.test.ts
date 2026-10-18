@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { getEventListeners } from 'node:events';
 import { Redis } from 'ioredis';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -87,6 +88,18 @@ describe('RedisJobQueue', () => {
     if (!reachable || !redis) return;
     const keys = await redis.keys(`${prefix}*`);
     if (keys.length > 0) await redis.del(...keys);
+  });
+
+  it('does not pile up abort listeners while polling an empty queue', async () => {
+    // A stand-in that always answers "nothing to take": the queue only sleeps and polls again.
+    const empty = { eval: async () => null } as unknown as Redis;
+    const queue = new RedisJobQueue(empty, { prefix: `${prefix}:idle`, pollMs: 2 });
+    const abort = new AbortController();
+    const running = queue.listen(async () => {}, { signal: abort.signal, concurrency: 4 });
+    await new Promise((r) => setTimeout(r, 200)); // dozens of empty polls per consumer
+    expect(getEventListeners(abort.signal, 'abort').length).toBeLessThanOrEqual(4);
+    abort.abort();
+    await running;
   });
 
   it('persists jobs across consumers, retries with backoff and dead-letters', async (t) => {
