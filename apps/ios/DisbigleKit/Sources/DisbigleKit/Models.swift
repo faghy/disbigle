@@ -29,9 +29,26 @@ public struct Account: Codable, Hashable, Identifiable, Sendable {
   /** The display name, or the username when there is none. */
   public var name: String { displayName.isEmpty ? username : displayName }
 
-  /** A header that is a real image (the API sends a placeholder path when there is none). */
+  /** A header that is a real image (the API sends a placeholder when there is none). */
   public var headerURL: URL? {
-    header.isEmpty || header.hasSuffix("/missing.png") ? nil : URL(string: header)
+    Self.isPlaceholder(header) ? nil : URL(string: header)
+  }
+
+  /** An avatar the person chose (nil for the server's default picture). */
+  public var avatarURL: URL? {
+    Self.isPlaceholder(avatar) ? nil : URL(string: avatar)
+  }
+
+  /** Initials for a picture-less avatar. */
+  public var initials: String {
+    let words = name.split(whereSeparator: { $0 == " " || $0 == "_" || $0 == "." }).prefix(2)
+    return words.compactMap(\.first).map { String($0).uppercased() }.joined()
+  }
+
+  /** Default pictures of Disbigle (`/assets/user/default.png`, `missing-header.png`) and Mastodon (`missing.png`). */
+  static func isPlaceholder(_ url: String) -> Bool {
+    url.isEmpty || url.hasSuffix("/missing.png") || url.hasSuffix("/missing-header.png")
+      || url.hasSuffix("/assets/user/default.png")
   }
 }
 

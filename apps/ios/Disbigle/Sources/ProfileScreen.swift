@@ -84,7 +84,7 @@ struct ProfileScreen: View {
         .frame(height: 130)
         .frame(maxWidth: .infinity)
         .clipped()
-        Avatar(url: account.avatar, size: 76)
+        Avatar(account: account, size: 76)
           .overlay(RoundedRectangle(cornerRadius: 21, style: .continuous).stroke(.background, lineWidth: 4))
           .offset(x: 16, y: 38)
       }

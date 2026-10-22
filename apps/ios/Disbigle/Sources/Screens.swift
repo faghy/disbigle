@@ -99,7 +99,7 @@ struct NotificationRow: View {
           .foregroundStyle(Color.brand)
           .frame(width: 24)
           .accessibilityHidden(true)
-        Avatar(url: notification.account.avatar, size: 32)
+        Avatar(account: notification.account, size: 32)
         Text(summary).font(.subheadline).lineLimit(2)
         Spacer(minLength: 0)
         Text(notification.createdAt, format: .relative(presentation: .numeric, unitsStyle: .narrow))
@@ -206,7 +206,7 @@ struct ConversationRow: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
-      Avatar(url: conversation.accounts.first?.avatar ?? "", size: 44)
+      Avatar(account: conversation.accounts.first, size: 44)
         .overlay(alignment: .topTrailing) {
           if conversation.unread {
             Circle().fill(Color.brand).frame(width: 10, height: 10)
@@ -320,7 +320,7 @@ struct AccountRow: View {
 
   var body: some View {
     HStack(spacing: 12) {
-      Avatar(url: account.avatar, size: 40)
+      Avatar(account: account, size: 40)
       VStack(alignment: .leading) {
         Text(account.name).font(.subheadline.bold())
         Text("@\(account.acct)").font(.footnote).foregroundStyle(.secondary)

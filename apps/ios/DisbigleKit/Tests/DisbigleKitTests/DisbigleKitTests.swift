@@ -91,6 +91,8 @@ final class ClientTests: XCTestCase {
     XCTAssertEqual(status.favourited, true)
     XCTAssertNotNil(status.editedAt)
     XCTAssertNil(status.account.headerURL)
+    XCTAssertEqual(status.account.avatarURL?.absoluteString, "https://app.disbigle.com/media/a.webp")
+    XCTAssertEqual(status.account.initials, "F")
 
     let reblog = try Client.decoder.decode(
       Status.self, from: Data(Fixtures.reblog(of: Fixtures.status).utf8))

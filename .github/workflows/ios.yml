@@ -71,6 +71,10 @@ jobs:
           (cd apps/server && nohup npx tsx src/main.ts > "$RUNNER_TEMP/server.log" 2>&1 &)
           for i in $(seq 1 60); do curl -sf http://localhost:3300/health && break; sleep 1; done
           echo "TOKEN=$(apps/ios/scripts/dev-token.sh http://localhost:3300)" >> "$GITHUB_ENV"
+          # A direct message from bruno, so the Messages tab has something to show.
+          bruno=$(apps/ios/scripts/dev-token.sh http://localhost:3300 bruno)
+          curl -sf -H "Authorization: Bearer $bruno" http://localhost:3300/api/v1/statuses \
+            -d 'status=@alice ci vediamo sabato per la gita?' -d visibility=direct >/dev/null
       - name: Build for the simulator
         working-directory: apps/ios
         run: |

@@ -34,7 +34,7 @@ struct StatusRow: View {
         Button {
           router.go(.account(shown.account))
         } label: {
-          Avatar(url: shown.account.avatar, size: 44)
+          Avatar(account: shown.account, size: 44)
         }
         .buttonStyle(.borderless)
         .accessibilityLabel(Text("Profile of \(shown.account.name)"))
@@ -264,18 +264,39 @@ struct VisibilityIcon: View {
 }
 
 struct Avatar: View {
-  let url: String
+  let account: Account?
   var size: CGFloat = 44
 
   var body: some View {
-    AsyncImage(url: URL(string: url)) { image in
-      image.resizable().scaledToFill()
-    } placeholder: {
-      Color.secondary.opacity(0.2)
+    Group {
+      if let url = account?.avatarURL {
+        AsyncImage(url: url) { phase in
+          if let image = phase.image {
+            image.resizable().scaledToFill()
+          } else {
+            initials
+          }
+        }
+      } else {
+        initials
+      }
     }
     .frame(width: size, height: size)
     .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
     .accessibilityHidden(true)
+  }
+
+  /** Initials on a colour picked from the account, so each person keeps theirs. */
+  private var initials: some View {
+    // Not hashValue: it changes with every launch.
+    let sum = (account?.acct ?? "").unicodeScalars.reduce(0) { $0 + Int($1.value) }
+    let hue = Double(sum % 360) / 360
+    return ZStack {
+      Color(hue: hue, saturation: 0.45, brightness: 0.85)
+      Text(account?.initials ?? "")
+        .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
+        .foregroundStyle(.white)
+    }
   }
 }
 
