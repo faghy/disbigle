@@ -232,7 +232,7 @@ struct ComposeView: View {
 
   private var audienceSection: some View {
     Section("Who can see it") {
-      Picker("DisbigleKit.Visibility", selection: $visibility) {
+      Picker("Visibility", selection: $visibility) {
         Label("Everyone", systemImage: "globe").tag(DisbigleKit.Visibility.public)
         Label("Everyone, not in timelines", systemImage: "lock.open").tag(DisbigleKit.Visibility.unlisted)
         Label("Followers", systemImage: "lock").tag(DisbigleKit.Visibility.private)

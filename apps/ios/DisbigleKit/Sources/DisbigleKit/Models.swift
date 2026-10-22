@@ -226,6 +226,11 @@ public struct Instance: Codable, Sendable {
 public struct RegisteredApp: Codable, Sendable {
   public let clientId: String
   public let clientSecret: String
+
+  public init(clientId: String, clientSecret: String) {
+    self.clientId = clientId
+    self.clientSecret = clientSecret
+  }
 }
 
 public struct Token: Codable, Sendable {
