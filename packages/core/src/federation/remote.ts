@@ -1,7 +1,7 @@
 import { isLocalDomain } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import type { Visibility } from '@disbigle/shared';
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { sanitizeRemoteHtml } from '../social/content.ts';
@@ -405,12 +405,16 @@ export async function ingestRemotePost(
   return id;
 }
 
-/** Applies an edit received from the author's server. */
+/**
+ * Applies an edit received from the author's server, to the post with that ActivityPub id (a
+ * string) or diaspora* guid. With `editedAt`, an edit older than the one already applied is
+ * ignored (diaspora* copies may arrive in any order).
+ */
 export async function updateRemotePost(
   ctx: CoreContext,
   authorActorId: string,
-  apUri: string,
-  changes: { contentHtml: string; summary?: string; sensitive?: boolean },
+  id: string | { diasporaGuid: string },
+  changes: { contentHtml: string; summary?: string; sensitive?: boolean; editedAt?: Date },
 ): Promise<boolean> {
   const updated = await ctx.db
     .update(posts)
@@ -418,9 +422,18 @@ export async function updateRemotePost(
       contentHtml: sanitizeRemoteHtml(changes.contentHtml).slice(0, 100_000),
       ...(changes.summary !== undefined ? { summary: changes.summary.slice(0, 1000) } : {}),
       ...(changes.sensitive !== undefined ? { sensitive: changes.sensitive } : {}),
-      editedAt: new Date(),
+      editedAt: changes.editedAt ?? new Date(),
     })
-    .where(and(eq(posts.apUri, apUri), eq(posts.actorId, authorActorId), eq(posts.local, false)))
+    .where(
+      and(
+        typeof id === 'string' ? eq(posts.apUri, id) : eq(posts.diasporaGuid, id.diasporaGuid),
+        eq(posts.actorId, authorActorId),
+        eq(posts.local, false),
+        changes.editedAt
+          ? or(isNull(posts.editedAt), lt(posts.editedAt, changes.editedAt))
+          : undefined,
+      ),
+    )
     .returning({ id: posts.id });
   return updated.length > 0;
 }

@@ -586,7 +586,8 @@
   },
   "edit": {
     "label": "Edit post",
-    "save": "Save"
+    "save": "Save",
+    "pollReset": "Changing the options or the kind of poll clears the votes cast so far."
   },
   "search": {
     "title": "Search",

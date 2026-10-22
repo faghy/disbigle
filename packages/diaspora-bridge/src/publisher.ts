@@ -108,6 +108,8 @@ export class DiasporaPublisher implements EventBus {
     switch (event.type) {
       case 'post.created':
         return this.postCreated(event.postId);
+      case 'post.updated':
+        return this.postUpdated(event.postId);
       case 'post.deleted':
         return this.postDeleted(event);
       case 'like.created':
@@ -188,6 +190,17 @@ export class DiasporaPublisher implements EventBus {
       signer,
       await recipientsFor(ctx, post),
     );
+  }
+
+  /**
+   * An edited local post or reply goes out again, to the same people, with `edited_at` set.
+   * diaspora* itself keeps the first version of what it already has; Hubzilla and Friendica
+   * replace it with the newer one.
+   */
+  private async postUpdated(postId: string): Promise<void> {
+    const post = await postById(this.ctx, postId);
+    if (!post?.local || !post.editedAt || post.reblogOfId) return;
+    return this.postCreated(postId);
   }
 
   /**

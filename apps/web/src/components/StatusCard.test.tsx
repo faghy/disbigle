@@ -134,7 +134,91 @@ describe('editing a post', () => {
 
     expect(await within(article).findByText('again', { exact: false })).toBeInTheDocument();
     expect(within(article).getByText('edited')).toBeInTheDocument();
-    expect(saved).toEqual({ content: '**Hello** again', summary: '', sensitive: false });
+    // Attachments always go with an edit; an untouched poll is left out, so its votes stay.
+    expect(saved).toEqual({
+      content: '**Hello** again',
+      summary: '',
+      sensitive: false,
+      mediaIds: [],
+    });
+  });
+
+  it('removes an attachment', async () => {
+    const image = (id: string, name: string) => ({
+      id,
+      type: 'image' as const,
+      url: `https://disbigle.test/media/${name}`,
+      previewUrl: null,
+      description: name,
+      width: 10,
+      height: 10,
+      blurhash: null,
+    });
+    const own = makeStatus({
+      account: aliceUser.account,
+      source: 'Two photos',
+      media: [
+        image('01a12800-0000-7000-8000-0000000000a1', 'sea.png'),
+        image('01a12800-0000-7000-8000-0000000000a2', 'hill.png'),
+      ],
+    });
+    let saved: { mediaIds?: string[] } = {};
+    const article = await renderHomeWith(own, {
+      [`PUT /statuses/${own.id}`]: (body) => {
+        saved = body as typeof saved;
+        return { body: { ...own, media: own.media.slice(1) } };
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(within(article).getByRole('button', { name: 'More actions' }));
+    await user.click(within(article).getByRole('button', { name: 'Edit' }));
+    await user.click(within(article).getByRole('button', { name: 'Remove sea.png' }));
+    await user.click(within(article).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(saved.mediaIds).toEqual(['01a12800-0000-7000-8000-0000000000a2']));
+  });
+
+  it('sends a changed poll and warns that votes are cleared', async () => {
+    const own = makeStatus({
+      account: aliceUser.account,
+      source: 'Lunch?',
+      poll: {
+        id: '01a12800-0000-7000-8000-000000000011',
+        expiresAt: new Date(Date.now() + 3 * 3600_000).toISOString(),
+        expired: false,
+        multiple: false,
+        votesCount: 3,
+        votersCount: 3,
+        options: [
+          { title: 'Pizza', votesCount: 2 },
+          { title: 'Pasta', votesCount: 1 },
+        ],
+        voted: false,
+        ownVotes: [],
+      },
+    });
+    let saved: { poll?: unknown } = {};
+    const article = await renderHomeWith(own, {
+      [`PUT /statuses/${own.id}`]: (body) => {
+        saved = body as typeof saved;
+        return { body: own };
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(within(article).getByRole('button', { name: 'More actions' }));
+    await user.click(within(article).getByRole('button', { name: 'Edit' }));
+    expect(within(article).getByText(/clears the votes/)).toBeInTheDocument();
+    const second = within(article).getByRole('textbox', { name: 'Option 2' });
+    await user.clear(second);
+    await user.type(second, 'Salad');
+    await user.click(within(article).getByRole('button', { name: 'Save' }));
+    // Three hours left: the closest duration offered is six hours.
+    await waitFor(() =>
+      expect(saved.poll).toEqual({
+        options: ['Pizza', 'Salad'],
+        expiresIn: 21_600,
+        multiple: false,
+      }),
+    );
   });
 });
 

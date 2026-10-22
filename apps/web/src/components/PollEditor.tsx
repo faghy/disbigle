@@ -1,4 +1,4 @@
-import { MAX_POLL_OPTIONS } from '@disbigle/shared';
+import { MAX_POLL_OPTIONS, type Poll } from '@disbigle/shared';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloseIcon } from './icons.tsx';
@@ -32,6 +32,23 @@ const newOption = (text = '') => {
 
 export function emptyPoll(): PollDraft {
   return { options: [newOption(), newOption()], expiresIn: 86_400, multiple: false };
+}
+
+/**
+ * A draft of an existing poll. The duration is the shortest offered one covering the time left
+ * (a day for a poll that already closed).
+ */
+export function pollDraftOf(poll: Poll): PollDraft {
+  const left = poll.expiresAt ? (Date.parse(poll.expiresAt) - Date.now()) / 1000 : 0;
+  const duration =
+    left > 0
+      ? (pollDurations.find((d) => d.seconds >= left) ?? pollDurations[pollDurations.length - 1])
+      : pollDurations.find((d) => d.seconds === 86_400);
+  return {
+    options: poll.options.map((option) => newOption(option.title)),
+    expiresIn: duration?.seconds ?? 86_400,
+    multiple: poll.multiple,
+  };
 }
 
 /** Client-side checks; error keys follow the server's paths (`poll.options.1`). */

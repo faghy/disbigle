@@ -586,7 +586,8 @@
   },
   "edit": {
     "label": "Modifica post",
-    "save": "Salva"
+    "save": "Salva",
+    "pollReset": "Se cambi le opzioni o il tipo di sondaggio, i voti già dati vengono azzerati."
   },
   "search": {
     "title": "Cerca",

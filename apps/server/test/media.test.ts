@@ -59,6 +59,62 @@ describe('media API', () => {
     expect(post.json().media[0].id).toBe(media.id);
   });
 
+  it('changes the attachments of a post when it is edited', async () => {
+    const client = new Client(app);
+    await client.post('/api/v1/auth/register', newUser());
+    const upload = async (color: string) => {
+      const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: color } })
+        .png()
+        .toBuffer();
+      const body = multipart({}, { name: `${color}.png`, type: 'image/png', data: png });
+      const response = await app().inject({
+        method: 'POST',
+        url: '/api/v1/media',
+        payload: body.payload,
+        headers: { 'content-type': body.contentType, cookie: client.cookieHeader ?? '' },
+      });
+      return response.json().id as string;
+    };
+    const [red, green, blue] = [
+      await upload('#ff0000'),
+      await upload('#00ff00'),
+      await upload('#0000ff'),
+    ];
+    const post = (
+      await client.post('/api/v1/statuses', { content: 'Colors', mediaIds: [red, green] })
+    ).json();
+
+    // Drop red, add blue in front of green.
+    const edited = await client.request('PUT', `/api/v1/statuses/${post.id}`, {
+      content: 'Colors',
+      mediaIds: [blue, green],
+    });
+    expect(edited.statusCode).toBe(200);
+    expect(edited.json().media.map((m: { id: string }) => m.id)).toEqual([blue, green]);
+
+    // The removed image is free again, and leaving mediaIds out keeps the current ones.
+    const reused = await client.post('/api/v1/statuses', { content: 'Red again', mediaIds: [red] });
+    expect(reused.statusCode).toBe(201);
+    const textOnly = await client.request('PUT', `/api/v1/statuses/${post.id}`, {
+      content: 'Hues',
+    });
+    expect(textOnly.json().media.map((m: { id: string }) => m.id)).toEqual([blue, green]);
+
+    // Media of another post, or of someone else, can't be taken.
+    const stolen = await client.request('PUT', `/api/v1/statuses/${post.id}`, {
+      content: 'Hues',
+      mediaIds: [red],
+    });
+    expect(stolen.statusCode).toBe(404);
+
+    // Without text, a post needs to keep something.
+    const empty = await client.request('PUT', `/api/v1/statuses/${post.id}`, {
+      content: '',
+      mediaIds: [],
+    });
+    expect(empty.statusCode).toBe(422);
+  });
+
   it('requires sign-in to upload', async () => {
     const body = multipart({}, { name: 'x.png', type: 'image/png', data: Buffer.from('x') });
     const response = await app().inject({

@@ -411,6 +411,19 @@ describe('Mastodon API: media, polls, search, instance', () => {
       headers: { ...noFile.headers, authorization: `Bearer ${alice.api.token}` },
     });
     expect(missing.statusCode).toBe(422);
+
+    // An edit describes the whole post, as on Mastodon: alt text through media_attributes,
+    // and attachments left out of media_ids are taken off.
+    const edited = await alice.api.put(`/api/v1/statuses/${status.json().id}`, {
+      status: 'look again',
+      media_ids: [media.id],
+      media_attributes: [{ id: media.id, description: 'Navy' }],
+    });
+    expect(edited.json().media_attachments).toMatchObject([{ id: media.id, description: 'Navy' }]);
+    const textOnly = await alice.api.put(`/api/v1/statuses/${status.json().id}`, {
+      status: 'just text',
+    });
+    expect(textOnly.json().media_attachments).toEqual([]);
   });
 
   it('creates a poll and votes in it', async () => {
@@ -450,6 +463,15 @@ describe('Mastodon API: media, polls, search, instance', () => {
     expect(
       (await alice.api.get(`/api/v1/polls/${post.poll.id}`)).json().options[1].votes_count,
     ).toBe(1);
+
+    // Editing the options starts the poll over; an edit without a poll removes it.
+    const changed = await alice.api.put(`/api/v1/statuses/${post.id}`, {
+      status: 'Tea, coffee or juice?',
+      poll: { options: ['Tea', 'Coffee', 'Juice'], expires_in: 3600 },
+    });
+    expect(changed.json().poll).toMatchObject({ votes_count: 0, options: [{}, {}, {}] });
+    const removed = await alice.api.put(`/api/v1/statuses/${post.id}`, { status: 'No poll' });
+    expect(removed.json().poll).toBeNull();
   });
 
   it('searches accounts, hashtags and statuses by URL', async () => {

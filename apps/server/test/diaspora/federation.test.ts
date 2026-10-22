@@ -167,6 +167,62 @@ describe('federation over diaspora* between three Disbigle instances', () => {
     });
   }, 90_000);
 
+  it('carries edits of posts and of comments, relayed by the thread author', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const carol = await signUp(c);
+    const bobOnA = await a.bridge.resolvePerson(bob.diasporaId);
+    const bobOnC = await c.bridge.resolvePerson(bob.diasporaId);
+    if (!bobOnA || !bobOnC) throw new Error('discovery failed');
+    await alice.client.post(`/api/v1/accounts/${bobOnA.id}/follow`);
+    await carol.client.post(`/api/v1/accounts/${bobOnC.id}/follow`);
+    await eventually(async () => {
+      const list = (await bob.client.get(`/api/v1/accounts/${bob.account.id}/followers`)).json();
+      return list.length === 2;
+    });
+
+    const post = (await bob.client.post('/api/v1/statuses', { content: 'Prima stesura' })).json();
+    const onA = await eventually(async () =>
+      findIn((await alice.client.get('/api/v1/timelines/home')).json(), 'Prima stesura'),
+    );
+    const onC = await eventually(async () =>
+      findIn((await carol.client.get('/api/v1/timelines/home')).json(), 'Prima stesura'),
+    );
+    const comment = (
+      await alice.client.post('/api/v1/statuses', { content: 'commento', inReplyToId: onA.id })
+    ).json();
+    await eventually(async () => {
+      const context = (await carol.client.get(`/api/v1/statuses/${onC.id}/context`)).json();
+      return context.descendants?.length === 1;
+    });
+
+    // The author edits the post: both pods get the new text.
+    await bob.client.request('PUT', `/api/v1/statuses/${post.id}`, { content: 'Versione finale' });
+    for (const [reader, id] of [
+      [alice, onA.id],
+      [carol, onC.id],
+    ] as const) {
+      const edited = await eventually(async () => {
+        const status = (await reader.client.get(`/api/v1/statuses/${id}`)).json();
+        return status.content.includes('Versione finale') ? status : null;
+      });
+      expect(edited.editedAt).not.toBeNull();
+    }
+
+    // Alice edits her comment: B applies it and relays the signed new version to C.
+    await alice.client.request('PUT', `/api/v1/statuses/${comment.id}`, {
+      content: 'commento corretto',
+    });
+    await eventually(async () => {
+      const context = (await bob.client.get(`/api/v1/statuses/${post.id}/context`)).json();
+      return context.descendants?.[0]?.content.includes('corretto');
+    });
+    await eventually(async () => {
+      const context = (await carol.client.get(`/api/v1/statuses/${onC.id}/context`)).json();
+      return context.descendants?.[0]?.content.includes('corretto');
+    });
+  }, 90_000);
+
   it('votes on a poll: counted by the author and relayed to the other pods', async () => {
     const alice = await signUp(a);
     const bob = await signUp(b);

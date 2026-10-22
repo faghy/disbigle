@@ -1,9 +1,12 @@
-import type { Status } from '@disbigle/shared';
+import type { EditPostRequest, Status } from '@disbigle/shared';
 import { type FormEvent, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom } from '../api/errors.ts';
 import { useEditStatus } from '../api/mutations.ts';
 import { useLimits } from '../api/queries.ts';
+import { PollIcon } from './icons.tsx';
+import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
+import { emptyPoll, type PollDraft, PollEditor, pollDraftOf, validatePoll } from './PollEditor.tsx';
 import { Alert, Button, cx } from './ui.tsx';
 
 /** Text of server HTML, keeping paragraph and line breaks (fallback when no source is sent). */
@@ -15,7 +18,7 @@ export function htmlToText(html: string): string {
   return doc.body.textContent ?? '';
 }
 
-/** Inline editor for one of your posts: text, content warning and the sensitive flag. */
+/** Inline editor for one of your posts: text, content warning, attachments and poll. */
 export function EditStatusForm({ status, onDone }: { status: Status; onDone: () => void }) {
   const { t } = useTranslation();
   const limits = useLimits();
@@ -25,33 +28,65 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
   const [summary, setSummary] = useState(status.summary);
   const [warningOpen, setWarningOpen] = useState(status.summary.length > 0);
   const [sensitive, setSensitive] = useState(status.sensitive);
+  const mediaItems = useMediaItems(status.media);
+  const [poll, setPoll] = useState<PollDraft | null>(() =>
+    status.poll ? pollDraftOf(status.poll) : null,
+  );
+  // Sent only when changed: an untouched poll keeps its votes and closing time.
+  const [pollTouched, setPollTouched] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [pollErrors, setPollErrors] = useState<Record<string, string>>({});
+  const [preparing, setPreparing] = useState(false);
   const remaining = limits.maxPostLength - content.length;
+  const hasMedia = mediaItems.media.length > 0;
+  const changePoll = (next: PollDraft | null) => {
+    setPoll(next);
+    setPollTouched(true);
+    setPollErrors({});
+  };
 
-  const save = () => {
-    if (edit.isPending) return;
-    if (!content.trim() && status.media.length === 0) {
+  const save = async () => {
+    if (edit.isPending || preparing || mediaItems.uploading) return;
+    if (!content.trim() && mediaItems.ready.length === 0 && !poll) {
       setProblem(t('composer.errors.empty'));
       return;
     }
     if (remaining < 0) return;
+    const found = poll && pollTouched ? validatePoll(poll, t) : {};
+    if (mediaItems.failed) found.media = t('composer.errors.mediaFailed');
+    setPollErrors(found);
     setProblem(null);
-    edit.mutate(
-      {
-        id: status.id,
-        body: {
-          content,
-          summary: warningOpen ? summary.trim() : '',
-          sensitive: status.media.length > 0 && sensitive,
-        },
-      },
-      { onSuccess: onDone },
-    );
+    if (Object.keys(found).length > 0) return;
+    setPreparing(true);
+    const saved = await mediaItems.saveDescriptions();
+    setPreparing(false);
+    if (!saved) return;
+    const body: EditPostRequest = {
+      content,
+      summary: warningOpen ? summary.trim() : '',
+      sensitive: mediaItems.ready.length > 0 && sensitive,
+      mediaIds: mediaItems.ready.map((item) => item.attachment.id),
+      ...(pollTouched
+        ? {
+            poll: poll
+              ? {
+                  options: poll.options.map((option) => option.text.trim()),
+                  expiresIn: poll.expiresIn,
+                  multiple: poll.multiple,
+                }
+              : null,
+          }
+        : {}),
+    };
+    edit.mutate({ id: status.id, body }, { onSuccess: onDone });
   };
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    save();
+    void save();
   };
+  const serverErrors = fieldErrorsFrom(edit.error);
+  const allErrors = { ...serverErrors, ...pollErrors };
+  const hadVotes = (status.poll?.votersCount ?? 0) > 0;
   const contentError = problem ?? fieldErrorsFrom(edit.error).content ?? null;
 
   return (
@@ -90,7 +125,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
               event.preventDefault();
-              save();
+              void save();
             } else if (event.key === 'Escape') {
               onDone();
             }
@@ -105,10 +140,42 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           </p>
         )}
       </div>
+      <MediaList items={mediaItems} error={allErrors.media} />
+      {poll && (
+        <>
+          <PollEditor value={poll} onChange={changePoll} errors={allErrors} />
+          {hadVotes && <p className="text-xs text-fg-muted">{t('edit.pollReset')}</p>}
+        </>
+      )}
       <Alert>
-        {edit.error && !fieldErrorsFrom(edit.error).content ? errorMessage(edit.error) : null}
+        {edit.error &&
+        !serverErrors.content &&
+        !Object.keys(serverErrors).some((k) => k.startsWith('poll'))
+          ? errorMessage(edit.error)
+          : null}
       </Alert>
       <div className="flex flex-wrap items-center gap-2">
+        <AddMediaButton
+          items={mediaItems}
+          disabled={poll !== null}
+          title={poll ? t('poll.editor.noMediaWithPoll') : undefined}
+        />
+        <button
+          type="button"
+          aria-pressed={poll !== null}
+          disabled={hasMedia}
+          onClick={() => changePoll(poll ? null : emptyPoll())}
+          aria-label={t('poll.editor.add')}
+          title={hasMedia ? t('poll.editor.noPollWithMedia') : t('poll.editor.add')}
+          className={cx(
+            'inline-flex size-9 items-center justify-center rounded-full focus-ring disabled:opacity-40',
+            poll
+              ? 'bg-accent-soft text-accent'
+              : 'text-fg-muted hover:bg-surface-muted hover:text-fg',
+          )}
+        >
+          <PollIcon />
+        </button>
         <button
           type="button"
           aria-pressed={warningOpen}
@@ -121,7 +188,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           <span aria-hidden="true">CW</span>
           <span className="sr-only">{t('composer.warning.toggle')}</span>
         </button>
-        {status.media.length > 0 && (
+        {hasMedia && (
           <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-fg-muted">
             <input
               type="checkbox"
@@ -143,7 +210,11 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           <Button variant="ghost" onClick={onDone}>
             {t('common.cancel')}
           </Button>
-          <Button type="submit" loading={edit.isPending} disabled={remaining < 0}>
+          <Button
+            type="submit"
+            loading={edit.isPending || preparing}
+            disabled={remaining < 0 || mediaItems.uploading}
+          >
             {t('edit.save')}
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import type { CreatePostRequest, MediaAttachment, Status, Visibility } from '@disbigle/shared';
+import type { CreatePostRequest, Status, Visibility } from '@disbigle/shared';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -13,34 +13,19 @@ import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom, isFieldError } from '../api/errors.ts';
 import { useCreateStatus } from '../api/mutations.ts';
 import { useCurrentUser, useLimits } from '../api/queries.ts';
-import { social } from '../api/social.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
-import { CloseIcon, ImageIcon, PollIcon, WarningIcon } from './icons.tsx';
+import { PollIcon, WarningIcon } from './icons.tsx';
+import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
-import { Alert, Button, cx, Spinner } from './ui.tsx';
-
-const MAX_DESCRIPTION = 1500;
-
-interface MediaItem {
-  key: string;
-  name: string;
-  kind: 'image' | 'video' | 'audio';
-  previewUrl: string | null;
-  state: 'uploading' | 'ready' | 'error';
-  attachment: MediaAttachment | null;
-  description: string;
-  error: unknown;
-}
+import { Alert, Button, cx } from './ui.tsx';
 
 /** Visibility a reply starts with: the parent's, unless the parent is public. */
 function initialReplyVisibility(parent: Status): Visibility {
   return parent.visibility === 'public' ? 'public' : parent.visibility;
 }
-
-let mediaKey = 0;
 
 export interface ComposerProps {
   replyTo?: Status;
@@ -74,11 +59,9 @@ export function Composer({
   const create = useCreateStatus();
   const limits = useLimits();
   const maxLength = limits.maxPostLength;
-  const maxMedia = limits.maxMediaAttachments;
   const ids = { text: useId(), counter: useId(), warning: useId(), error: useId() };
   const ownTextarea = useRef<HTMLTextAreaElement>(null);
   const textarea = textareaRef ?? ownTextarea;
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const lockedAudience = replyTo ? isPrivateConversation(replyTo.visibility) : false;
   const mention =
@@ -97,22 +80,10 @@ export function Composer({
   const [summary, setSummary] = useState('');
   const [sensitive, setSensitive] = useState(false);
   const [poll, setPoll] = useState<PollDraft | null>(null);
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [editingAlt, setEditingAlt] = useState<string | null>(null);
+  const mediaItems = useMediaItems();
+  const { media, uploading } = mediaItems;
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [mediaError, setMediaError] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
-
-  // Free object URLs of local previews when the composer goes away.
-  const mediaRef = useRef(media);
-  mediaRef.current = media;
-  useEffect(
-    () => () => {
-      for (const item of mediaRef.current)
-        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -126,94 +97,28 @@ export function Composer({
 
   const length = content.length;
   const remaining = maxLength - length;
-  const uploading = media.some((item) => item.state === 'uploading');
   const serverErrors = fieldErrorsFrom(create.error);
   const allErrors = { ...serverErrors, ...errors };
 
-  const updateItem = (key: string, patch: Partial<MediaItem>) =>
-    setMedia((items) => items.map((item) => (item.key === key ? { ...item, ...patch } : item)));
-
-  const addFiles = (files: FileList | null) => {
-    if (!files) return;
-    setMediaError(null);
-    const room = maxMedia - media.length;
-    const list = [...files];
-    if (list.length > room) setMediaError(t('composer.media.tooMany', { max: maxMedia }));
-    for (const file of list.slice(0, Math.max(0, room))) {
-      const kind = file.type.startsWith('image/')
-        ? 'image'
-        : file.type.startsWith('video/')
-          ? 'video'
-          : file.type.startsWith('audio/')
-            ? 'audio'
-            : null;
-      if (!kind || !limits.acceptedMediaTypes.includes(file.type)) {
-        setMediaError(t('composer.media.unsupported', { name: file.name }));
-        continue;
-      }
-      const limit = kind === 'image' ? limits.maxImageBytes : limits.maxVideoBytes;
-      if (file.size > limit) {
-        setMediaError(
-          t('composer.media.tooLarge', { name: file.name, size: Math.round(limit / 1024 / 1024) }),
-        );
-        continue;
-      }
-      mediaKey += 1;
-      const key = `m${mediaKey}`;
-      const previewUrl = kind === 'image' ? URL.createObjectURL(file) : null;
-      setMedia((items) => [
-        ...items,
-        {
-          key,
-          name: file.name,
-          kind,
-          previewUrl,
-          state: 'uploading',
-          attachment: null,
-          description: '',
-          error: null,
-        },
-      ]);
-      social.uploadMedia(file).then(
-        (attachment) => updateItem(key, { state: 'ready', attachment }),
-        (error: unknown) => updateItem(key, { state: 'error', error }),
-      );
-    }
-  };
-
-  const removeItem = (key: string) => {
-    setMedia((items) => {
-      const item = items.find((i) => i.key === key);
-      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
-      return items.filter((i) => i.key !== key);
-    });
-    if (editingAlt === key) setEditingAlt(null);
-  };
-
   const reset = () => {
-    for (const item of media) if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    mediaItems.reset();
     setContent('');
     setSummary('');
     setWarningOpen(false);
     setSensitive(false);
-    setMedia([]);
-    setEditingAlt(null);
     setErrors({});
-    setMediaError(null);
     setPoll(null);
   };
 
   const validate = (): Record<string, string> => {
     const found: Record<string, string> = {};
-    const ready = media.filter((item) => item.state === 'ready');
-    if (!content.trim() && ready.length === 0)
+    if (!content.trim() && mediaItems.ready.length === 0)
       found.content = poll ? t('poll.errors.question') : t('composer.errors.empty');
     if (poll) Object.assign(found, validatePoll(poll, t));
     if (length > maxLength) found.content = t('composer.errors.tooLong', { max: maxLength });
     if (!lockedAudience && audience.visibility === 'limited' && audience.aspectIds.length === 0)
       found.aspectIds = t('composer.errors.aspectsRequired');
-    if (media.some((item) => item.state === 'error'))
-      found.media = t('composer.errors.mediaFailed');
+    if (mediaItems.failed) found.media = t('composer.errors.mediaFailed');
     return found;
   };
 
@@ -226,23 +131,11 @@ export function Composer({
       if (found.content) textarea.current?.focus();
       return;
     }
-    const ready = media.filter(
-      (item): item is MediaItem & { attachment: MediaAttachment } => item.attachment !== null,
-    );
+    const { ready } = mediaItems;
     setPreparing(true);
-    try {
-      // Alt text edited after the upload is saved before the post refers to the media.
-      await Promise.all(
-        ready
-          .filter((item) => item.description.trim() !== item.attachment.description)
-          .map((item) => social.updateMedia(item.attachment.id, item.description.trim())),
-      );
-    } catch (error) {
-      setPreparing(false);
-      setMediaError(errorMessage(error));
-      return;
-    }
+    const saved = await mediaItems.saveDescriptions();
     setPreparing(false);
+    if (!saved) return;
 
     const body: CreatePostRequest = {
       content,
@@ -349,79 +242,7 @@ export function Composer({
             )}
           </div>
 
-          {media.length > 0 && (
-            <ul
-              className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-              aria-label={t('composer.media.list')}
-            >
-              {media.map((item, index) => (
-                <li key={item.key} className="space-y-1">
-                  <div className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface-muted">
-                    {item.previewUrl ? (
-                      <img
-                        src={item.previewUrl}
-                        alt={item.description || t('composer.media.preview', { number: index + 1 })}
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex size-full items-center justify-center p-2 text-center text-xs break-all text-fg-muted">
-                        {item.name}
-                      </span>
-                    )}
-                    {item.state === 'uploading' && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-surface/70">
-                        <Spinner />
-                        <span className="sr-only">{t('composer.media.uploading')}</span>
-                      </span>
-                    )}
-                    {item.state === 'error' && (
-                      <span className="absolute inset-x-0 bottom-0 bg-danger px-1 py-0.5 text-center text-xs text-white">
-                        {errorMessage(item.error)}
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.key)}
-                      aria-label={t('composer.media.remove', { name: item.name })}
-                      className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black focus-ring"
-                    >
-                      <CloseIcon size={14} />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={item.state !== 'ready'}
-                    aria-expanded={editingAlt === item.key}
-                    onClick={() => setEditingAlt(editingAlt === item.key ? null : item.key)}
-                    className={cx(
-                      'w-full rounded-md px-2 py-1 text-xs font-medium focus-ring disabled:opacity-50',
-                      item.description.trim()
-                        ? 'bg-success-soft text-success'
-                        : 'bg-surface-muted text-fg-muted hover:text-fg',
-                    )}
-                  >
-                    {item.description.trim()
-                      ? t('composer.media.altSet')
-                      : t('composer.media.addAlt', { number: index + 1 })}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {media.map((item, index) =>
-            editingAlt === item.key ? (
-              <AltEditor
-                key={item.key}
-                number={index + 1}
-                value={item.description}
-                onChange={(description) => updateItem(item.key, { description })}
-                onDone={() => setEditingAlt(null)}
-              />
-            ) : null,
-          )}
-
-          {(mediaError || allErrors.media) && <Alert>{mediaError ?? allErrors.media}</Alert>}
+          <MediaList items={mediaItems} error={allErrors.media} />
 
           {poll && (
             <PollEditor
@@ -461,30 +282,12 @@ export function Composer({
           <Alert>{generalError}</Alert>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-            <input
-              ref={fileInput}
-              type="file"
-              accept={limits.acceptedMediaTypes.join(',')}
-              multiple
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden="true"
-              onChange={(event) => {
-                addFiles(event.target.files);
-                event.target.value = '';
-              }}
-              data-testid="composer-file-input"
+            <AddMediaButton
+              items={mediaItems}
+              disabled={poll !== null}
+              title={poll ? t('poll.editor.noMediaWithPoll') : undefined}
+              testId="composer-file-input"
             />
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              disabled={media.length >= maxMedia || poll !== null}
-              aria-label={t('composer.media.add')}
-              title={poll ? t('poll.editor.noMediaWithPoll') : t('composer.media.add')}
-              className="inline-flex size-9 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring disabled:opacity-40"
-            >
-              <ImageIcon />
-            </button>
             <button
               type="button"
               aria-pressed={poll !== null}
@@ -550,44 +353,5 @@ export function Composer({
         </div>
       </div>
     </form>
-  );
-}
-
-function AltEditor({
-  number,
-  value,
-  onChange,
-  onDone,
-}: {
-  number: number;
-  value: string;
-  onChange: (value: string) => void;
-  onDone: () => void;
-}) {
-  const { t } = useTranslation();
-  const id = useId();
-  return (
-    <div className="space-y-2 rounded-xl border border-border bg-surface-muted p-3">
-      <label htmlFor={id} className="block text-sm font-medium">
-        {t('composer.media.altLabel', { number })}
-      </label>
-      <textarea
-        id={id}
-        // biome-ignore lint/a11y/noAutofocus: opened on request to edit this description
-        autoFocus
-        rows={3}
-        maxLength={MAX_DESCRIPTION}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={t('composer.media.altPlaceholder')}
-        className="input-base"
-      />
-      <div className="flex items-center justify-between text-xs text-fg-muted">
-        <span>{t('composer.media.altHint')}</span>
-        <Button variant="secondary" className="min-h-8 px-3 py-1" onClick={onDone}>
-          {t('common.done')}
-        </Button>
-      </div>
-    </div>
   );
 }

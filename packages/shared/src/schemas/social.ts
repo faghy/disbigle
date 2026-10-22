@@ -6,6 +6,17 @@ export const MAX_POLL_OPTIONS = 6;
 export const visibilities = ['public', 'unlisted', 'followers', 'limited', 'direct'] as const;
 export type Visibility = (typeof visibilities)[number];
 
+const pollRequestSchema = z.object({
+  options: z.array(z.string().trim().min(1).max(100)).min(2).max(MAX_POLL_OPTIONS),
+  /** Seconds until the poll closes: 5 minutes to 30 days. */
+  expiresIn: z
+    .number()
+    .int()
+    .min(300)
+    .max(30 * 24 * 3600),
+  multiple: z.boolean().default(false),
+});
+
 export const createPostRequestSchema = z
   .object({
     content: z.string().max(MAX_POST_LENGTH).default(''),
@@ -20,18 +31,7 @@ export const createPostRequestSchema = z
       .regex(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/)
       .optional(),
     mediaIds: z.array(z.uuid()).max(4).default([]),
-    poll: z
-      .object({
-        options: z.array(z.string().trim().min(1).max(100)).min(2).max(MAX_POLL_OPTIONS),
-        /** Seconds until the poll closes: 5 minutes to 30 days. */
-        expiresIn: z
-          .number()
-          .int()
-          .min(300)
-          .max(30 * 24 * 3600),
-        multiple: z.boolean().default(false),
-      })
-      .optional(),
+    poll: pollRequestSchema.optional(),
   })
   .refine((p) => p.content.trim().length > 0 || p.mediaIds.length > 0 || p.poll !== undefined, {
     message: 'A post needs text, media or a poll',
@@ -43,6 +43,13 @@ export const editPostRequestSchema = z.object({
   content: z.string().max(MAX_POST_LENGTH),
   summary: z.string().trim().max(500).default(''),
   sensitive: z.boolean().default(false),
+  /** The attachments, in order, replacing the current ones. Left out, they stay as they are. */
+  mediaIds: z.array(z.uuid()).max(4).optional(),
+  /**
+   * The poll: left out it stays as it is, `null` removes it. Changing the options or the choice
+   * mode starts it over without votes; with the same options only the closing time changes.
+   */
+  poll: pollRequestSchema.nullable().optional(),
 });
 export type EditPostRequest = z.input<typeof editPostRequestSchema>;
 

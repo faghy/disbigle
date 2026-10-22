@@ -60,6 +60,48 @@ describe('statuses and timelines', () => {
     expect(edited.tags).toEqual([{ name: 'final' }]);
   });
 
+  it('edits the poll of a post: same options keep the votes, new ones start over', async () => {
+    const author = await signedIn();
+    const voter = await signedIn();
+    const post = (
+      await author.client.post('/api/v1/statuses', {
+        content: 'Lunch?',
+        poll: { options: ['Pizza', 'Pasta'], expiresIn: 3600 },
+      })
+    ).json();
+    const pollId = post.poll.id;
+    await voter.client.post(`/api/v1/polls/${pollId}/votes`, { choices: [0] });
+    const edit = (body: object) =>
+      author.client.request('PUT', `/api/v1/statuses/${post.id}`, { content: 'Lunch?', ...body });
+
+    // Only the closing time moves.
+    const longer = (
+      await edit({ poll: { options: ['Pizza', 'Pasta'], expiresIn: 86_400 } })
+    ).json();
+    expect(longer.poll).toMatchObject({ id: pollId, votersCount: 1 });
+    expect(Date.parse(longer.poll.expiresAt) - Date.now()).toBeGreaterThan(23 * 3600_000);
+
+    // Leaving the poll out keeps it.
+    expect((await edit({})).json().poll).toMatchObject({ id: pollId, votersCount: 1 });
+
+    // Other options: a new poll, without votes.
+    const changed = (
+      await edit({ poll: { options: ['Pizza', 'Salad', 'Soup'], expiresIn: 3600 } })
+    ).json();
+    expect(changed.poll.id).not.toBe(pollId);
+    expect(changed.poll).toMatchObject({ votersCount: 0, votesCount: 0 });
+    expect(changed.poll.options.map((o: { title: string }) => o.title)).toEqual([
+      'Pizza',
+      'Salad',
+      'Soup',
+    ]);
+
+    // null removes it; a poll can also be added to a post that had none.
+    expect((await edit({ poll: null })).json().poll).toBeNull();
+    const added = (await edit({ poll: { options: ['Yes', 'No'], expiresIn: 300 } })).json();
+    expect(added.poll.options).toHaveLength(2);
+  });
+
   it('follows hashtags into the home timeline', async () => {
     const reader = await signedIn();
     const writer = await signedIn();

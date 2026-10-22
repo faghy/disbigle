@@ -18,6 +18,7 @@ import {
   renderMarkdown,
   unfollow,
   unlike,
+  updateRemotePost,
   upsertRemoteActor,
   votePoll,
 } from '@disbigle/core';
@@ -188,6 +189,20 @@ async function statusMessage(
   const ctx = bridge.ctx;
   const text = entity.text ?? '';
   const rendered = await renderDiasporaText(ctx, text);
+  // A post we already have, sent again with `edited_at` (Hubzilla, Friendica and Disbigle send
+  // edits so): the newer text replaces ours. diaspora* itself never edits.
+  const known = entity.editedAt ? await findPostByGuid(ctx, entity.guid) : null;
+  if (known && entity.editedAt) {
+    if (known.actorId !== author.id) return;
+    await updateRemotePost(
+      ctx,
+      author.id,
+      { diasporaGuid: entity.guid },
+      { contentHtml: rendered.html, editedAt: entity.editedAt },
+    );
+    if (!entity.public && recipient) await addAudience(ctx, known.id, [recipient.id]);
+    return;
+  }
   const attachments: RemoteAttachment[] = (entity.photos ?? []).map((photo) => ({
     url: `${photo.remotePhotoPath}${photo.remotePhotoName}`,
     mimeType: mimeTypeFromName(photo.remotePhotoName),
@@ -232,6 +247,7 @@ async function statusMessage(
   if (id && !entity.public && recipient) await addAudience(ctx, id, [recipient.id]);
 }
 
+/** Stores a comment or message; false when it is an older version of one already edited here. */
 async function comment(
   bridge: DiasporaBridge,
   entity: Comment | Message,
@@ -239,7 +255,7 @@ async function comment(
   parent: PostRow,
   recipient: ActorRow | undefined,
   sender: string,
-) {
+): Promise<boolean> {
   const ctx = bridge.ctx;
   // Only people who can see a post may comment on it (knowing a private post's guid is not
   // enough), unless the thread's author relays the comment: on diaspora* they decide who takes
@@ -251,6 +267,17 @@ async function comment(
     throw new DomainError('forbidden', 'Comment on a post the author cannot see');
   }
   const rendered = await renderDiasporaText(ctx, entity.text);
+  const editedAt = 'editedAt' in entity ? entity.editedAt : undefined;
+  const known = await findPostByGuid(ctx, entity.guid);
+  if (known?.editedAt || (known && editedAt)) {
+    if (known.actorId !== author.id || !editedAt) return false;
+    return updateRemotePost(
+      ctx,
+      author.id,
+      { diasporaGuid: entity.guid },
+      { contentHtml: rendered.html, editedAt },
+    );
+  }
   const { visibility, audience } = await replyAudience(ctx, parent, [
     ...rendered.mentionIds,
     ...(recipient ? [recipient.id] : []),
@@ -268,6 +295,7 @@ async function comment(
   });
   if (id && recipient && !isPublicVisibility(visibility))
     await addAudience(ctx, id, [recipient.id]);
+  return true;
 }
 
 async function likeEntity(bridge: DiasporaBridge, entity: Like, author: ActorRow) {
@@ -443,7 +471,8 @@ export async function applyEntity(
     case 'Comment': {
       const parent = await findPostByGuid(ctx, entity.parentGuid);
       if (!parent) return;
-      await comment(bridge, entity, author, parent, recipient, sender);
+      // A stale copy must not replace the stored, newer one that later relays send.
+      if (!(await comment(bridge, entity, author, parent, recipient, sender))) return;
       const stored = await findPostByGuid(ctx, entity.guid);
       await storeRelayable(bridge, entity, { postId: stored?.id ?? null });
       return relay(bridge, entity, await threadRootOf(ctx, parent), author.id);

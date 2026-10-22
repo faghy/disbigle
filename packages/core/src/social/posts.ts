@@ -10,7 +10,7 @@ import {
   type StatusContext,
   type Visibility,
 } from '@disbigle/shared';
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, notInArray, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
@@ -258,8 +258,10 @@ export async function createPost(
 }
 
 /**
- * Edits the text of your own post. Audience, mentions-based recipients and attachments stay as
- * they were; newly mentioned people are linked but not added to a private audience.
+ * Edits one of your posts: text, content warning, attachments and poll. The audience and the
+ * mentions-based recipients stay as they were; newly mentioned people are linked but not added
+ * to a private audience. Attachments taken off the post are left unattached, so the hourly
+ * cleanup removes them.
  */
 export async function editPost(
   ctx: CoreContext,
@@ -272,14 +274,38 @@ export async function editPost(
   if (!post || post.actorId !== actorId || !post.local || post.reblogOfId) {
     throw new DomainError('not_found', 'Post not found');
   }
-  const [hasMedia] = await ctx.db
-    .select({ id: mediaAttachments.id })
-    .from(mediaAttachments)
-    .where(eq(mediaAttachments.postId, post.id))
-    .limit(1);
-  if (!input.content.trim() && !hasMedia) {
-    throw new DomainError('validation_failed', 'A post needs text or media', [
-      { path: 'content', message: 'A post needs text or media' },
+  const mediaIds = input.mediaIds ? [...new Set(input.mediaIds)] : undefined;
+  if (mediaIds && mediaIds.length > 0) {
+    const media = await ctx.db
+      .select({ id: mediaAttachments.id })
+      .from(mediaAttachments)
+      .where(
+        and(
+          inArray(mediaAttachments.id, mediaIds),
+          eq(mediaAttachments.actorId, actorId),
+          or(isNull(mediaAttachments.postId), eq(mediaAttachments.postId, post.id)),
+        ),
+      );
+    if (media.length !== mediaIds.length) throw new DomainError('not_found', 'Media not found');
+  }
+  const [currentPoll] = await ctx.db
+    .select()
+    .from(schema.polls)
+    .where(eq(schema.polls.postId, post.id));
+  const hasMedia =
+    mediaIds !== undefined
+      ? mediaIds.length > 0
+      : (
+          await ctx.db
+            .select({ id: mediaAttachments.id })
+            .from(mediaAttachments)
+            .where(eq(mediaAttachments.postId, post.id))
+            .limit(1)
+        ).length > 0;
+  const hasPoll = input.poll !== undefined ? input.poll !== null : currentPoll !== undefined;
+  if (!input.content.trim() && !hasMedia && !hasPoll) {
+    throw new DomainError('validation_failed', 'A post needs text, media or a poll', [
+      { path: 'content', message: 'A post needs text, media or a poll' },
     ]);
   }
   const mentioned = await resolveMentions(ctx, input.content);
@@ -320,6 +346,52 @@ export async function editPost(
         .insert(mentions)
         .values(newMentions.map((id) => ({ postId: post.id, actorId: id })))
         .onConflictDoNothing();
+    }
+    if (mediaIds) {
+      await tx
+        .update(mediaAttachments)
+        .set({ postId: null })
+        .where(
+          and(
+            eq(mediaAttachments.postId, post.id),
+            mediaIds.length > 0 ? notInArray(mediaAttachments.id, mediaIds) : undefined,
+          ),
+        );
+      for (const [position, mediaId] of mediaIds.entries()) {
+        await tx
+          .update(mediaAttachments)
+          .set({ postId: post.id, position })
+          .where(eq(mediaAttachments.id, mediaId));
+      }
+    }
+    const poll = input.poll;
+    if (poll === null && currentPoll) {
+      await tx.delete(schema.polls).where(eq(schema.polls.id, currentPoll.id));
+    } else if (poll) {
+      const expiresAt = new Date(Date.now() + poll.expiresIn * 1000);
+      const sameQuestion =
+        currentPoll &&
+        currentPoll.multiple === poll.multiple &&
+        currentPoll.options.length === poll.options.length &&
+        currentPoll.options.every((option, i) => option.title === poll.options[i]);
+      if (sameQuestion) {
+        // Same options: the votes stay, only the closing time moves.
+        await tx
+          .update(schema.polls)
+          .set({ expiresAt, endNotifiedAt: null })
+          .where(eq(schema.polls.id, currentPoll.id));
+      } else {
+        // Votes cast on other options would be meaningless: the poll starts over.
+        if (currentPoll) await tx.delete(schema.polls).where(eq(schema.polls.id, currentPoll.id));
+        await tx.insert(schema.polls).values({
+          id: uuidv7(),
+          postId: post.id,
+          options: poll.options.map((title) => ({ title, votesCount: 0 })),
+          multiple: poll.multiple,
+          expiresAt,
+          diasporaGuid: randomBytes(16).toString('hex'),
+        });
+      }
     }
   });
   await emit(ctx, { type: 'post.updated', postId: post.id, actorId });

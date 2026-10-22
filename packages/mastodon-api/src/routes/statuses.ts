@@ -23,6 +23,7 @@ import {
   unlike,
   unpinPost,
   unreblog,
+  updateMediaDescription,
   visibleTo,
   votePoll,
 } from '@disbigle/core';
@@ -39,6 +40,7 @@ import {
   idParam,
   int,
   isUuid,
+  list,
   MastodonError,
   obj,
   type PageParams,
@@ -65,6 +67,25 @@ function uuids(values: string[], what: string): string[] {
 }
 
 /** Mastodon `POST /api/v1/statuses` parameters as our create request. */
+/** The `poll` parameters of a status form, if it has options. */
+function pollOf(fields: FormObject): CreatePostRequest['poll'] {
+  const poll = obj(fields.poll);
+  const options = strings(poll.options);
+  if (options.length === 0) return undefined;
+  if (options.length > MAX_POLL_OPTIONS) {
+    throw new MastodonError(
+      422,
+      `Validation failed: a poll can have at most ${MAX_POLL_OPTIONS} options`,
+    );
+  }
+  const expiresIn = int(poll.expires_in) ?? 24 * 3600;
+  return {
+    options,
+    expiresIn: Math.min(Math.max(expiresIn, MIN_POLL_SECONDS), MAX_POLL_SECONDS),
+    multiple: bool(poll.multiple) ?? false,
+  };
+}
+
 export function toCreateRequest(fields: FormObject): CreatePostRequest {
   if (str(fields.scheduled_at)) {
     throw new MastodonError(422, 'Validation failed: scheduled posts are not supported');
@@ -90,22 +111,8 @@ export function toCreateRequest(fields: FormObject): CreatePostRequest {
   }
   const language = str(fields.language)?.trim();
   if (language && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(language)) request.language = language;
-  const poll = obj(fields.poll);
-  const options = strings(poll.options);
-  if (options.length > 0) {
-    if (options.length > MAX_POLL_OPTIONS) {
-      throw new MastodonError(
-        422,
-        `Validation failed: a poll can have at most ${MAX_POLL_OPTIONS} options`,
-      );
-    }
-    const expiresIn = int(poll.expires_in) ?? 24 * 3600;
-    request.poll = {
-      options,
-      expiresIn: Math.min(Math.max(expiresIn, MIN_POLL_SECONDS), MAX_POLL_SECONDS),
-      multiple: bool(poll.multiple) ?? false,
-    };
-  }
+  const poll = pollOf(fields);
+  if (poll) request.poll = poll;
   return request;
 }
 
@@ -174,10 +181,21 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
     const id = idParam(request);
     const { fields } = await readInput(request);
     const current = await getStatus(ctx, user.actorId, id);
+    if (current.account.id !== user.actorId) throw new MastodonError(404, 'Record not found');
+    // As on Mastodon, the form describes the whole post: attachments and a poll left out go.
+    const mediaIds = uuids(strings(fields.media_ids), 'media');
+    for (const attributes of list(fields.media_attributes)) {
+      const mediaId = str(obj(attributes).id)?.toLowerCase();
+      const description = str(obj(attributes).description);
+      if (mediaId && description !== undefined && mediaIds.includes(mediaId))
+        await updateMediaDescription(ctx, user.actorId, mediaId, description);
+    }
     const edited = await editPost(ctx, user.actorId, id, {
       content: str(fields.status) ?? current.source ?? '',
       summary: str(fields.spoiler_text) ?? '',
       sensitive: bool(fields.sensitive) ?? false,
+      mediaIds,
+      poll: pollOf(fields) ?? null,
     });
     return new Presenter(ctx, user.actorId).status(edited);
   });

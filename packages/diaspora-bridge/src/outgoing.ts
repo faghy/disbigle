@@ -303,6 +303,7 @@ export async function commentFor(
     parentGuid: root.diasporaGuid ?? '',
     text: await diasporaText(ctx, post),
     createdAt: post.createdAt,
+    ...(post.editedAt ? { editedAt: post.editedAt } : {}),
   };
 }
 
