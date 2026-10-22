@@ -4,6 +4,8 @@ import SwiftUI
 
 @main
 struct DisbigleApp: App {
+  @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+  @Environment(\.scenePhase) private var scenePhase
   @State private var model = AppModel()
 
   var body: some Scene {
@@ -18,7 +20,30 @@ struct DisbigleApp: App {
       .environment(model)
       .tint(.brand)
       .task(id: model.session?.token) { await model.refresh() }
+      .onAppear {
+        delegate.onOpen = { statusId, accountId in model.open(statusId: statusId, accountId: accountId) }
+      }
     }
+    .onChange(of: scenePhase) { _, phase in
+      if phase == .background && model.preferences.notificationsOn { model.notifier.schedule() }
+    }
+    .backgroundTask(.appRefresh(Notifier.refreshTask)) {
+      await BackgroundRefresh.run()
+    }
+  }
+}
+
+/** What iOS runs when it wakes the app in the background. */
+enum BackgroundRefresh {
+  @MainActor static func run() async {
+    let preferences = Preferences()
+    guard preferences.notificationsOn, let session = Keychain.load() else { return }
+    let notifier = Notifier()
+    // Ask to be woken again first: if this run is cut short, the next one is still planned.
+    notifier.schedule()
+    await notifier.check(
+      client: Client(server: session.server, token: session.token), preferences: preferences,
+      announce: true)
   }
 }
 
@@ -115,6 +140,7 @@ struct MainView: View {
         .tag("home")
       TabStack { NotificationsScreen() }
         .tabItem { Label("Notifications", systemImage: "bell") }
+        .badge(model.notifier.unread)
         .tag("notifications")
       TabStack { ConversationsScreen() }
         .tabItem { Label("Messages", systemImage: "envelope") }
@@ -135,10 +161,23 @@ struct MainView: View {
     .sheet(item: $model.composing) { target in
       ComposeView(target: target)
     }
+    .onChange(of: model.pendingRoute) { _, route in
+      if route != nil { tab = "notifications" }
+    }
+    .task(id: model.session?.token) {
+      // While the app is open: the unread count every minute (no system notifications).
+      while !Task.isCancelled {
+        await model.notifier.check(client: model.client, preferences: model.preferences, announce: false)
+        try? await Task.sleep(for: .seconds(60))
+      }
+    }
     .onAppear {
+      if model.pendingRoute != nil { tab = "notifications" }
       guard let screen = model.debugScreen else { return }
       if screen == "compose" {
         model.composing = .new
+      } else if screen.hasPrefix("settings") {
+        tab = "profile"
       } else {
         tab = screen
       }

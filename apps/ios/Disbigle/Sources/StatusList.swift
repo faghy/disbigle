@@ -7,7 +7,10 @@ enum Route: Hashable {
   case account(Account)
   /** An account known only by id (a mention), loaded on arrival. */
   case accountID(String)
+  /** A post known only by id (from a system notification), loaded on arrival. */
+  case statusID(String)
   case tag(String)
+  case settings(SettingsPage)
 }
 
 /** The navigation path of one tab; views push routes with `go`. */
@@ -33,7 +36,9 @@ struct TabStack<Root: View>: View {
           case .status(let status): StatusDetailScreen(status: status)
           case .account(let account): ProfileScreen(account: account)
           case .accountID(let id): ProfileLoader(id: id)
+          case .statusID(let id): StatusLoader(id: id)
           case .tag(let name): TagScreen(name: name)
+          case .settings(let page): page.screen
           }
         }
     }

@@ -172,12 +172,42 @@
         }
       }
     },
+    "Accept": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accetta"
+          }
+        }
+      }
+    },
     "Account": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Account"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi"
+          }
+        }
+      }
+    },
+    "Add a field": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un campo"
           }
         }
       }
@@ -212,6 +242,46 @@
         }
       }
     },
+    "Allow notifications in iOS Settings": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consenti le notifiche nelle Impostazioni di iOS"
+          }
+        }
+      }
+    },
+    "Always mark media as sensitive": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segna sempre i media come sensibili"
+          }
+        }
+      }
+    },
+    "Approve new followers": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva i nuovi follower"
+          }
+        }
+      }
+    },
+    "Apps with access": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App con accesso"
+          }
+        }
+      }
+    },
     "Aspect": {
       "localizations": {
         "it": {
@@ -232,12 +302,52 @@
         }
       }
     },
+    "Aspects are the groups you share with, as on diaspora*. Add people from their profile.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli aspetti sono i gruppi con cui condividi, come su diaspora*. Aggiungi le persone dal loro profilo."
+          }
+        }
+      }
+    },
     "Attachments": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Allegati"
+          }
+        }
+      }
+    },
+    "Bio": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bio"
+          }
+        }
+      }
+    },
+    "Block": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca"
+          }
+        }
+      }
+    },
+    "Blocked": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloccati"
           }
         }
       }
@@ -252,12 +362,42 @@
         }
       }
     },
+    "Bookmarks": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnalibri"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Annulla"
+          }
+        }
+      }
+    },
+    "Change the cover image": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia l'immagine di copertina"
+          }
+        }
+      }
+    },
+    "Change the profile picture": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia l'immagine del profilo"
           }
         }
       }
@@ -302,6 +442,16 @@
         }
       }
     },
+    "Content (a link is fine)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenuto (va bene anche un link)"
+          }
+        }
+      }
+    },
     "Content warning": {
       "localizations": {
         "it": {
@@ -328,6 +478,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crea un account"
+          }
+        }
+      }
+    },
+    "Decline": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rifiuta"
+          }
+        }
+      }
+    },
+    "Default visibility": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visibilità predefinita"
           }
         }
       }
@@ -382,6 +552,16 @@
         }
       }
     },
+    "Display name": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome visualizzato"
+          }
+        }
+      }
+    },
     "Edit": {
       "localizations": {
         "it": {
@@ -402,12 +582,32 @@
         }
       }
     },
+    "Edit profile": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifica profilo"
+          }
+        }
+      }
+    },
     "Ends in": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Chiude tra"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
           }
         }
       }
@@ -432,6 +632,16 @@
         }
       }
     },
+    "Export, move or delete the account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esporta, sposta o elimina l'account"
+          }
+        }
+      }
+    },
     "Fediverse": {
       "localizations": {
         "it": {
@@ -448,6 +658,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Segui"
+          }
+        }
+      }
+    },
+    "Follow requests": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richieste di follow"
           }
         }
       }
@@ -512,12 +732,52 @@
         }
       }
     },
+    "Italiano": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Italiano"
+          }
+        }
+      }
+    },
+    "Label": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etichetta"
+          }
+        }
+      }
+    },
+    "Language of emails": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingua delle email"
+          }
+        }
+      }
+    },
     "Like": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Mi piace"
+          }
+        }
+      }
+    },
+    "Liked posts": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post che ti piacciono"
           }
         }
       }
@@ -538,6 +798,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Altre azioni"
+          }
+        }
+      }
+    },
+    "Mute": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silenzia"
+          }
+        }
+      }
+    },
+    "Muted": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silenziati"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome"
+          }
+        }
+      }
+    },
+    "Name and bio": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome e bio"
+          }
+        }
+      }
+    },
+    "New aspect": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo aspetto"
           }
         }
       }
@@ -602,6 +912,26 @@
         }
       }
     },
+    "Nobody here.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuno qui."
+          }
+        }
+      }
+    },
+    "Nobody in this aspect yet.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuno in questo aspetto."
+          }
+        }
+      }
+    },
     "Nothing here yet.": {
       "localizations": {
         "it": {
@@ -612,12 +942,42 @@
         }
       }
     },
+    "Nothing saved yet.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora niente di salvato."
+          }
+        }
+      }
+    },
     "Notifications": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Notifiche"
+          }
+        }
+      }
+    },
+    "Notifications on this iPhone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifiche su questo iPhone"
+          }
+        }
+      }
+    },
+    "Notify me about": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisami per"
           }
         }
       }
@@ -672,6 +1032,16 @@
         }
       }
     },
+    "Password, passkeys and two-step sign-in": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password, passkey e accesso in due passaggi"
+          }
+        }
+      }
+    },
     "People": {
       "localizations": {
         "it": {
@@ -688,6 +1058,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Persone, #hashtag, post"
+          }
+        }
+      }
+    },
+    "Pictures": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immagini"
           }
         }
       }
@@ -712,6 +1092,16 @@
         }
       }
     },
+    "Posting": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pubblicazione"
+          }
+        }
+      }
+    },
     "Posts": {
       "localizations": {
         "it": {
@@ -732,12 +1122,32 @@
         }
       }
     },
+    "Profile fields": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campi del profilo"
+          }
+        }
+      }
+    },
     "Profile of %@": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Profilo di %@"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
           }
         }
       }
@@ -758,6 +1168,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Togli il sondaggio"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina"
+          }
+        }
+      }
+    },
+    "Rename aspect": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina aspetto"
           }
         }
       }
@@ -812,6 +1242,16 @@
         }
       }
     },
+    "Saved": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvati"
+          }
+        }
+      }
+    },
     "Search": {
       "localizations": {
         "it": {
@@ -828,6 +1268,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca persone (anche su altri server: nome@server), hashtag e post."
+          }
+        }
+      }
+    },
+    "Security and account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sicurezza e account"
           }
         }
       }
@@ -858,6 +1308,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Server"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni"
           }
         }
       }
@@ -952,6 +1412,26 @@
         }
       }
     },
+    "Source code": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice sorgente"
+          }
+        }
+      }
+    },
+    "Suggest my profile to others": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggerisci il mio profilo agli altri"
+          }
+        }
+      }
+    },
     "That doesn't look like a server address.": {
       "localizations": {
         "it": {
@@ -972,12 +1452,42 @@
         }
       }
     },
+    "These open your server's page, where you confirm with your password.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si aprono sulla pagina del tuo server, dove confermi con la password."
+          }
+        }
+      }
+    },
+    "This iPhone": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo iPhone"
+          }
+        }
+      }
+    },
     "This image can't be read.": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Questa immagine non si può leggere."
+          }
+        }
+      }
+    },
+    "This is an automated account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È un account automatico"
           }
         }
       }
@@ -1022,6 +1532,16 @@
         }
       }
     },
+    "Unblock": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca"
+          }
+        }
+      }
+    },
     "Unlisted": {
       "localizations": {
         "it": {
@@ -1032,12 +1552,62 @@
         }
       }
     },
+    "Unmute": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riattiva"
+          }
+        }
+      }
+    },
     "Unread": {
       "localizations": {
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Non letto"
+          }
+        }
+      }
+    },
+    "Unread count on the app icon": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numero di non lette sull'icona dell'app"
+          }
+        }
+      }
+    },
+    "Up to four, e.g. your website or where else to find you.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fino a quattro, per esempio il tuo sito o dove altro trovarti."
+          }
+        }
+      }
+    },
+    "Used for new posts written on this iPhone; replies keep the visibility of the conversation.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vale per i nuovi post scritti su questo iPhone; le risposte mantengono la visibilità della conversazione."
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versione"
           }
         }
       }
@@ -1148,6 +1718,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "seguiti"
+          }
+        }
+      }
+    },
+    "iOS settings for Disbigle": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni di iOS per Disbigle"
+          }
+        }
+      }
+    },
+    "iOS wakes Disbigle from time to time to look for new notifications, usually every 15–30 minutes and less often when the battery is low. Keep Background App Refresh on for Disbigle in the iOS settings.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS riattiva Disbigle ogni tanto per cercare nuove notifiche, di solito ogni 15–30 minuti e meno spesso con la batteria scarica. Tieni attivo l'aggiornamento app in background per Disbigle nelle impostazioni di iOS."
           }
         }
       }

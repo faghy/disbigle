@@ -51,6 +51,9 @@ targets:
         # Plain http only to this machine's network (a development server); https everywhere else.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # Background App Refresh: looking for new notifications (no push service with SideStore).
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.disbigle.app.refresh]
 schemes:
   Disbigle:
     build:

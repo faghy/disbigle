@@ -22,8 +22,13 @@ public struct Account: Codable, Hashable, Identifiable, Sendable {
   public let fields: [Field]
 
   public struct Field: Codable, Hashable, Sendable {
-    public let name: String
-    public let value: String
+    public var name: String
+    public var value: String
+
+    public init(name: String, value: String) {
+      self.name = name
+      self.value = value
+    }
   }
 
   /** The display name, or the username when there is none. */

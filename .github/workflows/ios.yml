@@ -98,7 +98,7 @@ jobs:
             xcrun simctl io "$device" screenshot "shots/$name.png"
           }
           name=signin shoot
-          for screen in home notifications messages search profile compose; do
+          for screen in home notifications messages search profile compose settings settings-notifications settings-profile; do
             name=$screen shoot -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen
           done
       - uses: actions/upload-artifact@v4

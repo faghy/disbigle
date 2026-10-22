@@ -108,7 +108,7 @@ struct ComposeView: View {
           if sending {
             ProgressView()
           } else {
-            Button(editing == nil ? "Post" : "Save") { Task { await send() } }
+            Button(editing == nil ? LocalizedStringKey("Post") : "Save") { Task { await send() } }
               .disabled(!canSend)
           }
         }
@@ -126,7 +126,7 @@ struct ComposeView: View {
             Image(systemName: "chart.bar")
           }
           .disabled(!media.isEmpty)
-          .accessibilityLabel(Text(poll == nil ? "Add a poll" : "Remove the poll"))
+          .accessibilityLabel(Text(poll == nil ? LocalizedStringKey("Add a poll") : "Remove the poll"))
           Spacer()
         }
       }
@@ -262,6 +262,8 @@ struct ComposeView: View {
     guard let client = model.client else { return }
     switch target {
     case .new:
+      visibility = model.preferences.defaultVisibility
+      sensitive = model.preferences.sensitiveMedia
       aspects = (try? await client.aspects()) ?? []
       textFocused = true
     case .reply(let status):

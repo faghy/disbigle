@@ -87,7 +87,7 @@ struct StatusRow: View {
     if !shown.spoilerText.isEmpty {
       VStack(alignment: .leading, spacing: 6) {
         Text(shown.spoilerText).font(.body.weight(.semibold))
-        Button(revealed ? "Show less" : "Show more") { revealed.toggle() }
+        Button(revealed ? LocalizedStringKey("Show less") : "Show more") { revealed.toggle() }
           .buttonStyle(.bordered)
           .controlSize(.small)
       }

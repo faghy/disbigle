@@ -56,9 +56,38 @@ struct StatusDetailScreen: View {
   }
 }
 
+/** A post known only by id. */
+struct StatusLoader: View {
+  @Environment(AppModel.self) private var model
+  let id: String
+  @State private var status: Status?
+  @State private var error: String?
+
+  var body: some View {
+    Group {
+      if let status {
+        StatusDetailScreen(status: status)
+      } else if let error {
+        Text(error).foregroundStyle(.secondary).padding()
+      } else {
+        ProgressView()
+      }
+    }
+    .task {
+      do {
+        status = try await model.client?.status(id)
+      } catch {
+        self.error = error.localizedDescription
+      }
+    }
+  }
+}
+
 struct NotificationsScreen: View {
   @Environment(AppModel.self) private var model
+  @Environment(Router.self) private var router
   @State private var list: PagedList<DisbigleKit.Notification>?
+  @State private var visible = false
 
   var body: some View {
     Group {
@@ -82,9 +111,36 @@ struct NotificationsScreen: View {
     }
     .navigationTitle("Notifications")
     .onAppear {
-      guard list == nil, let client = model.client else { return }
-      list = PagedList { try await client.notifications(query: $0) }
+      visible = true
+      openPending()
+      if list == nil, let client = model.client {
+        list = PagedList { try await client.notifications(query: $0) }
+      } else if model.notifier.unread > 0 {
+        Task { await list?.refresh() }
+      }
+      markRead()
     }
+    .onDisappear { visible = false }
+    .onChange(of: model.pendingRoute) { _, _ in openPending() }
+    .onChange(of: list?.items.first?.id) { _, _ in markRead() }
+    .onChange(of: model.notifier.unread) { _, unread in
+      if visible && unread > 0 { Task { await list?.refresh() } }
+    }
+  }
+}
+
+extension NotificationsScreen {
+  /** Shown here: read everywhere, and no system notification for them later. */
+  private func markRead() {
+    guard visible, let newest = list?.items.first?.id else { return }
+    Task { await model.notifier.markAllRead(client: model.client, newestId: newest) }
+  }
+
+  private func openPending() {
+    guard let route = model.pendingRoute else { return }
+    model.pendingRoute = nil
+    router.path = NavigationPath()
+    router.go(route)
   }
 }
 

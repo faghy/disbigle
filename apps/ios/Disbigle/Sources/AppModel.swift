@@ -34,6 +34,10 @@ final class AppModel {
   private(set) var me: Account?
   private(set) var instance: Instance?
   var composing: ComposeTarget?
+  let preferences = Preferences()
+  let notifier = Notifier()
+  /** Where a tapped system notification leads; the notifications tab takes it. */
+  var pendingRoute: Route?
   /** The last post published or edited from this app, for lists to show at once. */
   private(set) var lastSaved: Status?
 
@@ -100,7 +104,17 @@ final class AppModel {
     forget()
   }
 
+  /** Opens what a tapped notification is about. */
+  func open(statusId: String?, accountId: String?) {
+    if let statusId {
+      pendingRoute = .statusID(statusId)
+    } else if let accountId {
+      pendingRoute = .accountID(accountId)
+    }
+  }
+
   private func forget() {
+    notifier.signedOut()
     Keychain.delete()
     session = nil
     me = nil

@@ -3,11 +3,14 @@ import SwiftUI
 
 struct ProfileScreen: View {
   @Environment(AppModel.self) private var model
+  @Environment(Router.self) private var router
   let account: Account
   var isMe = false
   @State private var relationship: Relationship?
   @State private var list: PagedList<Status>?
-  @State private var confirmSignOut = false
+  @State private var aspects: [AspectList] = []
+  @State private var memberOf: Set<String> = []
+  @State private var openedDebugScreen = false
   @State private var following = false
 
   var body: some View {
@@ -31,27 +34,60 @@ struct ProfileScreen: View {
     .navigationTitle(account.name)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      if isMe {
-        ToolbarItem(placement: .topBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
+        if isMe {
+          Button {
+            router.go(.settings(.root))
+          } label: {
+            Label("Settings", systemImage: "gearshape")
+          }
+        } else if relationship != nil {
           Menu {
-            if let url = URL(string: account.url) {
-              Link(destination: url.deletingLastPathComponent().appending(path: "settings")) {
-                Label("Settings on the web", systemImage: "gear")
+            if !aspects.isEmpty {
+              Section("Aspects") {
+                ForEach(aspects) { aspect in
+                  Button {
+                    Task { await toggle(aspect) }
+                  } label: {
+                    if memberOf.contains(aspect.id) {
+                      Label(aspect.title, systemImage: "checkmark")
+                    } else {
+                      Text(aspect.title)
+                    }
+                  }
+                }
               }
             }
-            Button(role: .destructive) {
-              confirmSignOut = true
+            if let url = URL(string: account.url) {
+              ShareLink(item: url)
+            }
+            Button {
+              Task { await act(relationship?.muting == true ? .unmute : .mute) }
             } label: {
-              Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+              Label(
+                relationship?.muting == true ? LocalizedStringKey("Unmute") : "Mute",
+                systemImage: relationship?.muting == true ? "speaker.wave.2" : "speaker.slash")
+            }
+            Button(role: relationship?.blocking == true ? nil : .destructive) {
+              Task { await act(relationship?.blocking == true ? .unblock : .block) }
+            } label: {
+              Label(
+                relationship?.blocking == true ? LocalizedStringKey("Unblock") : "Block",
+                systemImage: "hand.raised")
             }
           } label: {
-            Label("Account", systemImage: "ellipsis.circle")
+            Label("More actions", systemImage: "ellipsis.circle")
           }
         }
       }
     }
-    .confirmationDialog("Sign out of Disbigle?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-      Button("Sign out", role: .destructive) { Task { await model.signOut() } }
+    .onAppear {
+      // Debug builds: `-DisbigleScreen settings|settings-notifications|settings-profile`.
+      guard isMe, let screen = model.debugScreen, screen.hasPrefix("settings"), !openedDebugScreen else { return }
+      openedDebugScreen = true
+      router.go(.settings(.root))
+      if screen == "settings-notifications" { router.go(.settings(.notifications)) }
+      if screen == "settings-profile" { router.go(.settings(.profile)) }
     }
     .task {
       guard let client = model.client else { return }
@@ -61,7 +97,11 @@ struct ProfileScreen: View {
         list = newList
         await newList.refresh()
       }
-      if !isMe { relationship = try? await client.relationship(with: account.id) }
+      if !isMe {
+        relationship = try? await client.relationship(with: account.id)
+        aspects = (try? await client.aspects()) ?? []
+        memberOf = Set(((try? await client.aspects(containing: account.id)) ?? []).map(\.id))
+      }
     }
   }
 
@@ -118,6 +158,24 @@ struct ProfileScreen: View {
       .padding(.horizontal, 16)
       .padding(.bottom, 12)
     }
+  }
+
+  private func toggle(_ aspect: AspectList) async {
+    guard let client = model.client else { return }
+    let inside = memberOf.contains(aspect.id)
+    do {
+      if inside {
+        try await client.removeMember(account.id, from: aspect.id)
+        memberOf.remove(aspect.id)
+      } else {
+        try await client.addMember(account.id, to: aspect.id)
+        memberOf.insert(aspect.id)
+      }
+    } catch {}
+  }
+
+  private func act(_ action: Client.AccountAction) async {
+    if let updated = try? await model.client?.act(action, on: account.id) { relationship = updated }
   }
 
   private func count(_ value: Int, _ label: LocalizedStringKey) -> some View {

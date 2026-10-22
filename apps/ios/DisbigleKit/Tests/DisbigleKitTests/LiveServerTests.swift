@@ -104,6 +104,44 @@ final class LiveServerTests: XCTestCase {
     let unfollowed = try await client.unfollow(bruno.id)
     XCTAssertFalse(unfollowed.following)
 
+    // Settings: profile, people lists, saved posts, aspects, read marker.
+    var draft = ProfileDraft(account: try await client.credentials())
+    draft.displayName = "Alice dall'app"
+    draft.fields = [Account.Field(name: "Sito", value: "https://example.com")]
+    draft.avatar = ProfileDraft.Upload(data: Self.png, mimeType: "image/png")
+    let updated = try await client.updateProfile(draft)
+    XCTAssertEqual(updated.displayName, "Alice dall'app")
+    XCTAssertEqual(updated.fields.map(\.name), ["Sito"])
+    XCTAssertNotNil(updated.avatarURL)
+    _ = try await client.act(.block, on: bruno.id)
+    let blocked = try await client.accounts(.blocks)
+    XCTAssertTrue(blocked.items.contains { $0.id == bruno.id })
+    _ = try await client.act(.unblock, on: bruno.id)
+    _ = try await client.accounts(.mutes)
+    _ = try await client.accounts(.followRequests)
+    let saved = try await client.favourites()
+    XCTAssertTrue(saved.items.contains { $0.id == posted.id })
+    _ = try await client.act(.bookmark, on: posted.id)
+    let bookmarked = try await client.bookmarks()
+    XCTAssertEqual(bookmarked.items.first?.id, posted.id)
+    let suffix = UUID().uuidString.prefix(6)
+    let aspect = try await client.createAspect("Dall'app \(suffix)")
+    let renamed = try await client.renameAspect(aspect.id, to: "Rinominato \(suffix)")
+    XCTAssertEqual(renamed.title, "Rinominato \(suffix)")
+    let members = try await client.members(of: aspect.id)
+    XCTAssertTrue(members.isEmpty)
+    try await client.addMember(bruno.id, to: aspect.id)
+    let containing = try await client.aspects(containing: bruno.id)
+    XCTAssertTrue(containing.contains { $0.id == aspect.id })
+    try await client.removeMember(bruno.id, from: aspect.id)
+    try await client.deleteAspect(aspect.id)
+    let notifications = try await client.notifications()
+    if let newest = notifications.items.first {
+      try await client.markNotificationsRead(upTo: newest.id)
+      let marker = try await client.notificationsReadMarker()
+      XCTAssertEqual(marker, newest.id)
+    }
+
     try await client.delete(withImage.id)
     try await SignIn.revoke(token.accessToken, on: server, app: signIn.app)
     do {
