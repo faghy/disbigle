@@ -33,6 +33,79 @@ jobs:
             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build \
             | xcbeautify --renderer github-actions
 
+  # The app against a seeded development server, in Italian: screenshots of the main screens.
+  screenshots:
+    needs: build
+    runs-on: macos-15
+    env:
+      NODE_ENV: development
+      PUBLIC_URL: http://localhost:3300
+      LOCAL_DOMAIN: localhost:3300
+      HOST: 127.0.0.1
+      PORT: '3300'
+      DATABASE_URL: postgres://disbigle@localhost:5432/disbigle_development
+      REDIS_URL: redis://localhost:6379/0
+      SESSION_SECRET: screenshots-screenshots-screenshots-screenshots-screenshots-0000
+      REGISTRATION_MODE: open
+      MEDIA_DIR: ${{ github.workspace }}/storage/media
+    steps:
+      - uses: actions/checkout@v4
+      - name: PostgreSQL and Redis
+        run: |
+          brew install postgresql@17 redis >/dev/null
+          PG=$(brew --prefix postgresql@17)/bin
+          "$PG/initdb" -D "$RUNNER_TEMP/pg" -U disbigle --auth=trust >/dev/null
+          "$PG/pg_ctl" -D "$RUNNER_TEMP/pg" -l "$RUNNER_TEMP/pg.log" -w start
+          "$PG/createdb" -U disbigle disbigle_development
+          redis-server --daemonize yes
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Development server with demo data
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm db:migrate
+          pnpm --filter @disbigle/server seed
+          (cd apps/server && nohup npx tsx src/main.ts > "$RUNNER_TEMP/server.log" 2>&1 &)
+          for i in $(seq 1 60); do curl -sf http://localhost:3300/health && break; sleep 1; done
+          echo "TOKEN=$(apps/ios/scripts/dev-token.sh http://localhost:3300)" >> "$GITHUB_ENV"
+      - name: Build for the simulator
+        working-directory: apps/ios
+        run: |
+          set -o pipefail
+          brew install xcodegen >/dev/null && xcodegen generate
+          xcodebuild -project Disbigle.xcodeproj -scheme Disbigle -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO build | xcbeautify --renderer github-actions
+      - name: Screenshots
+        run: |
+          device=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r in d.values() for x in r if x['name'].startswith('iPhone 16')))")
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          xcrun simctl status_bar "$device" override --time 9:41 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$device" "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/Disbigle.app"
+          mkdir -p shots
+          shoot() {
+            xcrun simctl terminate "$device" com.disbigle.app 2>/dev/null || true
+            xcrun simctl launch "$device" com.disbigle.app -AppleLanguages '(it)' -AppleLocale it_IT "$@"
+            sleep 10
+            xcrun simctl io "$device" screenshot "shots/$name.png"
+          }
+          name=signin shoot
+          for screen in home notifications messages search profile compose; do
+            name=$screen shoot -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: shots
+      - name: Server log
+        if: failure()
+        run: tail -50 "$RUNNER_TEMP/server.log"
+
   # Needs the repository secrets APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
   # APP_STORE_CONNECT_KEY (the .p8 file's content) and APPLE_TEAM_ID. Signing is automatic:
   # Xcode creates certificate and profile through the App Store Connect API key.

@@ -105,18 +105,23 @@ struct SignInView: View {
 
 struct MainView: View {
   @Environment(AppModel.self) private var model
+  @State private var tab = "home"
 
   var body: some View {
     @Bindable var model = model
-    TabView {
+    TabView(selection: $tab) {
       TabStack { TimelineScreen() }
         .tabItem { Label("Home", systemImage: "house") }
+        .tag("home")
       TabStack { NotificationsScreen() }
         .tabItem { Label("Notifications", systemImage: "bell") }
+        .tag("notifications")
       TabStack { ConversationsScreen() }
         .tabItem { Label("Messages", systemImage: "envelope") }
+        .tag("messages")
       TabStack { SearchScreen() }
         .tabItem { Label("Search", systemImage: "magnifyingglass") }
+        .tag("search")
       TabStack {
         if let me = model.me {
           ProfileScreen(account: me, isMe: true)
@@ -125,9 +130,18 @@ struct MainView: View {
         }
       }
       .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+      .tag("profile")
     }
     .sheet(item: $model.composing) { target in
       ComposeView(target: target)
+    }
+    .onAppear {
+      guard let screen = model.debugScreen else { return }
+      if screen == "compose" {
+        model.composing = .new
+      } else {
+        tab = screen
+      }
     }
   }
 }

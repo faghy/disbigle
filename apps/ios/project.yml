@@ -48,6 +48,9 @@ targets:
       properties:
         CFBundleLocalizations: [en, it]
         CFBundleDevelopmentRegion: en
+        # Plain http only to this machine's network (a development server); https everywhere else.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
 schemes:
   Disbigle:
     build:

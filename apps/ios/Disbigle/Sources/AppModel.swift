@@ -43,6 +43,25 @@ final class AppModel {
 
   init() {
     session = Keychain.load()
+    #if DEBUG
+      // Screenshots and UI checks: `-DisbigleServer <url> -DisbigleToken <token>` signs in
+      // without the web page (and without touching the Keychain).
+      let defaults = UserDefaults.standard
+      if let server = defaults.string(forKey: "DisbigleServer").flatMap(URL.init(string:)),
+        let token = defaults.string(forKey: "DisbigleToken")
+      {
+        session = StoredSession(server: server, token: token, clientId: "", clientSecret: "")
+      }
+    #endif
+  }
+
+  /** The screen to open first (Debug builds, `-DisbigleScreen <name>`), for screenshots. */
+  var debugScreen: String? {
+    #if DEBUG
+      UserDefaults.standard.string(forKey: "DisbigleScreen")
+    #else
+      nil
+    #endif
   }
 
   /** Loads the account and the server limits; signs out if the token was revoked. */
