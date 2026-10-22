@@ -9,7 +9,7 @@ struct ComposeView: View {
   let target: ComposeTarget
 
   @State private var text = ""
-  @State private var visibility: Visibility = .public
+  @State private var visibility: DisbigleKit.Visibility = .public
   @State private var aspectIds: Set<String> = []
   @State private var aspects: [AspectList] = []
   @State private var warning = ""
@@ -232,11 +232,11 @@ struct ComposeView: View {
 
   private var audienceSection: some View {
     Section("Who can see it") {
-      Picker("Visibility", selection: $visibility) {
-        Label("Everyone", systemImage: "globe").tag(Visibility.public)
-        Label("Everyone, not in timelines", systemImage: "lock.open").tag(Visibility.unlisted)
-        Label("Followers", systemImage: "lock").tag(Visibility.private)
-        Label("Only people mentioned", systemImage: "at").tag(Visibility.direct)
+      Picker("DisbigleKit.Visibility", selection: $visibility) {
+        Label("Everyone", systemImage: "globe").tag(DisbigleKit.Visibility.public)
+        Label("Everyone, not in timelines", systemImage: "lock.open").tag(DisbigleKit.Visibility.unlisted)
+        Label("Followers", systemImage: "lock").tag(DisbigleKit.Visibility.private)
+        Label("Only people mentioned", systemImage: "at").tag(DisbigleKit.Visibility.direct)
       }
       .disabled(!aspectIds.isEmpty)
       if !aspects.isEmpty && visibility != .direct {

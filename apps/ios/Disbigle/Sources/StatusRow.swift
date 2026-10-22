@@ -244,7 +244,7 @@ struct ActionButton: View {
 }
 
 struct VisibilityIcon: View {
-  let visibility: Visibility
+  let visibility: DisbigleKit.Visibility
 
   var body: some View {
     switch visibility {
