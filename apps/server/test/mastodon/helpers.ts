@@ -119,6 +119,8 @@ export async function openConsent(
     url: `/oauth/authorize?${new URLSearchParams(query).toString()}`,
     headers: { cookie },
   });
+  // With no-referrer, browsers send `Origin: null` with the form and the approval is refused.
+  if (response.statusCode === 200) expect(response.headers['referrer-policy']).toBe('same-origin');
   const fields: Record<string, string> = {};
   for (const match of response.body.matchAll(
     /<input type="hidden" name="([^"]+)" value="([^"]*)">/g,
@@ -151,6 +153,8 @@ export async function authorize(
     headers: {
       cookie: client.cookieHeader ?? '',
       'content-type': 'application/x-www-form-urlencoded',
+      // What a browser sends with the consent form under the page's same-origin policy.
+      origin: 'https://disbigle.test',
     },
     payload: form({ ...fields, decision: 'approve' }),
   });

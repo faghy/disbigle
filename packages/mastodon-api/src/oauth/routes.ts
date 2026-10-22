@@ -164,6 +164,10 @@ export async function oauthRoutes(app: FastifyInstance, deps: Deps) {
       .status(status)
       .header('content-type', 'text/html; charset=utf-8')
       .header('content-security-policy', PAGE_CSP)
+      // Not no-referrer (helmet's default): with it browsers send `Origin: null` with the consent
+      // form, and the server refuses cookie-authenticated writes from another origin.
+      // same-origin still keeps the authorize URL from other sites.
+      .header('referrer-policy', 'same-origin')
       .header('cache-control', 'no-store')
       .send(page);
 
