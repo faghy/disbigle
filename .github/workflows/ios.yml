@@ -110,6 +110,95 @@ jobs:
         if: failure()
         run: tail -50 "$RUNNER_TEMP/server.log"
 
+  # An unsigned .ipa for SideStore/AltStore, which sign it with the person's own Apple ID.
+  # From main it goes to the `ios-latest` release with a SideStore source:
+  # https://github.com/faghy/disbigle/releases/download/ios-latest/sidestore.json
+  sideload:
+    needs: build
+    runs-on: macos-15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: apps/ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the unsigned app
+        run: |
+          set -o pipefail
+          brew install xcodegen >/dev/null && xcodegen generate
+          xcodebuild -project Disbigle.xcodeproj -scheme Disbigle -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} build \
+            | xcbeautify --renderer github-actions
+      - name: Package the .ipa
+        run: |
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/dd/Build/Products/Release-iphoneos/Disbigle.app" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry Disbigle.ipa Payload)
+          mkdir -p dist && mv "$RUNNER_TEMP/ipa/Disbigle.ipa" dist/
+      - name: SideStore source
+        env:
+          BUILD: ${{ github.run_number }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, plistlib
+          info = plistlib.load(open(os.environ['RUNNER_TEMP'] + '/dd/Build/Products/Release-iphoneos/Disbigle.app/Info.plist', 'rb'))
+          repo = os.environ['REPO']
+          base = f'https://github.com/{repo}/releases/download/ios-latest'
+          icon = f'https://raw.githubusercontent.com/{repo}/main/apps/ios/Disbigle/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png'
+          version = info['CFBundleShortVersionString']
+          source = {
+            'name': 'Disbigle',
+            'subtitle': 'The Disbigle app for iOS',
+            'description': 'Builds of the Disbigle iOS app, made from the main branch.',
+            'iconURL': icon,
+            'website': 'https://disbigle.com',
+            'tintColor': '#cf3200',
+            'nsfw': False,
+            'apps': [{
+              'name': 'Disbigle',
+              'bundleIdentifier': info['CFBundleIdentifier'],
+              'developerName': 'Disbigle',
+              'subtitle': 'diaspora*, Mastodon and the fediverse in one app',
+              'localizedDescription': 'Timelines, threads, notifications, messages, search and profiles of your Disbigle account; write, edit and delete posts with photos, polls and aspects.',
+              'iconURL': icon,
+              'tintColor': '#cf3200',
+              'category': 'social',
+              'versions': [{
+                'version': version,
+                'buildVersion': os.environ['BUILD'],
+                'marketingVersion': f"{version} ({os.environ['BUILD']})",
+                'date': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+                'downloadURL': f'{base}/Disbigle.ipa',
+                'size': os.path.getsize('dist/Disbigle.ipa'),
+                'localizedDescription': f"Build of commit {os.environ['SHA'][:7]}.",
+                'minOSVersion': info.get('MinimumOSVersion', '17.0'),
+              }],
+              'appPermissions': {'entitlements': [], 'privacy': {}},
+            }],
+            'news': [],
+          }
+          json.dump(source, open('dist/sidestore.json', 'w'), indent=2)
+          PY
+          cat dist/sidestore.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: apps/ios/dist
+      - name: Publish the ios-latest release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ios-latest --yes --cleanup-tag || true
+          gh release create ios-latest dist/Disbigle.ipa dist/sidestore.json \
+            --prerelease --target "$GITHUB_SHA" --title "Disbigle iOS (latest build)" \
+            --notes "Unsigned build of $(git rev-parse --short HEAD), for SideStore or AltStore. Add the source https://github.com/${{ github.repository }}/releases/download/ios-latest/sidestore.json or open Disbigle.ipa with SideStore."
+
   # Needs the repository secrets APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
   # APP_STORE_CONNECT_KEY (the .p8 file's content) and APPLE_TEAM_ID. Signing is automatic:
   # Xcode creates certificate and profile through the App Store Connect API key.
