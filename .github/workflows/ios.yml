@@ -1,0 +1,81 @@
+name: iOS
+
+on:
+  push:
+    paths: ['apps/ios/**', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['apps/ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: Sign and upload a build to TestFlight
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Test DisbigleKit
+        run: swift test --package-path DisbigleKit
+      - name: Generate the Xcode project
+        run: brew install xcodegen && xcodegen generate
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild -project Disbigle.xcodeproj -scheme Disbigle -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build \
+            | xcbeautify --renderer github-actions
+
+  # Needs the repository secrets APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID,
+  # APP_STORE_CONNECT_KEY (the .p8 file's content) and APPLE_TEAM_ID. Signing is automatic:
+  # Xcode creates certificate and profile through the App Store Connect API key.
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    needs: build
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/ios
+    env:
+      DISBIGLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: App Store Connect key
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s' "$KEY" > "$RUNNER_TEMP/keys/AuthKey.p8"
+      - name: Generate the Xcode project
+        run: brew install xcodegen && xcodegen generate
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild -project Disbigle.xcodeproj -scheme Disbigle -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Disbigle.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            archive | xcbeautify --renderer github-actions
+      - name: Upload to TestFlight
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Disbigle.xcarchive" \
+            -exportOptionsPlist ExportOptions.plist -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}" \
+            | xcbeautify --renderer github-actions
+      - name: Remove the key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
