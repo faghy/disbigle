@@ -21,6 +21,11 @@ const texts = {
     body: (link: string, domain: string) =>
       `Qualcuno ha chiesto di reimpostare la password del tuo account su ${domain}.\n\nApri questo link entro un'ora per scegliere una nuova password:\n${link}\n\nSe non sei stato tu, ignora questa email: la password resta invariata.`,
   },
+  es: {
+    subject: 'Restablece tu contraseña',
+    body: (link: string, domain: string) =>
+      `Alguien ha pedido restablecer la contraseña de tu cuenta en ${domain}.\n\nAbre este enlace antes de una hora para elegir una nueva contraseña:\n${link}\n\nSi no has sido tú, ignora este correo: tu contraseña sigue siendo la misma.`,
+  },
 } as const;
 
 /**
@@ -39,7 +44,7 @@ export async function requestPasswordReset(
   const token = randomToken();
   await ctx.kv.set(`password-reset:${sha256(token)}`, user.id, RESET_TTL_SECONDS);
   const link = `${ctx.config.PUBLIC_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  const t = user.locale === 'it' ? texts.it : texts.en;
+  const t = texts[user.locale as keyof typeof texts] ?? texts.en;
   await ctx.mailer.send({
     to: user.email,
     subject: t.subject,

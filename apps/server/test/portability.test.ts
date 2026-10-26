@@ -87,4 +87,12 @@ describe('password reset', () => {
     });
     expect(login.json().status).toBe('ok');
   });
+
+  it('writes the email in the user language', async () => {
+    const { testMailer } = await import('./helpers.ts');
+    const user = { ...newUser(), locale: 'es' };
+    await new Client(app).post('/api/v1/auth/register', user);
+    await new Client(app).post('/api/v1/auth/password/forgot', { email: user.email });
+    expect(testMailer.sent.at(-1)?.subject).toBe('Restablece tu contraseña');
+  });
 });

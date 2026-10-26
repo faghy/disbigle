@@ -9,7 +9,7 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "0.2.0"
+    MARKETING_VERSION: "0.2.1"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     SWIFT_STRICT_CONCURRENCY: minimal
@@ -46,7 +46,7 @@ targets:
     info:
       path: Disbigle/Info.plist
       properties:
-        CFBundleLocalizations: [en, it]
+        CFBundleLocalizations: [en, it, es]
         CFBundleDevelopmentRegion: en
         # Plain http only to this machine's network (a development server); https everywhere else.
         NSAppTransportSecurity:

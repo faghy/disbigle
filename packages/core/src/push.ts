@@ -144,6 +144,15 @@ const titles: Record<string, Record<string, string>> = {
     like: '{name} ha apprezzato il tuo post',
     poll: 'Un sondaggio a cui hai partecipato è terminato',
   },
+  es: {
+    follow: '{name} ha empezado a seguirte',
+    follow_request: '{name} quiere seguirte',
+    mention: '{name} te ha mencionado',
+    reply: '{name} te ha respondido',
+    reblog: '{name} ha compartido tu publicación',
+    like: '{name} le ha dado me gusta a tu publicación',
+    poll: 'Ha terminado una encuesta en la que participaste',
+  },
 };
 
 const plainText = (html: string) =>

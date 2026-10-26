@@ -365,6 +365,7 @@ struct EditProfileScreen: View {
           set: { draft.wrappedValue.language = $0 })) {
             Text("English").tag("en")
             Text("Italiano").tag("it")
+            Text("Español").tag("es")
           }
       }
       if let error {

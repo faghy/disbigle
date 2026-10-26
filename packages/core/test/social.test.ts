@@ -33,7 +33,7 @@ import { uniqueUser, useTestContext } from './helpers.ts';
 
 const ctx = useTestContext();
 
-async function newActor(locale: 'en' | 'it' = 'en') {
+async function newActor(locale: 'en' | 'it' | 'es' = 'en') {
   const input = uniqueUser();
   const { actorId } = await registerUser(ctx(), { ...input, locale });
   return { id: actorId, username: input.username };
@@ -104,6 +104,13 @@ describe('aspects', () => {
       'Amici',
       'Lavoro',
       'Conoscenti',
+    ]);
+    const es = await newActor('es');
+    expect((await listAspects(ctx(), es.id)).map((a) => a.name)).toEqual([
+      'Familia',
+      'Amigos',
+      'Trabajo',
+      'Conocidos',
     ]);
   });
 

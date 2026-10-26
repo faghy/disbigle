@@ -1,9 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from '../locales/en.json';
+import es from '../locales/es.json';
 import it from '../locales/it.json';
 
-export const languages = ['en', 'it'] as const;
+export const languages = ['en', 'it', 'es'] as const;
 export type Language = (typeof languages)[number];
 
 const STORAGE_KEY = 'disbigle.language';
@@ -12,7 +13,7 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === 'string' && (languages as readonly string[]).includes(value);
 }
 
-/** Saved choice of a signed-out visitor, else the browser language when Italian, else English. */
+/** Saved choice of a signed-out visitor, else the browser language when supported, else English. */
 export function detectLanguage(): Language {
   try {
     const saved = globalThis.localStorage?.getItem(STORAGE_KEY);
@@ -23,8 +24,7 @@ export function detectLanguage(): Language {
   const preferred = globalThis.navigator?.languages ?? [globalThis.navigator?.language ?? 'en'];
   for (const tag of preferred) {
     const base = tag.toLowerCase().split('-')[0];
-    if (base === 'it') return 'it';
-    if (base === 'en') return 'en';
+    if (isLanguage(base)) return base;
   }
   return 'en';
 }
@@ -50,7 +50,7 @@ i18n.on('languageChanged', (language) => {
 });
 
 void i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, it: { translation: it } },
+  resources: { en: { translation: en }, it: { translation: it }, es: { translation: es } },
   lng: detectLanguage(),
   fallbackLng: 'en',
   supportedLngs: languages,

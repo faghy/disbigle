@@ -8,7 +8,7 @@ const escapeHtml = (text: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-type Lang = 'en' | 'it';
+type Lang = 'en' | 'it' | 'es';
 
 const strings = {
   en: {
@@ -33,6 +33,17 @@ const strings = {
     codeHelp: "Copia questo codice e incollalo nell'applicazione:",
     notYou: 'Non sei tu? Esci e accedi con un altro account.',
   },
+  es: {
+    authorize: 'Autorizar',
+    deny: 'Rechazar',
+    wantsAccess: 'quiere usar tu cuenta',
+    signedInAs: 'Sesión iniciada como',
+    permissions: 'Esta aplicación podrá:',
+    error: 'Error de autorización',
+    codeTitle: 'Código de autorización',
+    codeHelp: 'Copia este código y pégalo en la aplicación:',
+    notYou: '¿No eres tú? Cierra la sesión e inicia sesión con otra cuenta.',
+  },
 } as const;
 
 const scopeLabels: Record<Lang, Record<string, string>> = {
@@ -50,12 +61,19 @@ const scopeLabels: Record<Lang, Record<string, string>> = {
     push: 'ricevere notifiche push',
     profile: 'leggere le informazioni di base del tuo profilo',
   },
+  es: {
+    read: 'leer los datos de tu cuenta, publicaciones, notificaciones y listas',
+    write: 'publicar, editar y eliminar publicaciones, y cambiar tu perfil',
+    follow: 'seguir, bloquear y silenciar cuentas',
+    push: 'recibir notificaciones push',
+    profile: 'leer la información básica de tu perfil',
+  },
 };
 
 export function pickLang(...candidates: (string | undefined | null)[]): Lang {
   for (const c of candidates) {
     const base = c?.toLowerCase().slice(0, 2);
-    if (base === 'it' || base === 'en') return base;
+    if (base === 'it' || base === 'en' || base === 'es') return base;
   }
   return 'en';
 }

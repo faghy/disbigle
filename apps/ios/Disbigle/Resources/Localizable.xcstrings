@@ -4,6 +4,12 @@
   "strings": {
     "%@ asked to follow you": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha pedido seguirte"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -14,6 +20,12 @@
     },
     "%@ edited a post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha editado una publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -24,6 +36,12 @@
     },
     "%@ follows you": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ te sigue"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -34,6 +52,12 @@
     },
     "%@ liked your post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A %@ le gusta tu publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -44,6 +68,12 @@
     },
     "%@ mentioned you": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ te ha mencionado"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -54,6 +84,12 @@
     },
     "%@ posted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha publicado"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -64,6 +100,12 @@
     },
     "%@ reshared": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha compartido"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -74,6 +116,12 @@
     },
     "%@ reshared your post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ha compartido tu publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -84,6 +132,12 @@
     },
     "%lld characters left": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quedan %lld caracteres"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -94,6 +148,12 @@
     },
     "%lld people": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld personas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -104,6 +164,12 @@
     },
     "1 day": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 día"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -114,6 +180,12 @@
     },
     "1 hour": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hora"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -124,6 +196,12 @@
     },
     "3 days": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 días"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -134,6 +212,12 @@
     },
     "5 minutes": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 minutos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -144,6 +228,12 @@
     },
     "6 hours": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 horas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -154,6 +244,12 @@
     },
     "7 days": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 días"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -164,6 +260,12 @@
     },
     "A poll you voted in has ended": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha terminado una encuesta en la que votaste"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -174,6 +276,12 @@
     },
     "Accept": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -184,6 +292,12 @@
     },
     "Account": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -194,6 +308,12 @@
     },
     "Add": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -204,6 +324,12 @@
     },
     "Add a field": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un campo"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -214,6 +340,12 @@
     },
     "Add a poll": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una encuesta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -224,6 +356,12 @@
     },
     "Add option": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir opción"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -234,6 +372,12 @@
     },
     "Add photos": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir fotos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -244,6 +388,12 @@
     },
     "Allow notifications in iOS Settings": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite las notificaciones en los Ajustes de iOS"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -254,6 +404,12 @@
     },
     "Always mark media as sensitive": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar siempre los archivos multimedia como sensibles"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -264,6 +420,12 @@
     },
     "Approve new followers": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar a los nuevos seguidores"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -274,6 +436,12 @@
     },
     "Apps with access": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps con acceso"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -284,6 +452,12 @@
     },
     "Aspect": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspecto"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -294,6 +468,12 @@
     },
     "Aspects": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspectos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -304,6 +484,12 @@
     },
     "Aspects are the groups you share with, as on diaspora*. Add people from their profile.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los aspectos son los grupos con los que compartes, como en diaspora*. Añade a las personas desde su perfil."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -314,6 +500,12 @@
     },
     "Attachments": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjuntos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -324,6 +516,12 @@
     },
     "Bio": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biografía"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -334,6 +532,12 @@
     },
     "Block": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -344,6 +548,12 @@
     },
     "Blocked": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueados"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -354,6 +564,12 @@
     },
     "Bookmark": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcador"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -364,6 +580,12 @@
     },
     "Bookmarks": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcadores"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -374,6 +596,12 @@
     },
     "Cancel": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -384,6 +612,12 @@
     },
     "Change the cover image": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la imagen de portada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -394,6 +628,12 @@
     },
     "Change the profile picture": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la foto de perfil"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -404,6 +644,12 @@
     },
     "Changing the options or the kind of poll clears the votes cast so far.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si cambias las opciones o el tipo de encuesta, se borran los votos emitidos hasta ahora."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -414,6 +660,12 @@
     },
     "Choosing aspects shares the post with their members only.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si eliges aspectos, la publicación se comparte solo con sus miembros."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -424,6 +676,12 @@
     },
     "Close": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -434,6 +692,12 @@
     },
     "Closed": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -444,6 +708,12 @@
     },
     "Content (a link is fine)": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido (vale un enlace)"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -454,6 +724,12 @@
     },
     "Content warning": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advertencia de contenido"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -464,6 +740,12 @@
     },
     "Copy link": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar enlace"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -474,6 +756,12 @@
     },
     "Create an account": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear una cuenta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -484,6 +772,12 @@
     },
     "Decline": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -494,6 +788,12 @@
     },
     "Default visibility": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visibilidad predeterminada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -504,6 +804,12 @@
     },
     "Delete": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -514,6 +820,12 @@
     },
     "Delete this post?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar esta publicación?"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -524,6 +836,12 @@
     },
     "Describe the image for people who can't see it": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe la imagen para quien no pueda verla"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -534,6 +852,12 @@
     },
     "Direct message": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensaje directo"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -544,6 +868,12 @@
     },
     "Disbigle": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disbigle"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -554,6 +884,12 @@
     },
     "Display name": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre visible"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -564,6 +900,12 @@
     },
     "Edit": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -574,6 +916,12 @@
     },
     "Edit post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -584,6 +932,12 @@
     },
     "Edit profile": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar perfil"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -594,6 +948,12 @@
     },
     "Ends in": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina en"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -604,6 +964,12 @@
     },
     "English": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -614,6 +980,12 @@
     },
     "Everyone": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -624,6 +996,12 @@
     },
     "Everyone, not in timelines": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos, pero no en las cronologías"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -634,6 +1012,12 @@
     },
     "Export, move or delete the account": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar, mover o eliminar la cuenta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -644,6 +1028,12 @@
     },
     "Fediverse": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fediverso"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -654,6 +1044,12 @@
     },
     "Follow": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -664,6 +1060,12 @@
     },
     "Follow requests": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes de seguimiento"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -674,6 +1076,12 @@
     },
     "Followers": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguidores"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -684,6 +1092,12 @@
     },
     "Followers or aspects only": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo seguidores o aspectos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -694,6 +1108,12 @@
     },
     "Following": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiendo"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -704,6 +1124,12 @@
     },
     "Hashtags": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hashtags"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -714,6 +1140,12 @@
     },
     "Home": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -724,6 +1156,12 @@
     },
     "Image": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -734,6 +1172,12 @@
     },
     "Italiano": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Italiano"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -744,6 +1188,12 @@
     },
     "Label": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiqueta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -754,6 +1204,12 @@
     },
     "Language of emails": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma de los correos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -764,6 +1220,12 @@
     },
     "Like": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me gusta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -774,6 +1236,12 @@
     },
     "Liked posts": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicaciones que te gustan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -784,6 +1252,12 @@
     },
     "Messages": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensajes"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -794,6 +1268,12 @@
     },
     "More actions": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más acciones"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -804,6 +1284,12 @@
     },
     "Mute": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silenciar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -814,6 +1300,12 @@
     },
     "Muted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silenciados"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -824,6 +1316,12 @@
     },
     "Name": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -834,6 +1332,12 @@
     },
     "Name and bio": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre y biografía"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -844,6 +1348,12 @@
     },
     "New aspect": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo aspecto"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -854,6 +1364,12 @@
     },
     "New message": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo mensaje"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -864,6 +1380,12 @@
     },
     "New post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nueva publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -874,6 +1396,12 @@
     },
     "No messages yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay mensajes."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -884,6 +1412,12 @@
     },
     "No notifications yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay notificaciones."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -894,6 +1428,12 @@
     },
     "No posts yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay publicaciones."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -904,6 +1444,12 @@
     },
     "No results.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay resultados."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -914,6 +1460,12 @@
     },
     "Nobody here.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay nadie aquí."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -924,6 +1476,12 @@
     },
     "Nobody in this aspect yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nadie en este aspecto."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -934,6 +1492,12 @@
     },
     "Nothing here yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nada aquí."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -944,6 +1508,12 @@
     },
     "Nothing saved yet.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no has guardado nada."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -954,6 +1524,12 @@
     },
     "Notifications": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificaciones"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -964,6 +1540,12 @@
     },
     "Notifications on this iPhone": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificaciones en este iPhone"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -974,6 +1556,12 @@
     },
     "Notify me about": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisarme de"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -984,6 +1572,12 @@
     },
     "OK": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -994,6 +1588,12 @@
     },
     "One account for diaspora*, Mastodon and the whole fediverse.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una sola cuenta para diaspora*, Mastodon y todo el fediverso."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1004,6 +1604,12 @@
     },
     "Only people mentioned": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo las personas mencionadas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1014,6 +1620,12 @@
     },
     "Open": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1024,6 +1636,12 @@
     },
     "Option %lld": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opción %lld"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1034,6 +1652,12 @@
     },
     "Password, passkeys and two-step sign-in": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña, llaves de acceso e inicio de sesión en dos pasos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1044,6 +1668,12 @@
     },
     "People": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1054,6 +1684,12 @@
     },
     "People, #hashtags, posts": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas, #hashtags, publicaciones"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1064,6 +1700,12 @@
     },
     "Pictures": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1074,6 +1716,12 @@
     },
     "Poll": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuesta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1084,6 +1732,12 @@
     },
     "Post": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1094,6 +1748,12 @@
     },
     "Posting": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1104,6 +1764,12 @@
     },
     "Posts": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicaciones"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1114,6 +1780,12 @@
     },
     "Profile": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1124,6 +1796,12 @@
     },
     "Profile fields": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campos del perfil"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1134,6 +1812,12 @@
     },
     "Profile of %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil de %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1144,6 +1828,12 @@
     },
     "Remove": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1154,6 +1844,12 @@
     },
     "Remove option %lld": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la opción %lld"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1164,6 +1860,12 @@
     },
     "Remove the poll": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la encuesta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1174,6 +1876,12 @@
     },
     "Rename": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renombrar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1184,6 +1892,12 @@
     },
     "Rename aspect": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renombrar aspecto"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1194,6 +1908,12 @@
     },
     "Reply": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1204,6 +1924,12 @@
     },
     "Replying to %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En respuesta a %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1214,6 +1940,12 @@
     },
     "Requested": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitado"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1224,6 +1956,12 @@
     },
     "Reshare": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1234,6 +1972,12 @@
     },
     "Save": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1244,6 +1988,12 @@
     },
     "Saved": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardados"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1254,6 +2004,12 @@
     },
     "Search": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1264,6 +2020,12 @@
     },
     "Search people (also on other servers: name@server), hashtags and posts.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca personas (también en otros servidores: nombre@servidor), hashtags y publicaciones."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1274,6 +2036,12 @@
     },
     "Security and account": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguridad y cuenta"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1284,6 +2052,12 @@
     },
     "Sensitive content": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido sensible"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1294,6 +2068,12 @@
     },
     "Sensitive media": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multimedia sensible"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1304,6 +2084,12 @@
     },
     "Server": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1314,6 +2100,12 @@
     },
     "Settings": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1324,6 +2116,12 @@
     },
     "Settings on the web": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes en la web"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1334,6 +2132,12 @@
     },
     "Several answers": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varias respuestas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1344,6 +2148,12 @@
     },
     "Show less": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar menos"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1354,6 +2164,12 @@
     },
     "Show more": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar más"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1364,6 +2180,12 @@
     },
     "Sign in": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1374,6 +2196,12 @@
     },
     "Sign in happens on your server's page: the app never sees your password.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El inicio de sesión se hace en la página de tu servidor: la app nunca ve tu contraseña."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1384,6 +2212,12 @@
     },
     "Sign out": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1394,6 +2228,12 @@
     },
     "Sign out of Disbigle?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cerrar sesión en Disbigle?"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1404,6 +2244,12 @@
     },
     "Something went wrong": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo ha salido mal"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1414,6 +2260,12 @@
     },
     "Source code": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código fuente"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1424,6 +2276,12 @@
     },
     "Suggest my profile to others": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerir mi perfil a otras personas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1434,6 +2292,12 @@
     },
     "That doesn't look like a server address.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eso no parece la dirección de un servidor."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1444,6 +2308,12 @@
     },
     "The authorization was refused.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ha denegado la autorización."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1454,6 +2324,12 @@
     },
     "These open your server's page, where you confirm with your password.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se abren en la página de tu servidor, donde confirmas con tu contraseña."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1464,6 +2340,12 @@
     },
     "This iPhone": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1474,6 +2356,12 @@
     },
     "This image can't be read.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede leer esta imagen."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1484,6 +2372,12 @@
     },
     "This is an automated account": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es una cuenta automatizada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1494,6 +2388,12 @@
     },
     "This server": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1504,6 +2404,12 @@
     },
     "Thread": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversación"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1514,6 +2420,12 @@
     },
     "Timeline": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cronología"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1524,6 +2436,12 @@
     },
     "Try again": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1534,6 +2452,12 @@
     },
     "Unblock": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquear"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1544,6 +2468,12 @@
     },
     "Unlisted": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No listada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1554,6 +2484,12 @@
     },
     "Unmute": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar de silenciar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1564,6 +2500,12 @@
     },
     "Unread": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin leer"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1574,6 +2516,12 @@
     },
     "Unread count on the app icon": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de no leídas en el icono de la app"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1584,6 +2532,12 @@
     },
     "Up to four, e.g. your website or where else to find you.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta cuatro, por ejemplo tu sitio web o dónde más encontrarte."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1594,6 +2548,12 @@
     },
     "Used for new posts written on this iPhone; replies keep the visibility of the conversation.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aplica a las nuevas publicaciones escritas en este iPhone; las respuestas mantienen la visibilidad de la conversación."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1604,6 +2564,12 @@
     },
     "Version": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1614,6 +2580,12 @@
     },
     "Visibility": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visibilidad"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1624,6 +2596,12 @@
     },
     "Vote": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1634,6 +2612,12 @@
     },
     "Welcome to Disbigle": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te damos la bienvenida a Disbigle"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1644,6 +2628,12 @@
     },
     "What's on your mind?": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué estás pensando?"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1654,6 +2644,12 @@
     },
     "Who can see it": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién puede verla"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1664,6 +2660,12 @@
     },
     "Write @name@server to choose who gets the message": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe @nombre@servidor para elegir quién recibe el mensaje"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1674,6 +2676,12 @@
     },
     "Your server": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1684,6 +2692,12 @@
     },
     "Your vote": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu voto"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1694,6 +2708,12 @@
     },
     "ends %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "termina %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1704,6 +2724,12 @@
     },
     "followers": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "seguidores"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1714,6 +2740,12 @@
     },
     "following": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "siguiendo"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1724,6 +2756,12 @@
     },
     "iOS settings for Disbigle": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes de iOS para Disbigle"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1734,6 +2772,12 @@
     },
     "iOS wakes Disbigle from time to time to look for new notifications, usually every 15–30 minutes and less often when the battery is low. Keep Background App Refresh on for Disbigle in the iOS settings.": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS activa Disbigle de vez en cuando para buscar notificaciones nuevas, normalmente cada 15–30 minutos y con menos frecuencia si queda poca batería. Mantén activada la actualización en segundo plano para Disbigle en los ajustes de iOS."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1744,6 +2788,12 @@
     },
     "posts": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "publicaciones"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1754,6 +2804,12 @@
     },
     "·": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1764,6 +2820,12 @@
     },
     "· edited %@": {
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· editada %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",

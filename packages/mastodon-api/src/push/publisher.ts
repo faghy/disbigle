@@ -65,6 +65,15 @@ const titles: Record<string, Record<string, string>> = {
     like: '{name} ha apprezzato il tuo post',
     poll: 'Un sondaggio di {name} è terminato',
   },
+  es: {
+    mention: '{name} te ha mencionado',
+    reply: '{name} te ha mencionado',
+    reblog: '{name} ha compartido tu publicación',
+    follow: '{name} ha empezado a seguirte',
+    follow_request: 'Solicitud de seguimiento: {name}',
+    like: '{name} le ha dado me gusta a tu publicación',
+    poll: 'Ha terminado una encuesta de {name}',
+  },
 };
 
 export const plainText = (html: string) =>
@@ -161,7 +170,7 @@ export class MastodonPushPublisher implements EventBus {
       ? await db.select().from(posts).where(eq(posts.id, notification.postId))
       : [];
     const name = from.displayName || from.username;
-    const locale = user.locale === 'it' ? 'it' : 'en';
+    const locale = titles[user.locale] ? user.locale : 'en';
     const title = (titles[locale]?.[type] ?? name).replace('{name}', name);
     const source = post ? post.summary || plainText(post.contentHtml) : plainText(from.summary);
     const icon = from.avatarUrl ?? `${config.PUBLIC_URL}/assets/user/default.png`;

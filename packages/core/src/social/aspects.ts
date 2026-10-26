@@ -10,6 +10,7 @@ const { aspects, aspectMemberships, actors } = schema;
 export const defaultAspectNames: Record<string, string[]> = {
   en: ['Family', 'Friends', 'Work', 'Acquaintances'],
   it: ['Famiglia', 'Amici', 'Lavoro', 'Conoscenti'],
+  es: ['Familia', 'Amigos', 'Trabajo', 'Conocidos'],
 };
 
 export async function createDefaultAspects(ctx: CoreContext, ownerActorId: string, locale: string) {

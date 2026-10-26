@@ -191,7 +191,7 @@ export async function accountRoutes(app: FastifyInstance, deps: Deps) {
         }
       }
       const language = str(obj(fields.source).language);
-      if (language === 'en' || language === 'it') {
+      if (language === 'en' || language === 'it' || language === 'es') {
         await updateSettings(ctx, user.userId, { locale: language });
       }
       return credentialAccount(deps, user.userId);

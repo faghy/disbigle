@@ -321,7 +321,7 @@ La prima versione completa le fasi 0–2 della roadmap e buona parte delle fasi 
 | diaspora* | Libreria del protocollo verificata sui fixture della gem, bridge con relayable, consegne cifrate, coda Redis persistente, sondaggi, `AccountMigration`, protezione SSRF |
 | Migrazione pod | `packages/diaspora-import`: utenti, chiavi, GUID, contatti, cerchie, post, foto, commenti, like, sondaggi, conversazioni; password bcrypt convertite al primo accesso |
 | Moderazione | Coda di approvazione, segnalazioni, sospensioni, ruoli, blocco domini, log, impostazioni d'istanza modificabili, elenco dei server conosciuti |
-| Web | React 19, italiano e inglese, PWA |
+| Web | React 19, italiano, inglese e spagnolo, PWA |
 | Deploy | systemd + nginx senza Docker: `docs/deploy.md` |
 
 Ancora da verificare dal vivo: federazione con server reali (serve un dominio pubblico) e import da un pod reale (diaspo.it).

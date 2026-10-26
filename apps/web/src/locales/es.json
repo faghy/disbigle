@@ -1,0 +1,1074 @@
+{
+  "common": {
+    "loading": "Cargando…",
+    "or": "o",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "done": "Listo"
+  },
+  "languages": {
+    "en": "English",
+    "it": "Italiano",
+    "es": "Español"
+  },
+  "nav": {
+    "skipToContent": "Saltar al contenido",
+    "main": "Principal",
+    "home": "Inicio",
+    "settings": "Configuración",
+    "signIn": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "accountMenu": "Menú de la cuenta",
+    "viewProfile": "Ver perfil",
+    "signOut": "Cerrar sesión",
+    "local": "Local",
+    "federated": "Federada",
+    "notifications": "Notificaciones",
+    "aspects": "Aspectos",
+    "bookmarks": "Guardados",
+    "unread_one": "{{count}} notificación sin leer",
+    "unread_many": "{{count}} notificaciones sin leer",
+    "unread_other": "{{count}} notificaciones sin leer",
+    "moderation": "Moderación",
+    "moderationPending_one": "{{count}} elemento pendiente de moderación",
+    "moderationPending_many": "{{count}} elementos pendientes de moderación",
+    "moderationPending_other": "{{count}} elementos pendientes de moderación",
+    "messages": "Mensajes",
+    "more": "Más",
+    "sidePanel": "Sobre este servidor y tus hashtags",
+    "aboutServer": "Sobre este servidor",
+    "contacts": "Contactos"
+  },
+  "footer": {
+    "tagline": "Disbigle · una red social federada",
+    "language": "Idioma",
+    "about": "Acerca de"
+  },
+  "landing": {
+    "tagline": "La plaza del pueblo del Fediverso: charlas, amigos y alguna que otra travesura, desde Mastodon, diaspora* y más allá.",
+    "register": "Crear cuenta",
+    "signIn": "Iniciar sesión",
+    "explore": "Echa un vistazo a la cronología local"
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "subtitle": "Te damos la bienvenida de nuevo a Disbigle.",
+    "login": "Correo electrónico o nombre de usuario",
+    "password": "Contraseña",
+    "submit": "Iniciar sesión",
+    "passkey": "Iniciar sesión con una llave de acceso",
+    "noAccount": "¿Eres nuevo aquí?",
+    "createAccount": "Crea una cuenta",
+    "mfaTitle": "Verificación en dos pasos",
+    "mfaTotpHelp": "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+    "mfaRecoveryHelp": "Introduce uno de los códigos de recuperación que guardaste al activar la verificación en dos pasos.",
+    "totpCode": "Código de autenticación",
+    "recoveryCode": "Código de recuperación",
+    "verify": "Verificar",
+    "useRecoveryCode": "Usar un código de recuperación",
+    "useTotp": "Usar tu aplicación de autenticación",
+    "mfaPasskey": "Usar una llave de acceso",
+    "codeInvalid": "Introduce el código que muestra tu aplicación (al menos 6 caracteres).",
+    "mfaExpired": "Tu inicio de sesión ha caducado. Vuelve a introducir tu contraseña.",
+    "back": "Volver a iniciar sesión",
+    "forgot": "¿Has olvidado tu contraseña?"
+  },
+  "register": {
+    "title": "Crea tu cuenta",
+    "subtitle": "Únete a {{domain}} y conecta con todo el Fediverso.",
+    "approvalNotice": "En este servidor, un moderador revisa las cuentas nuevas antes de que puedan usarse.",
+    "username": "Nombre de usuario",
+    "usernameHint": "Letras, números y guiones bajos. Tu dirección será @usuario@{{domain}}.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "passwordHint": "Al menos 10 caracteres.",
+    "inviteCode": "Código de invitación",
+    "reason": "¿Por qué quieres unirte?",
+    "reasonHint": "Esto ayuda a los moderadores a revisar tu solicitud.",
+    "agreement": "Acepto las normas y la política de privacidad de {{domain}}",
+    "submit": "Crear cuenta",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "signIn": "Iniciar sesión",
+    "pendingTitle": "Ya casi está",
+    "pendingBody": "Hemos recibido tu solicitud. Podrás iniciar sesión en cuanto un moderador apruebe tu cuenta.",
+    "closedTitle": "El registro está cerrado",
+    "closedBody": "{{domain}} no acepta cuentas nuevas en este momento.",
+    "rulesTitle": "Normas de {{domain}}",
+    "agreementRules": "Acepto las normas anteriores y la política de privacidad de {{domain}}"
+  },
+  "profile": {
+    "bot": "Bot",
+    "locked": "Aprueba seguidores",
+    "joined": "Se unió el {{date}}",
+    "edit": "Editar perfil",
+    "notFound": "Aquí no hay ninguna cuenta llamada @{{username}}.",
+    "follow": "Seguir",
+    "followBack": "Seguir también",
+    "unfollow": "Dejar de seguir",
+    "requested": "Solicitado",
+    "cancelRequest": "Cancelar solicitud de seguimiento",
+    "lockedHint": "Esta cuenta aprueba manualmente a sus seguidores.",
+    "followsYou": "Te sigue",
+    "muted": "Silenciado",
+    "blockedBy": "Esta cuenta te ha bloqueado.",
+    "moreActions": "Más acciones",
+    "mute": "Silenciar a {{name}}",
+    "unmute": "Dejar de silenciar a {{name}}",
+    "block": "Bloquear a {{name}}",
+    "unblock": "Desbloquear",
+    "blockTitle": "¿Bloquear a {{name}}?",
+    "blockDescription": "No podrá seguirte ni ver tus publicaciones, y se eliminará de tus aspectos.",
+    "blockConfirm": "Bloquear",
+    "aspects": {
+      "add": "Añadir a aspectos",
+      "inMany_one": "En {{count}} aspecto",
+      "inMany_many": "En {{count}} aspectos",
+      "inMany_other": "En {{count}} aspectos",
+      "legend": "Aspectos de {{name}}",
+      "manage": "Gestionar aspectos"
+    },
+    "tabs": {
+      "label": "Secciones del perfil",
+      "posts": "Publicaciones",
+      "replies": "Publicaciones y respuestas",
+      "followers": "Seguidores",
+      "following": "Siguiendo"
+    },
+    "noPosts": "Todavía no hay publicaciones.",
+    "noFollowers": "Todavía no tiene seguidores.",
+    "noFollowing": "Todavía no sigue a nadie.",
+    "openOriginal": "Abrir en el servidor original",
+    "report": "Denunciar a {{name}}",
+    "cancelRequestFor": "Cancelar la solicitud de seguimiento a {{name}}",
+    "counts": {
+      "posts_one": "<strong>{{formatted}}</strong> publicación",
+      "posts_many": "<strong>{{formatted}}</strong> publicaciones",
+      "posts_other": "<strong>{{formatted}}</strong> publicaciones",
+      "followers_one": "<strong>{{formatted}}</strong> seguidor",
+      "followers_many": "<strong>{{formatted}}</strong> seguidores",
+      "followers_other": "<strong>{{formatted}}</strong> seguidores",
+      "following_one": "<strong>{{formatted}}</strong> siguiendo",
+      "following_many": "<strong>{{formatted}}</strong> siguiendo",
+      "following_other": "<strong>{{formatted}}</strong> siguiendo"
+    },
+    "pinned": "Publicaciones fijadas",
+    "remoteNotice": "Aquí solo ves las publicaciones públicas de {{name}}. Las publicaciones solo para seguidores llegan cuando le sigues, y solo las nuevas: eso lo decide el servidor de {{name}}.",
+    "message": "Mensaje",
+    "messageLabel": "Enviar un mensaje privado a {{name}}"
+  },
+  "settings": {
+    "title": "Configuración",
+    "nav": "Secciones de la configuración",
+    "save": "Guardar cambios",
+    "saved": "Se han guardado tus cambios.",
+    "profile": {
+      "tab": "Perfil",
+      "title": "Perfil",
+      "description": "Cómo te ven los demás, aquí y en todo el Fediverso.",
+      "displayName": "Nombre para mostrar",
+      "bio": "Biografía",
+      "bioHint": "Texto sin formato. Se conservan los saltos de línea.",
+      "fields": "Campos adicionales",
+      "fieldsHint": "Hasta {{max}} elementos que se muestran en tu perfil, como un sitio web o tus pronombres.",
+      "noFields": "Todavía no hay campos adicionales.",
+      "fieldName": "Etiqueta {{number}}",
+      "fieldValue": "Contenido {{number}}",
+      "addField": "Añadir campo",
+      "removeField": "Eliminar",
+      "removeFieldLabel": "Eliminar el campo {{number}}",
+      "options": "Opciones",
+      "locked": "Aprobar seguidores manualmente",
+      "lockedHint": "Tú eliges quién puede seguirte.",
+      "discoverable": "Mostrar mi perfil en directorios y sugerencias",
+      "discoverableHint": "Otras personas podrán encontrarte más fácilmente.",
+      "bot": "Esta es una cuenta automatizada",
+      "botHint": "Marca la cuenta como un bot que podría no estar supervisado."
+    },
+    "account": {
+      "tab": "Cuenta",
+      "title": "Cuenta",
+      "description": "Idioma y contraseña.",
+      "language": "Idioma de la interfaz",
+      "languageLabel": "Idioma",
+      "password": "Cambiar contraseña",
+      "passwordHint": "Seguirás con la sesión iniciada aquí; se cerrarán todas tus demás sesiones.",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirma la nueva contraseña",
+      "changePassword": "Cambiar contraseña",
+      "passwordChanged": "Se ha cambiado tu contraseña.",
+      "export": {
+        "title": "Tus datos",
+        "description": "Descarga tu perfil, publicaciones, aspectos y contactos en un archivo JSON.",
+        "download": "Descargar tus datos"
+      },
+      "delete": {
+        "title": "Eliminar cuenta",
+        "posts": "Tu perfil, tus publicaciones y tus archivos multimedia se eliminarán de este servidor.",
+        "federation": "Se pedirá a los demás servidores que te conocen que también eliminen tus publicaciones; algunos podrían conservar copias.",
+        "username": "Tu nombre de usuario no podrá volver a registrarse.",
+        "final": "Esta acción no se puede deshacer.",
+        "exportFirst": "Quizá quieras descargar tus datos antes.",
+        "button": "Eliminar mi cuenta",
+        "confirmTitle": "¿Eliminar tu cuenta?",
+        "confirmDescription": "Introduce tu contraseña para confirmar. Se cerrará tu sesión de inmediato.",
+        "confirm": "Eliminar la cuenta definitivamente",
+        "lastAdmin": "Eres el último administrador. Nombra administrador a otra persona antes de eliminar tu cuenta."
+      }
+    },
+    "security": {
+      "tab": "Seguridad",
+      "title": "Seguridad",
+      "description": "La verificación en dos pasos y las llaves de acceso protegen tu cuenta.",
+      "password": "Contraseña actual",
+      "totp": {
+        "title": "Verificación en dos pasos",
+        "description": "Pide un código de una aplicación de autenticación después de la contraseña.",
+        "on": "Activada",
+        "off": "Desactivada",
+        "enable": "Configurar la verificación en dos pasos",
+        "step1": "Escanea el código QR con una aplicación de autenticación o introduce la clave a mano.",
+        "step2": "Escribe el código de 6 dígitos que muestra la aplicación para terminar.",
+        "qrAlt": "Código QR para añadir Disbigle a tu aplicación de autenticación",
+        "manual": "¿No puedes escanearlo? Usa esta clave:",
+        "code": "Código de la aplicación",
+        "confirm": "Activar",
+        "disableTitle": "Desactivar la verificación en dos pasos",
+        "disableDescription": "Tu cuenta quedará protegida solo por tu contraseña.",
+        "disable": "Desactivar"
+      },
+      "recovery": {
+        "title": "Códigos de recuperación",
+        "description": "Crea un nuevo conjunto de códigos. Los anteriores dejarán de funcionar.",
+        "regenerate": "Generar nuevos códigos",
+        "saveTitle": "Guarda tus códigos de recuperación",
+        "saveDescription": "Cada código funciona una sola vez, por si pierdes el acceso a tu aplicación de autenticación. No se volverán a mostrar.",
+        "copy": "Copiar",
+        "copied": "Copiado",
+        "download": "Descargar",
+        "done": "Ya los he guardado"
+      },
+      "passkeys": {
+        "title": "Llaves de acceso",
+        "description": "Inicia sesión con tu huella, tu cara, el bloqueo de pantalla o una llave de seguridad en lugar de una contraseña.",
+        "empty": "Todavía no tienes llaves de acceso.",
+        "created": "Añadida el {{date}}",
+        "lastUsed": "último uso: {{date}}",
+        "neverUsed": "nunca usada",
+        "delete": "Eliminar",
+        "deleteLabel": "Eliminar la llave de acceso {{name}}",
+        "confirmDelete": "Confirmar eliminación",
+        "confirmDeleteLabel": "Confirmar la eliminación de la llave de acceso {{name}}",
+        "name": "Nombre de la llave de acceso",
+        "nameHint": "Por ejemplo, \"Portátil\" o \"Móvil\".",
+        "add": "Añadir una llave de acceso",
+        "added": "Llave de acceso añadida."
+      }
+    },
+    "images": {
+      "title": "Avatar y cabecera",
+      "hint": "JPEG, PNG, WebP, GIF o AVIF. El servidor las recorta para que encajen.",
+      "avatar": "Avatar",
+      "header": "Cabecera",
+      "avatarSize": "Se muestra como un cuadrado de 400 × 400.",
+      "headerSize": "Se muestra a 1500 × 500.",
+      "upload": {
+        "avatar": "Subir avatar",
+        "header": "Subir cabecera"
+      },
+      "change": {
+        "avatar": "Cambiar avatar",
+        "header": "Cambiar cabecera"
+      },
+      "remove": {
+        "avatar": "Eliminar avatar",
+        "header": "Eliminar cabecera"
+      },
+      "headerPreview": "Tu imagen de cabecera",
+      "unsupported": "{{name}} no es un tipo de imagen compatible."
+    },
+    "notifications": {
+      "tab": "Notificaciones",
+      "title": "Notificaciones",
+      "description": "Elige qué te llega cuando Disbigle está cerrado.",
+      "pushTitle": "Notificaciones push en este dispositivo",
+      "pushHint": "Cada navegador o teléfono tiene su propia configuración.",
+      "enable": "Activar notificaciones",
+      "disable": "Desactivar en este dispositivo",
+      "offHint": "Recibe avisos de menciones, respuestas, nuevos seguidores y más, incluso con Disbigle cerrado. Tu navegador te pedirá permiso.",
+      "on": "Las notificaciones están activadas en este dispositivo.",
+      "typesLegend": "Avisarme de",
+      "types": {
+        "mention": "Menciones",
+        "reply": "Respuestas a mis publicaciones",
+        "follow": "Nuevos seguidores",
+        "follow_request": "Solicitudes de seguimiento",
+        "reblog": "Mis publicaciones compartidas",
+        "like": "Me gusta",
+        "poll": "Encuestas finalizadas"
+      },
+      "unsupported": "Este navegador no puede recibir notificaciones push. Prueba con una versión reciente de Firefox, Chrome, Edge o Safari.",
+      "denied": "Las notificaciones están bloqueadas para este sitio. Permítelas en la configuración del sitio de tu navegador y vuelve a cargar esta página.",
+      "notAllowed": "No se han permitido las notificaciones. Puedes volver a intentarlo cuando quieras.",
+      "subscribeFailed": "El navegador no ha podido conectar con su servicio push. Comprueba tu conexión e inténtalo de nuevo.",
+      "iosIntro": "En iPhone y iPad, las notificaciones funcionan cuando Disbigle está en tu pantalla de inicio:",
+      "iosStep1": "Toca el botón Compartir en Safari.",
+      "iosStep2": "Elige \"Añadir a pantalla de inicio\".",
+      "iosStep3": "Abre Disbigle desde la pantalla de inicio y vuelve a esta página."
+    }
+  },
+  "validation": {
+    "required": "Este campo es obligatorio.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "fields": {
+      "username": "Usa de 1 a 30 letras, números o guiones bajos.",
+      "email": "Introduce una dirección de correo electrónico válida.",
+      "password": "Usa al menos 10 caracteres.",
+      "newPassword": "Usa al menos 10 caracteres.",
+      "agreement": "Debes aceptar las normas para continuar.",
+      "inviteCode": "Introduce un código de invitación válido.",
+      "displayName": "Usa como máximo 100 caracteres.",
+      "note": "Usa como máximo 5000 caracteres.",
+      "locale": "Elige un idioma disponible."
+    }
+  },
+  "errors": {
+    "bad_request": "No se ha podido procesar la solicitud.",
+    "validation_failed": "Algunos campos no son válidos.",
+    "unauthorized": "Inicia sesión para continuar.",
+    "forbidden": "No tienes permiso para hacer eso.",
+    "not_found": "No encontrado.",
+    "conflict": "Hay un conflicto con el estado actual. Recarga la página e inténtalo de nuevo.",
+    "rate_limited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    "invalid_credentials": "Usuario o contraseña incorrectos.",
+    "mfa_required": "Se necesita un segundo paso de verificación.",
+    "invalid_mfa_code": "Ese código no es válido.",
+    "username_taken": "Este nombre de usuario ya está en uso.",
+    "email_taken": "Esta dirección de correo electrónico ya está registrada.",
+    "registrations_closed": "El registro está cerrado en este servidor.",
+    "bot_check_failed": "La comprobación antirrobots ha fallado. Recarga la página e inténtalo de nuevo.",
+    "invalid_invite": "El código de invitación no es válido o ha caducado.",
+    "account_pending_approval": "Tu cuenta está pendiente de la aprobación de un moderador.",
+    "account_disabled": "Esta cuenta ha sido desactivada.",
+    "internal_error": "Algo ha fallado por nuestra parte. Inténtalo de nuevo.",
+    "network_error": "No se puede conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+    "unknown_error": "Algo ha fallado. Inténtalo de nuevo.",
+    "wrong_password": "Contraseña incorrecta.",
+    "webauthn_cancelled": "La solicitud de la llave de acceso se ha cancelado o ha caducado.",
+    "webauthn_already_registered": "Este dispositivo ya tiene una llave de acceso para tu cuenta.",
+    "webauthn_unsupported": "Este navegador no es compatible con las llaves de acceso.",
+    "too_many_attempts": "Demasiados intentos. Vuelve a iniciar sesión."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o se ha movido.",
+    "home": "Ir a la página de inicio"
+  },
+  "errorPage": {
+    "title": "Algo ha fallado",
+    "retry": "Reintentar"
+  },
+  "visibility": {
+    "public": {
+      "label": "Pública",
+      "description": "Cualquiera, en cualquier servidor"
+    },
+    "unlisted": {
+      "label": "No listada",
+      "description": "Cualquiera con el enlace; no aparece en las cronologías públicas"
+    },
+    "followers": {
+      "label": "Seguidores",
+      "description": "Solo las personas que te siguen"
+    },
+    "limited": {
+      "label": "Aspectos",
+      "description": "Solo las personas de los aspectos que elijas"
+    },
+    "direct": {
+      "label": "Directa",
+      "description": "Solo las personas que menciones"
+    }
+  },
+  "composer": {
+    "label": "Nueva publicación",
+    "replyLabel": "Responder",
+    "placeholder": "¿Qué te ronda por la cabeza? Markdown, #etiquetas y @menciones bienvenidos.",
+    "replyPlaceholder": "Di lo tuyo…",
+    "publish": "Publicar",
+    "reply": "Responder",
+    "shortcut": "Ctrl+Intro o Cmd+Intro para enviar",
+    "remaining_one": "Queda {{count}} carácter",
+    "remaining_many": "Quedan {{count}} caracteres",
+    "remaining_other": "Quedan {{count}} caracteres",
+    "privateReply": "Las respuestas a esta publicación se quedan con su público original.",
+    "directHint": "Solo las personas que @menciones verán esta publicación.",
+    "sensitive": "Marcar el contenido multimedia como sensible",
+    "warning": {
+      "toggle": "Advertencia de contenido",
+      "label": "Advertencia de contenido",
+      "placeholder": "Escribe aquí tu advertencia"
+    },
+    "audience": {
+      "shareWith": "Compartir con:",
+      "legend": "Quién puede ver esta publicación",
+      "aspectsLegend": "Tus aspectos",
+      "chooseAspects": "elige aspectos",
+      "selectAll": "Seleccionar todos",
+      "selectNone": "No seleccionar ninguno",
+      "noAspects": "Todavía no tienes aspectos.",
+      "createAspect": "Crea uno",
+      "chosen": "Aspectos elegidos",
+      "removeAspect": "Quitar {{name}}"
+    },
+    "media": {
+      "add": "Añadir imágenes, vídeo o audio",
+      "list": "Archivos adjuntos",
+      "preview": "Adjunto {{number}}",
+      "uploading": "Subiendo…",
+      "remove": "Quitar {{name}}",
+      "addAlt": "Añadir descripción",
+      "altSet": "Descripción añadida",
+      "altLabel": "Descripción del adjunto {{number}}",
+      "altPlaceholder": "Descríbelo para quien no puede verlo",
+      "altHint": "Se muestra a quienes usan lectores de pantalla y cuando el archivo no se puede cargar.",
+      "tooMany": "Puedes adjuntar hasta {{max}} archivos.",
+      "unsupported": "{{name}} no es un tipo de archivo compatible.",
+      "tooLarge": "{{name}} ocupa más de {{size}} MB."
+    },
+    "errors": {
+      "empty": "Escribe algo o adjunta un archivo.",
+      "tooLong": "Las publicaciones pueden tener como máximo {{max}} caracteres.",
+      "aspectsRequired": "Elige al menos un aspecto.",
+      "mediaFailed": "Quita los adjuntos que no se han podido subir."
+    }
+  },
+  "status": {
+    "reshared": "{{name}} ha compartido",
+    "sharedWithAspects": "Compartida con aspectos",
+    "showMore": "Mostrar más",
+    "showLess": "Mostrar menos",
+    "reply": "Responder",
+    "reshare": "Compartir",
+    "unreshare": "Dejar de compartir",
+    "reshareUnavailable": "Esta publicación no se puede compartir",
+    "like": "Me gusta",
+    "unlike": "Quitar Me gusta",
+    "bookmark": "Guardar",
+    "unbookmark": "Quitar de guardados",
+    "more": "Más acciones",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "openOriginal": "Abrir en el servidor original",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar esta publicación?",
+    "deleteDescription": "Se eliminará para todos. No se puede deshacer.",
+    "media": {
+      "sensitive": "Contenido sensible",
+      "reveal": "Selecciona para mostrar",
+      "open": "Abrir imagen",
+      "openWithAlt": "Abrir imagen: {{alt}}",
+      "viewer": "Visor de imágenes",
+      "previous": "Imagen anterior",
+      "next": "Imagen siguiente",
+      "position": "{{current}} de {{total}}"
+    },
+    "edit": "Editar",
+    "edited": "editada",
+    "editedAt": "Editada el {{date}}",
+    "report": "Denunciar a @{{acct}}",
+    "pin": "Fijar en el perfil",
+    "unpin": "Dejar de fijar en el perfil",
+    "pinned": "Fijada",
+    "pinLimit": "Puedes fijar hasta 5 publicaciones públicas o no listadas. Deja de fijar una primero.",
+    "replyingTo": "En respuesta a @{{acct}}",
+    "replyingToPost": "En respuesta a una publicación",
+    "counts": {
+      "replies_one": "{{count}} respuesta",
+      "replies_many": "{{count}} respuestas",
+      "replies_other": "{{count}} respuestas",
+      "reshares_one": "Compartida {{count}} vez",
+      "reshares_many": "Compartida {{count}} veces",
+      "reshares_other": "Compartida {{count}} veces",
+      "likes_one": "{{count}} Me gusta",
+      "likes_many": "{{count}} Me gusta",
+      "likes_other": "{{count}} Me gusta"
+    }
+  },
+  "timeline": {
+    "loadMore": "Cargar más",
+    "end": "Lo has visto todo. Hora de un café ☕",
+    "empty": "Todo tranquilo por aquí… de momento.",
+    "newPosts_one": "{{count}} publicación nueva",
+    "newPosts_many": "{{count}} publicaciones nuevas",
+    "newPosts_other": "{{count}} publicaciones nuevas",
+    "home": {
+      "title": "Inicio",
+      "emptyTitle": "Tu cronología de inicio está vacía",
+      "empty": "Sigue a personas o añádelas a tus aspectos para ver aquí sus publicaciones.",
+      "explore": "Explora la cronología local",
+      "findPeople": "Encuentra personas a las que seguir: prueba",
+      "findButton": "Buscar personas"
+    },
+    "local": {
+      "title": "Local",
+      "description": "Publicaciones públicas de las personas de este servidor."
+    },
+    "federated": {
+      "title": "Federada",
+      "description": "Publicaciones públicas de este servidor y del Fediverso."
+    },
+    "tag": {
+      "description": "Publicaciones públicas con la etiqueta #{{tag}}.",
+      "empty": "Todavía no hay publicaciones con #{{tag}}.",
+      "postsCount_one": "{{count}} publicación pública con #{{tag}}.",
+      "postsCount_many": "{{count}} publicaciones públicas con #{{tag}}.",
+      "postsCount_other": "{{count}} publicaciones públicas con #{{tag}}."
+    },
+    "bookmarks": {
+      "title": "Guardados",
+      "description": "Publicaciones que guardaste para más tarde. Solo tú puedes ver esta lista.",
+      "empty": "Todavía no tienes publicaciones guardadas."
+    },
+    "aspect": {
+      "description_one": "Publicaciones de la {{count}} persona de {{name}}.",
+      "description_many": "Publicaciones de las {{count}} personas de {{name}}.",
+      "description_other": "Publicaciones de las {{count}} personas de {{name}}.",
+      "empty": "Todavía no hay publicaciones de {{name}}.",
+      "manage": "Gestionar aspectos"
+    }
+  },
+  "thread": {
+    "title": "Publicación",
+    "ancestors": "Antes en la conversación",
+    "replies": "Respuestas",
+    "noReplies": "Todavía no hay respuestas."
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Todavía no hay notificaciones.",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "accepted": "Solicitud de seguimiento aceptada.",
+    "rejected": "Solicitud de seguimiento rechazada.",
+    "mediaPost": "Una publicación con archivos multimedia",
+    "types": {
+      "mention": "{{name}} te ha mencionado",
+      "reply": "{{name}} te ha respondido",
+      "follow": "{{name}} te ha seguido",
+      "follow_request": "{{name}} quiere seguirte",
+      "reblog": "{{name}} ha compartido tu publicación",
+      "like": "A {{name}} le gusta tu publicación",
+      "poll": "Una encuesta ha finalizado"
+    },
+    "verbs": {
+      "mention": "te ha mencionado",
+      "reply": "te ha respondido",
+      "follow": "te ha seguido",
+      "follow_request": "ha pedido seguirte",
+      "reblog": "ha compartido tu publicación",
+      "like": "ha indicado que le gusta tu publicación",
+      "poll": "ha finalizado una encuesta"
+    },
+    "pollEnded": "Ha finalizado una encuesta en la que votaste",
+    "pollOwnEnded": "Tu encuesta ha finalizado",
+    "seeAll": "Ver todas las notificaciones"
+  },
+  "aspects": {
+    "title": "Aspectos",
+    "description": "Agrupa a las personas que conoces y luego elige qué aspectos ven cada publicación.",
+    "memberCount_one": "{{count}} persona",
+    "memberCount_many": "{{count}} personas",
+    "memberCount_other": "{{count}} personas",
+    "newName": "Nuevo aspecto",
+    "newPlaceholder": "Por ejemplo: Club de lectura",
+    "create": "Crear aspecto",
+    "empty": "Todavía no tienes aspectos.",
+    "members": "Miembros",
+    "noMembers": "Todavía no hay nadie en este aspecto. Añade personas desde su perfil.",
+    "rename": "Cambiar nombre",
+    "renameLabel": "Cambiar el nombre de {{name}}",
+    "delete": "Eliminar",
+    "deleteLabel": "Eliminar {{name}}",
+    "deleteTitle": "¿Eliminar {{name}}?",
+    "deleteDescription": "Las personas que contiene siguen conectadas contigo; las publicaciones ya compartidas mantienen su público."
+  },
+  "tags": {
+    "follow": "Seguir hashtag",
+    "unfollow": "Dejar de seguir hashtag",
+    "followedTitle": "Hashtags seguidos"
+  },
+  "edit": {
+    "label": "Editar publicación",
+    "save": "Guardar",
+    "pollReset": "Si cambias las opciones o el tipo de encuesta, se borrarán los votos emitidos hasta ahora."
+  },
+  "search": {
+    "title": "Buscar",
+    "label": "Buscar personas, publicaciones y hashtags",
+    "description": "Encuentra personas aquí y en todo el Fediverso.",
+    "placeholder": "Nombre, @usuario@servidor, palabras o #etiqueta",
+    "shortPlaceholder": "Buscar",
+    "people": "Personas",
+    "searching": "Buscando…",
+    "noResults": "Nadie aquí coincide con “{{query}}”.",
+    "noLocalMatchRemote": "Nadie en este servidor coincide. Búscalo en la red, más arriba.",
+    "remoteTitle": "{{query}}",
+    "remoteHint": "Parece alguien de otro servidor.",
+    "lookUp": "Buscar en la red",
+    "lookingUp": "Preguntando al otro servidor por {{query}}… puede tardar unos segundos.",
+    "notFoundRemote": "No se ha encontrado nada en {{query}}. Comprueba la dirección e inténtalo de nuevo.",
+    "tryAgain": "Reintentar",
+    "found": "Encontrado:",
+    "signInToLookUp": "Inicia sesión para buscar personas en otros servidores.",
+    "lookUpHandle": "Buscar {{handle}} en la red",
+    "followLabel": "{{action}} {{name}}",
+    "tips": {
+      "names": "Busca personas de este servidor por nombre o nombre de usuario.",
+      "remote": "Para encontrar a alguien de otro servidor (Mastodon, diaspora*, Friendica…), escribe su dirección completa, por ejemplo",
+      "url": "También puedes pegar la dirección de su página de perfil."
+    },
+    "lookUpAccount": "Buscar cuenta",
+    "lookUpPost": "Buscar publicación",
+    "postTitle": "¿Es un enlace a una publicación?",
+    "postHint": "Tráela aquí para responder, darle Me gusta o compartirla.",
+    "lookingUpPost": "Obteniendo la publicación… puede tardar unos segundos.",
+    "postNotFound": "No se ha encontrado ninguna publicación pública en esta dirección.",
+    "tabs": {
+      "label": "Resultados de búsqueda",
+      "accounts": "Personas",
+      "posts": "Publicaciones",
+      "hashtags": "Hashtags"
+    },
+    "noPosts": "Ninguna publicación coincide con “{{query}}”.",
+    "noHashtags": "Ningún hashtag coincide con “{{query}}”.",
+    "tagPosts_one": "{{count}} publicación",
+    "tagPosts_many": "{{count}} publicaciones",
+    "tagPosts_other": "{{count}} publicaciones",
+    "followedTag": "Seguido",
+    "networkTitle": "¿No es quien buscabas? Busca «{{query}}» en otros servidores",
+    "networkHint": "Preguntamos a los servidores con los que ya hablamos (Mastodon, diaspora*, Hubzilla…) si tienen a alguien con ese nombre. El Fediverso no tiene un directorio único de personas.",
+    "networkButton": "Buscar fuera",
+    "networkSearching": "Buscando «{{query}}» en otros servidores…",
+    "networkNone_one": "No hay nadie llamado «{{query}}» en el único servidor consultado. Si conoces su servidor, busca nombre@servidor.",
+    "networkNone_many": "No hay nadie llamado «{{query}}» en los {{count}} servidores consultados. Si conoces su servidor, busca nombre@servidor.",
+    "networkNone_other": "No hay nadie llamado «{{query}}» en los {{count}} servidores consultados. Si conoces su servidor, busca nombre@servidor.",
+    "networkFound_one": "Encontrado en el {{count}} servidor consultado:",
+    "networkFound_many": "Encontrado en los {{count}} servidores consultados:",
+    "networkFound_other": "Encontrado en los {{count}} servidores consultados:"
+  },
+  "passwordReset": {
+    "forgotTitle": "Restablece tu contraseña",
+    "forgotHelp": "Introduce la dirección de correo electrónico de tu cuenta y te enviaremos un enlace para elegir una nueva contraseña.",
+    "send": "Enviar enlace de restablecimiento",
+    "sent": "Si alguna cuenta usa {{email}}, el enlace de restablecimiento ya está en camino. Caduca pronto, así que úsalo rápido.",
+    "backToSignIn": "Volver a iniciar sesión",
+    "resetTitle": "Elige una nueva contraseña",
+    "save": "Guardar la nueva contraseña",
+    "invalidLink": "Este enlace de restablecimiento no es válido, ya se ha usado o ha caducado.",
+    "requestNew": "Solicitar un nuevo enlace",
+    "done": "Se ha cambiado tu contraseña. Inicia sesión con la nueva contraseña."
+  },
+  "report": {
+    "title": "Denunciar a {{name}}",
+    "description": "Los moderadores de este servidor revisarán tu denuncia. A la persona denunciada no se le dice quién la ha denunciado.",
+    "categoryLegend": "¿Cuál es el problema?",
+    "categories": {
+      "spam": {
+        "label": "Spam",
+        "description": "Anuncios, mensajes no deseados repetidos, estafas."
+      },
+      "illegal": {
+        "label": "Contenido ilegal",
+        "description": "Algo que infringe la ley."
+      },
+      "harassment": {
+        "label": "Acoso",
+        "description": "Insultos, amenazas u odio hacia alguien."
+      },
+      "violation": {
+        "label": "Infringe las normas del servidor",
+        "description": "Va en contra de las normas de este servidor."
+      },
+      "other": {
+        "label": "Otro motivo",
+        "description": "Explícalo en el comentario."
+      }
+    },
+    "postsLegend": "Publicaciones que incluir",
+    "postsHint": "Elige hasta {{max}} publicaciones que muestren el problema.",
+    "noPosts": "No hay publicaciones recientes para elegir.",
+    "comment": "Comentario (opcional)",
+    "commentPlaceholder": "Cualquier cosa que los moderadores deban saber",
+    "commentHint_one": "Queda {{count}} carácter",
+    "commentHint_many": "Quedan {{count}} caracteres",
+    "commentHint_other": "Quedan {{count}} caracteres",
+    "submit": "Enviar denuncia",
+    "doneTitle": "Gracias por tu denuncia",
+    "doneBody": "Los moderadores la revisarán. También puedes silenciar o bloquear a {{name}} desde su perfil."
+  },
+  "admin": {
+    "title": "Moderación",
+    "roleAdmin": "Eres administrador.",
+    "roleModerator": "Eres moderador.",
+    "sections": "Secciones de moderación",
+    "tabs": {
+      "pending": "Pendientes",
+      "reports": "Denuncias",
+      "accounts": "Cuentas",
+      "domains": "Dominios bloqueados",
+      "instance": "Instancia",
+      "federation": "Federación"
+    },
+    "roles": {
+      "user": "Usuario",
+      "moderator": "Moderador",
+      "admin": "Administrador"
+    },
+    "pending": {
+      "empty": "No hay registros pendientes de aprobación.",
+      "email": "Correo electrónico",
+      "reason": "Por qué quiere unirse",
+      "noReason": "No ha indicado ningún motivo.",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "approveLabel": "Aprobar a @{{acct}}",
+      "rejectLabel": "Rechazar a @{{acct}}",
+      "rejectTitle": "¿Rechazar a @{{acct}}?",
+      "rejectDescription": "Se eliminará el registro. Podrá volver a registrarse más adelante.",
+      "approved": "@{{acct}} ha sido aprobado y ya puede iniciar sesión.",
+      "rejected": "Se ha rechazado el registro de @{{acct}}."
+    },
+    "reports": {
+      "filter": "Mostrar denuncias",
+      "open": "Abiertas",
+      "resolved": "Resueltas",
+      "emptyOpen": "No hay denuncias abiertas.",
+      "emptyResolved": "Todavía no hay denuncias resueltas.",
+      "target": "Denunciado",
+      "reporter": "Denunciado por",
+      "comment": "Comentario",
+      "noComment": "Sin comentario.",
+      "unknownAccount": "Cuenta ya no disponible",
+      "posts_one": "{{count}} publicación denunciada",
+      "posts_many": "{{count}} publicaciones denunciadas",
+      "posts_other": "{{count}} publicaciones denunciadas",
+      "postUnavailable": "Esta publicación no está disponible: se ha eliminado o no puedes verla.",
+      "resolve": "Marcar como resuelta",
+      "suspendTarget": "Suspender cuenta",
+      "suspendAndResolve": "Suspender y resolver",
+      "resolvedAt": "Resuelta el {{date}}"
+    },
+    "suspend": {
+      "title": "¿Suspender a @{{acct}}?",
+      "description": "La cuenta se oculta en todas partes, se cierra su sesión y se eliminan sus seguimientos. Puedes deshacerlo más adelante.",
+      "reason": "Motivo (para el registro de moderación)",
+      "reasonHint": "Solo los moderadores pueden verlo.",
+      "confirm": "Suspender"
+    },
+    "accounts": {
+      "search": "Buscar",
+      "searchPlaceholder": "Nombre de usuario, nombre o dominio",
+      "origin": "Origen",
+      "status": "Estado",
+      "all": "Todas",
+      "local": "Locales",
+      "remote": "Remotas",
+      "active": "Activas",
+      "suspended": "Suspendidas",
+      "empty": "Ninguna cuenta coincide con estos filtros.",
+      "awaitingApproval": "Pendiente de aprobación",
+      "suspend": "Suspender",
+      "unsuspend": "Levantar la suspensión",
+      "role": "Rol",
+      "roleSaved": "Rol cambiado a {{role}}."
+    },
+    "domains": {
+      "severity": {
+        "silence": {
+          "label": "Silenciar",
+          "explain": "Las publicaciones de este servidor se ocultan en las cronologías públicas; quienes siguen a sus cuentas las siguen viendo."
+        },
+        "suspend": {
+          "label": "Suspender",
+          "explain": "Sin ninguna federación: no se envía nada a este servidor ni se acepta nada de él, y sus cuentas quedan suspendidas."
+        }
+      },
+      "adminOnly": "Solo los administradores pueden añadir o quitar bloqueos de dominio.",
+      "addTitle": "Bloquear un servidor",
+      "domain": "Dominio",
+      "severityLegend": "Gravedad",
+      "publicComment": "Nota pública",
+      "publicHint": "Puede mostrarse a los usuarios como motivo.",
+      "privateComment": "Nota privada",
+      "privateHint": "Solo los moderadores pueden verla.",
+      "add": "Bloquear servidor",
+      "added": "Se ha bloqueado el servidor.",
+      "empty": "No hay servidores bloqueados.",
+      "remove": "Quitar bloqueo",
+      "removeLabel": "Quitar el bloqueo de {{domain}}",
+      "removeTitle": "¿Quitar el bloqueo de {{domain}}?",
+      "removeDescription": {
+        "silence": "Sus publicaciones públicas volverán a aparecer en las cronologías públicas.",
+        "suspend": "Se reanuda la federación y sus cuentas dejan de estar suspendidas."
+      }
+    },
+    "instance": {
+      "title": "Nombre del servidor",
+      "description": "Descripción",
+      "descriptionHint": "Se muestra en la página de inicio y en la página de información.",
+      "contactEmail": "Correo electrónico de contacto",
+      "contactHint": "Se muestra en la página de información. Déjalo vacío para ocultarlo.",
+      "registration": "Registro",
+      "modes": {
+        "open": {
+          "label": "Abierto",
+          "description": "Cualquiera puede crear una cuenta y usarla de inmediato."
+        },
+        "approval": {
+          "label": "Con aprobación",
+          "description": "Las personas explican por qué quieren unirse; un moderador aprueba cada cuenta."
+        },
+        "invite": {
+          "label": "Solo con invitación",
+          "description": "Solo pueden registrarse las personas con un enlace de invitación de un miembro."
+        },
+        "closed": {
+          "label": "Cerrado",
+          "description": "Nadie puede registrarse. Las cuentas existentes siguen funcionando."
+        }
+      },
+      "rules": "Normas",
+      "rulesHint": "Se muestran en el registro y en la página de información. Hasta {{max}} normas; las vacías se descartan.",
+      "noRules": "Todavía no hay normas.",
+      "rule": "Norma {{number}}",
+      "addRule": "Añadir norma",
+      "removeRule": "Eliminar la norma {{number}}",
+      "moveUp": "Subir la norma {{number}}",
+      "moveDown": "Bajar la norma {{number}}",
+      "welcome": "Bienvenida para cuentas nuevas",
+      "welcomeHint": "Cuando una cuenta se activa, sigue a la cuenta de bienvenida, que la sigue a su vez, la añade al aspecto y le envía el mensaje en privado. Deja la cuenta vacía para desactivarlo.",
+      "welcomeAccount": "Cuenta de bienvenida",
+      "welcomeAccountHint": "Un nombre de usuario local, por ejemplo el del administrador.",
+      "welcomeAspect": "Aspecto",
+      "welcomeAspectHint": "El nombre de un aspecto de la cuenta de bienvenida. Déjalo vacío para omitirlo.",
+      "welcomeMessage": "Mensaje de bienvenida",
+      "welcomeMessageHint": "Se envía como mensaje privado. Déjalo vacío para omitirlo."
+    },
+    "federation": {
+      "description": "Servidores que este conoce, gracias a seguimientos, menciones y entregas.",
+      "search": "Buscar servidores",
+      "empty": "Todavía no se conoce ningún otro servidor.",
+      "noMatch": "Ningún servidor conocido coincide con “{{query}}”.",
+      "accounts_one": "{{count}} cuenta",
+      "accounts_many": "{{count}} cuentas",
+      "accounts_other": "{{count}} cuentas",
+      "followers_one": "{{count}} seguidor de cuentas locales",
+      "followers_many": "{{count}} seguidores de cuentas locales",
+      "followers_other": "{{count}} seguidores de cuentas locales",
+      "lastSeen": "visto por última vez {{time}}",
+      "blocked": {
+        "silence": "Silenciado",
+        "suspend": "Suspendido"
+      },
+      "block": "Bloquear dominio",
+      "changeBlock": "Cambiar bloqueo",
+      "blockLabel": "Bloquear {{domain}}",
+      "changeBlockLabel": "Cambiar el bloqueo de {{domain}}"
+    }
+  },
+  "poll": {
+    "vote": "Votar",
+    "results": "Resultados de la encuesta",
+    "legendSingle": "Elige una respuesta",
+    "legendMultiple": "Elige una o más respuestas",
+    "multipleHint": "Puedes elegir más de una respuesta.",
+    "voters_one": "{{count}} persona",
+    "voters_many": "{{count}} personas",
+    "voters_other": "{{count}} personas",
+    "optionVotes_one": "{{count}} voto",
+    "optionVotes_many": "{{count}} votos",
+    "optionVotes_other": "{{count}} votos",
+    "endsIn": "termina {{time}}",
+    "closed": "Cerrada",
+    "open": "Abierta",
+    "refresh": "Actualizar",
+    "refreshing": "Actualizando…",
+    "seeResults": "Ver resultados",
+    "backToVoting": "Volver a votar",
+    "yourChoice": "Tu elección",
+    "errors": {
+      "alreadyVoted": "Ya has votado en esta encuesta.",
+      "closed": "Esta encuesta ha finalizado.",
+      "optionRequired": "Escribe esta opción o elimínala.",
+      "duplicate": "Esta opción ya está en la encuesta.",
+      "question": "Escribe la pregunta de tu encuesta."
+    },
+    "editor": {
+      "legend": "Encuesta",
+      "add": "Añadir una encuesta",
+      "option": "Opción {{number}}",
+      "removeOption": "Eliminar la opción {{number}}",
+      "addOption": "Añadir opción",
+      "duration": "Termina en",
+      "kind": "Tipo de respuesta",
+      "single": "Una respuesta",
+      "multiple": "Varias respuestas",
+      "noMediaWithPoll": "Una publicación con encuesta no puede tener adjuntos",
+      "noPollWithMedia": "Quita los adjuntos para añadir una encuesta"
+    },
+    "durations": {
+      "m5": "5 minutos",
+      "m30": "30 minutos",
+      "h1": "1 hora",
+      "h6": "6 horas",
+      "d1": "1 día",
+      "d3": "3 días",
+      "d7": "7 días"
+    }
+  },
+  "about": {
+    "rules": "Normas",
+    "noRules": "Este servidor todavía no ha publicado ninguna norma.",
+    "contact": "Contacto",
+    "contactText": "¿Preguntas o problemas? Escribe a",
+    "noContact": "No se ha publicado ninguna dirección de contacto.",
+    "join": "Únete a este servidor",
+    "software": "ActivityPub y diaspora*",
+    "version": "versión {{version}}",
+    "registration": {
+      "open": "Cualquiera puede registrarse.",
+      "approval": "Un moderador revisa las cuentas nuevas.",
+      "invite": "El registro es solo con invitación.",
+      "closed": "El registro está cerrado en este momento."
+    }
+  },
+  "invites": {
+    "tab": "Invitar amigos",
+    "title": "Invitar amigos",
+    "description": "Comparte un enlace para invitar a personas a {{domain}}. En los servidores solo con invitación, es la única forma de entrar.",
+    "maxUses": "Se puede usar",
+    "expiresIn": "Caduca después de",
+    "unlimited": "Sin límite de veces",
+    "uses_one": "{{count}} vez",
+    "uses_many": "{{count}} veces",
+    "uses_other": "{{count}} veces",
+    "expiry": {
+      "h1": "1 hora",
+      "h6": "6 horas",
+      "d1": "1 día",
+      "d7": "7 días",
+      "d30": "30 días",
+      "never": "Nunca"
+    },
+    "create": "Crear enlace",
+    "created": "Enlace de invitación creado.",
+    "yourLinks": "Tus enlaces de invitación",
+    "empty": "Todavía no tienes enlaces de invitación.",
+    "link": "Enlace de invitación",
+    "copy": "Copiar enlace",
+    "copied": "Copiado",
+    "delete": "Eliminar",
+    "deleteLabel": "Eliminar la invitación {{code}}",
+    "deleteTitle": "¿Eliminar este enlace de invitación?",
+    "deleteDescription": "El enlace dejará de funcionar. Las cuentas ya creadas con él no se ven afectadas.",
+    "used_one": "Usado {{count}} de {{max}} veces",
+    "used_many": "Usado {{count}} de {{max}} veces",
+    "used_other": "Usado {{count}} de {{max}} veces",
+    "usedUnlimited_one": "Usado {{count}} vez, sin límite",
+    "usedUnlimited_many": "Usado {{count}} veces, sin límite",
+    "usedUnlimited_other": "Usado {{count}} veces, sin límite",
+    "expires": "caduca {{time}}",
+    "expired": "Caducado",
+    "neverExpires": "No caduca nunca",
+    "inactive": "Ya no es válido"
+  },
+  "messages": {
+    "title": "Mensajes",
+    "description": "Conversaciones privadas: mensajes directos y publicaciones compartidas con tus aspectos.",
+    "new": "Nuevo mensaje",
+    "empty": "Todavía no hay conversaciones. Empieza una con “Nuevo mensaje”.",
+    "you": "Tú",
+    "to": "Para",
+    "searchPlaceholder": "Busca personas por nombre o @usuario@servidor",
+    "recipients": "Destinatarios",
+    "removeRecipient": "Quitar a @{{acct}}",
+    "suggestions": "Sugerencias",
+    "noMatches": "No hay coincidencias."
+  },
+  "filters": {
+    "tab": "Palabras silenciadas",
+    "title": "Palabras silenciadas",
+    "description": "Oculta las publicaciones que contienen palabras o frases que no quieres ver.",
+    "phrase": "Palabra o frase",
+    "phraseHint": "No distingue entre mayúsculas y minúsculas.",
+    "wholeWord": "Solo palabra completa",
+    "wholeWordHint": "“gato” no ocultará “gatopardo”.",
+    "contexts": "Ocultar en",
+    "contextsRequired": "Elige al menos un lugar.",
+    "context": {
+      "home": "Inicio y listas",
+      "public": "Cronologías públicas",
+      "notifications": "Notificaciones",
+      "thread": "Conversaciones"
+    },
+    "duration": "Durante",
+    "durations": {
+      "forever": "Para siempre",
+      "day": "1 día",
+      "week": "1 semana",
+      "month": "1 mes"
+    },
+    "add": "Silenciar",
+    "added": "Silenciada.",
+    "yourWords": "Tus palabras silenciadas",
+    "empty": "No has silenciado ninguna palabra.",
+    "wholeWordShort": "palabra completa",
+    "partialShort": "también dentro de palabras",
+    "forever": "para siempre",
+    "expires": "hasta {{time}}",
+    "expired": "caducada",
+    "remove": "Dejar de silenciar",
+    "removeLabel": "Dejar de silenciar “{{phrase}}”"
+  },
+  "apps": {
+    "tab": "Aplicaciones autorizadas",
+    "title": "Aplicaciones autorizadas",
+    "description": "Aplicaciones como Tusky, Ivory o Elk funcionan con Disbigle: inicia sesión en ellas con la dirección {{domain}}. Aquí aparecen las aplicaciones que has autorizado.",
+    "empty": "Ninguna aplicación tiene acceso a tu cuenta.",
+    "unnamed": "Aplicación sin nombre",
+    "permissions": "Permisos",
+    "scopes": {
+      "read": "Lectura",
+      "write": "Escritura",
+      "follow": "Seguimiento",
+      "push": "Notificaciones push",
+      "admin": "Administración"
+    },
+    "partial": "{{scope}} (parcial)",
+    "authorized": "Autorizada {{time}}",
+    "lastUsed": "último uso {{time}}",
+    "neverUsed": "nunca usada",
+    "revoke": "Revocar acceso",
+    "revokeLabel": "Revocar el acceso de {{name}}",
+    "revokeTitle": "¿Revocar el acceso de {{name}}?",
+    "revokeDescription": "Se cerrará la sesión de {{name}} y necesitará de nuevo tu permiso para usar tu cuenta.",
+    "passwordNote": "Cambiar o restablecer tu contraseña también cierra la sesión de todas las aplicaciones."
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "contacts": {
+    "title": "Contactos",
+    "description": "Las personas con las que estás conectado, en todas las redes.",
+    "filters": "Mostrar",
+    "all": "Todos los contactos",
+    "onlyFollowers": "Solo te siguen",
+    "empty": "Todavía no hay nadie aquí.",
+    "emptyAll": "Todavía no hay contactos. Busca personas y síguelas, o añádelas a un aspecto."
+  }
+}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const USERNAME_PATTERN = /^[a-zA-Z0-9_]{1,30}$/;
-export const supportedLocales = ['en', 'it'] as const;
+export const supportedLocales = ['en', 'it', 'es'] as const;
 export type Locale = (typeof supportedLocales)[number];
 
 export const usernameSchema = z
