@@ -1070,5 +1070,23 @@
     "onlyFollowers": "Solo te siguen",
     "empty": "Todavía no hay nadie aquí.",
     "emptyAll": "Todavía no hay contactos. Busca personas y síguelas, o añádelas a un aspecto."
+  },
+  "emoji": {
+    "button": "Emoji",
+    "search": "Buscar emoji",
+    "categories": "Categorías",
+    "recent": "Usados recientemente",
+    "results": "Resultados",
+    "noResults": "No se ha encontrado ningún emoji.",
+    "failed": "No se han podido cargar los emoji. Inténtalo más tarde.",
+    "skinTone": "Tono de piel",
+    "tones": {
+      "0": "Predeterminado",
+      "1": "Claro",
+      "2": "Medio claro",
+      "3": "Medio",
+      "4": "Medio oscuro",
+      "5": "Oscuro"
+    }
   }
 }

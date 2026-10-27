@@ -1044,5 +1044,23 @@
     "onlyFollowers": "Following you only",
     "empty": "Nobody here yet.",
     "emptyAll": "No contacts yet. Search for people and follow them, or add them to an aspect."
+  },
+  "emoji": {
+    "button": "Emoji",
+    "search": "Search emoji",
+    "categories": "Categories",
+    "recent": "Recently used",
+    "results": "Results",
+    "noResults": "No emoji found.",
+    "failed": "The emoji couldn't be loaded. Try again later.",
+    "skinTone": "Skin tone",
+    "tones": {
+      "0": "Default",
+      "1": "Light",
+      "2": "Medium-light",
+      "3": "Medium",
+      "4": "Medium-dark",
+      "5": "Dark"
+    }
   }
 }

@@ -1,9 +1,10 @@
 import type { EditPostRequest, Status } from '@disbigle/shared';
-import { type FormEvent, useId, useState } from 'react';
+import { type FormEvent, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom } from '../api/errors.ts';
 import { useEditStatus } from '../api/mutations.ts';
 import { useLimits } from '../api/queries.ts';
+import { EmojiButton } from './EmojiPicker.tsx';
 import { PollIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { emptyPoll, type PollDraft, PollEditor, pollDraftOf, validatePoll } from './PollEditor.tsx';
@@ -25,6 +26,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
   const edit = useEditStatus();
   const ids = { text: useId(), counter: useId(), warning: useId(), error: useId() };
   const [content, setContent] = useState(status.source ?? htmlToText(status.content));
+  const textarea = useRef<HTMLTextAreaElement>(null);
   const [summary, setSummary] = useState(status.summary);
   const [warningOpen, setWarningOpen] = useState(status.summary.length > 0);
   const [sensitive, setSensitive] = useState(status.sensitive);
@@ -117,6 +119,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
         </label>
         <textarea
           id={ids.text}
+          ref={textarea}
           // biome-ignore lint/a11y/noAutofocus: opened on request to edit this post
           autoFocus
           rows={4}
@@ -160,6 +163,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           disabled={poll !== null}
           title={poll ? t('poll.editor.noMediaWithPoll') : undefined}
         />
+        <EmojiButton textarea={textarea} onChange={setContent} />
         <button
           type="button"
           aria-pressed={poll !== null}

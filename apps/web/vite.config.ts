@@ -35,7 +35,8 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
-            { name: 'vendor', test: /node_modules[\\/]/ },
+            // Emoji data stays out: it loads per language when the picker opens.
+            { name: 'vendor', test: /^(?!.*emojibase-data).*node_modules[\\/]/ },
           ],
         },
       },

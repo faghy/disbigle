@@ -144,4 +144,20 @@ describe('composer', () => {
     await user.upload(screen.getByTestId('composer-file-input'), big);
     expect(await screen.findByText('huge.png is larger than 16 MB.')).toBeInTheDocument();
   });
+
+  it('inserts an emoji where the cursor is, found by searching', async () => {
+    signedInApi();
+    renderApp('/');
+    const user = userEvent.setup();
+    const textbox = await screen.findByRole('textbox', { name: 'New post' });
+    await user.type(textbox, 'Hello world');
+    (textbox as HTMLTextAreaElement).setSelectionRange(5, 5);
+    await user.click(screen.getByRole('button', { name: 'Emoji' }));
+    const panel = await screen.findByRole('dialog', { name: 'Emoji' });
+    await user.type(within(panel).getByRole('searchbox', { name: 'Search emoji' }), 'waving hand');
+    await user.click(await within(panel).findByRole('button', { name: 'waving hand' }));
+    expect(textbox).toHaveValue('Hello👋 world');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Emoji' })).not.toBeInTheDocument();
+  });
 });

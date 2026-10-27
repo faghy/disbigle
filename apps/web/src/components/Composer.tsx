@@ -17,6 +17,7 @@ import { useAspects } from '../api/socialQueries.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
+import { EmojiButton } from './EmojiPicker.tsx';
 import { PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
@@ -288,6 +289,7 @@ export function Composer({
               title={poll ? t('poll.editor.noMediaWithPoll') : undefined}
               testId="composer-file-input"
             />
+            <EmojiButton textarea={textarea} onChange={setContent} />
             <button
               type="button"
               aria-pressed={poll !== null}
