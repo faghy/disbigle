@@ -1,0 +1,32 @@
+name: Translation / Traducción / Traduzione
+description: A wrong, missing or clumsy text. / Un texto incorrecto, que falta o poco claro. / Un testo sbagliato, mancante o poco chiaro.
+labels: [translation, needs-triage]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language / Idioma / Lingua
+      options: [Español, Italiano, English]
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where? / ¿Dónde? / Dove?
+      options:
+        - Android app
+        - iOS app
+        - Web (app.disbigle.com)
+        - Emails / Correos / Email
+        - Website (disbigle.com)
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Current text and your proposal / Texto actual y tu propuesta / Testo attuale e proposta
+      placeholder: |
+        Now / Ahora: …
+        Better / Mejor: …
+    validations:
+      required: true

@@ -1,0 +1,45 @@
+name: Bug / Error / Errore
+description: Something doesn't work as it should. / Algo no funciona como debería. / Qualcosa non funziona come dovrebbe.
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: Write in English, Spanish or Italian. / Escribe en inglés, español o italiano. / Scrivi in inglese, spagnolo o italiano.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where? / ¿Dónde? / Dove?
+      options:
+        - Android app
+        - iOS app
+        - Web (app.disbigle.com)
+        - Federation (diaspora*, Mastodon, Hubzilla…)
+        - Website (disbigle.com)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and device / Versión de la app y dispositivo / Versione dell'app e dispositivo
+      description: Settings → About → Version. / Ajustes → Información → Versión.
+      placeholder: 0.1.0 (3), Pixel 7, Android 15
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Pasos para reproducirlo / Passi per riprodurlo
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened? / ¿Qué esperabas y qué pasó? / Cosa ti aspettavi e cosa è successo?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Capturas / Screenshot
+      description: Drag images here. Hide private data. / Arrastra aquí las imágenes; oculta los datos privados.

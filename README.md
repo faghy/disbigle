@@ -77,6 +77,14 @@ Useful commands:
 | `packages/shared` | API types and schemas shared with the client |
 | `packages/config` | Typed configuration |
 
+## Contributing
+
+Found a bug, have an idea or a better translation? [Open an issue](https://github.com/faghy/disbigle/issues/new/choose): the forms are in English, Spanish and Italian.
+
+### Thanks
+
+- **Diego** ([@diegoch64](https://github.com/diegoch64), diaspo.it): testing, Spanish translation, ideas, and the Android app on the users' side.
+
 ## License
 
 [GNU Affero General Public License v3.0](LICENSE)

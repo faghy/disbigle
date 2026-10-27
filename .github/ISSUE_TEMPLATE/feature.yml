@@ -1,0 +1,29 @@
+name: Idea / Idea / Idea
+description: A feature or an improvement. / Una función o una mejora. / Una funzionalità o un miglioramento.
+labels: [enhancement, needs-triage]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where? / ¿Dónde? / Dove?
+      multiple: true
+      options:
+        - Android app
+        - iOS app
+        - Web (app.disbigle.com)
+        - Federation (diaspora*, Mastodon, Hubzilla…)
+        - Website (disbigle.com)
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like, and why? / ¿Qué te gustaría y por qué? / Cosa vorresti e perché?
+      description: Tell us the need, not only the solution. / Cuéntanos la necesidad, no solo la solución.
+    validations:
+      required: true
+  - type: textarea
+    id: elsewhere
+    attributes:
+      label: Seen elsewhere? / ¿Lo has visto en otro sitio? / Visto altrove?
+      description: diaspora*, Mastodon, other apps… Links or screenshots help.
