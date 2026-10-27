@@ -20,7 +20,7 @@ A federated social network that speaks ActivityPub and stays compatible with the
 - **Migration**: import an existing diaspora\* pod on the same domain, keeping handles, keys and contacts.
 - **Moderation**: approval queue, reports, suspensions, domain blocks, roles, audit log, editable instance settings and rules.
 - **Privacy**: images stripped of metadata, remote media cached locally, visibility enforced in one place.
-- **Apps**: the web client (English, Italian and Spanish; full width on desktop, notifications behind a bell at the top right, light theme by default with dark or system on request) installs as a PWA with push notifications; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
+- **Apps**: the web client (English, Italian and Spanish; full width on desktop, notifications behind a bell at the top right, light theme by default with dark or system on request) installs as a PWA with push notifications; native apps for iOS (`apps/ios`, SwiftUI) and Android (`apps/android`, Jetpack Compose) are in the repository; Mastodon apps (Tusky, Ivory, Elk, Phanpy…) work too, through a Mastodon-compatible API with OAuth 2. Mastodon lists are your aspects.
 
 Status: early development. A test instance runs at [app.disbigle.com](https://app.disbigle.com) and federates with real diaspora\* pods, Hubzilla and Mastodon. See [docs/architettura.md](docs/architettura.md) (Italian) for the design, [docs/decisions.md](docs/decisions.md) for implementation decisions and [docs/deploy.md](docs/deploy.md) to run your own.
 

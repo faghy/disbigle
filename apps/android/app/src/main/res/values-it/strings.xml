@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Sign-in -->
+  <string name="welcome">Benvenuto su Disbigle</string>
+  <string name="welcome_text">Un solo account per diaspora*, Mastodon e tutto il fediverso.</string>
+  <string name="your_server">Il tuo server</string>
+  <string name="sign_in_footer">L\'accesso avviene sulla pagina del tuo server: l\'app non vede mai la tua password.</string>
+  <string name="sign_in">Accedi</string>
+  <string name="create_account">Crea un account</string>
+  <string name="bad_server_address">Non sembra l\'indirizzo di un server.</string>
+  <string name="authorization_refused">L\'autorizzazione è stata negata.</string>
+  <string name="session_ended">La sessione è scaduta. Accedi di nuovo.</string>
+
+  <!-- Tabs and lists -->
+  <string name="tab_home">Home</string>
+  <string name="tab_notifications">Notifiche</string>
+  <string name="tab_messages">Messaggi</string>
+  <string name="tab_search">Cerca</string>
+  <string name="tab_profile">Profilo</string>
+  <string name="this_server">Questo server</string>
+  <string name="fediverse">Fediverso</string>
+  <string name="aspect">Aspetto</string>
+  <string name="aspects">Aspetti</string>
+  <string name="choose_timeline">Scegli la timeline</string>
+  <string name="new_post">Nuovo post</string>
+  <string name="new_message">Nuovo messaggio</string>
+  <string name="nothing_here">Ancora niente qui.</string>
+  <string name="try_again">Riprova</string>
+  <string name="back">Indietro</string>
+  <string name="thread">Conversazione</string>
+  <string name="no_notifications">Ancora nessuna notifica.</string>
+  <string name="no_messages">Ancora nessun messaggio.</string>
+  <string name="no_posts">Ancora nessun post.</string>
+  <string name="unread">Non letto</string>
+
+  <!-- Posts -->
+  <string name="reshared_by">%1$s ha ricondiviso</string>
+  <string name="profile_of">Profilo di %1$s</string>
+  <string name="show_more">Mostra di più</string>
+  <string name="show_less">Mostra meno</string>
+  <string name="edited_ago">modificato %1$s</string>
+  <string name="reply">Rispondi</string>
+  <string name="reshare">Ricondividi</string>
+  <string name="like">Mi piace</string>
+  <string name="bookmark">Segnalibro</string>
+  <string name="more_actions">Altre azioni</string>
+  <string name="share">Condividi</string>
+  <string name="copy_link">Copia link</string>
+  <string name="edit">Modifica</string>
+  <string name="delete">Elimina</string>
+  <string name="cancel">Annulla</string>
+  <string name="ok">OK</string>
+  <string name="delete_post_question">Eliminare questo post?</string>
+  <string name="something_went_wrong">Qualcosa è andato storto</string>
+  <string name="visibility_unlisted">Non in elenco</string>
+  <string name="visibility_private_icon">Solo follower o aspetti</string>
+  <string name="visibility_direct_icon">Messaggio diretto</string>
+  <string name="sensitive_content">Contenuto sensibile</string>
+  <string name="open">Apri</string>
+  <string name="close">Chiudi</string>
+  <string name="your_vote">Il tuo voto</string>
+  <string name="vote">Vota</string>
+  <string name="poll_closed">Chiuso</string>
+  <string name="poll_ends">chiude %1$s</string>
+  <plurals name="people">
+    <item quantity="one">%1$d persona</item>
+    <item quantity="many">%1$d persone</item>
+    <item quantity="other">%1$d persone</item>
+  </plurals>
+
+  <!-- Notifications -->
+  <string name="n_mention">%1$s ti ha menzionato</string>
+  <string name="n_status">%1$s ha pubblicato</string>
+  <string name="n_reblog">%1$s ha ricondiviso il tuo post</string>
+  <string name="n_follow">%1$s ti segue</string>
+  <string name="n_follow_request">%1$s ha chiesto di seguirti</string>
+  <string name="n_favourite">A %1$s piace il tuo post</string>
+  <string name="n_poll">Un sondaggio in cui hai votato è chiuso</string>
+  <string name="n_update">%1$s ha modificato un post</string>
+  <string name="alert_mention">%1$s ti ha menzionato</string>
+  <string name="alert_status">%1$s ha pubblicato</string>
+  <string name="alert_reblog">%1$s ha ricondiviso il tuo post</string>
+  <string name="alert_favourite">A %1$s piace il tuo post</string>
+  <string name="alert_follow">%1$s ti segue</string>
+  <string name="alert_follow_request">%1$s ha chiesto di seguirti</string>
+  <string name="alert_poll">Un sondaggio è chiuso</string>
+  <string name="alert_update">%1$s ha modificato un post</string>
+  <string name="channel_name">Notifiche di Disbigle</string>
+
+  <!-- Search -->
+  <string name="search_prompt">Persone, #hashtag, post</string>
+  <string name="search_hint">Cerca persone (anche su altri server: nome@server), hashtag e post.</string>
+  <string name="people">Persone</string>
+  <string name="hashtags">Hashtag</string>
+  <string name="posts">Post</string>
+  <string name="no_results">Nessun risultato.</string>
+
+  <!-- Profile -->
+  <string name="settings">Impostazioni</string>
+  <string name="mute">Silenzia</string>
+  <string name="unmute">Riattiva</string>
+  <string name="block">Blocca</string>
+  <string name="unblock">Sblocca</string>
+  <string name="follow">Segui</string>
+  <string name="following_button">Segui già</string>
+  <string name="requested">Richiesta inviata</string>
+  <string name="following_count">seguiti</string>
+  <plurals name="posts">
+    <item quantity="one">post</item>
+    <item quantity="many">post</item>
+    <item quantity="other">post</item>
+  </plurals>
+  <plurals name="followers">
+    <item quantity="one">follower</item>
+    <item quantity="many">follower</item>
+    <item quantity="other">follower</item>
+  </plurals>
+
+  <!-- Compose -->
+  <string name="edit_post">Modifica post</string>
+  <string name="post">Pubblica</string>
+  <string name="save">Salva</string>
+  <string name="replying_to">In risposta a %1$s</string>
+  <string name="content_warning">Avviso sul contenuto</string>
+  <string name="compose_placeholder">A cosa stai pensando?</string>
+  <string name="direct_placeholder">Scrivi @nome@server per scegliere chi riceve il messaggio</string>
+  <string name="alt_text_placeholder">Descrivi l\'immagine per chi non può vederla</string>
+  <string name="remove">Rimuovi</string>
+  <string name="sensitive_media">Media sensibili</string>
+  <string name="add_photos">Aggiungi foto</string>
+  <string name="add_poll">Aggiungi un sondaggio</string>
+  <string name="remove_poll">Togli il sondaggio</string>
+  <string name="image_unreadable">Questa immagine non si può leggere.</string>
+  <string name="discard_question">Scartare questo post?</string>
+  <string name="discard">Scarta</string>
+  <string name="keep_writing">Continua a scrivere</string>
+  <string name="poll">Sondaggio</string>
+  <string name="option_n">Opzione %1$d</string>
+  <string name="remove_option_n">Rimuovi l\'opzione %1$d</string>
+  <string name="add_option">Aggiungi opzione</string>
+  <string name="ends_in">Chiude tra</string>
+  <string name="d_5m">5 minuti</string>
+  <string name="d_1h">1 ora</string>
+  <string name="d_6h">6 ore</string>
+  <string name="d_1d">1 giorno</string>
+  <string name="d_3d">3 giorni</string>
+  <string name="d_7d">7 giorni</string>
+  <string name="several_answers">Più risposte</string>
+  <string name="poll_edit_note">Se cambi le opzioni o il tipo di sondaggio, i voti già dati vengono azzerati.</string>
+  <string name="who_can_see">Chi può vederlo</string>
+  <string name="visibility_public">Tutti</string>
+  <string name="visibility_unlisted_long">Tutti, ma non nelle timeline</string>
+  <string name="visibility_followers">Follower</string>
+  <string name="visibility_direct">Solo le persone menzionate</string>
+  <string name="aspects_note">Scegliendo degli aspetti, il post è condiviso solo con chi ne fa parte.</string>
+
+  <!-- Settings -->
+  <string name="edit_profile">Modifica profilo</string>
+  <string name="this_device">Questo dispositivo</string>
+  <string name="notifications">Notifiche</string>
+  <string name="posting">Pubblicazione</string>
+  <string name="android_settings">Impostazioni di Android per Disbigle</string>
+  <string name="follow_requests">Richieste di follow</string>
+  <string name="blocked">Bloccati</string>
+  <string name="muted">Silenziati</string>
+  <string name="saved">Salvati</string>
+  <string name="bookmarks">Segnalibri</string>
+  <string name="liked_posts">Post che ti piacciono</string>
+  <string name="security_and_account">Sicurezza e account</string>
+  <string name="security">Password, passkey e accesso in due passaggi</string>
+  <string name="apps_with_access">App con accesso</string>
+  <string name="account_actions">Esporta, sposta o elimina l\'account</string>
+  <string name="security_footer">Si aprono sulla pagina del tuo server, dove confermi con la password.</string>
+  <string name="about">Informazioni</string>
+  <string name="version">Versione</string>
+  <string name="server">Server</string>
+  <string name="source_code">Codice sorgente</string>
+  <string name="sign_out">Esci</string>
+  <string name="sign_out_question">Uscire da Disbigle?</string>
+  <string name="notifications_on_device">Notifiche su questo dispositivo</string>
+  <string name="allow_in_settings">Consenti le notifiche nelle impostazioni di Android</string>
+  <string name="notifications_footer">Android avvia Disbigle in background circa ogni 15 minuti per cercare nuove notifiche, meno spesso con la batteria scarica.</string>
+  <string name="notify_me_about">Avvisami per</string>
+  <string name="kind_mention">Menzioni e risposte</string>
+  <string name="kind_reblog">Ricondivisioni</string>
+  <string name="kind_favourite">Mi piace</string>
+  <string name="kind_follow">Nuovi follower</string>
+  <string name="kind_follow_request">Richieste di follow</string>
+  <string name="kind_poll">Sondaggi chiusi</string>
+  <string name="kind_update">Modifiche di post che hai ricondiviso</string>
+  <string name="kind_status">Post delle persone di cui ricevi notifiche</string>
+  <string name="kind_other">Altro</string>
+  <string name="default_visibility">Visibilità predefinita</string>
+  <string name="always_sensitive">Segna sempre i media come sensibili</string>
+  <string name="posting_footer">Vale per i nuovi post scritti su questo dispositivo; le risposte mantengono la visibilità della conversazione.</string>
+  <string name="pictures">Immagini</string>
+  <string name="change_avatar">Cambia l\'immagine del profilo</string>
+  <string name="change_header">Cambia l\'immagine di copertina</string>
+  <string name="name_and_bio">Nome e bio</string>
+  <string name="display_name">Nome visualizzato</string>
+  <string name="bio">Bio</string>
+  <string name="profile_fields">Campi del profilo</string>
+  <string name="field_label">Etichetta</string>
+  <string name="field_content">Contenuto (va bene anche un link)</string>
+  <string name="add_field">Aggiungi un campo</string>
+  <string name="fields_footer">Fino a quattro, per esempio il tuo sito o dove altro trovarti.</string>
+  <string name="approve_followers">Approva i nuovi follower</string>
+  <string name="suggest_profile">Suggerisci il mio profilo agli altri</string>
+  <string name="automated_account">È un account automatico</string>
+  <string name="email_language">Lingua delle email</string>
+  <string name="accept">Accetta</string>
+  <string name="decline">Rifiuta</string>
+  <string name="nobody_here">Nessuno qui.</string>
+  <string name="nothing_saved">Ancora niente di salvato.</string>
+  <string name="rename">Rinomina</string>
+  <string name="rename_aspect">Rinomina aspetto</string>
+  <string name="delete_aspect_question">Eliminare l\'aspetto «%1$s»?</string>
+  <string name="aspects_footer">Gli aspetti sono i gruppi con cui condividi, come su diaspora*. Aggiungi le persone dal loro profilo.</string>
+  <string name="new_aspect">Nuovo aspetto</string>
+  <string name="add">Aggiungi</string>
+  <string name="aspect_empty">Ancora nessuno in questo aspetto.</string>
+</resources>
