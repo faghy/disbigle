@@ -21,12 +21,13 @@ export function App({
     let lastTracked = '';
     const track = async () => {
       const href = appRouter.state.location.href;
-      if (href === lastTracked) return;
+      const pattern = appRouter.state.matches.at(-1)?.fullPath;
+      // Not resolved yet: the router's event reports it.
+      if (!pattern || href === lastTracked) return;
       lastTracked = href;
       const analytics = (await queryClient.fetchQuery(instanceQueryOptions).catch(() => null))
         ?.analytics;
-      const pattern = appRouter.state.matches.at(-1)?.fullPath;
-      if (analytics && pattern) trackPageView(analytics, pattern);
+      if (analytics) trackPageView(analytics, pattern);
     };
     void track();
     return appRouter.subscribe('onResolved', (event) => {
