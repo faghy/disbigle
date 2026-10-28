@@ -17,7 +17,12 @@ export function App({
   // Anonymous page views, when this server uses Matomo (see lib/analytics.ts).
   useEffect(() => {
     if (trackingRefused()) return;
+    // The first screen can be reported both here and by the router's first event: once only.
+    let lastTracked = '';
     const track = async () => {
+      const href = appRouter.state.location.href;
+      if (href === lastTracked) return;
+      lastTracked = href;
       const analytics = (await queryClient.fetchQuery(instanceQueryOptions).catch(() => null))
         ?.analytics;
       const pattern = appRouter.state.matches.at(-1)?.fullPath;
