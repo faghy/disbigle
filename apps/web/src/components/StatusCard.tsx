@@ -164,6 +164,15 @@ function VisibilityBadge({ status, isAuthor }: { status: Status; isAuthor: boole
   );
 }
 
+/** Local previews are at most this many pixels on their longest side (see core/media/upload.ts). */
+const PREVIEW_SIDE = 640;
+
+function singleImageSrcSet(item: MediaAttachment): string | undefined {
+  if (!item.previewUrl || item.previewUrl === item.url || !item.width || !item.height) return;
+  const scale = Math.min(1, PREVIEW_SIDE / Math.max(item.width, item.height));
+  return `${item.previewUrl} ${Math.round(item.width * scale)}w, ${item.url} ${item.width}w`;
+}
+
 function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: boolean }) {
   const { t } = useTranslation();
   const [revealed, setRevealed] = useState(!sensitive);
@@ -199,7 +208,7 @@ function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: 
               tabIndex={revealed ? 0 : -1}
               className={cx(
                 'relative block overflow-hidden bg-surface-muted focus-ring',
-                images.length === 1 ? 'max-h-[28rem]' : 'aspect-video',
+                images.length === 1 ? 'w-full' : 'aspect-video',
                 images.length === 3 && index === 0 && 'row-span-2 aspect-auto',
               )}
               onClick={() => setViewing(index)}
@@ -211,11 +220,18 @@ function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: 
             >
               <img
                 src={item.previewUrl ?? item.url}
+                // A single image is shown whole and wide: the full file where the preview is too small.
+                srcSet={images.length === 1 ? singleImageSrcSet(item) : undefined}
+                sizes={images.length === 1 ? '(min-width: 64rem) 66vw, 100vw' : undefined}
                 alt={item.description}
                 loading="lazy"
                 width={item.width ?? undefined}
                 height={item.height ?? undefined}
-                className="size-full object-cover"
+                className={
+                  images.length === 1
+                    ? 'max-h-[32rem] w-full object-contain'
+                    : 'size-full object-cover'
+                }
               />
               {item.description && (
                 <span className="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
