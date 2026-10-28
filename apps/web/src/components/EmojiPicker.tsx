@@ -57,14 +57,14 @@ export function EmojiButton({
       if (!wrapper.current?.contains(event.target as Node)) setOpen(false);
     };
     // Esc closes it from the text too, where the cursor goes back after each pick.
-    const escape = (event: globalThis.KeyboardEvent) => {
+    const onEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
     document.addEventListener('pointerdown', outside);
-    document.addEventListener('keydown', escape);
+    document.addEventListener('keydown', onEscape);
     return () => {
       document.removeEventListener('pointerdown', outside);
-      document.removeEventListener('keydown', escape);
+      document.removeEventListener('keydown', onEscape);
     };
   }, [open]);
 
