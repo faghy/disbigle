@@ -13,6 +13,9 @@ const configSchema = z.object({
   MEDIA_DIR: z.string().default('./storage/media'),
   INSTANCE_TITLE: z.string().default('Disbigle'),
   INSTANCE_DESCRIPTION: z.string().default(''),
+  /** Optional Matomo for the web client (cookieless page views, no personal data). */
+  MATOMO_URL: z.url().optional(),
+  MATOMO_SITE_ID: z.coerce.number().int().positive().optional(),
   /** SMTP connection URL, e.g. smtps://user:pass@mail.example.org:465. Without it, emails are logged. */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Disbigle <noreply@localhost>'),

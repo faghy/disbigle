@@ -157,6 +157,7 @@ describe('composer', () => {
     await user.type(within(panel).getByRole('searchbox', { name: 'Search emoji' }), 'waving hand');
     await user.click(await within(panel).findByRole('button', { name: 'waving hand' }));
     expect(textbox).toHaveValue('Hello👋 world');
+    await waitFor(() => expect(textbox).toHaveFocus());
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Emoji' })).not.toBeInTheDocument();
   });

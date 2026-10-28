@@ -67,6 +67,8 @@ export interface InstanceInfo {
   /** Effective mode: a brand-new instance reports `open` so its first user can sign up as admin. */
   registrationMode: 'open' | 'approval' | 'invite' | 'closed';
   version: string;
+  /** Matomo of this server, when it uses one: the web client sends anonymous page views. */
+  analytics?: { matomoUrl: string; siteId: number };
   limits: {
     maxPostLength: number;
     maxMediaAttachments: number;

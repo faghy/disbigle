@@ -27,6 +27,9 @@ export async function publicRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       contactEmail: settings.contactEmail,
       registrationMode: anyUser ? settings.registrationMode : 'open',
       version: VERSION,
+      ...(ctx.config.MATOMO_URL && ctx.config.MATOMO_SITE_ID
+        ? { analytics: { matomoUrl: ctx.config.MATOMO_URL, siteId: ctx.config.MATOMO_SITE_ID } }
+        : {}),
       limits: {
         maxPostLength: MAX_POST_LENGTH,
         maxMediaAttachments: 4,

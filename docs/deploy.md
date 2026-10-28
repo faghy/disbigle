@@ -45,6 +45,8 @@ SMTP_URL=smtps://user:password@mail.example.org:465
 MAIL_FROM="Example <noreply@example.org>"
 ```
 
+**Analytics (optional).** With `MATOMO_URL=https://matomo.example.org` and `MATOMO_SITE_ID=3` the web client sends Matomo a page view at each screen: no cookies, no script from the Matomo server (an image request, so the Content Security Policy stays as it is), only the screen's generic address (`/@profile/post`, never names, posts or searches), and nothing at all from browsers that ask not to be tracked (Do Not Track, Global Privacy Control). Mention it in your privacy policy.
+
 `LOCAL_DOMAIN` becomes part of every handle (`user@example.org`) and **cannot change later** without breaking federation.
 
 **Split domain.** Handles can live on a different host from the app: `LOCAL_DOMAIN=example.org` with `PUBLIC_URL=https://social.example.org` gives handles like `user@example.org`. The app answers WebFinger for both hosts. The server at `example.org` (any web server or site) only has to send the discovery paths to the app:
