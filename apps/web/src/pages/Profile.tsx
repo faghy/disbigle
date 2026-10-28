@@ -17,7 +17,7 @@ import { FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
 import { InfoIcon, MailIcon, MoreIcon } from '../components/icons.tsx';
 import { ReportDialog } from '../components/ReportDialog.tsx';
-import { displayName, StatusCard } from '../components/StatusCard.tsx';
+import { displayName, StatusCard, StatusContent } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { Alert, Button, buttonClass, Card, cx, LoadingState } from '../components/ui.tsx';
 import { useDismiss } from '../lib/dismiss.ts';
@@ -172,7 +172,13 @@ export function ProfileView({
 
         {me && !isOwn && <RelationshipBar account={account} />}
 
-        {account.note && <p className="mt-5 whitespace-pre-wrap break-words">{account.note}</p>}
+        {account.note &&
+          // Remote bios arrive as HTML (sanitised by the server), local ones as plain text.
+          (account.local ? (
+            <p className="mt-5 whitespace-pre-wrap break-words">{account.note}</p>
+          ) : (
+            <StatusContent html={account.note} className="mt-5" />
+          ))}
 
         {account.fields.length > 0 && (
           <dl className="mt-5 divide-y divide-border overflow-hidden rounded-xl border border-border">
@@ -183,7 +189,13 @@ export function ProfileView({
                 className="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(0,10rem)_1fr] sm:gap-4"
               >
                 <dt className="text-sm font-medium text-fg-muted break-words">{field.name}</dt>
-                <dd className="break-words">{field.value}</dd>
+                {account.local ? (
+                  <dd className="break-words">{field.value}</dd>
+                ) : (
+                  <dd>
+                    <StatusContent html={field.value} />
+                  </dd>
+                )}
               </div>
             ))}
           </dl>

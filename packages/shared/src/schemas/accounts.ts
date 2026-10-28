@@ -28,7 +28,7 @@ export interface Account {
   /** `username` for local accounts, `username@domain` for remote ones. */
   acct: string;
   displayName: string;
-  /** Profile bio as plain text (rendered by the client). */
+  /** Profile bio: plain text for local accounts, sanitised HTML for remote ones. */
   note: string;
   avatarUrl: string | null;
   headerUrl: string | null;

@@ -35,6 +35,39 @@ describe('public profile', () => {
     expect(screen.getByText('Bot')).toBeInTheDocument();
   });
 
+  it('renders the HTML bio and fields of remote accounts', async () => {
+    mockApi({
+      'GET /me': signedOut,
+      'GET /instance': instance(),
+      'GET /accounts/lookup/carol@remote.example': {
+        body: {
+          id: '3',
+          username: 'carol',
+          acct: 'carol@remote.example',
+          displayName: 'Carol',
+          note: '<p>Hello <strong>world</strong></p>',
+          avatarUrl: null,
+          headerUrl: null,
+          fields: [{ name: 'Site', value: '<a href="https://carol.example">carol.example</a>' }],
+          locked: false,
+          bot: false,
+          discoverable: true,
+          local: false,
+          url: 'https://remote.example/@carol',
+          createdAt: '2026-10-11T00:00:00.000Z',
+        },
+      },
+    });
+    renderApp('/@carol@remote.example');
+    expect(await screen.findByRole('heading', { name: 'Carol' })).toBeInTheDocument();
+    expect(screen.getByText('world').tagName).toBe('STRONG');
+    expect(screen.queryByText(/<p>/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'carol.example' })).toHaveAttribute(
+      'href',
+      'https://carol.example',
+    );
+  });
+
   it('shows a not-found state for unknown accounts', async () => {
     mockApi({ 'GET /me': signedOut, 'GET /instance': instance() });
     renderApp('/@nobody');
