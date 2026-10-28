@@ -1062,5 +1062,11 @@
       "4": "Medium-dark",
       "5": "Dark"
     }
+  },
+  "youtube": {
+    "video": "YouTube video",
+    "play": "Play “{{title}}” (loads YouTube)",
+    "privacy": "YouTube loads only when you press play",
+    "playing": "Playing from YouTube"
   }
 }

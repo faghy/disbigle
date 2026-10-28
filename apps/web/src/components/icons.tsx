@@ -240,3 +240,8 @@ export const PenIcon = (p: IconProps) => (
     <path d="M13.5 6.5l4 4" />
   </Icon>
 );
+export const PlayIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
+  </Icon>
+);

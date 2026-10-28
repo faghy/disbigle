@@ -1,7 +1,7 @@
 import type { Account, MediaAttachment, Mention, Status } from '@disbigle/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useRouter } from '@tanstack/react-router';
-import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { findCachedStatus, shownStatus, socialKeys, updateStatusEverywhere } from '../api/cache.ts';
 import { ApiError } from '../api/client.ts';
@@ -13,6 +13,7 @@ import { useAspects } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { fullDateTime, relativeTime } from '../lib/time.ts';
 import { canReshare, visibilityIcons } from '../lib/visibility.tsx';
+import { firstYouTubeLink } from '../lib/youtube.ts';
 import { Avatar } from './Avatar.tsx';
 import { Composer } from './Composer.tsx';
 import { ConfirmDialog } from './Dialog.tsx';
@@ -30,6 +31,7 @@ import { Lightbox } from './Lightbox.tsx';
 import { PollView } from './PollView.tsx';
 import { ReportDialog } from './ReportDialog.tsx';
 import { Alert, cx } from './ui.tsx';
+import { YouTubePreview } from './YouTubePreview.tsx';
 
 /** Path of a post page inside the app. */
 export const statusPath = (status: Status) => ({
@@ -592,6 +594,11 @@ export function StatusCard({
   const headingId = useId();
   const hasWarning = status.summary.length > 0;
   const signedIn = Boolean(user);
+  // Like Mastodon's link cards: only on posts without photos or a poll.
+  const youtube = useMemo(
+    () => (status.media.length === 0 && !status.poll ? firstYouTubeLink(status.content) : null),
+    [status.media.length, status.poll, status.content],
+  );
 
   const act = (kind: ToggleKind, value: boolean) => toggle.mutate({ status, kind, value });
   // Bumped on each new like: the heart pops then, not for posts already liked on load.
@@ -690,6 +697,7 @@ export function StatusCard({
             {status.media.length > 0 && (
               <MediaGrid media={status.media} sensitive={status.sensitive && !hasWarning} />
             )}
+            {youtube && <YouTubePreview link={youtube} />}
           </div>
 
           {highlighted && (

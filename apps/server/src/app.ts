@@ -44,6 +44,7 @@ import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
 import { tagRoutes } from './routes/tags.ts';
 import { timelineRoutes } from './routes/timelines.ts';
+import { youtubeRoutes } from './routes/youtube.ts';
 import type { StreamingHub } from './streaming.ts';
 
 /** Size prefixes diaspora* puts before a photo's file name. */
@@ -205,6 +206,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(inviteRoutes, { ctx, prefix: '/invites' });
       await api.register(filterRoutes, { ctx, prefix: '/filters' });
       await api.register(adminRoutes, { ctx, prefix: '/admin' });
+      await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
       if (options.federation) {
         await api.register(searchRoutes, {
           ctx,

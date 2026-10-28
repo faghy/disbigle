@@ -1088,5 +1088,11 @@
       "4": "Medio oscuro",
       "5": "Oscuro"
     }
+  },
+  "youtube": {
+    "video": "Video de YouTube",
+    "play": "Reproducir “{{title}}” (carga YouTube)",
+    "privacy": "YouTube solo se carga cuando pulsas play",
+    "playing": "Reproduciendo desde YouTube"
   }
 }
