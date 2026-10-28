@@ -46,6 +46,9 @@ import { tagRoutes } from './routes/tags.ts';
 import { timelineRoutes } from './routes/timelines.ts';
 import type { StreamingHub } from './streaming.ts';
 
+/** Size prefixes diaspora* puts before a photo's file name. */
+const DIASPORA_PHOTO_SIZES = ['thumb_small_', 'thumb_medium_', 'thumb_large_', 'scaled_full_'];
+
 export interface AppOptions {
   ctx: CoreContext;
   /** Shared rate-limit store; in-memory when omitted (tests, single process). */
@@ -158,6 +161,17 @@ export async function buildApp(options: AppOptions) {
       decorateReply: false,
       index: false,
     });
+    // diaspora* pods ask for photo sizes by prefixing the file name (remote_photo_path +
+    // "thumb_large_" + remote_photo_name): every size is the file itself. In production nginx
+    // does the same (deploy/nginx.conf).
+    app.get<{ Params: { year: string; month: string; file: string } }>(
+      `/media/:year/:month/:file(^(?:${DIASPORA_PHOTO_SIZES.join('|')}).+)`,
+      async (request, reply) => {
+        const { year, month, file } = request.params;
+        const name = file.replace(new RegExp(`^(?:${DIASPORA_PHOTO_SIZES.join('|')})`), '');
+        return reply.redirect(`/media/${year}/${month}/${encodeURIComponent(name)}`, 301);
+      },
+    );
   }
 
   app.get('/health', async () => ({ status: 'ok' }));

@@ -58,6 +58,7 @@ export function useTestApp(
       mailer: testMailer,
       disableRateLimit: true,
       disableRegistrationGuard: !options.registrationGuard,
+      serveMedia: true,
     });
   });
   afterAll(async () => {

@@ -57,6 +57,17 @@ describe('media API', () => {
     const post = await client.post('/api/v1/statuses', { content: '', mediaIds: [media.id] });
     expect(post.statusCode).toBe(201);
     expect(post.json().media[0].id).toBe(media.id);
+
+    // diaspora* pods ask for sizes by prefixing the file name: they get the same image.
+    const path = new URL(media.url).pathname;
+    expect((await app().inject({ method: 'GET', url: path })).statusCode).toBe(200);
+    const slash = path.lastIndexOf('/');
+    const sized = await app().inject({
+      method: 'GET',
+      url: `${path.slice(0, slash + 1)}thumb_large_${path.slice(slash + 1)}`,
+    });
+    expect(sized.statusCode).toBe(301);
+    expect(sized.headers.location).toBe(path);
   });
 
   it('changes the attachments of a post when it is edited', async () => {
