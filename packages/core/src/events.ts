@@ -15,6 +15,8 @@ export type DomainEvent =
       threadRootId: string | null;
       /** Author of the post this one answered, who received it and must hear of its deletion. */
       inReplyToActorId?: string | null;
+      /** The group the post was in. */
+      groupId?: string | null;
     }
   | { type: 'notification.created'; notificationId: string; recipientActorId: string }
   | {
@@ -40,7 +42,11 @@ export type DomainEvent =
   | { type: 'account.deleted'; actorId: string }
   | { type: 'post.updated'; postId: string; actorId: string }
   | { type: 'account.moved'; actorId: string; targetActorId: string }
-  | { type: 'poll.voted'; pollId: string; postId: string; actorId: string; voteIds: string[] };
+  | { type: 'poll.voted'; pollId: string; postId: string; actorId: string; voteIds: string[] }
+  /** A public group stops federating (deleted, or made private); `actorId` is the group's actor. */
+  | { type: 'group.closed'; groupId: string; actorId: string }
+  /** A member from another server was removed from a group. */
+  | { type: 'group.member_removed'; groupId: string; actorId: string; apUri: string };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

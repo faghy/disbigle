@@ -59,7 +59,7 @@ async function loadKeyPairs(ctx: CoreContext, actorId: string): Promise<CryptoKe
     .from(schema.users)
     .innerJoin(schema.actors, eq(schema.actors.id, schema.users.actorId))
     .where(eq(schema.users.actorId, actorId));
-  if (!row) return [];
+  if (!row) return loadGroupKeyPairs(ctx, actorId);
   let { ed25519PrivateKeyPem, ed25519PublicKeyPem } = row.user;
   if (!ed25519PrivateKeyPem || !ed25519PublicKeyPem) {
     const generated = await generateEd25519KeyPair();
@@ -74,6 +74,19 @@ async function loadKeyPairs(ctx: CoreContext, actorId: string): Promise<CryptoKe
     await importRsaKeyPair(row.user.privateKeyPem, row.publicKeyPem),
     await importEd25519KeyPair(ed25519PrivateKeyPem, ed25519PublicKeyPem),
   ];
+}
+
+/** A group's actor signs with its RSA key only (HTTP Signatures). */
+async function loadGroupKeyPairs(ctx: CoreContext, actorId: string): Promise<CryptoKeyPair[]> {
+  const [row] = await ctx.db
+    .select({
+      privateKeyPem: schema.groups.privateKeyPem,
+      publicKeyPem: schema.actors.publicKeyPem,
+    })
+    .from(schema.groups)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.groups.actorId))
+    .where(eq(schema.groups.actorId, actorId));
+  return row ? [await importRsaKeyPair(row.privateKeyPem, row.publicKeyPem)] : [];
 }
 
 /** Identifier of the instance actor; the tilde keeps it apart from every username. */

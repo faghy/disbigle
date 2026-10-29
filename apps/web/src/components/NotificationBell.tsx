@@ -129,7 +129,11 @@ function BellItem({ notification, onPick }: { notification: Notification; onPick
   const { account, status, type } = notification;
   const style = typeStyle[type];
   const Icon = style.icon;
-  const target = status ? statusPath(status) : profilePath(account);
+  const target = status
+    ? statusPath(status)
+    : notification.group
+      ? { to: '/groups/$handle' as const, params: { handle: notification.group.handle } }
+      : profilePath(account);
   return (
     <Link
       {...target}
@@ -153,7 +157,9 @@ function BellItem({ notification, onPick }: { notification: Notification; onPick
       <span className="min-w-0 flex-1 text-sm">
         <span className="block">
           <span className="font-semibold">{displayName(account)}</span>{' '}
-          <span className="text-fg-muted">{t(`notifications.verbs.${type}`)}</span>
+          <span className="text-fg-muted">
+            {t(`notifications.verbs.${type}`, { group: notification.group?.name ?? '' })}
+          </span>
         </span>
         {status && (
           <span className="mt-0.5 block truncate text-fg-muted">

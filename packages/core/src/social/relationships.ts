@@ -40,6 +40,9 @@ export async function follow(
 ): Promise<Relationship> {
   if (actorId === targetActorId) throw new DomainError('bad_request', 'You cannot follow yourself');
   const [actor, target] = await Promise.all([getActor(ctx, actorId), getActor(ctx, targetActorId)]);
+  // Our groups are joined (remote servers' follows are handled as joins by the inbox).
+  if (target.isGroup && target.domain === null)
+    throw new DomainError('bad_request', 'Join the group instead of following it');
   if (await isBlockedEitherWay(ctx, actorId, targetActorId)) {
     throw new DomainError('forbidden', 'You cannot follow this account');
   }

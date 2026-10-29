@@ -13,11 +13,15 @@ import {
   findPostByUri,
   follow,
   getInstanceSettings,
+  groupOfActor,
   ingestRemoteAnnounce,
   ingestRemotePost,
   isBridgeUsername,
   like,
   rejectFollowRequest,
+  remoteGroupMembers,
+  remoteJoinGroup,
+  remoteLeaveGroup,
   undoRemoteActivity,
   unfollow,
   updateRemotePollCounts,
@@ -48,6 +52,7 @@ import {
   Move,
   Note,
   Person,
+  PUBLIC_COLLECTION,
   Question,
   Reject,
   Tombstone,
@@ -59,6 +64,7 @@ import { bridgedNoteById } from './bridge.ts';
 import {
   bridgedPerson,
   localActorToPerson,
+  localGroupToActor,
   noteToPostData,
   postToNote,
   questionPoll,
@@ -151,7 +157,20 @@ async function deletedLocalActor(ctx: CoreContext, identifier: string) {
 
 async function localActorByIdentifier(ctx: CoreContext, identifier: string) {
   const actor = await findLocalActorByUsername(ctx, identifier);
-  return actor && !actor.suspendedAt ? actor : null;
+  if (!actor || actor.suspendedAt) return null;
+  // Of our groups, only public ones exist for other servers.
+  if (actor.isGroup && (await groupOfActor(ctx, actor.id))?.group.privacy !== 'public') return null;
+  return actor;
+}
+
+/** Whether a post may be shown to other servers: not one in a private group. */
+async function federatable(ctx: CoreContext, post: { groupId: string | null }) {
+  if (!post.groupId) return true;
+  const [group] = await ctx.db
+    .select({ privacy: schema.groups.privacy })
+    .from(schema.groups)
+    .where(eq(schema.groups.id, post.groupId));
+  return group?.privacy === 'public';
 }
 
 const MAX_ANCESTOR_FETCH = 5;
@@ -222,6 +241,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         return bridged ? bridgedPerson(ctx, bridged, await ctx.getActorKeyPairs(identifier)) : null;
       }
       const actor = await localActorByIdentifier(ctx.data, identifier);
+      if (actor?.isGroup)
+        return localGroupToActor(ctx, actor, await ctx.getActorKeyPairs(identifier));
       if (actor) {
         const [moved] = actor.movedToActorId
           ? await ctx.data.db
@@ -274,6 +295,21 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         (await localActorByIdentifier(ctx.data, identifier)) ??
         (await deletedLocalActor(ctx.data, identifier))?.actor;
       if (!actor) return null;
+      if (actor.isGroup) {
+        // A group's followers are its members on other servers.
+        const record = await groupOfActor(ctx.data, actor.id);
+        const members = record ? await remoteGroupMembers(ctx.data, record.group.id) : [];
+        return {
+          items: members
+            .filter((m) => m.apUri && m.apInbox)
+            .map((m) => ({
+              id: new URL(m.apUri ?? ''),
+              inboxId: new URL(m.apInbox ?? ''),
+              endpoints: m.apSharedInbox ? { sharedInbox: new URL(m.apSharedInbox) } : null,
+            })),
+          nextCursor: null,
+        };
+      }
       const { follows, actors } = schema;
       const rows = await ctx.data.db
         .select({ follow: follows, follower: actors })
@@ -303,6 +339,10 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     .setCounter(async (ctx, identifier) => {
       const actor = await localActorByIdentifier(ctx.data, identifier);
       if (!actor) return null;
+      if (actor.isGroup) {
+        const record = await groupOfActor(ctx.data, actor.id);
+        return record ? (await remoteGroupMembers(ctx.data, record.group.id)).length : 0;
+      }
       const [row] = await ctx.data.db
         .select({ n: count() })
         .from(schema.follows)
@@ -345,6 +385,39 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       const actor = await localActorByIdentifier(ctx.data, identifier);
       if (!actor) return null;
       const { posts } = schema;
+      if (actor.isGroup) {
+        // What a group shares: the posts started in it.
+        const record = await groupOfActor(ctx.data, actor.id);
+        if (!record) return null;
+        const shared = await ctx.data.db
+          .select({ id: posts.id, apUri: posts.apUri, createdAt: posts.createdAt })
+          .from(posts)
+          .where(
+            and(
+              eq(posts.groupId, record.group.id),
+              isNull(posts.inReplyToId),
+              isNull(posts.reblogOfId),
+              cursor ? lt(posts.id, cursor) : undefined,
+            ),
+          )
+          .orderBy(desc(posts.id))
+          .limit(PAGE_SIZE);
+        return {
+          items: shared
+            .filter((p) => p.apUri)
+            .map(
+              (p) =>
+                new Announce({
+                  id: new URL(`${ctx.getActorUri(actor.username).href}#announces/${p.id}`),
+                  actor: ctx.getActorUri(actor.username),
+                  object: new URL(p.apUri ?? ''),
+                  to: PUBLIC_COLLECTION,
+                  published: Temporal.Instant.fromEpochMilliseconds(p.createdAt.getTime()),
+                }),
+            ),
+          nextCursor: shared.length === PAGE_SIZE ? (shared.at(-1)?.id ?? null) : null,
+        };
+      }
       const rows = await ctx.data.db
         .select()
         .from(posts)
@@ -353,6 +426,7 @@ export function createDisbigleFederation(options: FederationOptions): Federation
             eq(posts.actorId, actor.id),
             eq(posts.visibility, 'public'),
             isNull(posts.reblogOfId),
+            isNull(posts.groupId),
             cursor ? lt(posts.id, cursor) : undefined,
           ),
         )
@@ -379,7 +453,13 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       const [row] = await ctx.data.db
         .select({ n: count() })
         .from(schema.posts)
-        .where(and(eq(schema.posts.actorId, actor.id), eq(schema.posts.visibility, 'public')));
+        .where(
+          and(
+            eq(schema.posts.actorId, actor.id),
+            eq(schema.posts.visibility, 'public'),
+            isNull(schema.posts.groupId),
+          ),
+        );
       return row?.n ?? 0;
     })
     .setFirstCursor(() => '');
@@ -391,7 +471,13 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       .select({ post: schema.posts })
       .from(schema.pins)
       .innerJoin(schema.posts, eq(schema.posts.id, schema.pins.postId))
-      .where(and(eq(schema.pins.actorId, actor.id), eq(schema.posts.visibility, 'public')))
+      .where(
+        and(
+          eq(schema.pins.actorId, actor.id),
+          eq(schema.posts.visibility, 'public'),
+          isNull(schema.posts.groupId),
+        ),
+      )
       .orderBy(desc(schema.pins.createdAt));
     return { items: await Promise.all(rows.map((r) => postToNote(ctx, r.post, actor))) };
   });
@@ -409,7 +495,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     if (
       !post ||
       post.reblogOfId ||
-      (post.visibility !== 'public' && post.visibility !== 'unlisted')
+      (post.visibility !== 'public' && post.visibility !== 'unlisted') ||
+      !(await federatable(ctx.data, post))
     )
       return null;
     return postToNote(ctx, post, actor);
@@ -510,6 +597,25 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       const target = await localActorByIdentifier(ctx.data, parsed.identifier);
       const follower = await storeActor(ctx, await activity.getActor(ctx));
       if (!target || !follower) return;
+      if (target.isGroup) {
+        // Following a group is joining it.
+        const joined = await remoteJoinGroup(ctx.data, target.id, follower.id, activity.id.href);
+        const remote = await activity.getActor(ctx);
+        if (!remote) return;
+        const Answer = joined ? Accept : Reject;
+        await ctx.sendActivity(
+          { identifier: target.username },
+          remote,
+          new Answer({
+            id: new URL(
+              `${ctx.getActorUri(target.username).href}#${joined ? 'accepts' : 'rejects'}/${crypto.randomUUID()}`,
+            ),
+            actor: ctx.getActorUri(target.username),
+            object: activity,
+          }),
+        );
+        return;
+      }
       try {
         await follow(ctx.data, follower.id, target.id, { apUri: activity.id.href });
       } catch {
@@ -572,7 +678,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         const parsed = ctx.parseUri(object.objectId);
         if (parsed?.type !== 'actor') return;
         const target = await localActorByIdentifier(ctx.data, parsed.identifier);
-        if (target) await rejectFollowRequest(ctx.data, target.id, sender.id);
+        if (target?.isGroup) await remoteLeaveGroup(ctx.data, target.id, sender.id);
+        else if (target) await rejectFollowRequest(ctx.data, target.id, sender.id);
       } else if ((object instanceof Like || object instanceof Announce) && object.id) {
         await undoRemoteActivity(ctx.data, sender.id, object.id.href);
       } else if (activity.objectId) {

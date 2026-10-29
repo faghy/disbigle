@@ -36,7 +36,8 @@
     "more": "More",
     "sidePanel": "About this server and your hashtags",
     "aboutServer": "About this server",
-    "contacts": "Contacts"
+    "contacts": "Contacts",
+    "groups": "Groups"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -436,7 +437,9 @@
       "aspectsRequired": "Choose at least one aspect.",
       "mediaFailed": "Remove the attachments that failed to upload."
     },
-    "mentionSuggestions": "People to mention"
+    "mentionSuggestions": "People to mention",
+    "inGroup": "Only members of {{name}} will see this",
+    "inPublicGroup": "Posting in {{name}}: anyone can read it"
   },
   "status": {
     "reshared": "{{name}} reshared",
@@ -485,7 +488,8 @@
       "reshares_other": "{{count}} reshares",
       "likes_one": "{{count}} like",
       "likes_other": "{{count}} likes"
-    }
+    },
+    "inGroup": "In {{name}}"
   },
   "timeline": {
     "loadMore": "Load more",
@@ -557,11 +561,15 @@
       "follow_request": "asked to follow you",
       "reblog": "reshared your post",
       "like": "liked your post",
-      "poll": "ended a poll"
+      "poll": "ended a poll",
+      "group_request": "asked to join {{group}}",
+      "group_invite": "invited you to {{group}}",
+      "group_accepted": "let you into {{group}}"
     },
     "pollEnded": "A poll you voted in has ended",
     "pollOwnEnded": "Your poll has ended",
-    "seeAll": "See all notifications"
+    "seeAll": "See all notifications",
+    "openGroup": "Open {{name}}"
   },
   "aspects": {
     "title": "Aspects",
@@ -1071,5 +1079,100 @@
     "play": "Play “{{title}}” (loads YouTube)",
     "privacy": "YouTube loads only when you press play",
     "playing": "Playing from YouTube"
+  },
+  "groups": {
+    "title": "Groups",
+    "description": "Spaces to talk about what you care about, with the people who care too.",
+    "create": "Create group",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "mine": "Your groups",
+    "invitations": "Invitations",
+    "discover": "Discover groups",
+    "search": "Search groups",
+    "noneYet": "You are not in any group yet. Join one below or create your own.",
+    "noGroups": "No groups yet. Be the first to create one!",
+    "noMatch": "No group matches “{{query}}”.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "join": "Join group",
+    "askToJoin": "Ask to join",
+    "cancelRequest": "Withdraw request",
+    "leave": "Leave group",
+    "requestSent": "Request sent: a moderator will look at it.",
+    "signInToJoin": "Sign in to join",
+    "leaveTitle": "Leave {{name}}?",
+    "leavePrivate": "You will no longer see the posts of this group, unless you join again.",
+    "fediverseHandle": "On the fediverse: {{handle}}",
+    "privateNotice": "Only members see the posts of this group. Ask to join to take part.",
+    "joinToWrite": "Join the group to write and comment here.",
+    "noPosts": "No posts yet. Start the conversation!",
+    "membersPrivate": "Only members see who is in this group.",
+    "roleOf": "Role of {{name}}",
+    "roles": {
+      "admin": "Admin",
+      "moderator": "Moderator",
+      "member": "Member"
+    },
+    "remove": "Remove",
+    "removeTitle": "Remove {{name}} from the group?",
+    "invite": "Invite people",
+    "invitePlaceholder": "Name or username",
+    "inviteButton": "Invite",
+    "invited": "Invited",
+    "requests": "Requests to join",
+    "noRequests": "No requests waiting.",
+    "approve": "Approve",
+    "pendingInvitations": "Invitations sent",
+    "withdrawInvitation": "Withdraw",
+    "images": "Pictures",
+    "image": {
+      "avatar": "Group picture",
+      "header": "Cover",
+      "change": "Change",
+      "choose": "Choose",
+      "remove": "Remove"
+    },
+    "deleteTitle": "Delete group",
+    "deleteDescription": "The group and all its posts will be deleted for good.",
+    "delete": "Delete group",
+    "deleteConfirmTitle": "Delete {{name}}?",
+    "privacyConfirmTitle": "Switch to “{{privacy}}”?",
+    "privacyConfirm": "A group can become more private, but never go back. People elsewhere on the fediverse leave a group that is no longer public.",
+    "joined": "You joined the group.",
+    "invitationDeclined": "Invitation declined.",
+    "tabs": {
+      "label": "Group sections",
+      "posts": "Discussion",
+      "members": "Members",
+      "requests": "Requests",
+      "settings": "Settings"
+    },
+    "privacy": {
+      "public": {
+        "label": "Public group",
+        "description": "Anyone can see the posts and join. People on Mastodon and other servers can follow it too."
+      },
+      "private": {
+        "label": "Private group",
+        "description": "Anyone can find it, only members see the posts. Moderators approve who joins."
+      },
+      "secret": {
+        "label": "Secret group",
+        "description": "Only members can find it and see the posts. People join by invitation."
+      }
+    },
+    "form": {
+      "title": "New group",
+      "name": "Name",
+      "handle": "Address",
+      "handleHint": "Letters, digits and underscores: the group will be at /groups/{{handle}}.",
+      "handleInvalid": "Use 1-30 letters, digits or underscores.",
+      "description": "What is it about?",
+      "privacy": "Who can see it",
+      "submit": "Create group",
+      "privacyOneWay": "A group can become more private, never less.",
+      "saved": "Saved."
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { schema } from '@disbigle/db';
 import type { Account } from '@disbigle/shared';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
@@ -22,6 +22,7 @@ export function serializeAccount(actor: ActorRow): Account {
     url: actor.apUrl,
     createdAt: actor.createdAt.toISOString(),
     movedToId: actor.movedToActorId,
+    ...(actor.isGroup ? { group: true } : {}),
   };
 }
 
@@ -40,7 +41,13 @@ export async function getAccountWithCounts(ctx: CoreContext, actor: ActorRow): P
     ctx.db
       .select({ n: sql<number>`count(*)::int` })
       .from(posts)
-      .where(and(eq(posts.actorId, actor.id), inArray(posts.visibility, ['public', 'unlisted']))),
+      .where(
+        and(
+          eq(posts.actorId, actor.id),
+          inArray(posts.visibility, ['public', 'unlisted']),
+          isNull(posts.groupId),
+        ),
+      ),
   ]);
   return {
     ...serializeAccount(actor),

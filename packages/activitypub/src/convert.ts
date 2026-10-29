@@ -10,6 +10,7 @@ import {
   Collection,
   Document,
   Endpoints,
+  Group,
   Hashtag,
   Image,
   type Link,
@@ -74,6 +75,43 @@ export async function localActorToPerson(
     successor: movedToUri ? new URL(movedToUri) : null,
   };
   return actor.bot ? new Service(values) : new Person(values);
+}
+
+/** The ActivityPub face of one of our public groups (FEP-1b12): it shares what members write. */
+export function localGroupToActor(
+  ctx: Context<CoreContext>,
+  actor: ActorRow,
+  keys: Awaited<ReturnType<Context<CoreContext>['getActorKeyPairs']>>,
+): Group {
+  return new Group({
+    id: ctx.getActorUri(actor.username),
+    preferredUsername: actor.username,
+    name: actor.displayName || actor.username,
+    summary: bioToHtml(actor.summary),
+    url: actor.apUrl ? new URL(actor.apUrl) : null,
+    inbox: ctx.getInboxUri(actor.username),
+    outbox: ctx.getOutboxUri(actor.username),
+    followers: ctx.getFollowersUri(actor.username),
+    endpoints: new Endpoints({ sharedInbox: ctx.getInboxUri() }),
+    publicKey: keys[0]?.cryptographicKey ?? null,
+    assertionMethods: keys.map((k) => k.multikey),
+    manuallyApprovesFollowers: false,
+    discoverable: actor.discoverable,
+    indexable: actor.discoverable,
+    published: instant(actor.createdAt),
+    icon: actor.avatarUrl ? new Image({ url: new URL(actor.avatarUrl) }) : null,
+    image: actor.headerUrl ? new Image({ url: new URL(actor.headerUrl) }) : null,
+  });
+}
+
+/** The actor URI of the group a post was written in. */
+async function groupActorUri(ctx: Context<CoreContext>, groupId: string): Promise<URL | null> {
+  const [row] = await ctx.data.db
+    .select({ username: schema.actors.username })
+    .from(schema.groups)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.groups.actorId))
+    .where(eq(schema.groups.id, groupId));
+  return row ? ctx.getActorUri(row.username) : null;
 }
 
 /** Where people can see a remote account on its own server. */
@@ -142,7 +180,7 @@ export function bridgedNote(
 /** Audience fields for a post, following Mastodon's conventions so other servers display it right. */
 export async function addressing(
   ctx: Context<CoreContext>,
-  post: Pick<PostRow, 'id' | 'visibility'>,
+  post: Pick<PostRow, 'id' | 'visibility'> & { groupId?: string | null },
   author: ActorRow,
   only?: ActorRow,
 ): Promise<{ to: URL[]; cc: URL[]; explicitRecipients: ActorRow[] }> {
@@ -160,6 +198,9 @@ export async function addressing(
     .map((a) => a.apUri)
     .filter((u): u is string => !!u)
     .map((u) => new URL(u));
+  // A post in a public group is addressed to everyone and to the group, which shares it.
+  const group = post.groupId ? await groupActorUri(ctx, post.groupId) : null;
+  if (group) return { to: [PUBLIC_COLLECTION, group], cc: uris, explicitRecipients: recipients };
   switch (post.visibility) {
     case 'public':
       return { to: [PUBLIC_COLLECTION], cc: [followers, ...uris], explicitRecipients: recipients };
@@ -238,6 +279,8 @@ export async function postToNote(
     replyTarget: replyTarget ? new URL(replyTarget) : null,
     tos: to,
     ccs: cc,
+    // FEP-1b12: the group a post belongs to.
+    audience: post.groupId ? await groupActorUri(ctx, post.groupId) : null,
     tags,
     attachments: mediaRows
       .filter((m) => m.filePath)
@@ -298,6 +341,7 @@ export async function remoteActorData(
     fields,
     locked: actor.manuallyApprovesFollowers ?? false,
     bot: actor instanceof Service || actor instanceof Application,
+    group: actor instanceof Group,
     discoverable: actor.discoverable ?? true,
     publicKeyPem: await exportSpki(key.publicKey),
     apUri: actor.id.href,
@@ -341,13 +385,20 @@ export async function noteToPostData(
   else visibility = 'direct';
 
   const audience = new Set<string>();
+  let groupActorId: string | null = null;
   for (const uri of recipients) {
     const local = await localActorFromUri(ctx, uri);
-    if (local) audience.add(local.id);
+    if (local?.isGroup) groupActorId = local.id;
+    else if (local) audience.add(local.id);
     else if (uri.href !== PUBLIC_COLLECTION.href && uri.href !== followers) {
       const known = await findActorByApUri(ctx.data, uri.href);
       if (known) audience.add(known.id);
     }
+  }
+  // FEP-1b12 names the group in `audience` too.
+  for (const uri of note.audienceIds) {
+    const local = await localActorFromUri(ctx, uri);
+    if (local?.isGroup) groupActorId = local.id;
   }
 
   const mentionIds = new Set<string>();
@@ -394,6 +445,7 @@ export async function noteToPostData(
     mentionActorIds: [...mentionIds],
     tags: tagNames,
     inReplyTo: { postId: replyPostId, uri: replyUri },
+    groupActorId,
     attachments,
     publishedAt: note.published ? new Date(note.published.epochMilliseconds) : new Date(),
     ...(note instanceof Question ? { poll: await questionPoll(ctx, note) } : {}),

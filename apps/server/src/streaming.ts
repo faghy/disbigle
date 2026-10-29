@@ -99,10 +99,28 @@ export class StreamingHub {
           .from(mutes)
           .where(and(eq(mutes.targetActorId, post.actorId), inArray(mutes.actorId, connected))),
       ]);
-      for (const r of [...followers, ...audience]) homeAudience.add(r.id);
+      if (post.groupId) {
+        // Group posts go to the group's members, as in Home; replies stay in their threads.
+        if (!post.inReplyToId) {
+          const members = await db
+            .select({ id: schema.groupMembers.actorId })
+            .from(schema.groupMembers)
+            .where(
+              and(
+                eq(schema.groupMembers.groupId, post.groupId),
+                eq(schema.groupMembers.state, 'member'),
+                inArray(schema.groupMembers.actorId, connected),
+              ),
+            );
+          for (const r of members) homeAudience.add(r.id);
+        }
+      } else {
+        for (const r of [...followers, ...audience]) homeAudience.add(r.id);
+      }
       for (const r of muted) homeAudience.delete(r.id);
     }
     const isPublicTopLevel =
+      !post.groupId &&
       post.visibility === 'public' &&
       !post.reblogOfId &&
       (post.inReplyToActorId === null || post.inReplyToActorId === post.actorId);

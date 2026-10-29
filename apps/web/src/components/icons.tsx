@@ -245,3 +245,20 @@ export const PlayIcon = (p: IconProps) => (
     <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
   </Icon>
 );
+
+export const GroupIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="9" cy="8" r="3" />
+    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+    <circle cx="17" cy="9" r="2.5" />
+    <path d="M15.5 14.2A4.5 4.5 0 0 1 21 18.5" />
+  </Icon>
+);
+
+export const EyeOffIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 3l18 18" />
+    <path d="M10.6 5.1A9.6 9.6 0 0 1 12 5c5 0 8.5 4.5 9.5 7a13 13 0 0 1-2.7 3.9M6.4 6.4A13.2 13.2 0 0 0 2.5 12c1 2.5 4.5 7 9.5 7 1.9 0 3.6-.6 5-1.5" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+  </Icon>
+);

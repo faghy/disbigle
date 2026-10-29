@@ -517,3 +517,80 @@ describe('federation between two instances', () => {
     );
   });
 });
+
+describe('groups across servers', () => {
+  it('lets people elsewhere join a public group, get its posts and answer in it', async () => {
+    const owner = await signUp(a);
+    const bob = await signUp(b);
+    const handle = `club_${Math.random().toString(36).slice(2, 7)}`;
+    const group = (
+      await owner.client.post('/api/v1/groups', { name: 'Club', handle, privacy: 'public' })
+    ).json();
+
+    // Bob finds the group from the other server: an account that is a group.
+    const resolved = await bob.client.post('/api/v1/search/resolve', {
+      q: `${a.url}/users/${handle}`,
+    });
+    expect(resolved.json()).toMatchObject({ username: handle, group: true, local: false });
+    const remoteGroup = resolved.json();
+
+    // Following it is joining it.
+    await bob.client.post(`/api/v1/accounts/${remoteGroup.id}/follow`);
+    await eventually(async () => {
+      const rel = (
+        await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteGroup.id}`)
+      ).json();
+      return rel[0]?.following;
+    });
+    const members = (await owner.client.get(`/api/v1/groups/${group.id}/members`)).json();
+    expect(members.map((m: { account: { acct: string } }) => m.account.acct)).toContain(
+      `${bob.account.username}@${b.domain}`,
+    );
+
+    // What members write here, the group shares with Bob.
+    const post = (
+      await owner.client.post('/api/v1/statuses', {
+        content: 'Benvenuti nel **club**',
+        groupId: group.id,
+      })
+    ).json();
+    const shared = await eventually(async () => {
+      const home = (await bob.client.get('/api/v1/timelines/home')).json();
+      return home.find((s: { reblog: { uri: string } | null }) => s.reblog?.uri === post.uri);
+    });
+    expect(shared.account.acct).toBe(`${handle}@${a.domain}`);
+    expect(shared.reblog.content).toContain('<strong>club</strong>');
+
+    // Bob answers from his server: the answer joins the group's thread.
+    await bob.client.post('/api/v1/statuses', {
+      content: 'Grazie!',
+      inReplyToId: shared.reblog.id,
+    });
+    const answer = await eventually(async () => {
+      const context = (await owner.client.get(`/api/v1/statuses/${post.id}/context`)).json();
+      return context.descendants?.[0];
+    });
+    expect(answer).toMatchObject({
+      content: expect.stringContaining('Grazie'),
+      group: { id: group.id },
+    });
+
+    // Leaving the group is unfollowing it.
+    await bob.client.post(`/api/v1/accounts/${remoteGroup.id}/unfollow`);
+    await eventually(async () => {
+      const list = (await owner.client.get(`/api/v1/groups/${group.id}/members`)).json();
+      return !list.some((m: { account: { acct: string } }) => m.account.acct.includes('@'));
+    });
+  });
+
+  it('keeps private groups out of reach of other servers', async () => {
+    const owner = await signUp(a);
+    const bob = await signUp(b);
+    const handle = `hidden_${Math.random().toString(36).slice(2, 7)}`;
+    await owner.client.post('/api/v1/groups', { name: 'Hidden', handle, privacy: 'private' });
+    const resolved = await bob.client.post('/api/v1/search/resolve', {
+      q: `${a.url}/users/${handle}`,
+    });
+    expect(resolved.json()).toBeNull();
+  });
+});

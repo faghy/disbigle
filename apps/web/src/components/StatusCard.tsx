@@ -1,7 +1,17 @@
 import type { Account, MediaAttachment, Mention, Status } from '@disbigle/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useRouter } from '@tanstack/react-router';
-import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { findCachedStatus, shownStatus, socialKeys, updateStatusEverywhere } from '../api/cache.ts';
 import { ApiError } from '../api/client.ts';
@@ -20,6 +30,7 @@ import { ConfirmDialog } from './Dialog.tsx';
 import { EditStatusForm } from './EditStatusForm.tsx';
 import {
   BookmarkIcon,
+  GroupIcon,
   HeartIcon,
   MoreIcon,
   PinIcon,
@@ -135,9 +146,33 @@ export function StatusContent({
   );
 }
 
+/** The group whose page is open: its posts don't need to say where they are. */
+export const CurrentGroupContext = createContext<string | null>(null);
+
+/** "In <group>", linking to the group a post was written in. */
+function GroupContext({ status }: { status: Status }) {
+  const { t } = useTranslation();
+  const current = useContext(CurrentGroupContext);
+  if (!status.group || status.group.id === current) return null;
+  return (
+    <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-fg-muted">
+      <GroupIcon size={14} className="shrink-0" />
+      <Link
+        to="/groups/$handle"
+        params={{ handle: status.group.handle }}
+        className="truncate rounded hover:text-accent hover:underline focus-ring"
+      >
+        {t('status.inGroup', { name: status.group.name })}
+      </Link>
+    </p>
+  );
+}
+
 function VisibilityBadge({ status, isAuthor }: { status: Status; isAuthor: boolean }) {
   const { t } = useTranslation();
   const aspects = useAspects();
+  // A group decides who reads its posts; the group line says which.
+  if (status.group) return null;
   const Icon = visibilityIcons[status.visibility];
   const label = t(`visibility.${status.visibility}.label`);
   let detail: string | null = null;
@@ -667,6 +702,7 @@ export function StatusCard({
           </header>
 
           {status.inReplyToId && <ReplyContext status={status} />}
+          <GroupContext status={status} />
 
           {hasWarning && (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2">

@@ -1,6 +1,6 @@
 import type { Account, Relationship } from '@disbigle/shared';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, Navigate, useParams } from '@tanstack/react-router';
 import { type KeyboardEvent, useCallback, useId, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
@@ -35,6 +35,9 @@ export function ProfilePage() {
     }
     return <Alert>{errorMessage(account.error)}</Alert>;
   }
+  // Our groups have their own page.
+  if (account.data.group && account.data.local)
+    return <Navigate to="/groups/$handle" params={{ handle: account.data.username }} replace />;
   return <Profile account={account.data} />;
 }
 

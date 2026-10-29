@@ -4,7 +4,10 @@ import {
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
+  findGroup,
+  type GroupRecord,
   postsForNewFollower,
+  remoteGroupMembers,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import type { Context, Federation } from '@fedify/fedify';
@@ -28,7 +31,13 @@ import {
 } from '@fedify/vocab';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { bridgedReplyOf, bridgedThreadOf, threadAddressing, threadAudience } from './bridge.ts';
-import { addressing, bridgedNote, localActorToPerson, postToNote } from './convert.ts';
+import {
+  addressing,
+  bridgedNote,
+  localActorToPerson,
+  localGroupToActor,
+  postToNote,
+} from './convert.ts';
 
 type ActorRow = typeof schema.actors.$inferSelect;
 type PostRow = typeof schema.posts.$inferSelect;
@@ -192,11 +201,14 @@ export class ActivityPubPublisher implements EventBus {
       case 'profile.updated': {
         const [actor] = (await this.actors([event.actorId])).values();
         if (!actor || actor.domain !== null) return;
-        const person = await localActorToPerson(
-          ctx,
-          actor,
-          await ctx.getActorKeyPairs(actor.username),
-        );
+        if (actor.isGroup) {
+          const record = await findGroup(this.core, actor.id);
+          if (record?.group.privacy !== 'public') return;
+        }
+        const keys = await ctx.getActorKeyPairs(actor.username);
+        const person = actor.isGroup
+          ? localGroupToActor(ctx, actor, keys)
+          : await localActorToPerson(ctx, actor, keys);
         await ctx.sendActivity(
           { identifier: actor.username },
           'followers',
@@ -247,6 +259,47 @@ export class ActivityPubPublisher implements EventBus {
       }
       case 'poll.voted':
         return this.pollVoted(ctx, event);
+      case 'group.closed': {
+        // The group leaves the fediverse: its members elsewhere see it deleted.
+        const [actor] = (await this.actors([event.actorId])).values();
+        if (!actor) return;
+        const members = (await remoteGroupMembers(this.core, event.groupId)).filter(
+          speaksActivityPub,
+        );
+        if (members.length === 0) return;
+        await ctx.sendActivity(
+          { identifier: actor.username },
+          members.map(recipient),
+          new Delete({
+            id: new URL(`${ctx.getActorUri(actor.username).href}#delete`),
+            actor: ctx.getActorUri(actor.username),
+            object: ctx.getActorUri(actor.username),
+            to: PUBLIC_COLLECTION,
+          }),
+          { preferSharedInbox: true },
+        );
+        return;
+      }
+      case 'group.member_removed': {
+        const record = await findGroup(this.core, event.groupId);
+        const [member] = (await this.actors([event.actorId])).values();
+        if (!record || !speaksActivityPub(member)) return;
+        const group = record.actor.username;
+        await ctx.sendActivity(
+          { identifier: group },
+          recipient(member),
+          new Reject({
+            id: freshId(ctx, group, 'rejects'),
+            actor: ctx.getActorUri(group),
+            object: new Follow({
+              id: new URL(event.apUri),
+              actor: new URL(member.apUri ?? ''),
+              object: ctx.getActorUri(group),
+            }),
+          }),
+        );
+        return;
+      }
       case 'account.deleted': {
         const [actor] = (await this.actors([event.actorId])).values();
         if (!actor || actor.domain !== null) return;
@@ -297,6 +350,7 @@ export class ActivityPubPublisher implements EventBus {
       .select()
       .from(schema.posts)
       .where(eq(schema.posts.id, postId));
+    if (post?.groupId) return this.groupPostCreated(ctx, post, edited);
     if (post && !post.local && !edited) return this.bridgeReply(ctx, post);
     if (!post?.local || !post.apUri) return;
     const [author] = await this.core.db
@@ -350,6 +404,86 @@ export class ActivityPubPublisher implements EventBus {
           ccs: note.ccIds,
           published: note.published,
         }),
+    );
+  }
+
+  /**
+   * A post in one of our public groups (FEP-1b12): the group announces it to its members on other
+   * servers; a local author also sends it to the people it names and, for a reply, to the author
+   * it answers. Posts in private groups never leave this server.
+   */
+  private async groupPostCreated(
+    ctx: Context<CoreContext>,
+    post: PostRow,
+    edited: boolean,
+  ): Promise<void> {
+    const record = post.groupId ? await findGroup(this.core, post.groupId) : null;
+    if (record?.group.privacy !== 'public' || !post.apUri || post.reblogOfId) return;
+    const members = (await remoteGroupMembers(this.core, record.group.id)).filter(
+      speaksActivityPub,
+    );
+    const [author] = (await this.actors([post.actorId])).values();
+    if (!author) return;
+    let note: Note | Question | null = null;
+    if (author.domain === null) {
+      note = await postToNote(ctx, post, author);
+      const { explicitRecipients } = await addressing(ctx, post, author);
+      const direct = explicitRecipients.filter(speaksActivityPub);
+      if (post.inReplyToActorId) {
+        const [parentAuthor] = (await this.actors([post.inReplyToActorId])).values();
+        if (speaksActivityPub(parentAuthor) && !direct.some((a) => a.id === parentAuthor.id))
+          direct.push(parentAuthor);
+      }
+      // Edits reach everyone who has the post; a new post reaches members through the group.
+      const targets = edited ? [...direct, ...members] : direct;
+      const unique = [...new Map(targets.map((a) => [a.id, a])).values()];
+      if (unique.length > 0) {
+        const Activity = edited ? Update : Create;
+        await ctx.sendActivity(
+          { identifier: author.username },
+          unique.map(recipient),
+          new Activity({
+            id: edited
+              ? new URL(`${post.apUri}#updates/${Date.now()}`)
+              : new URL(`${post.apUri}/activity`),
+            actor: ctx.getActorUri(author.username),
+            object: note,
+            tos: note.toIds,
+            ccs: note.ccIds,
+            published: note.published,
+          }),
+          { preferSharedInbox: true },
+        );
+      }
+    }
+    if (edited) return;
+    await this.groupAnnounce(ctx, record, post, note, members);
+  }
+
+  /** The group shares a post with its members elsewhere (not with the post's own author). */
+  private async groupAnnounce(
+    ctx: Context<CoreContext>,
+    record: GroupRecord,
+    post: PostRow,
+    note: Note | Question | null,
+    members: ActorRow[],
+  ): Promise<void> {
+    const targets = members.filter((m) => m.id !== post.actorId);
+    if (targets.length === 0 || !post.apUri) return;
+    const group = record.actor.username;
+    await ctx.sendActivity(
+      { identifier: group },
+      targets.map(recipient),
+      new Announce({
+        id: new URL(`${ctx.getActorUri(group).href}#announces/${post.id}`),
+        actor: ctx.getActorUri(group),
+        // Our own posts travel embedded (same origin as the group); others by reference.
+        object: note ?? new URL(post.apUri),
+        to: PUBLIC_COLLECTION,
+        cc: ctx.getFollowersUri(group),
+        published: Temporal.Instant.fromEpochMilliseconds(post.createdAt.getTime()),
+      }),
+      { preferSharedInbox: true },
     );
   }
 
@@ -597,6 +731,11 @@ export class ActivityPubPublisher implements EventBus {
       return;
     }
 
+    if (post.local && author.domain === null && post.groupId) {
+      // A poll in a group: the new totals go where the post went.
+      await this.groupPostCreated(ctx, post, true);
+      return;
+    }
     if (post.local && author.domain === null) {
       // The new totals reach the poll's audience, never more.
       await this.deliver(
@@ -615,10 +754,45 @@ export class ActivityPubPublisher implements EventBus {
     }
   }
 
+  /** A local post deleted in a public group: its author tells the group's members elsewhere. */
+  private async groupPostDeleted(
+    ctx: Context<CoreContext>,
+    event: Extract<DomainEvent, { type: 'post.deleted' }>,
+  ) {
+    if (!event.apUri || !event.groupId || event.reblogOfId) return;
+    const record = await findGroup(this.core, event.groupId);
+    if (record?.group.privacy !== 'public') return;
+    const [author] = (await this.actors([event.actorId])).values();
+    if (!author || author.domain !== null) return;
+    const audience = [
+      ...(await remoteGroupMembers(this.core, record.group.id)),
+      ...(
+        await this.actors([
+          ...event.audienceActorIds,
+          ...(event.inReplyToActorId ? [event.inReplyToActorId] : []),
+        ])
+      ).values(),
+    ].filter(speaksActivityPub);
+    const targets = [...new Map(audience.map((a) => [a.id, a])).values()];
+    if (targets.length === 0) return;
+    await ctx.sendActivity(
+      { identifier: author.username },
+      targets.map(recipient),
+      new Delete({
+        id: new URL(`${event.apUri}#delete`),
+        actor: ctx.getActorUri(author.username),
+        object: new Tombstone({ id: new URL(event.apUri) }),
+        to: PUBLIC_COLLECTION,
+      }),
+      { preferSharedInbox: true },
+    );
+  }
+
   private async postDeleted(
     ctx: Context<CoreContext>,
     event: Extract<DomainEvent, { type: 'post.deleted' }>,
   ) {
+    if (event.groupId) return this.groupPostDeleted(ctx, event);
     if (await this.bridgeDelete(ctx, event)) return;
     if (!event.apUri) return;
     const [author] = await this.core.db

@@ -21,6 +21,8 @@ import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
+import { GroupPage } from './pages/Group.tsx';
+import { GroupsPage } from './pages/Groups.tsx';
 import { HomePage } from './pages/Home.tsx';
 import { LoginPage } from './pages/Login.tsx';
 import { MessagesPage } from './pages/Messages.tsx';
@@ -224,6 +226,18 @@ const notificationsRoute = createRoute({
   component: NotificationsPage,
 });
 
+const groupsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/groups',
+  component: GroupsPage,
+});
+
+const groupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/groups/$handle',
+  component: GroupPage,
+});
+
 const aspectsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/aspects',
@@ -379,6 +393,8 @@ export const routeTree = rootRoute.addChildren([
   tagRoute,
   bookmarksRoute,
   notificationsRoute,
+  groupsRoute,
+  groupRoute,
   aspectsRoute,
   contactsRoute,
   aspectTimelineRoute,

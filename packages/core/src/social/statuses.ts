@@ -3,6 +3,7 @@ import type { MediaAttachment, Status } from '@disbigle/shared';
 import { and, eq, inArray } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
+import { groupSummaries } from './groups.ts';
 import { loadPolls } from './polls.ts';
 import { visibleTo } from './visibility.ts';
 
@@ -113,6 +114,10 @@ export async function hydrateStatuses(
 
   const actorsById = new Map(actorRows.map((a) => [a.id, serializeAccount(a)]));
   const pollsByPost = await loadPolls(ctx, viewerActorId, postIds);
+  const groupsById = await groupSummaries(
+    ctx,
+    all.map((p) => p.groupId).filter((id): id is string => id !== null),
+  );
   const pinnedIds = viewerActorId
     ? new Set(
         (
@@ -170,6 +175,7 @@ export async function hydrateStatuses(
     };
     if (post.actorId === viewerActorId && post.source !== null) status.source = post.source;
     if (pinnedIds.has(post.id)) status.pinned = true;
+    if (post.groupId) status.group = groupsById.get(post.groupId) ?? null;
     if (post.actorId === viewerActorId && post.visibility === 'limited') {
       status.aspectIds = aspectRows.filter((r) => r.postId === post.id).map((r) => r.aspectId);
     }

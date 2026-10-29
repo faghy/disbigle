@@ -175,7 +175,9 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
         const { type, guid } = request.params;
         if (!FETCH_TYPES.has(type)) return reply.status(404).send();
         const post = await findPostByGuid(ctx, guid);
-        if (!post || !isPublicVisibility(post.visibility)) return reply.status(404).send();
+        // Group posts never travel through diaspora*.
+        if (!post || post.groupId || !isPublicVisibility(post.visibility))
+          return reply.status(404).send();
         const author = await actorById(ctx, post.actorId);
         if (!author || author.suspendedAt) return reply.status(404).send();
         if (!post.local && type === 'comment') {

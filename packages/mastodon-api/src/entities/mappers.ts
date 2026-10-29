@@ -94,7 +94,7 @@ export function mapAccount(ctx: MapContext, account: Account, depth = 0): MAccou
     bot: account.bot,
     discoverable: account.discoverable,
     indexable: account.discoverable,
-    group: false,
+    group: account.group ?? false,
     noindex: !account.discoverable,
     hide_collections: false,
     created_at: account.createdAt,
@@ -252,6 +252,13 @@ export function mapStatus(
   return result;
 }
 
+/** Group notifications have no Mastodon counterpart: apps never see them. */
+export const groupNotificationTypes: NotificationType[] = [
+  'group_request',
+  'group_invite',
+  'group_accepted',
+];
+
 /** Our notification types as Mastodon types: a reply is a mention, a like a favourite. */
 export function mapNotificationType(type: NotificationType): MNotificationType {
   switch (type) {
@@ -259,6 +266,11 @@ export function mapNotificationType(type: NotificationType): MNotificationType {
       return 'mention';
     case 'like':
       return 'favourite';
+    case 'group_request':
+    case 'group_invite':
+    case 'group_accepted':
+      // Never sent to apps (see groupNotificationTypes); a mention is the closest kind.
+      return 'mention';
     default:
       return type;
   }

@@ -41,6 +41,8 @@ export interface Account {
   createdAt: string;
   /** The account this one moved to, if any. */
   movedToId?: string | null;
+  /** True for groups (ours, or remote ones such as Lemmy communities). */
+  group?: boolean;
   /** Present on single-account endpoints (profile pages). */
   followersCount?: number;
   followingCount?: number;

@@ -1,4 +1,4 @@
-import type { CreatePostRequest, Status, Visibility } from '@disbigle/shared';
+import type { CreatePostRequest, GroupSummary, Status, Visibility } from '@disbigle/shared';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -18,7 +18,7 @@ import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
 import { EmojiButton } from './EmojiPicker.tsx';
-import { PollIcon, WarningIcon } from './icons.tsx';
+import { GroupIcon, PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { useMentionSuggestions } from './MentionSuggestions.tsx';
 import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
@@ -42,6 +42,8 @@ export interface ComposerProps {
   editContentRef?: RefObject<((edit: (content: string) => string) => void) | null>;
   /** Shown above the text, e.g. a recipient picker. */
   header?: ReactNode;
+  /** Writes in this group: its members (or everyone, for a public group) read the post. */
+  group?: GroupSummary;
 }
 
 export function Composer({
@@ -54,6 +56,7 @@ export function Composer({
   textareaRef,
   editContentRef,
   header,
+  group: groupProp,
 }: ComposerProps) {
   const { t } = useTranslation();
   const user = useCurrentUser();
@@ -65,6 +68,8 @@ export function Composer({
   const ownTextarea = useRef<HTMLTextAreaElement>(null);
   const textarea = textareaRef ?? ownTextarea;
 
+  // Posts and replies in a group: the group is the audience.
+  const group = groupProp ?? replyTo?.group ?? null;
   const lockedAudience = replyTo ? isPrivateConversation(replyTo.visibility) : false;
   const mention =
     replyTo && replyTo.account.id !== user?.account.id ? `@${replyTo.account.acct} ` : '';
@@ -119,7 +124,12 @@ export function Composer({
       found.content = poll ? t('poll.errors.question') : t('composer.errors.empty');
     if (poll) Object.assign(found, validatePoll(poll, t));
     if (length > maxLength) found.content = t('composer.errors.tooLong', { max: maxLength });
-    if (!lockedAudience && audience.visibility === 'limited' && audience.aspectIds.length === 0)
+    if (
+      !group &&
+      !lockedAudience &&
+      audience.visibility === 'limited' &&
+      audience.aspectIds.length === 0
+    )
       found.aspectIds = t('composer.errors.aspectsRequired');
     if (mediaItems.failed) found.media = t('composer.errors.mediaFailed');
     return found;
@@ -157,6 +167,7 @@ export function Composer({
           }
         : {}),
       ...(replyTo ? { inReplyToId: replyTo.id } : {}),
+      ...(group && !replyTo ? { groupId: group.id } : {}),
     };
     create.mutate(body, {
       onSuccess: (status) => {
@@ -200,11 +211,21 @@ export function Composer({
         {!compact && <Avatar account={user.account} size="md" className="max-sm:hidden" />}
         <div className="min-w-0 flex-1 space-y-3">
           {header}
-          {replyTo && lockedAudience && (
+          {group ? (
             <p className="flex items-center gap-2 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
-              <WarningIcon size={16} className="shrink-0" />
-              {t('composer.privateReply')}
+              <GroupIcon size={16} className="shrink-0" />
+              {t(group.privacy === 'public' ? 'composer.inPublicGroup' : 'composer.inGroup', {
+                name: group.name,
+              })}
             </p>
+          ) : (
+            replyTo &&
+            lockedAudience && (
+              <p className="flex items-center gap-2 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
+                <WarningIcon size={16} className="shrink-0" />
+                {t('composer.privateReply')}
+              </p>
+            )
           )}
 
           {warningOpen && (
@@ -269,22 +290,24 @@ export function Composer({
             />
           )}
 
-          <AudiencePicker
-            value={
-              lockedAudience && replyTo
-                ? { visibility: replyTo.visibility, aspectIds: replyTo.aspectIds ?? [] }
-                : audience
-            }
-            onChange={(value) => {
-              setAudience(value);
-              if (value.visibility !== 'limited' || value.aspectIds.length > 0)
-                setErrors(({ aspectIds: _removed, ...rest }) => rest);
-            }}
-            aspects={aspects.data}
-            error={allErrors.aspectIds}
-            disabled={lockedAudience}
-          />
-          {audience.visibility === 'direct' && !lockedAudience && (
+          {!group && (
+            <AudiencePicker
+              value={
+                lockedAudience && replyTo
+                  ? { visibility: replyTo.visibility, aspectIds: replyTo.aspectIds ?? [] }
+                  : audience
+              }
+              onChange={(value) => {
+                setAudience(value);
+                if (value.visibility !== 'limited' || value.aspectIds.length > 0)
+                  setErrors(({ aspectIds: _removed, ...rest }) => rest);
+              }}
+              aspects={aspects.data}
+              error={allErrors.aspectIds}
+              disabled={lockedAudience}
+            />
+          )}
+          {!group && audience.visibility === 'direct' && !lockedAudience && (
             <p className="text-xs text-fg-muted">{t('composer.directHint')}</p>
           )}
 

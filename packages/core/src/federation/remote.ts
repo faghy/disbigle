@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { sanitizeRemoteHtml } from '../social/content.ts';
+import { groupOfActor, isGroupMember } from '../social/groups.ts';
 import { createNotification } from '../social/notifications.ts';
 import { deletePost } from '../social/posts.ts';
 
@@ -27,6 +28,8 @@ export interface RemoteActorData {
   fields?: { name: string; value: string }[];
   locked?: boolean;
   bot?: boolean;
+  /** An ActivityPub Group (a Lemmy community, a Friendica forum...). */
+  group?: boolean;
   discoverable?: boolean;
   publicKeyPem?: string;
   apUri?: string;
@@ -137,6 +140,7 @@ export async function upsertRemoteActor(
     })),
     locked: data.locked,
     bot: data.bot,
+    isGroup: data.group,
     discoverable: data.discoverable,
     publicKeyPem: data.publicKeyPem,
     apUri: data.apUri,
@@ -224,6 +228,8 @@ export interface RemotePostData {
   mentionActorIds?: string[];
   tags?: string[];
   inReplyTo?: { postId?: string | null; uri?: string | null };
+  /** One of our groups' actors, when the post was addressed to it. */
+  groupActorId?: string | null;
   attachments?: RemoteAttachment[];
   publishedAt?: Date;
   poll?: {
@@ -298,6 +304,24 @@ export async function ingestRemotePost(
   const mentioned = new Set(data.mentionActorIds ?? []);
   audience.delete(data.authorActorId);
   mentioned.delete(data.authorActorId);
+  // Public posts join a group: replies the group of their thread, new posts the public group
+  // they were addressed to, when the author is a member. Private answers stay private.
+  let groupId: string | null = null;
+  if (data.visibility === 'public' || data.visibility === 'unlisted') {
+    if (parent?.groupId) groupId = parent.groupId;
+    else if (data.groupActorId && !parent) {
+      const record = await groupOfActor(ctx, data.groupActorId);
+      if (
+        record?.group.privacy === 'public' &&
+        (await isGroupMember(ctx, record.group.id, data.authorActorId))
+      )
+        groupId = record.group.id;
+    }
+  }
+  if (data.groupActorId) {
+    audience.delete(data.groupActorId);
+    mentioned.delete(data.groupActorId);
+  }
   const tagNames = [
     ...new Set((data.tags ?? []).map((t) => t.replace(/^#/, '').toLowerCase()).filter(Boolean)),
   ];
@@ -316,6 +340,7 @@ export async function ingestRemotePost(
       inReplyToActorId: parent?.actorId ?? null,
       inReplyToUri: parent ? null : (data.inReplyTo?.uri ?? null),
       threadRootId: parent ? (parent.threadRootId ?? parent.id) : id,
+      groupId,
       apUri: data.apUri ?? null,
       apUrl: safeHttpUrl(data.apUrl ?? data.apUri),
       diasporaGuid: data.diasporaGuid ?? null,

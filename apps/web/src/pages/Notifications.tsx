@@ -5,6 +5,7 @@ import { type ComponentType, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
 import { errorMessage } from '../api/errors.ts';
+import { groupKeys, groups } from '../api/groups.ts';
 import { useCurrentUser } from '../api/queries.ts';
 import { PAGE_SIZE, social } from '../api/social.ts';
 import { Avatar } from '../components/Avatar.tsx';
@@ -12,6 +13,7 @@ import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import {
   AtIcon,
   BellIcon,
+  GroupIcon,
   HeartIcon,
   PollIcon,
   ReplyIcon,
@@ -33,6 +35,9 @@ export const typeStyle: Record<
   reblog: { icon: ReshareIcon, tone: 'bg-success-soft text-success' },
   like: { icon: HeartIcon, tone: 'bg-danger-soft text-danger' },
   poll: { icon: PollIcon, tone: 'bg-accent-soft text-accent' },
+  group_request: { icon: GroupIcon, tone: 'bg-accent-soft text-accent' },
+  group_invite: { icon: GroupIcon, tone: 'bg-accent-soft text-accent' },
+  group_accepted: { icon: GroupIcon, tone: 'bg-success-soft text-success' },
 };
 
 /** Plain-text excerpt of a post for one-line summaries. */
@@ -153,7 +158,9 @@ function NotificationItem({ notification }: { notification: Notification }) {
             <AccountLink account={account} className="font-semibold hover:underline">
               {name}
             </AccountLink>{' '}
-            <span className="text-fg-muted">{t(`notifications.verbs.${type}`)}</span>
+            <span className="text-fg-muted">
+              {t(`notifications.verbs.${type}`, { group: notification.group?.name ?? '' })}
+            </span>
           </p>
           <time dateTime={notification.createdAt} className="shrink-0 text-xs text-fg-muted">
             {relativeTime(notification.createdAt, i18n.language)}
@@ -168,7 +175,63 @@ function NotificationItem({ notification }: { notification: Notification }) {
           </Link>
         )}
         {type === 'follow_request' && <FollowRequestActions accountId={account.id} />}
+        {notification.group && (
+          <Link
+            to="/groups/$handle"
+            params={{ handle: notification.group.handle }}
+            className="inline-block rounded text-sm font-medium text-accent hover:underline focus-ring"
+          >
+            {t('notifications.openGroup', { name: notification.group.name })}
+          </Link>
+        )}
+        {type === 'group_invite' && notification.group && (
+          <InvitationActions groupId={notification.group.id} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function InvitationActions({ groupId }: { groupId: string }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [outcome, setOutcome] = useState<'accepted' | 'declined' | null>(null);
+  const decide = useMutation({
+    mutationFn: (accept: boolean) => (accept ? groups.join(groupId) : groups.leave(groupId)),
+    onSuccess: (_, accept) => {
+      setOutcome(accept ? 'accepted' : 'declined');
+      void queryClient.invalidateQueries({ queryKey: groupKeys.all });
+    },
+  });
+  if (outcome) {
+    return (
+      <p role="status" className="text-sm font-medium text-fg-muted">
+        {outcome === 'accepted' ? t('groups.joined') : t('groups.invitationDeclined')}
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Button
+          className="min-h-9 px-3 py-1"
+          loading={decide.isPending && decide.variables === true}
+          disabled={decide.isPending}
+          onClick={() => decide.mutate(true)}
+        >
+          {t('groups.accept')}
+        </Button>
+        <Button
+          variant="secondary"
+          className="min-h-9 px-3 py-1"
+          loading={decide.isPending && decide.variables === false}
+          disabled={decide.isPending}
+          onClick={() => decide.mutate(false)}
+        >
+          {t('groups.decline')}
+        </Button>
+      </div>
+      {decide.error && <Alert>{errorMessage(decide.error)}</Alert>}
     </div>
   );
 }

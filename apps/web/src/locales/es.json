@@ -38,7 +38,8 @@
     "more": "Más",
     "sidePanel": "Sobre este servidor y tus hashtags",
     "aboutServer": "Sobre este servidor",
-    "contacts": "Contactos"
+    "contacts": "Contactos",
+    "groups": "Grupos"
   },
   "footer": {
     "tagline": "Disbigle · una red social federada",
@@ -443,7 +444,9 @@
       "aspectsRequired": "Elige al menos un aspecto.",
       "mediaFailed": "Quita los adjuntos que no se han podido subir."
     },
-    "mentionSuggestions": "Personas para mencionar"
+    "mentionSuggestions": "Personas para mencionar",
+    "inGroup": "Solo lo verán los miembros de {{name}}",
+    "inPublicGroup": "Estás escribiendo en {{name}}: cualquiera puede leerlo"
   },
   "status": {
     "reshared": "{{name}} ha compartido",
@@ -495,7 +498,8 @@
       "likes_one": "{{count}} Me gusta",
       "likes_many": "{{count}} Me gusta",
       "likes_other": "{{count}} Me gusta"
-    }
+    },
+    "inGroup": "En {{name}}"
   },
   "timeline": {
     "loadMore": "Cargar más",
@@ -570,11 +574,15 @@
       "follow_request": "ha pedido seguirte",
       "reblog": "ha compartido tu publicación",
       "like": "ha indicado que le gusta tu publicación",
-      "poll": "ha finalizado una encuesta"
+      "poll": "ha finalizado una encuesta",
+      "group_request": "quiere unirse a {{group}}",
+      "group_invite": "te ha invitado a {{group}}",
+      "group_accepted": "te ha dejado entrar en {{group}}"
     },
     "pollEnded": "Ha finalizado una encuesta en la que votaste",
     "pollOwnEnded": "Tu encuesta ha finalizado",
-    "seeAll": "Ver todas las notificaciones"
+    "seeAll": "Ver todas las notificaciones",
+    "openGroup": "Abrir {{name}}"
   },
   "aspects": {
     "title": "Aspectos",
@@ -1097,5 +1105,100 @@
     "play": "Reproducir “{{title}}” (carga YouTube)",
     "privacy": "YouTube solo se carga cuando pulsas play",
     "playing": "Reproduciendo desde YouTube"
+  },
+  "groups": {
+    "title": "Grupos",
+    "description": "Espacios para hablar de lo que te importa, con quien también le importa.",
+    "create": "Crear grupo",
+    "members_one": "{{count}} miembro",
+    "members_other": "{{count}} miembros",
+    "mine": "Tus grupos",
+    "invitations": "Invitaciones",
+    "discover": "Descubre grupos",
+    "search": "Buscar grupos",
+    "noneYet": "Todavía no estás en ningún grupo. Únete a uno aquí abajo o crea el tuyo.",
+    "noGroups": "Todavía no hay grupos. ¡Crea el primero!",
+    "noMatch": "Ningún grupo coincide con «{{query}}».",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "join": "Unirse al grupo",
+    "askToJoin": "Pedir unirse",
+    "cancelRequest": "Retirar solicitud",
+    "leave": "Salir del grupo",
+    "requestSent": "Solicitud enviada: la revisará un moderador.",
+    "signInToJoin": "Inicia sesión para unirte",
+    "leaveTitle": "¿Salir de {{name}}?",
+    "leavePrivate": "Ya no verás las publicaciones de este grupo, salvo que vuelvas a unirte.",
+    "fediverseHandle": "En el fediverso: {{handle}}",
+    "privateNotice": "Solo los miembros ven las publicaciones de este grupo. Pide unirte para participar.",
+    "joinToWrite": "Únete al grupo para escribir y comentar aquí.",
+    "noPosts": "Todavía no hay publicaciones. ¡Empieza la conversación!",
+    "membersPrivate": "Solo los miembros ven quién está en este grupo.",
+    "roleOf": "Rol de {{name}}",
+    "roles": {
+      "admin": "Admin",
+      "moderator": "Moderador",
+      "member": "Miembro"
+    },
+    "remove": "Quitar",
+    "removeTitle": "¿Quitar a {{name}} del grupo?",
+    "invite": "Invitar personas",
+    "invitePlaceholder": "Nombre o usuario",
+    "inviteButton": "Invitar",
+    "invited": "Invitado",
+    "requests": "Solicitudes para unirse",
+    "noRequests": "No hay solicitudes pendientes.",
+    "approve": "Aprobar",
+    "pendingInvitations": "Invitaciones enviadas",
+    "withdrawInvitation": "Retirar",
+    "images": "Imágenes",
+    "image": {
+      "avatar": "Imagen del grupo",
+      "header": "Portada",
+      "change": "Cambiar",
+      "choose": "Elegir",
+      "remove": "Quitar"
+    },
+    "deleteTitle": "Eliminar el grupo",
+    "deleteDescription": "El grupo y todas sus publicaciones se eliminarán para siempre.",
+    "delete": "Eliminar el grupo",
+    "deleteConfirmTitle": "¿Eliminar {{name}}?",
+    "privacyConfirmTitle": "¿Pasar a «{{privacy}}»?",
+    "privacyConfirm": "Un grupo puede volverse más reservado, pero no volver atrás. Quien lo sigue desde otros servidores del fediverso sale cuando el grupo deja de ser público.",
+    "joined": "Te has unido al grupo.",
+    "invitationDeclined": "Invitación rechazada.",
+    "tabs": {
+      "label": "Secciones del grupo",
+      "posts": "Conversación",
+      "members": "Miembros",
+      "requests": "Solicitudes",
+      "settings": "Ajustes"
+    },
+    "privacy": {
+      "public": {
+        "label": "Grupo público",
+        "description": "Cualquiera ve las publicaciones y puede unirse. También se puede seguir desde Mastodon y otros servidores."
+      },
+      "private": {
+        "label": "Grupo privado",
+        "description": "Cualquiera lo encuentra, solo los miembros ven las publicaciones. Los moderadores aprueban quién entra."
+      },
+      "secret": {
+        "label": "Grupo secreto",
+        "description": "Solo los miembros lo encuentran y ven sus publicaciones. Se entra por invitación."
+      }
+    },
+    "form": {
+      "title": "Nuevo grupo",
+      "name": "Nombre",
+      "handle": "Dirección",
+      "handleHint": "Letras, números y guiones bajos: el grupo estará en /groups/{{handle}}.",
+      "handleInvalid": "Usa de 1 a 30 letras, números o guiones bajos.",
+      "description": "¿De qué trata?",
+      "privacy": "Quién puede verlo",
+      "submit": "Crear grupo",
+      "privacyOneWay": "Un grupo puede volverse más reservado, nunca menos.",
+      "saved": "Guardado."
+    }
   }
 }

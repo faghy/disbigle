@@ -103,8 +103,29 @@ export class DiasporaPublisher implements EventBus {
     return this.bridge.ctx;
   }
 
+  /** Groups live on ActivityPub only: diaspora* has no such thing. */
+  private async aboutGroup(event: DomainEvent): Promise<boolean> {
+    const postIdOf = (e: DomainEvent) =>
+      e.type === 'post.created' ||
+      e.type === 'post.updated' ||
+      e.type === 'like.created' ||
+      e.type === 'like.removed' ||
+      e.type === 'poll.voted'
+        ? e.postId
+        : null;
+    if (event.type === 'post.deleted') return Boolean(event.groupId);
+    if (event.type === 'profile.updated' || event.type === 'account.deleted') {
+      return Boolean((await actorById(this.ctx, event.actorId))?.isGroup);
+    }
+    const postId = postIdOf(event);
+    if (!postId) return false;
+    const post = await postById(this.ctx, postId);
+    return Boolean(post?.groupId);
+  }
+
   /** Handles one event now (normally called from the queue). */
   async handle(event: DomainEvent): Promise<void> {
+    if (await this.aboutGroup(event)) return;
     switch (event.type) {
       case 'post.created':
         return this.postCreated(event.postId);

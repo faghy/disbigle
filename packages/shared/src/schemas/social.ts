@@ -32,6 +32,8 @@ export const createPostRequestSchema = z
       .optional(),
     mediaIds: z.array(z.uuid()).max(4).default([]),
     poll: pollRequestSchema.optional(),
+    /** Posts in a group; the group decides who reads it, so `visibility` is ignored. */
+    groupId: z.uuid().optional(),
   })
   .refine((p) => p.content.trim().length > 0 || p.mediaIds.length > 0 || p.poll !== undefined, {
     message: 'A post needs text, media or a poll',
@@ -148,6 +150,8 @@ export interface Status {
   pinned?: boolean;
   /** Markdown source of a local post; only present for the author (for editing). */
   source?: string;
+  /** The group the post was written in. */
+  group?: GroupSummary | null;
 }
 
 export interface StatusContext {
@@ -180,7 +184,10 @@ export type NotificationType =
   | 'reply'
   | 'reblog'
   | 'like'
-  | 'poll';
+  | 'poll'
+  | 'group_request'
+  | 'group_invite'
+  | 'group_accepted';
 
 export interface Notification {
   id: string;
@@ -189,7 +196,65 @@ export interface Notification {
   read: boolean;
   account: Account;
   status: Status | null;
+  /** For group requests, invitations and approvals. */
+  group?: GroupSummary | null;
 }
+
+export const groupPrivacies = ['public', 'private', 'secret'] as const;
+/**
+ * public: anyone can read and join; private: listed, members only, joining needs approval;
+ * secret: members only and unlisted, by invitation.
+ */
+export type GroupPrivacy = (typeof groupPrivacies)[number];
+export const groupRoles = ['admin', 'moderator', 'member'] as const;
+export type GroupRole = (typeof groupRoles)[number];
+export type GroupMemberState = 'member' | 'requested' | 'invited';
+
+export interface GroupSummary {
+  id: string;
+  /** Handle: `name` here, `name@domain` for the fediverse. */
+  handle: string;
+  name: string;
+  privacy: GroupPrivacy;
+  avatarUrl: string | null;
+}
+
+export interface Group extends GroupSummary {
+  description: string;
+  headerUrl: string | null;
+  url: string;
+  membersCount: number;
+  createdAt: string;
+  /** The viewer's place in the group, if any. */
+  membership: { role: GroupRole; state: GroupMemberState } | null;
+  /** Join requests waiting, for moderators and admins. */
+  requestsCount?: number;
+}
+
+export interface GroupMember {
+  account: Account;
+  role: GroupRole;
+  state: GroupMemberState;
+  createdAt: string;
+}
+
+export const createGroupRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  handle: z
+    .string()
+    .trim()
+    .regex(/^[a-zA-Z0-9_]{1,30}$/, 'Use 1-30 letters, digits or underscores'),
+  description: z.string().trim().max(2000).default(''),
+  privacy: z.enum(groupPrivacies).default('public'),
+});
+export type CreateGroupRequest = z.input<typeof createGroupRequestSchema>;
+
+export const updateGroupRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().trim().max(2000).optional(),
+  privacy: z.enum(groupPrivacies).optional(),
+});
+export type UpdateGroupRequest = z.input<typeof updateGroupRequestSchema>;
 
 /** Messages pushed over the streaming WebSocket. */
 export type StreamEvent =

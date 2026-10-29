@@ -66,6 +66,8 @@ export async function searchRoutes(
           and(
             or(ilike(schema.actors.username, term), ilike(schema.actors.displayName, term)),
             isNull(schema.actors.suspendedAt),
+            // Our groups are found in the groups directory, not among people.
+            sql`not (${schema.actors.isGroup} and ${schema.actors.domain} is null)`,
             // Accounts that opted out of discovery are found only by their exact username.
             sql`(${schema.actors.discoverable} or lower(${schema.actors.username}) = lower(${q.replace(/^@/, '')}))`,
           ),

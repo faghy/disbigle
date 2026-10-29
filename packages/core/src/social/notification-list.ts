@@ -4,6 +4,7 @@ import { paginationQuerySchema } from '@disbigle/shared';
 import { and, inArray } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
+import { groupSummaries } from './groups.ts';
 import { listNotificationRows } from './notifications.ts';
 import { hydrateStatuses } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
@@ -39,6 +40,10 @@ export async function serializeNotifications(
       : [],
   ]);
   const statuses = await hydrateStatuses(ctx, actorId, postRows);
+  const groupsById = await groupSummaries(
+    ctx,
+    rows.map((r) => r.groupId).filter((id): id is string => id !== null),
+  );
   const statusById = new Map(statuses.map((s) => [s.id, s]));
   const accountById = new Map(fromActors.map((a) => [a.id, serializeAccount(a)]));
 
@@ -47,6 +52,8 @@ export async function serializeNotifications(
     if (!account) return [];
     const status = row.postId ? (statusById.get(row.postId) ?? null) : null;
     if (row.postId && !status) return [];
+    const group = row.groupId ? (groupsById.get(row.groupId) ?? null) : null;
+    if (row.groupId && !group) return [];
     return [
       {
         id: row.id,
@@ -55,6 +62,7 @@ export async function serializeNotifications(
         read: row.readAt !== null,
         account,
         status,
+        ...(group ? { group } : {}),
       },
     ];
   });

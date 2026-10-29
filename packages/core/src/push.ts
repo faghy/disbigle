@@ -18,6 +18,9 @@ export const defaultPushAlerts: Required<PushAlerts> = {
   reblog: true,
   like: true,
   poll: true,
+  group_request: true,
+  group_invite: true,
+  group_accepted: true,
 };
 
 /** The instance's VAPID key pair, created on first use (needs the instance_keys row). */
@@ -134,6 +137,9 @@ const titles: Record<string, Record<string, string>> = {
     reblog: '{name} reshared your post',
     like: '{name} liked your post',
     poll: 'A poll you took part in has ended',
+    group_request: '{name} asked to join {group}',
+    group_invite: '{name} invited you to {group}',
+    group_accepted: 'You are now a member of {group}',
   },
   it: {
     follow: '{name} ha iniziato a seguirti',
@@ -143,6 +149,9 @@ const titles: Record<string, Record<string, string>> = {
     reblog: '{name} ha condiviso il tuo post',
     like: '{name} ha apprezzato il tuo post',
     poll: 'Un sondaggio a cui hai partecipato è terminato',
+    group_request: '{name} chiede di entrare in {group}',
+    group_invite: '{name} ti ha invitato in {group}',
+    group_accepted: 'Ora fai parte di {group}',
   },
   es: {
     follow: '{name} ha empezado a seguirte',
@@ -152,6 +161,9 @@ const titles: Record<string, Record<string, string>> = {
     reblog: '{name} ha compartido tu publicación',
     like: '{name} le ha dado me gusta a tu publicación',
     poll: 'Ha terminado una encuesta en la que participaste',
+    group_request: '{name} quiere unirse a {group}',
+    group_invite: '{name} te ha invitado a {group}',
+    group_accepted: 'Ya eres miembro de {group}',
   },
 };
 
@@ -213,13 +225,25 @@ export class PushPublisher implements EventBus {
     const [post] = notification.postId
       ? await db.select().from(schema.posts).where(eq(schema.posts.id, notification.postId))
       : [];
+    const [group] = notification.groupId
+      ? await db
+          .select({ actor: actors })
+          .from(schema.groups)
+          .innerJoin(actors, eq(actors.id, schema.groups.actorId))
+          .where(eq(schema.groups.id, notification.groupId))
+      : [];
     const name = from.displayName || from.username;
+    const groupName = group ? group.actor.displayName || group.actor.username : '';
     const title =
-      (titles[user.locale] ?? titles.en)?.[notification.type]?.replace('{name}', name) ?? name;
+      (titles[user.locale] ?? titles.en)?.[notification.type]
+        ?.replace('{name}', name)
+        .replace('{group}', groupName) ?? name;
     const acct = from.domain ? `${from.username}@${from.domain}` : from.username;
     const url = post
       ? `${this.ctx.config.PUBLIC_URL}/@${acct}/${post.id}`
-      : `${this.ctx.config.PUBLIC_URL}/notifications`;
+      : group
+        ? `${this.ctx.config.PUBLIC_URL}/groups/${group.actor.username}`
+        : `${this.ctx.config.PUBLIC_URL}/notifications`;
     const payload = JSON.stringify({
       notificationId: notification.id,
       type: notification.type,

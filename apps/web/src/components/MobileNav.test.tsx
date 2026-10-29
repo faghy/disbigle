@@ -43,6 +43,7 @@ describe('mobile navigation', () => {
     expect(links).toEqual([
       '/public/local',
       '/public',
+      '/groups',
       '/contacts',
       '/bookmarks',
       '/settings',

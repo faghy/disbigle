@@ -2,6 +2,7 @@ import { backfillRemoteOutbox, resolveRemoteStatus } from '@disbigle/activitypub
 import {
   bridgedAccountByUsername,
   type CoreContext,
+  findGroup,
   isBridgeUsername,
   LocalMediaStorage,
   type Mailer,
@@ -30,6 +31,7 @@ import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { authorizedAppRoutes } from './routes/authorized-apps.ts';
 import { filterRoutes } from './routes/filters.ts';
+import { groupRoutes } from './routes/groups.ts';
 import { inviteRoutes } from './routes/invites.ts';
 import { legacyDiasporaRoutes } from './routes/legacy.ts';
 import { meRoutes } from './routes/me.ts';
@@ -130,6 +132,15 @@ export async function buildApp(options: AppOptions) {
           if (!match?.[1])
             return new Response('Not Acceptable', { status: 406, headers: { Vary: 'Accept' } });
           let handle = match[1];
+          if (!match[2]) {
+            // A group's actor opens the group's page.
+            const group = await findGroup(ctx, handle);
+            if (group)
+              return new Response(null, {
+                status: 302,
+                headers: { Location: `/groups/${group.actor.username}`, Vary: 'Accept' },
+              });
+          }
           if (isBridgeUsername(handle)) {
             // A bridge identity: show the account it stands for.
             const bridged = await bridgedAccountByUsername(ctx, handle);
@@ -207,6 +218,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(filterRoutes, { ctx, prefix: '/filters' });
       await api.register(adminRoutes, { ctx, prefix: '/admin' });
       await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
+      await api.register(groupRoutes, { ctx, mediaCtx, prefix: '/groups' });
       if (options.federation) {
         await api.register(searchRoutes, {
           ctx,

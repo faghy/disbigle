@@ -41,6 +41,7 @@ export const reservedUsernames = new Set([
   'hostmaster',
   'noreply',
   'system',
+  'groups',
 ]);
 
 export interface RegisteredUser {

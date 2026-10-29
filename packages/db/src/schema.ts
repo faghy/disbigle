@@ -49,6 +49,18 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'reblog',
   'like',
   'poll',
+  'group_request',
+  'group_invite',
+  'group_accepted',
+]);
+/** public: anyone reads; private: members only, the group is listed; secret: members only, unlisted. */
+export const groupPrivacyEnum = pgEnum('group_privacy', ['public', 'private', 'secret']);
+export const groupRoleEnum = pgEnum('group_role', ['admin', 'moderator', 'member']);
+/** requested: waiting for a moderator; invited: waiting for the invited person. */
+export const groupMemberStateEnum = pgEnum('group_member_state', [
+  'member',
+  'requested',
+  'invited',
 ]);
 
 export type ProfileField = { name: string; value: string };
@@ -74,6 +86,8 @@ export const actors = pgTable(
     locked: boolean('locked').notNull().default(false),
     discoverable: boolean('discoverable').notNull().default(true),
     bot: boolean('bot').notNull().default(false),
+    /** A group (ours, or a remote ActivityPub Group such as a Lemmy community). */
+    isGroup: boolean('is_group').notNull().default(false),
     publicKeyPem: text('public_key_pem').notNull(),
     apUri: text('ap_uri'),
     apUrl: text('ap_url'),
@@ -307,6 +321,45 @@ export const aspectMemberships = pgTable(
   ],
 );
 
+/**
+ * Groups hosted here. Name, description and pictures live on the group's actor (its handle is
+ * the actor's username), so a public group can federate as an ActivityPub Group (FEP-1b12).
+ */
+export const groups = pgTable(
+  'groups',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    privacy: groupPrivacyEnum('privacy').notNull().default('public'),
+    /** RSA key of the group's actor, which signs what the group shares on other servers. */
+    privateKeyPem: text('private_key_pem').notNull(),
+    createdById: uuid('created_by_id').references(() => actors.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('groups_actor_idx').on(t.actorId)],
+);
+
+/** Members of a group, local or remote, with pending requests and invitations. */
+export const groupMembers = pgTable(
+  'group_members',
+  {
+    groupId: uuid('group_id')
+      .notNull()
+      .references(() => groups.id, { onDelete: 'cascade' }),
+    actorId: actorRef('actor_id'),
+    role: groupRoleEnum('role').notNull().default('member'),
+    state: groupMemberStateEnum('state').notNull().default('member'),
+    invitedById: uuid('invited_by_id').references(() => actors.id, { onDelete: 'set null' }),
+    /** URI of the Follow activity, for remote members. */
+    apUri: text('ap_uri'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.actorId] }),
+    index('group_members_actor_idx').on(t.actorId),
+  ],
+);
+
 /** Status messages, replies and reblogs, local or remote. */
 export const posts = pgTable(
   'posts',
@@ -330,6 +383,8 @@ export const posts = pgTable(
     /** First post of the thread; equals `id` for a thread root. */
     threadRootId: uuid('thread_root_id'),
     reblogOfId: uuid('reblog_of_id'),
+    /** The group the post was written in; replies inherit it from the thread. */
+    groupId: uuid('group_id').references(() => groups.id, { onDelete: 'cascade' }),
     apUri: text('ap_uri'),
     apUrl: text('ap_url'),
     diasporaGuid: text('diaspora_guid'),
@@ -346,6 +401,7 @@ export const posts = pgTable(
     index('posts_reblog_idx').on(t.reblogOfId),
     index('posts_public_local_idx').on(t.id).where(sql`${t.visibility} = 'public' and ${t.local}`),
     index('posts_public_idx').on(t.id).where(sql`${t.visibility} = 'public'`),
+    index('posts_group_idx').on(t.groupId, t.id).where(sql`${t.groupId} is not null`),
     index('posts_search_idx').using(
       'gin',
       sql`to_tsvector('simple', regexp_replace(${t.contentHtml} || ' ' || ${t.summary}, '<[^>]+>', ' ', 'g'))`,
@@ -507,6 +563,8 @@ export const notifications = pgTable(
     type: notificationTypeEnum('type').notNull(),
     fromActorId: actorRef('from_actor_id'),
     postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    /** For group notifications (requests, invitations, approvals). */
+    groupId: uuid('group_id').references(() => groups.id, { onDelete: 'cascade' }),
     readAt: timestamp('read_at', { withTimezone: true }),
     createdAt: createdAt(),
   },
@@ -656,7 +714,19 @@ export const pollVotes = pgTable(
 );
 
 export type PushAlerts = Partial<
-  Record<'follow' | 'follow_request' | 'mention' | 'reply' | 'reblog' | 'like' | 'poll', boolean>
+  Record<
+    | 'follow'
+    | 'follow_request'
+    | 'mention'
+    | 'reply'
+    | 'reblog'
+    | 'like'
+    | 'poll'
+    | 'group_request'
+    | 'group_invite'
+    | 'group_accepted',
+    boolean
+  >
 >;
 
 export type MastodonPushData = {

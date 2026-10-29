@@ -9,7 +9,7 @@ import { schema } from '@disbigle/db';
 import { and, eq, inArray, isNull, lte, notInArray, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { requireUser } from '../auth.ts';
-import { nativeNotificationTypes } from '../entities/mappers.ts';
+import { groupNotificationTypes, nativeNotificationTypes } from '../entities/mappers.ts';
 import { Presenter } from '../entities/presenter.ts';
 import {
   idParam,
@@ -44,7 +44,10 @@ export async function notificationRoutes(app: FastifyInstance, deps: Deps) {
     const query = parseQuery(request);
     const page = pageParams(query, 40, 80);
     const include = strings(query.types);
-    const exclude = nativeNotificationTypes(strings(query.exclude_types));
+    const exclude = [
+      ...nativeNotificationTypes(strings(query.exclude_types)),
+      ...groupNotificationTypes,
+    ];
     const types = include.length > 0 ? nativeNotificationTypes(include) : null;
     if (types && types.length === 0) return [];
     const accountId = str(query.account_id);
@@ -93,7 +96,13 @@ export async function notificationRoutes(app: FastifyInstance, deps: Deps) {
     const rows = await ctx.db
       .select()
       .from(notifications)
-      .where(and(eq(notifications.id, idParam(request)), eq(notifications.actorId, user.actorId)));
+      .where(
+        and(
+          eq(notifications.id, idParam(request)),
+          eq(notifications.actorId, user.actorId),
+          notInArray(notifications.type, groupNotificationTypes),
+        ),
+      );
     const [notification] = await serializeNotifications(ctx, user.actorId, rows);
     if (!notification) throw new MastodonError(404, 'Record not found');
     const [result] = await new Presenter(ctx, user.actorId).notifications([notification]);

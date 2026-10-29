@@ -22,6 +22,7 @@ const {
   bookmarks,
   domainBlocks,
   tagFollows,
+  groupMembers,
 } = schema;
 
 /** Excludes posts from servers the admins silenced or suspended (public and tag timelines). */
@@ -93,7 +94,8 @@ async function page(
 
 /**
  * Home: your own posts, posts of accounts you follow, posts shared with you (diaspora-style
- * limited posts and mentions) and public posts with hashtags you follow, newest first.
+ * limited posts and mentions), public posts with hashtags you follow and new posts in your
+ * groups, newest first. What people you follow write in groups stays in those groups.
  */
 export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: PaginationQuery = {}) {
   return page(
@@ -101,7 +103,11 @@ export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: Pag
     viewerActorId,
     sql`(
       ${posts.actorId} = ${viewerActorId}
-      or exists (select 1 from ${follows} where ${follows.actorId} = ${viewerActorId} and ${follows.targetActorId} = ${posts.actorId})
+      or (${posts.groupId} is not null and ${posts.inReplyToId} is null and exists (
+        select 1 from ${groupMembers} where ${groupMembers.groupId} = ${posts.groupId}
+          and ${groupMembers.actorId} = ${viewerActorId} and ${groupMembers.state} = 'member'
+      ))
+      or (${posts.groupId} is null and exists (select 1 from ${follows} where ${follows.actorId} = ${viewerActorId} and ${follows.targetActorId} = ${posts.actorId}))
       or exists (select 1 from ${postAudiences} where ${postAudiences.postId} = ${posts.id} and ${postAudiences.actorId} = ${viewerActorId})
       or (${posts.visibility} = 'public' and exists (
         select 1 from ${postTags} inner join ${tagFollows} on ${tagFollows.tagId} = ${postTags.tagId}
@@ -125,6 +131,7 @@ export function publicTimeline(
     and(
       eq(posts.visibility, 'public'),
       isNull(posts.reblogOfId),
+      isNull(posts.groupId),
       query.local ? eq(posts.local, true) : notFromBlockedDomain,
       sql`(${posts.inReplyToActorId} is null or ${posts.inReplyToActorId} = ${posts.actorId})`,
     ),
@@ -168,7 +175,10 @@ export async function aspectTimeline(
   return page(
     ctx,
     ownerActorId,
-    sql`exists (select 1 from ${aspectMemberships} where ${aspectMemberships.aspectId} = ${aspectId} and ${aspectMemberships.actorId} = ${posts.actorId})`,
+    and(
+      isNull(posts.groupId),
+      sql`exists (select 1 from ${aspectMemberships} where ${aspectMemberships.aspectId} = ${aspectId} and ${aspectMemberships.actorId} = ${posts.actorId})`,
+    ),
     query,
     'home',
   );
@@ -185,11 +195,29 @@ export function accountTimeline(
     viewerActorId,
     and(
       eq(posts.actorId, accountId),
+      // Group posts belong to their group, not to the profile.
+      isNull(posts.groupId),
       query.excludeReplies
         ? sql`(${posts.inReplyToActorId} is null or ${posts.inReplyToActorId} = ${posts.actorId})`
         : undefined,
     ),
     query,
+  );
+}
+
+/** Posts started in a group (replies stay in their threads), newest first. */
+export function groupTimeline(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  groupId: string,
+  query: PaginationQuery = {},
+) {
+  return page(
+    ctx,
+    viewerActorId,
+    and(eq(posts.groupId, groupId), isNull(posts.inReplyToId), isNull(posts.reblogOfId)),
+    query,
+    'home',
   );
 }
 

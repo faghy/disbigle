@@ -105,6 +105,8 @@ export function useCreateStatus() {
       prependToTimeline(queryClient, socialKeys.timeline('home'), [status]);
       for (const aspectId of status.aspectIds ?? [])
         prependToTimeline(queryClient, socialKeys.timeline('aspect', aspectId), [status]);
+      if (status.group && !status.inReplyToId)
+        prependToTimeline(queryClient, socialKeys.timeline('group', status.group.id), [status]);
     },
   });
 }

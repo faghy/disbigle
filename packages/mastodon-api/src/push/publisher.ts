@@ -27,6 +27,9 @@ export function nativeAlerts(alerts: Record<string, boolean | undefined>): Requi
     follow_request: on('follow_request'),
     like: on('favourite'),
     poll: on('poll'),
+    group_request: false,
+    group_invite: false,
+    group_accepted: false,
   };
 }
 

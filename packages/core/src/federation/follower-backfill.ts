@@ -32,6 +32,7 @@ export async function postsForNewFollower(
         eq(posts.visibility, 'public'),
         isNull(posts.inReplyToId),
         isNull(posts.reblogOfId),
+        isNull(posts.groupId),
       ),
     )
     .orderBy(desc(posts.id))

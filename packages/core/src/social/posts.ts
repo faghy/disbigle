@@ -15,6 +15,7 @@ import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
 import { notFilteredFor } from './filters.ts';
+import { canModerateGroupPost, findGroup, isGroupMember } from './groups.ts';
 import { createNotification } from './notifications.ts';
 import { hydrateStatuses, type PostRow } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
@@ -98,7 +99,17 @@ export async function createPost(
   const audience = new Set<string>();
   let aspectIds: string[] = [];
 
-  if (parent && (parent.visibility === 'limited' || parent.visibility === 'direct')) {
+  // Posts and replies in a group: the group is the audience, and only members write there.
+  const groupId = parent ? parent.groupId : (input.groupId ?? null);
+  const group = groupId ? await findGroup(ctx, groupId) : null;
+  if (groupId && !group) throw new DomainError('not_found', 'Group not found');
+  if (group && !(await isGroupMember(ctx, group.group.id, authorActorId)))
+    throw new DomainError('forbidden', 'Join the group to write in it');
+  const publicGroup = group?.group.privacy === 'public';
+
+  if (group) {
+    visibility = publicGroup ? 'public' : 'limited';
+  } else if (parent && (parent.visibility === 'limited' || parent.visibility === 'direct')) {
     // Replies to private conversations stay inside them.
     visibility = parent.visibility;
     const parentAudience = await ctx.db
@@ -129,9 +140,13 @@ export async function createPost(
 
   const mentioned = await resolveMentions(ctx, input.content);
   const mentionedIds = new Set([...mentioned.values()].map((a) => a.id));
-  for (const id of mentionedIds) audience.add(id);
+  // In a private group a mention reaches no one outside it.
+  if (!group || publicGroup) for (const id of mentionedIds) audience.add(id);
   audience.delete(authorActorId);
   mentionedIds.delete(authorActorId);
+  /** Who may hear about this post: in a private group, its members only. */
+  const mayNotify = async (actorId: string) =>
+    !group || publicGroup || (await isGroupMember(ctx, group.group.id, actorId));
 
   if (visibility === 'direct' && audience.size === 0) {
     throw new DomainError('validation_failed', 'Mention at least one person', [
@@ -177,6 +192,7 @@ export async function createPost(
     inReplyToId: parent?.id ?? null,
     inReplyToActorId: parent?.actorId ?? null,
     threadRootId: parent ? (parent.threadRootId ?? parent.id) : id,
+    groupId: group?.group.id ?? null,
     apUri: `${author.apUri}/statuses/${id}`,
     apUrl: `${base}/@${author.username}/${id}`,
     diasporaGuid: randomBytes(16).toString('hex'),
@@ -233,6 +249,7 @@ export async function createPost(
   });
 
   for (const actorId of mentionedIds) {
+    if (!(await mayNotify(actorId))) continue;
     await createNotification(ctx, {
       actorId,
       type: 'mention',
@@ -240,7 +257,7 @@ export async function createPost(
       postId: id,
     });
   }
-  if (parent && !mentionedIds.has(parent.actorId)) {
+  if (parent && !mentionedIds.has(parent.actorId) && (await mayNotify(parent.actorId))) {
     await createNotification(ctx, {
       actorId: parent.actorId,
       type: 'reply',
@@ -406,7 +423,11 @@ export async function deletePost(
   options: { asModerator?: boolean } = {},
 ): Promise<void> {
   const [post] = await ctx.db.select().from(posts).where(eq(posts.id, postId));
-  if (!post || (post.actorId !== actorId && !options.asModerator)) {
+  const groupModerator =
+    post?.groupId && post.actorId !== actorId
+      ? await canModerateGroupPost(ctx, actorId, post.groupId)
+      : false;
+  if (!post || (post.actorId !== actorId && !options.asModerator && !groupModerator)) {
     throw new DomainError('not_found', 'Post not found');
   }
   const audience = await ctx.db
@@ -446,6 +467,7 @@ export async function deletePost(
     reblogOfId: post.reblogOfId,
     threadRootId: post.threadRootId,
     inReplyToActorId: post.inReplyToActorId,
+    groupId: post.groupId,
   });
 }
 
@@ -516,7 +538,11 @@ export async function reblog(ctx: CoreContext, actorId: string, postId: string):
   const actor = await getLocalActor(ctx, actorId);
   let target = await getVisiblePost(ctx, actorId, postId);
   if (target.reblogOfId) target = await getVisiblePost(ctx, actorId, target.reblogOfId);
-  if (target.visibility !== 'public' && target.visibility !== 'unlisted') {
+  const targetGroup = target.groupId ? await findGroup(ctx, target.groupId) : null;
+  if (
+    (target.visibility !== 'public' && target.visibility !== 'unlisted') ||
+    (targetGroup && targetGroup.group.privacy !== 'public')
+  ) {
     throw new DomainError('forbidden', 'Only public posts can be reshared');
   }
   const id = uuidv7();

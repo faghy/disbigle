@@ -12,7 +12,13 @@ const { notifications, actors, mutes, blocks } = schema;
  */
 export async function createNotification(
   ctx: CoreContext,
-  input: { actorId: string; type: NotificationType; fromActorId: string; postId?: string | null },
+  input: {
+    actorId: string;
+    type: NotificationType;
+    fromActorId: string;
+    postId?: string | null;
+    groupId?: string | null;
+  },
 ): Promise<string | null> {
   // The only notification about yourself: your poll has ended.
   if (input.actorId === input.fromActorId && input.type !== 'poll') return null;
@@ -42,6 +48,7 @@ export async function createNotification(
     type: input.type,
     fromActorId: input.fromActorId,
     postId: input.postId ?? null,
+    groupId: input.groupId ?? null,
   });
   await emit(ctx, {
     type: 'notification.created',
