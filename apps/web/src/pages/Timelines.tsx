@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser } from '../api/queries.ts';
 import { type PageParams, social } from '../api/social.ts';
-import { aspectsQueryOptions, tagKeys } from '../api/socialQueries.ts';
+import { aspectsQueryOptions, tagKeys, useFollowTag } from '../api/socialQueries.ts';
 import { Composer } from '../components/Composer.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { AspectsIcon, BookmarkIcon, GlobeIcon, HashIcon, LocalIcon } from '../components/icons.tsx';
@@ -161,19 +161,8 @@ function TagSummary({ name }: { name: string }) {
 function FollowTagButton({ name }: { name: string }) {
   const { t } = useTranslation();
   const user = useCurrentUser();
-  const queryClient = useQueryClient();
   const tag = useQuery({ queryKey: tagKeys.tag(name), queryFn: () => social.tag(name) });
-  const change = useMutation({
-    mutationFn: (follow: boolean) => social.followTag(name, follow),
-    onSuccess: (info) => {
-      queryClient.setQueryData(tagKeys.tag(name), info);
-      queryClient.setQueryData<string[]>(tagKeys.followed, (list) => {
-        const rest = (list ?? []).filter((n) => n !== info.name);
-        return info.following ? [...rest, info.name].sort() : rest;
-      });
-      void queryClient.invalidateQueries({ queryKey: socialKeys.timeline('home') });
-    },
-  });
+  const change = useFollowTag();
   if (!user || !tag.data) return null;
   const following = tag.data.following;
   return (
@@ -182,7 +171,7 @@ function FollowTagButton({ name }: { name: string }) {
         variant={following ? 'secondary' : 'primary'}
         loading={change.isPending}
         aria-pressed={following}
-        onClick={() => change.mutate(!following)}
+        onClick={() => change.mutate({ name, follow: !following })}
       >
         {following ? t('tags.unfollow') : t('tags.follow')}
       </Button>

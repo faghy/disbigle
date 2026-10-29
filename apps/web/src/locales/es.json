@@ -442,7 +442,8 @@
       "tooLong": "Las publicaciones pueden tener como máximo {{max}} caracteres.",
       "aspectsRequired": "Elige al menos un aspecto.",
       "mediaFailed": "Quita los adjuntos que no se han podido subir."
-    }
+    },
+    "mentionSuggestions": "Personas para mencionar"
   },
   "status": {
     "reshared": "{{name}} ha compartido",
@@ -597,7 +598,9 @@
   "tags": {
     "follow": "Seguir hashtag",
     "unfollow": "Dejar de seguir hashtag",
-    "followedTitle": "Hashtags seguidos"
+    "followedTitle": "Hashtags seguidos",
+    "followNew": "Seguir una etiqueta",
+    "followNewPlaceholder": "Seguir #etiqueta"
   },
   "edit": {
     "label": "Editar publicación",

@@ -377,6 +377,23 @@ describe('accounts and notifications', () => {
     expect(await ids(hidden.account.username)).toContain(hidden.account.id);
   });
 
+  it('lists the people you follow first', async () => {
+    const viewer = await signedIn();
+    const name = `Mentionable ${Date.now()}`;
+    const others = [await signedIn(), await signedIn()];
+    for (const other of others)
+      await other.client.patch('/api/v1/me/profile', { displayName: name });
+    const ids = async () =>
+      (await viewer.client.get(`/api/v1/search/accounts?q=${encodeURIComponent(name)}`))
+        .json()
+        .map((r: { id: string }) => r.id);
+    for (const other of others) {
+      await viewer.client.post(`/api/v1/accounts/${other.account.id}/follow`);
+      expect((await ids())[0]).toBe(other.account.id);
+      await viewer.client.post(`/api/v1/accounts/${other.account.id}/unfollow`);
+    }
+  });
+
   it('manages aspects', async () => {
     const { client } = await signedIn();
     const created = await client.post('/api/v1/aspects', { name: 'Pod admins' });

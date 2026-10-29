@@ -435,7 +435,8 @@
       "tooLong": "Posts can be at most {{max}} characters long.",
       "aspectsRequired": "Choose at least one aspect.",
       "mediaFailed": "Remove the attachments that failed to upload."
-    }
+    },
+    "mentionSuggestions": "People to mention"
   },
   "status": {
     "reshared": "{{name}} reshared",
@@ -583,7 +584,9 @@
   "tags": {
     "follow": "Follow hashtag",
     "unfollow": "Unfollow hashtag",
-    "followedTitle": "Followed hashtags"
+    "followedTitle": "Followed hashtags",
+    "followNew": "Follow a hashtag",
+    "followNewPlaceholder": "Follow #hashtag"
   },
   "edit": {
     "label": "Edit post",

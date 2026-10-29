@@ -5,8 +5,9 @@ import { type ComponentType, useCallback, useEffect, useId, useRef, useState } f
 import { useTranslation } from 'react-i18next';
 import { isModerator, summaryQueryOptions } from '../api/admin.ts';
 import { endpoints } from '../api/endpoints.ts';
+import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
-import { useFollowedTags } from '../api/socialQueries.ts';
+import { useFollowedTags, useFollowTag } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { setTheme, themes, useTheme } from '../lib/theme.ts';
@@ -164,7 +165,7 @@ function Badge({
 function FollowedTags() {
   const { t } = useTranslation();
   const tags = useFollowedTags();
-  if (!tags.data || tags.data.length === 0) return null;
+  if (!tags.data) return null;
   return (
     <section aria-labelledby="followed-tags-title" className="mt-6 border-t border-border pt-4">
       <h2
@@ -173,20 +174,64 @@ function FollowedTags() {
       >
         {t('tags.followedTitle')}
       </h2>
-      <ul className="mt-2 space-y-0.5">
-        {tags.data.map((name) => (
-          <li key={name}>
-            <Link
-              to="/tags/$tag"
-              params={{ tag: name }}
-              className="block truncate rounded-lg px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring data-[status=active]:text-accent"
-            >
-              #{name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {tags.data.length > 0 && (
+        <ul className="mt-2 space-y-0.5">
+          {tags.data.map((name) => (
+            <li key={name}>
+              <Link
+                to="/tags/$tag"
+                params={{ tag: name }}
+                className="block truncate rounded-lg px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring data-[status=active]:text-accent"
+              >
+                #{name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <FollowTagForm />
     </section>
+  );
+}
+
+/** A field to follow a new hashtag straight from the list. */
+function FollowTagForm() {
+  const { t } = useTranslation();
+  const follow = useFollowTag();
+  const [name, setName] = useState('');
+  const inputId = useId();
+  return (
+    <form
+      className="mt-2 px-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const tag = name.trim().replace(/^#/, '').toLowerCase();
+        if (!tag) return;
+        follow.mutate({ name: tag, follow: true }, { onSuccess: () => setName('') });
+      }}
+    >
+      <label htmlFor={inputId} className="sr-only">
+        {t('tags.followNew')}
+      </label>
+      <input
+        id={inputId}
+        className="input-base py-1.5 text-sm"
+        placeholder={t('tags.followNewPlaceholder')}
+        value={name}
+        onChange={(event) => {
+          setName(event.target.value);
+          follow.reset();
+        }}
+        disabled={follow.isPending}
+        enterKeyHint="done"
+        autoCapitalize="none"
+      />
+      {follow.error && (
+        <p role="alert" className="mt-1 text-xs text-danger">
+          {errorMessage(follow.error)}
+        </p>
+      )}
+    </form>
   );
 }
 
@@ -230,10 +275,8 @@ function SideNav({ user }: { user: CurrentUser | null }) {
   );
 }
 
-/** The followed hashtags as a card of the side panel (nothing when there are none). */
+/** The followed hashtags as a card of the side panel, with a field to follow more. */
 function FollowedTagsCard() {
-  const tags = useFollowedTags();
-  if (!tags.data || tags.data.length === 0) return null;
   return (
     <div className="sticker-soft rounded-2xl bg-surface px-1 pb-3 [&>section]:mt-0 [&>section]:border-t-0">
       <FollowedTags />

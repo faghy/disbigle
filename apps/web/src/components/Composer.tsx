@@ -20,6 +20,7 @@ import { Avatar } from './Avatar.tsx';
 import { EmojiButton } from './EmojiPicker.tsx';
 import { PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
+import { useMentionSuggestions } from './MentionSuggestions.tsx';
 import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
 import { Alert, Button, cx } from './ui.tsx';
 
@@ -85,6 +86,7 @@ export function Composer({
   const { media, uploading } = mediaItems;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [preparing, setPreparing] = useState(false);
+  const mentions = useMentionSuggestions({ textarea, content, setContent });
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -170,6 +172,7 @@ export function Composer({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentions.onKeyDown(event)) return;
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       void submit();
@@ -220,7 +223,7 @@ export function Composer({
             </div>
           )}
 
-          <div>
+          <div className="relative">
             <label htmlFor={ids.text} className="sr-only">
               {replyTo ? t('composer.replyLabel') : t('composer.label')}
             </label>
@@ -229,13 +232,18 @@ export function Composer({
               ref={textarea}
               rows={compact ? 3 : 4}
               value={content}
-              onChange={(event) => setContent(event.target.value)}
+              {...mentions.textareaProps}
+              onChange={(event) => {
+                setContent(event.target.value);
+                mentions.trackCaret();
+              }}
               onKeyDown={onKeyDown}
               placeholder={replyTo ? t('composer.replyPlaceholder') : t('composer.placeholder')}
               aria-invalid={allErrors.content ? true : undefined}
               aria-describedby={cx(ids.counter, allErrors.content && ids.error) || undefined}
               className="block w-full resize-y border-0 bg-transparent p-0 text-base placeholder:text-fg-muted focus:ring-0 focus-visible:outline-none"
             />
+            {mentions.list}
             {allErrors.content && (
               <p id={ids.error} className="mt-1 text-sm text-danger">
                 {allErrors.content}

@@ -52,6 +52,13 @@ export async function searchRoutes(
       }
 
       const term = `%${q.replace(/^@/, '').replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
+      // People you follow come first, so @-mention suggestions start with your contacts.
+      const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+      const followedFirst = viewer
+        ? [
+            sql`exists (select 1 from ${schema.follows} where ${schema.follows.actorId} = ${viewer} and ${schema.follows.targetActorId} = ${schema.actors.id}) desc`,
+          ]
+        : [];
       const rows = await ctx.db
         .select()
         .from(schema.actors)
@@ -63,7 +70,7 @@ export async function searchRoutes(
             sql`(${schema.actors.discoverable} or lower(${schema.actors.username}) = lower(${q.replace(/^@/, '')}))`,
           ),
         )
-        .orderBy(sql`${schema.actors.domain} is not null`, schema.actors.username)
+        .orderBy(...followedFirst, sql`${schema.actors.domain} is not null`, schema.actors.username)
         .limit(20);
       for (const actor of rows) results.set(actor.id, serializeAccount(actor));
       return [...results.values()];

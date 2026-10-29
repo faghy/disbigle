@@ -2,7 +2,7 @@ import { MAX_POST_LENGTH } from '@disbigle/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { aliceUser, makeStatus, nextId } from '../test/fixtures.ts';
+import { aliceUser, makeAccount, makeStatus, nextId } from '../test/fixtures.ts';
 import { instance, mockApi, renderApp } from '../test/utils.tsx';
 
 const family = { id: nextId(), name: 'Family', memberCount: 2 };
@@ -23,6 +23,32 @@ const postCalls = (fetchMock: ReturnType<typeof mockApi>) =>
   );
 
 describe('composer', () => {
+  it('suggests people to mention and inserts their handle', async () => {
+    const carol = makeAccount({
+      username: 'carol',
+      acct: 'carol@diaspo.example',
+      displayName: 'Carol',
+      local: false,
+    });
+    signedInApi({
+      'GET /search/accounts': (_body, url) => ({
+        body: url.searchParams.get('q') === 'car' ? [carol] : [],
+      }),
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    const textbox = await screen.findByRole('textbox', { name: 'New post' });
+    await user.type(textbox, 'Hi @car');
+    const list = await screen.findByRole('listbox', { name: 'People to mention' });
+    expect(within(list).getByRole('option', { name: /Carol/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await user.keyboard('{Enter}');
+    expect(textbox).toHaveValue('Hi @carol@diaspo.example ');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
   it('counts the characters left', async () => {
     signedInApi();
     renderApp('/');

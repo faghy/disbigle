@@ -1,4 +1,4 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { socialKeys } from './cache.ts';
 import { useCurrentUser } from './queries.ts';
 import { social } from './social.ts';
@@ -79,6 +79,23 @@ export const tagKeys = {
   tag: (name: string) => ['tag', name] as const,
   followed: ['tags', 'followed'] as const,
 };
+
+/** Follows or unfollows a hashtag, updating its info, the followed list and Home. */
+export function useFollowTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, follow }: { name: string; follow: boolean }) =>
+      social.followTag(name, follow),
+    onSuccess: (info) => {
+      queryClient.setQueryData(tagKeys.tag(info.name), info);
+      queryClient.setQueryData<string[]>(tagKeys.followed, (list) => {
+        const rest = (list ?? []).filter((n) => n !== info.name);
+        return info.following ? [...rest, info.name].sort() : rest;
+      });
+      void queryClient.invalidateQueries({ queryKey: socialKeys.timeline('home') });
+    },
+  });
+}
 
 /** Hashtags the signed-in user follows (their public posts appear in Home). */
 export function useFollowedTags() {

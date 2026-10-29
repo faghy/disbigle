@@ -435,7 +435,8 @@
       "tooLong": "Un post può avere al massimo {{max}} caratteri.",
       "aspectsRequired": "Scegli almeno un aspetto.",
       "mediaFailed": "Rimuovi gli allegati che non sono stati caricati."
-    }
+    },
+    "mentionSuggestions": "Persone da menzionare"
   },
   "status": {
     "reshared": "{{name}} ha ricondiviso",
@@ -583,7 +584,9 @@
   "tags": {
     "follow": "Segui hashtag",
     "unfollow": "Smetti di seguire",
-    "followedTitle": "Hashtag seguiti"
+    "followedTitle": "Hashtag seguiti",
+    "followNew": "Segui un hashtag",
+    "followNewPlaceholder": "Segui #hashtag"
   },
   "edit": {
     "label": "Modifica post",
