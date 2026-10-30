@@ -1140,6 +1140,8 @@
       "moderator": "Moderador",
       "member": "Miembro"
     },
+    "rolesHint": "Para nombrar a un moderador, elige «Moderador» junto a su nombre. Los moderadores aprueban solicitudes y quitan publicaciones y miembros; los administradores también cambian los ajustes.",
+    "rolesHintAlone": "Cuando alguien se una, desde esta lista podrás nombrarlo moderador.",
     "remove": "Quitar",
     "removeTitle": "¿Quitar a {{name}} del grupo?",
     "invite": "Invitar personas",
@@ -1157,7 +1159,13 @@
       "header": "Portada",
       "change": "Cambiar",
       "choose": "Elegir",
-      "remove": "Quitar"
+      "remove": "Quitar",
+      "edit": {
+        "header": "Cambiar la portada",
+        "avatar": "Cambiar la imagen del grupo"
+      },
+      "avatarSize": "Tamaño ideal: 400 × 400 píxeles, cuadrada.",
+      "headerSize": "Tamaño ideal: 1500 × 500 píxeles (3:1)."
     },
     "deleteTitle": "Eliminar el grupo",
     "deleteDescription": "El grupo y todas sus publicaciones se eliminarán para siempre.",

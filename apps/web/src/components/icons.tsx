@@ -187,6 +187,12 @@ export const CameraIcon = (p: IconProps) => (
     <circle cx="12" cy="13" r="3.5" />
   </Icon>
 );
+export const PencilIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20h4L19 9l-4-4L4 16z" />
+    <path d="M13.5 6.5l4 4" />
+  </Icon>
+);
 export const ExternalIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M14 4h6v6M20 4l-9 9" />

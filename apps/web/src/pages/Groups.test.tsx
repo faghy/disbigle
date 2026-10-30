@@ -245,4 +245,59 @@ describe('groups', () => {
       fetchMock.mock.calls.some(([url]) => String(url).endsWith(`/groups/${group.id}/join`)),
     ).toBe(true);
   });
+  it('lets admins change the pictures from the group page and name moderators', async () => {
+    const group = makeGroup({ membership: { role: 'admin', state: 'member' } });
+    const carol = makeAccount({ username: 'carol', displayName: 'Carol' });
+    const fetchMock = mockApi({
+      ...base,
+      [`GET /groups/${group.handle}`]: { body: group },
+      [`GET /groups/${group.id}/timeline`]: { body: [] },
+      [`POST /groups/${group.id}/header`]: {
+        body: { ...group, headerUrl: 'https://disbigle.test/header.webp' },
+      },
+      [`GET /groups/${group.id}/members`]: {
+        body: [
+          { account: aliceUser.account, role: 'admin', state: 'member', createdAt: '' },
+          { account: carol, role: 'member', state: 'member', createdAt: '' },
+        ],
+      },
+      [`PATCH /groups/${group.id}/members/${carol.id}`]: { body: { status: 'ok' } },
+    });
+    renderApp(`/groups/${group.handle}`);
+    const user = userEvent.setup();
+    const cover = await screen.findByLabelText('Change the cover');
+    expect(screen.getByLabelText('Change the group picture')).toBeInTheDocument();
+    await user.upload(cover, new File(['x'], 'cover.png', { type: 'image/png' }));
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, init]) =>
+            String(url).endsWith(`/groups/${group.id}/header`) && init?.method === 'POST',
+        ),
+      ).toBe(true),
+    );
+
+    await user.click(screen.getByRole('tab', { name: /Members/ }));
+    expect(await screen.findByText(/To name a moderator/)).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Role of Carol' }), 'moderator');
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([url, init]) => String(url).endsWith(`/members/${carol.id}`) && init?.method === 'PATCH',
+      );
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({ role: 'moderator' });
+    });
+  });
+
+  it('shows no pencils to plain members', async () => {
+    const group = makeGroup({ membership: { role: 'member', state: 'member' } });
+    mockApi({
+      ...base,
+      [`GET /groups/${group.handle}`]: { body: group },
+      [`GET /groups/${group.id}/timeline`]: { body: [] },
+    });
+    renderApp(`/groups/${group.handle}`);
+    expect(await screen.findByRole('heading', { name: 'Gardeners', level: 1 })).toBeVisible();
+    expect(screen.queryByLabelText('Change the cover')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Change the group picture')).not.toBeInTheDocument();
+  });
 });

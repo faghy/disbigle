@@ -7,14 +7,14 @@ import { socialKeys } from '../api/cache.ts';
 import { ApiError } from '../api/client.ts';
 import { errorMessage, fieldErrorsFrom } from '../api/errors.ts';
 import { groupKeys, groupQueryOptions, groups } from '../api/groups.ts';
-import { useCurrentUser, useInstance } from '../api/queries.ts';
+import { useCurrentUser, useInstance, useLimits } from '../api/queries.ts';
 import { social } from '../api/social.ts';
 import { Avatar } from '../components/Avatar.tsx';
 import { Composer } from '../components/Composer.tsx';
 import { ConfirmDialog } from '../components/Dialog.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
 import { GroupAvatar, PrivacyLabel } from '../components/GroupParts.tsx';
-import { InfoIcon } from '../components/icons.tsx';
+import { InfoIcon, PencilIcon } from '../components/icons.tsx';
 import { CurrentGroupContext } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import {
@@ -24,6 +24,7 @@ import {
   Card,
   cx,
   LoadingState,
+  Spinner,
   TextAreaField,
   TextField,
 } from '../components/ui.tsx';
@@ -93,9 +94,11 @@ function GroupHeader({ group }: { group: Group }) {
   const { t } = useTranslation();
   const instance = useInstance();
   const domain = instance.data?.domain;
+  const groupImages = useGroupImages(group);
+  const images = isAdmin(group) ? groupImages : null;
   return (
     <Card as="div" className="relative">
-      <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[calc(1.5rem-1.5px)] sm:-mx-6 sm:-mt-6">
+      <div className="relative -mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[calc(1.5rem-1.5px)] sm:-mx-6 sm:-mt-6">
         {group.headerUrl ? (
           <img
             src={group.headerUrl}
@@ -108,13 +111,31 @@ function GroupHeader({ group }: { group: Group }) {
             className="aspect-[6/1] w-full bg-gradient-to-r from-accent-soft via-surface-muted to-accent-soft"
           />
         )}
+        {images && (
+          <ImageEditButton
+            label={t('groups.image.edit.header')}
+            pending={images.uploading === 'header'}
+            onFile={(file) => images.choose('header', file)}
+            className="absolute top-3 right-3"
+          />
+        )}
       </div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <GroupAvatar
-          group={group}
-          size="lg"
-          className="-mt-14 ring-4 ring-surface sm:-mt-16 sm:size-24 sm:text-3xl"
-        />
+        <div className="relative -mt-14 self-start sm:-mt-16">
+          <GroupAvatar
+            group={group}
+            size="lg"
+            className="ring-4 ring-surface sm:size-24 sm:text-3xl"
+          />
+          {images && (
+            <ImageEditButton
+              label={t('groups.image.edit.avatar')}
+              pending={images.uploading === 'avatar'}
+              onFile={(file) => images.choose('avatar', file)}
+              className="absolute -right-1 -bottom-1"
+            />
+          )}
+        </div>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight break-words">{group.name}</h1>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -134,6 +155,7 @@ function GroupHeader({ group }: { group: Group }) {
       {group.description && (
         <p className="mt-4 whitespace-pre-wrap break-words">{group.description}</p>
       )}
+      {images?.error && <Alert className="mt-4">{images.error}</Alert>}
     </Card>
   );
 }
@@ -332,6 +354,14 @@ function Members({ group }: { group: Group }) {
   return (
     <div>
       {isMember(group) && <InvitePeople group={group} />}
+      {isAdmin(group) && members.data && (
+        <p className="flex gap-2 border-b border-border px-4 py-3 text-sm text-fg-muted sm:px-5">
+          <InfoIcon size={16} className="mt-0.5 shrink-0" />
+          {members.data.some((member) => member.account.local && member.role !== 'admin')
+            ? t('groups.rolesHint')
+            : t('groups.rolesHintAlone')}
+        </p>
+      )}
       {members.isPending ? (
         <LoadingState label={t('common.loading')} />
       ) : members.isError ? (
@@ -736,55 +766,132 @@ function GroupSettings({ group }: { group: Group }) {
   );
 }
 
-function GroupImages({ group }: { group: Group }) {
+const GROUP_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+
+/** Upload and removal of the group's picture and cover, with the same checks as profiles. */
+function useGroupImages(group: Group) {
   const { t } = useTranslation();
+  const limits = useLimits();
   const storeGroup = useStoreGroup();
+  const [problem, setProblem] = useState<string | null>(null);
   const upload = useMutation({
-    mutationFn: ({ kind, file }: { kind: 'avatar' | 'header'; file: File }) =>
+    mutationFn: ({ kind, file }: { kind: ImageKind; file: File }) =>
       groups.uploadImage(group.id, kind, file),
     onSuccess: storeGroup,
   });
   const remove = useMutation({
-    mutationFn: (kind: 'avatar' | 'header') => groups.removeImage(group.id, kind),
+    mutationFn: (kind: ImageKind) => groups.removeImage(group.id, kind),
     onSuccess: storeGroup,
   });
+  const choose = (kind: ImageKind, file: File) => {
+    setProblem(null);
+    if (!GROUP_IMAGE_TYPES.includes(file.type)) {
+      setProblem(t('settings.images.unsupported', { name: file.name }));
+      return;
+    }
+    if (file.size > limits.maxImageBytes) {
+      setProblem(
+        t('composer.media.tooLarge', {
+          name: file.name,
+          size: Math.round(limits.maxImageBytes / 1024 / 1024),
+        }),
+      );
+      return;
+    }
+    upload.mutate({ kind, file });
+  };
+  const failure = upload.error ?? remove.error;
+  return {
+    choose,
+    remove,
+    uploading: upload.isPending ? upload.variables.kind : null,
+    pending: upload.isPending || remove.isPending,
+    error: problem ?? (failure ? errorMessage(failure) : null),
+  };
+}
+
+type ImageKind = 'avatar' | 'header';
+
+/** The round pencil on the group's picture or cover: picks a new image. */
+function ImageEditButton({
+  label,
+  pending,
+  onFile,
+  className,
+}: {
+  label: string;
+  pending: boolean;
+  onFile: (file: File) => void;
+  className?: string;
+}) {
   return (
-    <section className="space-y-3 border-t border-border pt-5">
+    <label
+      title={label}
+      className={cx(
+        'flex size-9 cursor-pointer items-center justify-center rounded-full border border-border bg-surface/90 text-fg shadow-sm backdrop-blur hover:bg-surface focus-within:ring-2 focus-within:ring-accent',
+        className,
+      )}
+    >
+      {pending ? <Spinner /> : <PencilIcon size={16} />}
+      <span className="sr-only">{label}</span>
+      <input
+        type="file"
+        accept={GROUP_IMAGE_TYPES.join(',')}
+        className="sr-only"
+        disabled={pending}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) onFile(file);
+        }}
+      />
+    </label>
+  );
+}
+
+function GroupImages({ group }: { group: Group }) {
+  const { t } = useTranslation();
+  const images = useGroupImages(group);
+  return (
+    <section className="space-y-4 border-t border-border pt-5">
       <h2 className="font-semibold">{t('groups.images')}</h2>
       {(['avatar', 'header'] as const).map((kind) => {
         const current = kind === 'avatar' ? group.avatarUrl : group.headerUrl;
         return (
           <div key={kind} className="flex flex-wrap items-center gap-3">
-            <span className="w-32 text-sm font-medium">{t(`groups.image.${kind}`)}</span>
+            <span className="w-full sm:w-60">
+              <span className="block text-sm font-medium">{t(`groups.image.${kind}`)}</span>
+              <span className="block text-xs text-fg-muted">
+                {t(`groups.image.${kind}Size`)}
+              </span>
+            </span>
             <label className={buttonClass('secondary', 'cursor-pointer')}>
               {current ? t('groups.image.change') : t('groups.image.choose')}
               <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
+                accept={GROUP_IMAGE_TYPES.join(',')}
                 className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   event.target.value = '';
-                  if (file) upload.mutate({ kind, file });
+                  if (file) images.choose(kind, file);
                 }}
               />
             </label>
             {current && (
-              <Button variant="ghost" onClick={() => remove.mutate(kind)}>
+              <Button variant="ghost" onClick={() => images.remove.mutate(kind)}>
                 {t('groups.image.remove')}
               </Button>
             )}
           </div>
         );
       })}
-      {(upload.isPending || remove.isPending) && (
+      {images.pending && (
         <p className="text-sm text-fg-muted" role="status">
           {t('common.loading')}
         </p>
       )}
-      {(upload.error ?? remove.error) && (
-        <Alert>{errorMessage(upload.error ?? remove.error)}</Alert>
-      )}
+      {images.error && <Alert>{images.error}</Alert>}
     </section>
   );
 }
