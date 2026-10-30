@@ -4,6 +4,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
 import { groupSummaries } from './groups.ts';
+import { baseLanguage, guessLanguage, loadLanguageDetector } from './language.ts';
 import { loadPolls } from './polls.ts';
 import { visibleTo } from './visibility.ts';
 
@@ -38,6 +39,7 @@ export async function hydrateStatuses(
 ): Promise<Status[]> {
   if (rows.length === 0) return [];
   const { db } = ctx;
+  await loadLanguageDetector();
 
   const reblogIds = [
     ...new Set(rows.map((r) => r.reblogOfId).filter((id): id is string => id !== null)),
@@ -156,7 +158,8 @@ export async function hydrateStatuses(
       summary: post.summary,
       sensitive: post.sensitive,
       visibility: post.visibility,
-      language: post.language,
+      // Few servers say which language a post is in: guessed from the text when missing.
+      language: baseLanguage(post.language) ?? guessLanguage(post.contentHtml, post.summary),
       inReplyToId: post.inReplyToId,
       inReplyToAccountId: post.inReplyToActorId,
       inReplyToAccountAcct: post.inReplyToActorId

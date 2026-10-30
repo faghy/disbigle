@@ -9,6 +9,7 @@ import type {
   Relationship,
   Status,
   StatusContext,
+  Translation,
 } from '@disbigle/shared';
 import { api, queryString } from './client.ts';
 
@@ -70,6 +71,8 @@ export const social = {
   deleteStatus: (statusId: string) => api.delete<Ok>(`/statuses/${id(statusId)}`),
   statusAction: (statusId: string, action: StatusAction) =>
     api.post<Status>(`/statuses/${id(statusId)}/${action}`),
+  translateStatus: (statusId: string, lang: string) =>
+    api.post<Translation>(`/statuses/${id(statusId)}/translate`, { lang }),
 
   // Timelines
   homeTimeline: (page: PageParams) =>

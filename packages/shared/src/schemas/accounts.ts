@@ -71,6 +71,8 @@ export interface InstanceInfo {
   version: string;
   /** Matomo of this server, when it uses one: the web client sends anonymous page views. */
   analytics?: { matomoUrl: string; siteId: number };
+  /** Whether posts can be translated ("Translate" under posts in another language). */
+  translation?: boolean;
   limits: {
     maxPostLength: number;
     maxMediaAttachments: number;

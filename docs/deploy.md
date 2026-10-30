@@ -76,6 +76,11 @@ sudo systemctl enable --now disbigle-server disbigle-worker
 
 The server sets `RUN_FEDERATION_QUEUE=false`, so federation delivery happens in the worker. For more delivery throughput, run more workers.
 
+**Translation (optional).** Posts in another language get a "Translate" link when
+`TRANSLATION_URL` points to a translation service: the Bergamot one in
+[`apps/translator`](../apps/translator) (runs here, about 35 MB per language and a few
+hundred MB of memory while in use) or a LibreTranslate server.
+
 ## 5. nginx and TLS
 
 Edit the domain and paths in `deploy/nginx.conf`, then:

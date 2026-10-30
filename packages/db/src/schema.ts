@@ -367,6 +367,25 @@ export const groupMembers = pgTable(
   ],
 );
 
+/** Machine translations of posts, one per post and target language. */
+export const postTranslations = pgTable(
+  'post_translations',
+  {
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    language: text('language').notNull(),
+    /** Hash of the text that was translated: an edit of the post makes the row stale. */
+    sourceHash: text('source_hash').notNull(),
+    sourceLanguage: text('source_language').notNull(),
+    contentHtml: text('content_html').notNull(),
+    summary: text('summary').notNull().default(''),
+    provider: text('provider').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.language] })],
+);
+
 /** Status messages, replies and reblogs, local or remote. */
 export const posts = pgTable(
   'posts',

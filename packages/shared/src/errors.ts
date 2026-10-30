@@ -19,6 +19,7 @@ export const errorCodes = [
   'account_pending_approval',
   'account_disabled',
   'bot_check_failed',
+  'translation_unavailable',
   'internal_error',
 ] as const;
 

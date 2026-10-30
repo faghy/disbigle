@@ -116,6 +116,18 @@ export const pollVoteRequestSchema = z.object({
     .max(MAX_POLL_OPTIONS),
 });
 
+/** A post's text in another language, from the server's translation service. */
+export interface Translation {
+  content: string;
+  /** The translated content warning. */
+  summary: string;
+  /** The language the post was translated from (ISO 639-1). */
+  sourceLanguage: string;
+  /** The language it was translated to. */
+  language: string;
+  provider: string;
+}
+
 export interface Status {
   id: string;
   uri: string | null;

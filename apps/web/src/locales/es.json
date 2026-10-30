@@ -349,6 +349,7 @@
     "email_taken": "Esta dirección de correo electrónico ya está registrada.",
     "registrations_closed": "El registro está cerrado en este servidor.",
     "bot_check_failed": "La comprobación antirrobots ha fallado. Recarga la página e inténtalo de nuevo.",
+    "translation_unavailable": "La traducción no está disponible para esta publicación en este momento.",
     "invalid_invite": "El código de invitación no es válido o ha caducado.",
     "account_pending_approval": "Tu cuenta está pendiente de la aprobación de un moderador.",
     "account_disabled": "Esta cuenta ha sido desactivada.",
@@ -503,7 +504,11 @@
     },
     "inGroup": "En {{name}}",
     "sharedInGroup": "{{name}} compartió en",
-    "pendingApproval": "Pendiente de aprobación"
+    "pendingApproval": "Pendiente de aprobación",
+    "translate": "Traducir",
+    "translating": "Traduciendo…",
+    "translatedFrom": "Traducido del {{language}}",
+    "showOriginal": "Ver original"
   },
   "timeline": {
     "loadMore": "Cargar más",

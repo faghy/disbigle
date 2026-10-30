@@ -17,7 +17,7 @@ import { findCachedStatus, shownStatus, socialKeys, updateStatusEverywhere } fro
 import { ApiError } from '../api/client.ts';
 import { errorMessage } from '../api/errors.ts';
 import { type ToggleKind, useDeleteStatus, useToggleStatus } from '../api/mutations.ts';
-import { useCurrentUser } from '../api/queries.ts';
+import { useCurrentUser, useInstance } from '../api/queries.ts';
 import { social } from '../api/social.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
@@ -638,6 +638,89 @@ export interface StatusCardProps {
   position?: number;
 }
 
+/** `it` for `it-IT`. */
+const baseLanguage = (tag: string) => tag.toLowerCase().split(/[-_]/)[0];
+
+/** "Spanish" for `es`, in the reader's language. */
+function languageName(code: string, locale: string) {
+  try {
+    return new Intl.DisplayNames([locale], { type: 'language' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/**
+ * "Translate" under a post written in a language other than the reader's, when the server
+ * has a translation service. The translation replaces the text until "Show original".
+ */
+function useStatusTranslation(status: Status, isAuthor: boolean) {
+  const { i18n } = useTranslation();
+  const instance = useInstance();
+  const signedIn = Boolean(useCurrentUser());
+  const [shown, setShown] = useState(false);
+  const mutation = useMutation({
+    mutationFn: () => social.translateStatus(status.id, i18n.language),
+    onSuccess: () => setShown(true),
+  });
+  const offered =
+    Boolean(instance.data?.translation) &&
+    signedIn &&
+    !isAuthor &&
+    status.language !== null &&
+    baseLanguage(status.language) !== baseLanguage(i18n.language) &&
+    Boolean(status.content || status.summary);
+  return {
+    offered,
+    translation:
+      shown && mutation.data?.language === baseLanguage(i18n.language) ? mutation.data : null,
+    pending: mutation.isPending,
+    error: shown ? null : mutation.error,
+    show: () => (mutation.data ? setShown(true) : mutation.mutate()),
+    hide: () => setShown(false),
+  };
+}
+
+function TranslationControl({
+  translation,
+}: {
+  translation: ReturnType<typeof useStatusTranslation>;
+}) {
+  const { t, i18n } = useTranslation();
+  const linkClass = 'rounded font-medium hover:text-accent hover:underline focus-ring';
+  return (
+    <>
+      <p className="mt-1 text-sm text-fg-muted">
+        {translation.translation ? (
+          <>
+            {t('status.translatedFrom', {
+              language: languageName(translation.translation.sourceLanguage, i18n.language),
+            })}
+            {' · '}
+            <button type="button" className={linkClass} onClick={translation.hide}>
+              {t('status.showOriginal')}
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className={linkClass}
+            disabled={translation.pending}
+            onClick={translation.show}
+          >
+            {translation.pending ? t('status.translating') : t('status.translate')}
+          </button>
+        )}
+      </p>
+      {translation.error && (
+        <p role="alert" className="mt-1 text-sm text-danger">
+          {errorMessage(translation.error)}
+        </p>
+      )}
+    </>
+  );
+}
+
 export function StatusCard({
   status: item,
   highlighted = false,
@@ -660,6 +743,8 @@ export function StatusCard({
   const headingId = useId();
   const hasWarning = status.summary.length > 0;
   const signedIn = Boolean(user);
+  const translation = useStatusTranslation(status, isAuthor);
+  const shown = translation.translation;
   // Like Mastodon's link cards: only on posts without photos or a poll.
   const youtube = useMemo(
     () => (status.media.length === 0 && !status.poll ? firstYouTubeLink(status.content) : null),
@@ -754,7 +839,9 @@ export function StatusCard({
           {hasWarning && (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2">
               <WarningIcon size={16} className="text-fg-muted" />
-              <p className="min-w-0 flex-1 text-sm font-medium">{status.summary}</p>
+              <p className="min-w-0 flex-1 text-sm font-medium">
+                {shown?.summary || status.summary}
+              </p>
               <button
                 type="button"
                 aria-expanded={expanded}
@@ -771,11 +858,12 @@ export function StatusCard({
           <div id={contentId} hidden={editing || (hasWarning && !expanded)}>
             {status.content && (
               <StatusContent
-                html={status.content}
+                html={shown?.content ?? status.content}
                 mentions={status.mentions}
                 className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
               />
             )}
+            {translation.offered && <TranslationControl translation={translation} />}
             {status.poll && <PollView status={status} poll={status.poll} />}
             {status.media.length > 0 && (
               <MediaGrid media={status.media} sensitive={status.sensitive && !hasWarning} />

@@ -8,6 +8,7 @@ import {
   getInstanceSettings,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
+  translationEnabled,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { type InstanceInfo, MAX_POST_LENGTH } from '@disbigle/shared';
@@ -30,6 +31,7 @@ export async function publicRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       ...(ctx.config.MATOMO_URL && ctx.config.MATOMO_SITE_ID
         ? { analytics: { matomoUrl: ctx.config.MATOMO_URL, siteId: ctx.config.MATOMO_SITE_ID } }
         : {}),
+      translation: translationEnabled(ctx),
       limits: {
         maxPostLength: MAX_POST_LENGTH,
         maxMediaAttachments: 4,

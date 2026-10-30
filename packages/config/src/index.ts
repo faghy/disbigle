@@ -16,6 +16,8 @@ const configSchema = z.object({
   /** Optional Matomo for the web client (cookieless page views, no personal data). */
   MATOMO_URL: z.url().optional(),
   MATOMO_SITE_ID: z.coerce.number().int().positive().optional(),
+  /** Translation service (apps/translator, or LibreTranslate). Without it, no "Translate" link. */
+  TRANSLATION_URL: z.url().optional(),
   /** SMTP connection URL, e.g. smtps://user:pass@mail.example.org:465. Without it, emails are logged. */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Disbigle <noreply@localhost>'),

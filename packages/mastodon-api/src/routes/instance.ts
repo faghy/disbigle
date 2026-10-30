@@ -5,6 +5,8 @@ import {
   getVapidKeys,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
+  translationEnabled,
+  translationLanguages,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { MAX_POLL_OPTIONS, MAX_POST_LENGTH } from '@disbigle/shared';
@@ -145,7 +147,7 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
         statuses: statusLimits,
         media_attachments: mediaLimits,
         polls: pollLimits,
-        translation: { enabled: false },
+        translation: { enabled: translationEnabled(ctx) },
       },
       registrations: {
         enabled: info.mode !== 'closed',
@@ -162,7 +164,10 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
   app.get('/api/v1/instance/peers', async () => []);
   app.get('/api/v1/instance/activity', async () => []);
   app.get('/api/v1/instance/domain_blocks', async () => []);
-  app.get('/api/v1/instance/translation_languages', async () => ({}));
+  app.get('/api/v1/instance/translation_languages', async () => {
+    const languages = await translationLanguages(ctx).catch(() => new Map<string, Set<string>>());
+    return Object.fromEntries([...languages].map(([source, targets]) => [source, [...targets]]));
+  });
   app.get('/api/v1/instance/extended_description', async () => {
     const settings = await getInstanceSettings(ctx);
     return { updated_at: new Date().toISOString(), content: settings.description };

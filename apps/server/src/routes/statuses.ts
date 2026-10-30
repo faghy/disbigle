@@ -12,6 +12,7 @@ import {
   reblog,
   rejectGroupPost,
   shareToGroup,
+  translatePost,
   unbookmark,
   unlike,
   unpinPost,
@@ -115,4 +116,17 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
     await rejectGroupPost(ctx, session.actorId, id);
     return { status: 'ok' };
   });
+
+  // Machine translation into the reader's language (only with a translation service).
+  const translateBody = z.object({ lang: z.string().min(2).max(16) });
+  app.post(
+    '/:id/translate',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request) => {
+      const session = requireUser(request);
+      const { id } = parse(idParams, request.params);
+      const { lang } = parse(translateBody, request.body);
+      return translatePost(ctx, session.actorId, id, lang);
+    },
+  );
 }

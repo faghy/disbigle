@@ -18,6 +18,7 @@
     "@simplewebauthn/server": "^13.2.2",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.4",
+    "eld": "2.1.0",
     "marked": "^18.1.0",
     "otplib": "^13.5.0",
     "qrcode": "^1.5.4",

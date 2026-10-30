@@ -19,6 +19,7 @@ import {
   reblog,
   serializeAccount,
   tagTimeline,
+  translatePost,
   unbookmark,
   unlike,
   unpinPost,
@@ -35,6 +36,7 @@ import { requireUser, viewerId } from '../auth.ts';
 import { mapAccount, mapPoll, parseVisibility } from '../entities/mappers.ts';
 import { Presenter } from '../entities/presenter.ts';
 import {
+  body,
   bool,
   type FormObject,
   idParam,
@@ -291,6 +293,24 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
       throw error;
     }
   };
+  // Machine translation, into `lang` or the user's language.
+  app.post(
+    '/api/v1/statuses/:id/translate',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
+    async (request) => {
+      const user = requireUser(request, 'read:statuses');
+      const lang = str(body(request).lang) || user.locale;
+      const translation = await translatePost(ctx, user.actorId, idParam(request), lang);
+      return {
+        content: translation.content,
+        spoiler_text: translation.summary,
+        poll: null,
+        media_attachments: [],
+        detected_source_language: translation.sourceLanguage,
+        provider: translation.provider,
+      };
+    },
+  );
   statusAction('pin', ['write:accounts'], pinAction(pinPost));
   statusAction('unpin', ['write:accounts'], pinAction(unpinPost));
   for (const path of ['mute', 'unmute']) {

@@ -440,6 +440,7 @@ export async function noteToPostData(
     contentHtml: note.content?.toString() ?? '',
     summary: note.summary?.toString() ?? '',
     sensitive: note.sensitive ?? false,
+    language: noteLanguage(note),
     visibility,
     audienceActorIds: [...audience],
     mentionActorIds: [...mentionIds],
@@ -450,6 +451,14 @@ export async function noteToPostData(
     publishedAt: note.published ? new Date(note.published.epochMilliseconds) : new Date(),
     ...(note instanceof Question ? { poll: await questionPoll(ctx, note) } : {}),
   };
+}
+
+/** The language of a Note, from its `contentMap` (Mastodon sends one per post). */
+function noteLanguage(note: Note | Question): string | null {
+  for (const content of note.contents) {
+    if (typeof content === 'object' && 'locale' in content) return content.locale.language;
+  }
+  return null;
 }
 
 /** Options and totals of an incoming Question. */

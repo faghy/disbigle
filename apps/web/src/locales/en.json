@@ -343,6 +343,7 @@
     "email_taken": "This email address is already registered.",
     "registrations_closed": "Registrations are closed on this server.",
     "bot_check_failed": "The anti-robot check failed. Reload the page and try again.",
+    "translation_unavailable": "Translation isn't available for this post right now.",
     "invalid_invite": "The invitation code is invalid or has expired.",
     "account_pending_approval": "Your account is waiting for a moderator's approval.",
     "account_disabled": "This account has been disabled.",
@@ -493,7 +494,11 @@
     },
     "inGroup": "In {{name}}",
     "sharedInGroup": "{{name}} shared in",
-    "pendingApproval": "Waiting for approval"
+    "pendingApproval": "Waiting for approval",
+    "translate": "Translate",
+    "translating": "Translating…",
+    "translatedFrom": "Translated from {{language}}",
+    "showOriginal": "Show original"
   },
   "timeline": {
     "loadMore": "Load more",

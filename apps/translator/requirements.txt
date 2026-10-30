@@ -1,0 +1,2 @@
+bergamot==0.4.5
+py3langid==0.4.0

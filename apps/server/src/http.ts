@@ -23,6 +23,7 @@ const statusByCode: Record<ErrorCode, number> = {
   account_pending_approval: 403,
   account_disabled: 403,
   bot_check_failed: 400,
+  translation_unavailable: 422,
   internal_error: 500,
 };
 

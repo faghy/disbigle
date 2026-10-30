@@ -69,6 +69,59 @@ describe('status card', () => {
     ).toBeDisabled();
   });
 
+  it('translates posts in another language and shows the original again', async () => {
+    const status = makeStatus({ language: 'it', content: '<p>Ciao a tutti</p>' });
+    let asked: unknown;
+    const article = await renderHomeWith(status, {
+      'GET /instance': { body: { ...instance().body, translation: true } },
+      [`POST /statuses/${status.id}/translate`]: (body) => {
+        asked = body;
+        return {
+          body: {
+            content: '<p>Hello everyone</p>',
+            summary: '',
+            sourceLanguage: 'it',
+            language: 'en',
+            provider: 'Bergamot',
+          },
+        };
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(within(article).getByRole('button', { name: 'Translate' }));
+    expect(await within(article).findByText('Hello everyone')).toBeVisible();
+    expect(asked).toEqual({ lang: 'en' });
+    expect(within(article).getByText(/Translated from Italian/)).toBeVisible();
+    expect(within(article).queryByText('Ciao a tutti')).toBeNull();
+
+    await user.click(within(article).getByRole('button', { name: 'Show original' }));
+    expect(within(article).getByText('Ciao a tutti')).toBeVisible();
+    expect(within(article).getByRole('button', { name: 'Translate' })).toBeVisible();
+  });
+
+  it('offers no translation for posts in your language or without a translation service', async () => {
+    const english = makeStatus({ language: 'en', content: '<p>Hello</p>' });
+    const article = await renderHomeWith(english, {
+      'GET /instance': { body: { ...instance().body, translation: true } },
+    });
+    expect(within(article).queryByRole('button', { name: 'Translate' })).toBeNull();
+  });
+
+  it('says when a post cannot be translated', async () => {
+    const status = makeStatus({ language: 'it', content: '<p>Ciao a tutti</p>' });
+    const article = await renderHomeWith(status, {
+      'GET /instance': { body: { ...instance().body, translation: true } },
+      [`POST /statuses/${status.id}/translate`]: {
+        status: 422,
+        body: { error: 'translation_unavailable', message: 'down' },
+      },
+    });
+    await userEvent.setup().click(within(article).getByRole('button', { name: 'Translate' }));
+    expect(await within(article).findByRole('alert')).toHaveTextContent(
+      "Translation isn't available for this post right now.",
+    );
+  });
+
   it('hides content behind a content warning', async () => {
     const status = makeStatus({ summary: 'Spoilers', content: '<p>The butler did it</p>' });
     const article = await renderHomeWith(status, {});

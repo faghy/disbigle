@@ -1,0 +1,21 @@
+[Unit]
+Description=Disbigle machine translation (Bergamot)
+After=network.target
+
+[Service]
+Type=simple
+User=disbigle
+Environment=TRANSLATOR_MODELS=/var/lib/disbigle/translator/models
+Environment=TRANSLATOR_PORT=5100
+ExecStart=/opt/disbigle/translator-venv/bin/python /opt/disbigle/apps/translator/server.py
+Restart=on-failure
+RestartSec=5
+# Models are dropped after 10 idle minutes; keep a ceiling in case many are in use at once.
+MemoryMax=4G
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
