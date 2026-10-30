@@ -148,6 +148,13 @@
       "when": 1793354101750,
       "tag": "0020_group_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793354768122,
+      "tag": "0021_group_diaspora",
+      "breakpoints": true
     }
   ]
 }

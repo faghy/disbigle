@@ -209,7 +209,8 @@ export async function createGroup(
   const keys = await generateActorKeyPair(ctx.rsaKeyBits ?? 4096);
   const actorId = uuidv7();
   const groupId = uuidv7();
-  const urls = localActorUrls(ctx.config, handle, diasporaGuid());
+  const guid = diasporaGuid();
+  const urls = localActorUrls(ctx.config, handle, guid);
   try {
     await ctx.db.transaction(async (tx) => {
       await tx.insert(actors).values({
@@ -222,7 +223,9 @@ export async function createGroup(
         locked: input.privacy !== 'public',
         discoverable: input.privacy !== 'secret',
         publicKeyPem: keys.publicKeyPem,
-        protocols: ['activitypub'],
+        // Public groups also appear on diaspora*, as an account that reshares the group's posts.
+        protocols: ['activitypub', 'diaspora'],
+        diasporaGuid: guid,
         apUri: urls.apUri,
         apUrl: `${ctx.config.PUBLIC_URL}/groups/${handle}`,
         apInbox: urls.apInbox,

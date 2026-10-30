@@ -33,6 +33,7 @@ import {
   actorById,
   diasporaIdOf,
   isPublicVisibility,
+  localPrivateKey,
   type PostRow,
   podBaseUrl,
   postById,
@@ -369,12 +370,9 @@ export class DiasporaBridge {
 
   /** Processes a private delivery for a local recipient now. */
   async receivePrivate(recipient: ActorRow, body: string): Promise<ReceivedMessage | null> {
-    const [user] = await this.ctx.db
-      .select({ key: schema.users.privateKeyPem })
-      .from(schema.users)
-      .where(eq(schema.users.actorId, recipient.id));
-    if (!user) return null;
-    const envelope = decryptMagicEnvelope(body, user.key);
+    const key = await localPrivateKey(this.ctx, recipient.id);
+    if (!key) return null;
+    const envelope = decryptMagicEnvelope(body, key);
     return this.process(envelope, { isPublic: false, recipient });
   }
 

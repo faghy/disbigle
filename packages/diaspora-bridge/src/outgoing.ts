@@ -26,13 +26,14 @@ import {
   isPublicVisibility,
   localPrivateKey,
   type PostRow,
+  publicGroupOf,
   publicReceiveUrl,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
 import { diasporaPollOf, pollOfPost } from './polls.ts';
 import { htmlToText, mentionsToDiaspora } from './text.ts';
 
-const { actors, follows, postAudiences, mentions, mediaAttachments } = schema;
+const { actors, follows, postAudiences, mentions, mediaAttachments, groups, groupMembers } = schema;
 
 /** Where an entity must go: public endpoints (one per server) and people reached privately. */
 export interface Recipients {
@@ -95,10 +96,12 @@ async function explicitRecipientIds(ctx: CoreContext, postId: string): Promise<s
  */
 export async function recipientsFor(
   ctx: CoreContext,
-  post: Pick<PostRow, 'id' | 'actorId' | 'visibility' | 'inReplyToActorId'>,
+  post: Pick<PostRow, 'id' | 'actorId' | 'visibility' | 'inReplyToActorId'> &
+    Partial<Pick<PostRow, 'groupId'>>,
   options: { exclude?: string; explicitIds?: string[] } = {},
 ): Promise<Recipients> {
   const recipients = emptyRecipients();
+  if (post.groupId) return groupRecipients(ctx, post.groupId, post, options);
   const explicit = await actorsByIds(
     ctx,
     options.explicitIds ?? [
@@ -118,6 +121,45 @@ export async function recipientsFor(
   } else {
     for (const actor of reachable) addPrivate(recipients, actor);
   }
+  if (options.exclude) excludeActor(recipients, options.exclude);
+  return recipients;
+}
+
+/** diaspora* members of a group, who get what the group reshares. */
+export async function diasporaGroupMembers(ctx: CoreContext, groupId: string): Promise<ActorRow[]> {
+  const rows = await ctx.db
+    .select({ actor: actors })
+    .from(groupMembers)
+    .innerJoin(actors, eq(actors.id, groupMembers.actorId))
+    .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.state, 'member')));
+  return rows.map((r) => r.actor).filter(deliversViaDiaspora);
+}
+
+/**
+ * A thread in a group: in a public group, the group's diaspora* members and the people it names;
+ * posts of private groups never reach diaspora*.
+ */
+async function groupRecipients(
+  ctx: CoreContext,
+  groupId: string,
+  post: Pick<PostRow, 'id' | 'inReplyToActorId'>,
+  options: { exclude?: string; explicitIds?: string[] },
+): Promise<Recipients> {
+  const recipients = emptyRecipients();
+  const [group] = await ctx.db.select().from(groups).where(eq(groups.id, groupId));
+  if (group?.privacy !== 'public') return recipients;
+  const explicit = await actorsByIds(
+    ctx,
+    options.explicitIds ?? [
+      ...(await explicitRecipientIds(ctx, post.id)),
+      ...(post.inReplyToActorId ? [post.inReplyToActorId] : []),
+    ],
+  );
+  for (const actor of [
+    ...(await diasporaGroupMembers(ctx, groupId)),
+    ...explicit.filter(deliversViaDiaspora),
+  ])
+    addPublic(recipients, actor);
   if (options.exclude) excludeActor(recipients, options.exclude);
   return recipients;
 }
@@ -341,5 +383,8 @@ export async function localActorByGuid(ctx: CoreContext, guid: string): Promise<
     .select()
     .from(actors)
     .where(and(eq(actors.diasporaGuid, guid), isNull(actors.domain)));
-  return actor && !actor.suspendedAt ? actor : null;
+  if (!actor || actor.suspendedAt) return null;
+  // Groups exist on diaspora* only while they are public.
+  if (actor.isGroup && !(await publicGroupOf(ctx, actor))) return null;
+  return actor;
 }

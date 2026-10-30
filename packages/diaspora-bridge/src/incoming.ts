@@ -11,10 +11,14 @@ import {
   findActorByHandle,
   findPostByGuid,
   follow,
+  groupOfActor,
   ingestRemoteAnnounce,
   ingestRemotePost,
+  isGroupMember,
   like,
   type RemoteAttachment,
+  remoteJoinGroup,
+  remoteLeaveGroup,
   renderMarkdown,
   unfollow,
   unlike,
@@ -180,6 +184,23 @@ async function relay(
   await sendToRecipients(bridge, serializeEntity(entity), signer, recipients);
 }
 
+/**
+ * A public group of ours named in a public post by one of its members: diaspora* has no groups,
+ * so mentioning one is how a post is written in it.
+ */
+async function memberGroupNamed(
+  ctx: DiasporaBridge['ctx'],
+  authorId: string,
+  mentionIds: string[],
+): Promise<string | null> {
+  for (const id of mentionIds) {
+    const record = await groupOfActor(ctx, id);
+    if (record?.group.privacy === 'public' && (await isGroupMember(ctx, record.group.id, authorId)))
+      return id;
+  }
+  return null;
+}
+
 async function statusMessage(
   bridge: DiasporaBridge,
   entity: StatusMessage,
@@ -211,11 +232,15 @@ async function statusMessage(
     height: photo.height ?? null,
   }));
   const audience = [...rendered.mentionIds, ...(recipient ? [recipient.id] : [])];
+  const groupActorId = entity.public
+    ? await memberGroupNamed(ctx, author.id, rendered.mentionIds)
+    : null;
   const id = await ingestRemotePost(ctx, {
     authorActorId: author.id,
     diasporaGuid: entity.guid,
     contentHtml: rendered.html,
     visibility: entity.public ? 'public' : 'limited',
+    ...(groupActorId ? { groupActorId } : {}),
     audienceActorIds: audience,
     mentionActorIds: rendered.mentionIds,
     tags: rendered.tags,
@@ -350,6 +375,12 @@ async function contact(bridge: DiasporaBridge, entity: Contact, author: ActorRow
   const ctx = bridge.ctx;
   const target = await knownActor(ctx, entity.recipient);
   if (!target || target.domain !== null) return;
+  if (target.isGroup) {
+    // Adding a public group to an aspect is joining it; removing it, leaving.
+    if (entity.sharing && !entity.blocking) await remoteJoinGroup(ctx, target.id, author.id, null);
+    else await remoteLeaveGroup(ctx, target.id, author.id);
+    return;
+  }
   if (entity.blocking) {
     await block(ctx, author.id, target.id).catch(ignoreDomainErrors);
   } else if (entity.sharing) {

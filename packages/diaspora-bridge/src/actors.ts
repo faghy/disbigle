@@ -43,13 +43,28 @@ export function publicReceiveUrl(actor: Pick<ActorRow, 'diasporaReceiveUrl'>): s
   return base ? `${base}receive/public` : null;
 }
 
-/** The RSA private key (PKCS#8 PEM) of a local actor, shared with ActivityPub. */
+/** The RSA private key (PKCS#8 PEM) of a local actor (a person or a group), shared with ActivityPub. */
 export async function localPrivateKey(ctx: CoreContext, actorId: string): Promise<string | null> {
   const [row] = await ctx.db
     .select({ key: schema.users.privateKeyPem })
     .from(schema.users)
     .where(eq(schema.users.actorId, actorId));
-  return row?.key ?? null;
+  if (row) return row.key;
+  const [group] = await ctx.db
+    .select({ key: schema.groups.privateKeyPem })
+    .from(schema.groups)
+    .where(eq(schema.groups.actorId, actorId));
+  return group?.key ?? null;
+}
+
+/** The group a local group actor stands for, when it is public (only those reach diaspora*). */
+export async function publicGroupOf(ctx: CoreContext, actor: ActorRow) {
+  if (!actor.isGroup || actor.domain !== null) return null;
+  const [group] = await ctx.db
+    .select()
+    .from(schema.groups)
+    .where(eq(schema.groups.actorId, actor.id));
+  return group?.privacy === 'public' ? group : null;
 }
 
 export async function actorById(ctx: CoreContext, id: string): Promise<ActorRow | null> {

@@ -1,12 +1,13 @@
 // Turns domain events into outgoing diaspora* deliveries, like ActivityPubPublisher does for
 // ActivityPub. Only people whose preferred protocol is diaspora* are addressed.
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   acceptFollowRequest,
   bridgeIdentityOf,
   type DomainEvent,
   type EventBus,
   ensureBridgeIdentity,
+  findGroup,
   inAudienceOf,
   postsForNewFollower,
 } from '@disbigle/core';
@@ -17,6 +18,7 @@ import {
   type Contact,
   type PollParticipation,
   type Profile,
+  type Reshare,
   type Retraction,
   serializeEntity,
   signAccountMigration,
@@ -31,6 +33,7 @@ import {
   isPublicVisibility,
   type PostRow,
   postById,
+  publicGroupOf,
   publicReceiveUrl,
   threadRootOf,
 } from './actors.ts';
@@ -49,6 +52,14 @@ import {
 } from './outgoing.ts';
 import { answerGuids } from './polls.ts';
 import { htmlToText } from './text.ts';
+
+/** The guid of a group's reshare of a post: the same every time, so it can be taken back. */
+export function groupReshareGuid(groupId: string, postId: string): string {
+  return createHash('sha256')
+    .update(`group-reshare:${groupId}:${postId}`)
+    .digest('hex')
+    .slice(0, 32);
+}
 
 async function followedIds(ctx: DiasporaBridge['ctx'], actorId: string): Promise<string[]> {
   const rows = await ctx.db
@@ -103,8 +114,11 @@ export class DiasporaPublisher implements EventBus {
     return this.bridge.ctx;
   }
 
-  /** Groups live on ActivityPub only: diaspora* has no such thing. */
-  private async aboutGroup(event: DomainEvent): Promise<boolean> {
+  /**
+   * Private and secret groups never reach diaspora*. A public group appears there as an account
+   * that reshares the group's posts to its diaspora* members.
+   */
+  private async aboutClosedGroup(event: DomainEvent): Promise<boolean> {
     const postIdOf = (e: DomainEvent) =>
       e.type === 'post.created' ||
       e.type === 'post.updated' ||
@@ -113,19 +127,28 @@ export class DiasporaPublisher implements EventBus {
       e.type === 'poll.voted'
         ? e.postId
         : null;
-    if (event.type === 'post.deleted') return Boolean(event.groupId);
+    if (event.type === 'post.deleted')
+      return Boolean(event.groupId) && !(await this.publicGroup(event.groupId));
     if (event.type === 'profile.updated' || event.type === 'account.deleted') {
-      return Boolean((await actorById(this.ctx, event.actorId))?.isGroup);
+      const actor = await actorById(this.ctx, event.actorId);
+      return Boolean(actor?.isGroup) && !(actor && (await publicGroupOf(this.ctx, actor)));
     }
     const postId = postIdOf(event);
     if (!postId) return false;
     const post = await postById(this.ctx, postId);
-    return Boolean(post?.groupId);
+    return Boolean(post?.groupId) && !(await this.publicGroup(post?.groupId));
+  }
+
+  /** The group, with its actor, when it is public. */
+  private async publicGroup(groupId: string | null | undefined) {
+    if (!groupId) return null;
+    const record = await findGroup(this.ctx, groupId);
+    return record?.group.privacy === 'public' ? record : null;
   }
 
   /** Handles one event now (normally called from the queue). */
   async handle(event: DomainEvent): Promise<void> {
-    if (await this.aboutGroup(event)) return;
+    if (await this.aboutClosedGroup(event)) return;
     switch (event.type) {
       case 'post.created':
         return this.postCreated(event.postId);
@@ -176,6 +199,8 @@ export class DiasporaPublisher implements EventBus {
   private async postCreated(postId: string): Promise<void> {
     const ctx = this.ctx;
     const post = await postById(ctx, postId);
+    // In a group, posts and shares go out as the group's reshares; replies as usual comments.
+    if (post?.groupId && !post.inReplyToId) return this.groupReshare(post);
     if (post && !post.local && post.inReplyToId) return this.bridgeReply(post);
     if (!post?.local || !post.diasporaGuid) return;
     const author = await this.localActor(post.actorId);
@@ -221,6 +246,7 @@ export class DiasporaPublisher implements EventBus {
   private async postUpdated(postId: string): Promise<void> {
     const post = await postById(this.ctx, postId);
     if (!post?.local || !post.editedAt || post.reblogOfId) return;
+    if (post.groupId && !post.inReplyToId) return;
     return this.postCreated(postId);
   }
 
@@ -355,6 +381,8 @@ export class DiasporaPublisher implements EventBus {
   private async postDeleted(event: Extract<DomainEvent, { type: 'post.deleted' }>) {
     const ctx = this.ctx;
     if (!event.diasporaGuid) return;
+    const topLevel = !event.threadRootId || event.threadRootId === event.postId;
+    if (event.groupId && topLevel) return this.groupPostDeleted(event, event.groupId);
     const author = await this.localActor(event.actorId);
     if (!author) {
       if (!event.threadRootId || event.threadRootId === event.postId) return;
@@ -402,6 +430,72 @@ export class DiasporaPublisher implements EventBus {
       { explicitIds },
     );
     await sendToRecipients(this.bridge, serializeEntity(retraction), signer, recipients);
+  }
+
+  /**
+   * The group reshares a post written or shared in it to its members on diaspora*. diaspora*
+   * reshares only diaspora* posts: posts from ActivityPub authors stay off it.
+   */
+  private async groupReshare(post: PostRow): Promise<void> {
+    const ctx = this.ctx;
+    const record = await this.publicGroup(post.groupId);
+    const signer = record ? await signerFor(ctx, record.actor) : null;
+    if (!record || !signer) return;
+    const root = post.reblogOfId ? await postById(ctx, post.reblogOfId) : post;
+    const rootAuthor = root ? await actorById(ctx, root.actorId) : null;
+    if (!root?.diasporaGuid || !rootAuthor) return;
+    if (rootAuthor.domain !== null && !deliversViaDiaspora(rootAuthor)) return;
+    const reshare: Reshare = {
+      type: 'Reshare',
+      author: signer.diasporaId,
+      guid: groupReshareGuid(record.group.id, post.id),
+      createdAt: post.createdAt,
+      rootAuthor: diasporaIdOf(ctx, rootAuthor),
+      rootGuid: root.diasporaGuid,
+    };
+    const recipients = await recipientsFor(ctx, post, { explicitIds: [] });
+    await sendToRecipients(this.bridge, serializeEntity(reshare), signer, recipients);
+  }
+
+  /** A post or share removed from a public group: the group takes back its reshare. */
+  private async groupPostDeleted(
+    event: Extract<DomainEvent, { type: 'post.deleted' }>,
+    groupId: string,
+  ): Promise<void> {
+    const ctx = this.ctx;
+    const record = await this.publicGroup(groupId);
+    const signer = record ? await signerFor(ctx, record.actor) : null;
+    if (!record || !signer) return;
+    const recipients = await recipientsFor(
+      ctx,
+      {
+        id: event.postId,
+        actorId: event.actorId,
+        visibility: 'public',
+        inReplyToActorId: null,
+        groupId,
+      },
+      { explicitIds: [] },
+    );
+    const retraction: Retraction = {
+      type: 'Retraction',
+      author: signer.diasporaId,
+      targetGuid: groupReshareGuid(groupId, event.postId),
+      targetType: 'Reshare',
+    };
+    await sendToRecipients(this.bridge, serializeEntity(retraction), signer, recipients);
+    // A post written in the group is gone too, not only the group's reshare of it.
+    const author = event.reblogOfId ? null : await this.localActor(event.actorId);
+    const authorSigner = author ? await signerFor(ctx, author) : null;
+    if (author && authorSigner && event.diasporaGuid) {
+      const gone: Retraction = {
+        type: 'Retraction',
+        author: authorSigner.diasporaId,
+        targetGuid: event.diasporaGuid,
+        targetType: 'Post',
+      };
+      await sendToRecipients(this.bridge, serializeEntity(gone), authorSigner, recipients);
+    }
   }
 
   private async likeCreated(event: Extract<DomainEvent, { type: 'like.created' }>) {
@@ -592,9 +686,16 @@ export class DiasporaPublisher implements EventBus {
     const signer = actor ? await signerFor(ctx, actor) : null;
     if (!actor || !signer) return;
     const profile = profileFor(ctx, actor, signer.diasporaId);
+    const group = await publicGroupOf(ctx, actor);
     const recipients = await recipientsFor(
       ctx,
-      { id: actor.id, actorId: actor.id, visibility: 'public', inReplyToActorId: null },
+      {
+        id: actor.id,
+        actorId: actor.id,
+        visibility: 'public',
+        inReplyToActorId: null,
+        ...(group ? { groupId: group.id } : {}),
+      },
       { explicitIds: [] },
     );
     await sendToRecipients(this.bridge, serializeEntity(profile), signer, recipients);

@@ -4,6 +4,7 @@ import {
   bridgedAccountByGuid,
   type CoreContext,
   findActorByHandle,
+  findGroup,
   findPostByGuid,
 } from '@disbigle/core';
 import {
@@ -175,9 +176,12 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
         const { type, guid } = request.params;
         if (!FETCH_TYPES.has(type)) return reply.status(404).send();
         const post = await findPostByGuid(ctx, guid);
-        // Group posts never travel through diaspora*.
-        if (!post || post.groupId || !isPublicVisibility(post.visibility))
-          return reply.status(404).send();
+        if (!post || !isPublicVisibility(post.visibility)) return reply.status(404).send();
+        // Posts of private groups never travel through diaspora*; public groups reshare theirs.
+        if (post.groupId) {
+          const record = await findGroup(ctx, post.groupId);
+          if (record?.group.privacy !== 'public') return reply.status(404).send();
+        }
         const author = await actorById(ctx, post.actorId);
         if (!author || author.suspendedAt) return reply.status(404).send();
         if (!post.local && type === 'comment') {
