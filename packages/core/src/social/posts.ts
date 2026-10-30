@@ -15,7 +15,7 @@ import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
 import { notFilteredFor } from './filters.ts';
-import { canModerateGroupPost, findGroup, isGroupMember } from './groups.ts';
+import { canModerateGroupPost, findGroup, groupOfActor, isGroupMember } from './groups.ts';
 import { createNotification } from './notifications.ts';
 import { hydrateStatuses, type PostRow } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
@@ -248,8 +248,9 @@ export async function createPost(
     }
   });
 
+  const groupActorIds = new Set([...mentioned.values()].filter((a) => a.isGroup).map((a) => a.id));
   for (const actorId of mentionedIds) {
-    if (!(await mayNotify(actorId))) continue;
+    if (groupActorIds.has(actorId) || !(await mayNotify(actorId))) continue;
     await createNotification(ctx, {
       actorId,
       type: 'mention',
@@ -266,6 +267,16 @@ export async function createPost(
     });
   }
   await emit(ctx, { type: 'post.created', postId: id, actorId: authorActorId });
+
+  // Naming one of your groups in a public post shares it there too.
+  if (!group && (visibility === 'public' || visibility === 'unlisted')) {
+    for (const actor of mentioned.values()) {
+      if (!actor.isGroup || actor.domain !== null) continue;
+      const named = await groupOfActor(ctx, actor.id);
+      if (named && (await isGroupMember(ctx, named.group.id, authorActorId)))
+        await shareToGroup(ctx, authorActorId, id, named.group.id);
+    }
+  }
 
   const [created] = await ctx.db.select().from(posts).where(eq(posts.id, id));
   if (!created) throw new Error('Post vanished after insert');
@@ -579,7 +590,7 @@ export async function reblog(ctx: CoreContext, actorId: string, postId: string):
 export async function unreblog(ctx: CoreContext, actorId: string, postId: string): Promise<Status> {
   const removed = await ctx.db
     .delete(posts)
-    .where(and(eq(posts.actorId, actorId), eq(posts.reblogOfId, postId)))
+    .where(and(eq(posts.actorId, actorId), eq(posts.reblogOfId, postId), isNull(posts.groupId)))
     .returning({
       id: posts.id,
       apUri: posts.apUri,
@@ -607,6 +618,110 @@ export async function unreblog(ctx: CoreContext, actorId: string, postId: string
 }
 
 /** Likes a post. `options.apUri` is the id of an incoming Like activity (remote actor). */
+/**
+ * Shares a public post into one of your groups, like a reshare that only the group sees: it shows
+ * in the group's timeline and its members' Home, not on your profile. A public group also
+ * announces it to its members on other servers.
+ */
+export async function shareToGroup(
+  ctx: CoreContext,
+  actorId: string,
+  postId: string,
+  groupId: string,
+): Promise<Status> {
+  const actor = await getLocalActor(ctx, actorId);
+  const record = await findGroup(ctx, groupId);
+  if (!record) throw new DomainError('not_found', 'Group not found');
+  if (!(await isGroupMember(ctx, record.group.id, actorId)))
+    throw new DomainError('forbidden', 'Join the group to share in it');
+  let target = await getVisiblePost(ctx, actorId, postId);
+  if (target.reblogOfId) target = await getVisiblePost(ctx, actorId, target.reblogOfId);
+  if (target.groupId === record.group.id)
+    throw new DomainError('bad_request', 'This post is already in the group');
+  const targetGroup = target.groupId ? await findGroup(ctx, target.groupId) : null;
+  if (
+    (target.visibility !== 'public' && target.visibility !== 'unlisted') ||
+    (targetGroup && targetGroup.group.privacy !== 'public')
+  ) {
+    throw new DomainError('forbidden', 'Only public posts can be shared in a group');
+  }
+  const id = uuidv7();
+  const inserted = await ctx.db
+    .insert(posts)
+    .values({
+      id,
+      actorId,
+      local: true,
+      visibility: record.group.privacy === 'public' ? 'public' : 'limited',
+      reblogOfId: target.id,
+      groupId: record.group.id,
+      threadRootId: id,
+      apUri: `${actor.apUri}/statuses/${id}/activity`,
+      diasporaGuid: randomBytes(16).toString('hex'),
+    })
+    .onConflictDoNothing()
+    .returning({ id: posts.id });
+  if (inserted.length > 0) {
+    await ctx.db
+      .update(posts)
+      .set({ reblogsCount: sql`${posts.reblogsCount} + 1` })
+      .where(eq(posts.id, target.id));
+    // Someone else's post: they hear about it, unless the group is closed to them.
+    if (
+      target.actorId !== actorId &&
+      (record.group.privacy === 'public' ||
+        (await isGroupMember(ctx, record.group.id, target.actorId)))
+    ) {
+      await createNotification(ctx, {
+        actorId: target.actorId,
+        type: 'reblog',
+        fromActorId: actorId,
+        postId: target.id,
+      });
+    }
+    await emit(ctx, { type: 'post.created', postId: id, actorId });
+  }
+  return getStatus(ctx, actorId, target.id);
+}
+
+/** Takes back a post you shared into a group. */
+export async function unshareFromGroup(
+  ctx: CoreContext,
+  actorId: string,
+  postId: string,
+  groupId: string,
+): Promise<void> {
+  const removed = await ctx.db
+    .delete(posts)
+    .where(
+      and(eq(posts.actorId, actorId), eq(posts.reblogOfId, postId), eq(posts.groupId, groupId)),
+    )
+    .returning({
+      id: posts.id,
+      apUri: posts.apUri,
+      diasporaGuid: posts.diasporaGuid,
+      visibility: posts.visibility,
+    });
+  for (const row of removed) {
+    await ctx.db
+      .update(posts)
+      .set({ reblogsCount: sql`greatest(${posts.reblogsCount} - 1, 0)` })
+      .where(eq(posts.id, postId));
+    await emit(ctx, {
+      type: 'post.deleted',
+      postId: row.id,
+      actorId,
+      apUri: row.apUri,
+      diasporaGuid: row.diasporaGuid,
+      audienceActorIds: [],
+      visibility: row.visibility,
+      reblogOfId: postId,
+      threadRootId: null,
+      groupId,
+    });
+  }
+}
+
 export async function like(
   ctx: CoreContext,
   actorId: string,

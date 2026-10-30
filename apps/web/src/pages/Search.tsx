@@ -13,7 +13,7 @@ import { FollowButton } from '../components/FollowButton.tsx';
 import { GlobeIcon, HashIcon, ReplyIcon, SearchIcon } from '../components/icons.tsx';
 import { statusPath } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
-import { Alert, Button, cx, LoadingState, Spinner } from '../components/ui.tsx';
+import { Alert, Button, buttonClass, cx, LoadingState, Spinner } from '../components/ui.tsx';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
@@ -241,7 +241,20 @@ function AccountResults({ accounts }: { accounts: Account[] }) {
         <li key={account.id}>
           <AccountRow
             account={account}
-            actions={<FollowButton account={account} compact fetch={false} />}
+            actions={
+              // Our own groups are joined from their page, not followed.
+              account.group && account.local ? (
+                <Link
+                  to="/groups/$handle"
+                  params={{ handle: account.username }}
+                  className={buttonClass('secondary', 'min-h-9 px-3 py-1 text-sm')}
+                >
+                  {t('groups.open')}
+                </Link>
+              ) : (
+                <FollowButton account={account} compact fetch={false} />
+              )
+            }
           />
         </li>
       ))}

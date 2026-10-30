@@ -141,6 +141,13 @@
       "when": 1793316158987,
       "tag": "0019_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793354101750,
+      "tag": "0020_group_shares",
+      "breakpoints": true
     }
   ]
 }

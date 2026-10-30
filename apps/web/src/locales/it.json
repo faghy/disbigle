@@ -489,7 +489,8 @@
       "likes_one": "{{count}} mi piace",
       "likes_other": "{{count}} mi piace"
     },
-    "inGroup": "In {{name}}"
+    "inGroup": "In {{name}}",
+    "sharedInGroup": "{{name}} ha condiviso in"
   },
   "timeline": {
     "loadMore": "Carica altri",
@@ -1278,6 +1279,18 @@
       "submit": "Crea gruppo",
       "privacyOneWay": "Un gruppo può diventare più riservato, non meno.",
       "saved": "Salvato."
-    }
+    },
+    "badge": "Gruppo",
+    "open": "Apri"
+  },
+  "shareToGroup": {
+    "menu": "Condividi in un gruppo",
+    "title": "Condividi in un gruppo",
+    "description": "Il post compare nel gruppo e nella Bacheca dei suoi membri, non sul tuo profilo.",
+    "noGroups": "Iscriviti a un gruppo per condividerci i post.",
+    "share": "Condividi",
+    "shared": "Condiviso",
+    "shareIn": "Condividi in {{name}}",
+    "undoIn": "Condiviso in {{name}}: ritira"
   }
 }

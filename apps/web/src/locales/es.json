@@ -499,7 +499,8 @@
       "likes_many": "{{count}} Me gusta",
       "likes_other": "{{count}} Me gusta"
     },
-    "inGroup": "En {{name}}"
+    "inGroup": "En {{name}}",
+    "sharedInGroup": "{{name}} compartió en"
   },
   "timeline": {
     "loadMore": "Cargar más",
@@ -1304,6 +1305,18 @@
       "submit": "Crear grupo",
       "privacyOneWay": "Un grupo puede volverse más reservado, nunca menos.",
       "saved": "Guardado."
-    }
+    },
+    "badge": "Grupo",
+    "open": "Abrir"
+  },
+  "shareToGroup": {
+    "menu": "Compartir en un grupo",
+    "title": "Compartir en un grupo",
+    "description": "La publicación aparece en el grupo y en el Inicio de sus miembros, no en tu perfil.",
+    "noGroups": "Únete a un grupo para compartir publicaciones en él.",
+    "share": "Compartir",
+    "shared": "Compartido",
+    "shareIn": "Compartir en {{name}}",
+    "undoIn": "Compartido en {{name}}: retirar"
   }
 }

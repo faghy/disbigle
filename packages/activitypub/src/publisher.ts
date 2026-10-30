@@ -418,10 +418,21 @@ export class ActivityPubPublisher implements EventBus {
     edited: boolean,
   ): Promise<void> {
     const record = post.groupId ? await findGroup(this.core, post.groupId) : null;
-    if (record?.group.privacy !== 'public' || !post.apUri || post.reblogOfId) return;
+    if (record?.group.privacy !== 'public' || !post.apUri) return;
     const members = (await remoteGroupMembers(this.core, record.group.id)).filter(
       speaksActivityPub,
     );
+    if (post.reblogOfId) {
+      // A post shared into the group: the group announces the original to its members.
+      if (edited) return;
+      const [original] = await this.core.db
+        .select()
+        .from(schema.posts)
+        .where(eq(schema.posts.id, post.reblogOfId));
+      if (original?.apUri)
+        await this.groupAnnounce(ctx, record, { ...post, apUri: original.apUri }, null, members);
+      return;
+    }
     const [author] = (await this.actors([post.actorId])).values();
     if (!author) return;
     let note: Note | Question | null = null;
@@ -759,9 +770,32 @@ export class ActivityPubPublisher implements EventBus {
     ctx: Context<CoreContext>,
     event: Extract<DomainEvent, { type: 'post.deleted' }>,
   ) {
-    if (!event.apUri || !event.groupId || event.reblogOfId) return;
+    if (!event.apUri || !event.groupId) return;
     const record = await findGroup(this.core, event.groupId);
     if (record?.group.privacy !== 'public') return;
+    if (event.reblogOfId) {
+      // A share taken back: the group withdraws its announce.
+      const members = (await remoteGroupMembers(this.core, record.group.id)).filter(
+        speaksActivityPub,
+      );
+      if (members.length === 0) return;
+      const group = record.actor.username;
+      await ctx.sendActivity(
+        { identifier: group },
+        members.map(recipient),
+        new Undo({
+          id: freshId(ctx, group, 'undo'),
+          actor: ctx.getActorUri(group),
+          object: new Announce({
+            id: new URL(`${ctx.getActorUri(group).href}#announces/${event.postId}`),
+            actor: ctx.getActorUri(group),
+          }),
+          to: PUBLIC_COLLECTION,
+        }),
+        { preferSharedInbox: true },
+      );
+      return;
+    }
     const [author] = (await this.actors([event.actorId])).values();
     if (!author || author.domain !== null) return;
     const audience = [

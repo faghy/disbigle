@@ -26,6 +26,11 @@ export const groups = {
   timeline: (groupId: string, page: PageParams) =>
     api.get<Status[]>(`/groups/${id(groupId)}/timeline${queryString({ ...page })}`),
   join: (groupId: string) => api.post<Group>(`/groups/${id(groupId)}/join`),
+  /** Shares a public post into one of your groups; `unshare` takes it back. */
+  share: (statusId: string, groupId: string) =>
+    api.post<Status>(`/statuses/${id(statusId)}/share_to_group`, { groupId }),
+  unshare: (statusId: string, groupId: string) =>
+    api.post<Ok>(`/statuses/${id(statusId)}/unshare_from_group`, { groupId }),
   leave: (groupId: string) => api.post<Group | Ok>(`/groups/${id(groupId)}/leave`),
   members: (groupId: string, state: GroupMemberState = 'member') =>
     api.get<GroupMember[]>(`/groups/${id(groupId)}/members${queryString({ state })}`),

@@ -489,7 +489,8 @@
       "likes_one": "{{count}} like",
       "likes_other": "{{count}} likes"
     },
-    "inGroup": "In {{name}}"
+    "inGroup": "In {{name}}",
+    "sharedInGroup": "{{name}} shared in"
   },
   "timeline": {
     "loadMore": "Load more",
@@ -1278,6 +1279,18 @@
       "submit": "Create group",
       "privacyOneWay": "A group can become more private, never less.",
       "saved": "Saved."
-    }
+    },
+    "badge": "Group",
+    "open": "Open"
+  },
+  "shareToGroup": {
+    "menu": "Share in a group",
+    "title": "Share in a group",
+    "description": "The post shows in the group and in its members’ Home, not on your profile.",
+    "noGroups": "Join a group to share posts in it.",
+    "share": "Share",
+    "shared": "Shared",
+    "shareIn": "Share in {{name}}",
+    "undoIn": "Shared in {{name}}: take it back"
   }
 }

@@ -205,7 +205,7 @@ export function accountTimeline(
   );
 }
 
-/** Posts started in a group (replies stay in their threads), newest first. */
+/** Posts started or shared in a group (replies stay in their threads), newest first. */
 export function groupTimeline(
   ctx: CoreContext,
   viewerActorId: string | null,
@@ -215,7 +215,7 @@ export function groupTimeline(
   return page(
     ctx,
     viewerActorId,
-    and(eq(posts.groupId, groupId), isNull(posts.inReplyToId), isNull(posts.reblogOfId)),
+    and(eq(posts.groupId, groupId), isNull(posts.inReplyToId)),
     query,
     'home',
   );

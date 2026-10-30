@@ -41,6 +41,7 @@ import {
 import { Lightbox } from './Lightbox.tsx';
 import { PollView } from './PollView.tsx';
 import { ReportDialog } from './ReportDialog.tsx';
+import { ShareToGroupDialog } from './ShareToGroupDialog.tsx';
 import { Alert, cx } from './ui.tsx';
 import { YouTubePreview } from './YouTubePreview.tsx';
 
@@ -415,7 +416,13 @@ function MoreMenu({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const pin = usePinToggle(status, isAuthor && open);
+  // Public posts, outside closed groups, can be shared into your groups.
+  const shareable =
+    signedIn &&
+    canReshare(status.visibility) &&
+    (!status.group || status.group.privacy === 'public');
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -467,6 +474,18 @@ function MoreMenu({
           <a href={status.url} target="_blank" rel="noopener noreferrer" className={itemClass}>
             {t('status.openOriginal')}
           </a>
+        )}
+        {shareable && (
+          <button
+            type="button"
+            className={itemClass}
+            onClick={() => {
+              setOpen(false);
+              setSharing(true);
+            }}
+          >
+            {t('shareToGroup.menu')}
+          </button>
         )}
         {isAuthor && status.account.local && (
           <button
@@ -525,6 +544,15 @@ function MoreMenu({
         >
           {pin.error}
         </p>
+      )}
+      {sharing && (
+        <ShareToGroupDialog
+          status={status}
+          onClose={() => {
+            setSharing(false);
+            buttonRef.current?.focus();
+          }}
+        />
       )}
       {reporting && (
         <ReportDialog
@@ -620,6 +648,9 @@ export function StatusCard({
   const user = useCurrentUser();
   const status = shownStatus(item);
   const { account } = status;
+  // A post shared into a group says which one, except on that group's own page.
+  const currentGroup = useContext(CurrentGroupContext);
+  const sharedIn = item.reblog && item.group?.id !== currentGroup ? item.group : null;
   const isAuthor = user?.account.id === account.id;
   const [expanded, setExpanded] = useState(false);
   const [replying, setReplying] = useState(false);
@@ -656,8 +687,19 @@ export function StatusCard({
         <p className="mb-2 flex items-center gap-2 pl-6 text-sm text-fg-muted">
           <ReshareIcon size={16} />
           <AccountLink account={item.account} className="truncate font-medium hover:underline">
-            {t('status.reshared', { name: displayName(item.account) })}
+            {sharedIn
+              ? t('status.sharedInGroup', { name: displayName(item.account) })
+              : t('status.reshared', { name: displayName(item.account) })}
           </AccountLink>
+          {sharedIn && (
+            <Link
+              to="/groups/$handle"
+              params={{ handle: sharedIn.handle }}
+              className="-ml-1 truncate rounded font-medium hover:text-accent hover:underline focus-ring"
+            >
+              {sharedIn.name}
+            </Link>
+          )}
         </p>
       )}
 

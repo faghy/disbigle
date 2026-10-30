@@ -1,0 +1,2 @@
+DROP INDEX "posts_reblog_unique_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX "posts_reblog_unique_idx" ON "posts" USING btree ("actor_id","reblog_of_id",coalesce("group_id", '00000000-0000-0000-0000-000000000000')) WHERE "posts"."reblog_of_id" is not null;

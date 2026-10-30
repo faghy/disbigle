@@ -583,6 +583,36 @@ describe('groups across servers', () => {
     });
   });
 
+  it('announces posts shared into a public group to members elsewhere', async () => {
+    const owner = await signUp(a);
+    const bob = await signUp(b);
+    const handle = `share_${Math.random().toString(36).slice(2, 7)}`;
+    const group = (
+      await owner.client.post('/api/v1/groups', { name: 'Share', handle, privacy: 'public' })
+    ).json();
+    const remoteGroup = (
+      await bob.client.post('/api/v1/search/resolve', { q: `${a.url}/users/${handle}` })
+    ).json();
+    await bob.client.post(`/api/v1/accounts/${remoteGroup.id}/follow`);
+    await eventually(async () => {
+      const list = (await owner.client.get(`/api/v1/groups/${group.id}/members`)).json();
+      return list.some((m: { account: { acct: string } }) => m.account.acct.includes('@'));
+    });
+
+    const post = (
+      await owner.client.post('/api/v1/statuses', { content: 'Here comes the sun' })
+    ).json();
+    await owner.client.post(`/api/v1/statuses/${post.id}/share_to_group`, { groupId: group.id });
+    const shared = await eventually(async () => {
+      const home = (await bob.client.get('/api/v1/timelines/home')).json();
+      return home.find(
+        (s: { account: { acct: string }; reblog: { uri: string } | null }) =>
+          s.reblog?.uri === post.uri && s.account.acct === `${handle}@${a.domain}`,
+      );
+    });
+    expect(shared.reblog.content).toContain('Here comes the sun');
+  });
+
   it('keeps private groups out of reach of other servers', async () => {
     const owner = await signUp(a);
     const bob = await signUp(b);

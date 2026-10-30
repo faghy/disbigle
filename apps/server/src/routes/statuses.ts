@@ -9,10 +9,12 @@ import {
   like,
   pinPost,
   reblog,
+  shareToGroup,
   unbookmark,
   unlike,
   unpinPost,
   unreblog,
+  unshareFromGroup,
 } from '@disbigle/core';
 import { createPostRequestSchema, editPostRequestSchema } from '@disbigle/shared';
 import type { FastifyInstance } from 'fastify';
@@ -81,4 +83,20 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       return action(ctx, session.actorId, id);
     });
   }
+
+  // Sharing a post into one of your groups, and taking it back.
+  const groupBody = z.object({ groupId: z.uuid() });
+  app.post('/:id/share_to_group', async (request) => {
+    const session = requireUser(request);
+    const { id } = parse(idParams, request.params);
+    const { groupId } = parse(groupBody, request.body);
+    return shareToGroup(ctx, session.actorId, id, groupId);
+  });
+  app.post('/:id/unshare_from_group', async (request) => {
+    const session = requireUser(request);
+    const { id } = parse(idParams, request.params);
+    const { groupId } = parse(groupBody, request.body);
+    await unshareFromGroup(ctx, session.actorId, id, groupId);
+    return { status: 'ok' };
+  });
 }

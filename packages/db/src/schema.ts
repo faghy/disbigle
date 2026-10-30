@@ -408,8 +408,13 @@ export const posts = pgTable(
     ),
     uniqueIndex('posts_ap_uri_idx').on(t.apUri),
     uniqueIndex('posts_diaspora_guid_idx').on(t.diasporaGuid),
+    // One reshare per account and post, plus one share into each group.
     uniqueIndex('posts_reblog_unique_idx')
-      .on(t.actorId, t.reblogOfId)
+      .on(
+        t.actorId,
+        t.reblogOfId,
+        sql`coalesce(${t.groupId}, '00000000-0000-0000-0000-000000000000')`,
+      )
       .where(sql`${t.reblogOfId} is not null`),
   ],
 );

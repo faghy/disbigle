@@ -1,6 +1,6 @@
 import { schema } from '@disbigle/db';
 import type { MediaAttachment, Status } from '@disbigle/shared';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
 import { groupSummaries } from './groups.ts';
@@ -95,7 +95,13 @@ export async function hydrateStatuses(
       ? db
           .select({ postId: posts.reblogOfId })
           .from(posts)
-          .where(and(eq(posts.actorId, viewerActorId), inArray(posts.reblogOfId, postIds)))
+          .where(
+            and(
+              eq(posts.actorId, viewerActorId),
+              inArray(posts.reblogOfId, postIds),
+              isNull(posts.groupId),
+            ),
+          )
       : [],
     viewerActorId
       ? db

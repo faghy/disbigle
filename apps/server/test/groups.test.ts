@@ -106,11 +106,11 @@ describe('groups', () => {
     // A public group's post can be reshared.
     expect((await outsider.client.post(`/api/v1/statuses/${post.id}/reblog`)).statusCode).toBe(200);
 
-    // The group is listed, and people search does not show it as a person.
+    // The group is listed, and search finds it too (as a group), so it can be mentioned.
     const listed = (await anonymous.get(`/api/v1/groups?q=${group.handle}`)).json();
     expect(ids(listed)).toEqual([group.id]);
-    const people = (await anonymous.get(`/api/v1/search/accounts?q=${group.handle}`)).json();
-    expect(people).toEqual([]);
+    const found = (await anonymous.get(`/api/v1/search/accounts?q=${group.handle}`)).json();
+    expect(found).toMatchObject([{ username: group.handle, group: true }]);
     expect(ids((await reader.client.get('/api/v1/groups?scope=mine')).json())).toEqual([group.id]);
   });
 
@@ -325,5 +325,85 @@ describe('groups', () => {
       headers: { accept: 'application/activity+json' },
     });
     expect(note.statusCode).toBe(404);
+  });
+
+  it('shares public posts into your groups, also by mentioning the group', async () => {
+    const owner = await signedIn();
+    const friend = await signedIn();
+    const outsider = await signedIn();
+    const group = await createGroup(owner.client, 'public');
+    await friend.client.post(`/api/v1/groups/${group.id}/join`);
+
+    // Sharing a post of yours: it shows in the group, not twice on your profile.
+    const post = (await friend.client.post('/api/v1/statuses', { content: 'Abbey Road' })).json();
+    const shared = await friend.client.post(`/api/v1/statuses/${post.id}/share_to_group`, {
+      groupId: group.id,
+    });
+    expect(shared.statusCode).toBe(200);
+    const timeline = (await outsider.client.get(`/api/v1/groups/${group.id}/timeline`)).json();
+    expect(timeline[0]).toMatchObject({
+      account: { username: friend.account.username },
+      reblog: { id: post.id },
+      group: { id: group.id },
+    });
+    const profile = (
+      await outsider.client.get(`/api/v1/accounts/${friend.account.id}/statuses`)
+    ).json();
+    expect(ids(profile)).toEqual([post.id]);
+    // A share is not a reshare: the reshare button stays free.
+    expect((await friend.client.get(`/api/v1/statuses/${post.id}`)).json().reblogged).toBe(false);
+    // Members see it at home.
+    const home = (await owner.client.get('/api/v1/timelines/home')).json();
+    expect(home.some((s: { reblog: { id: string } | null }) => s.reblog?.id === post.id)).toBe(
+      true,
+    );
+
+    // Taking it back.
+    await friend.client.post(`/api/v1/statuses/${post.id}/unshare_from_group`, {
+      groupId: group.id,
+    });
+    expect((await outsider.client.get(`/api/v1/groups/${group.id}/timeline`)).json()).toEqual([]);
+
+    // Only members share, and only public posts.
+    expect(
+      (
+        await outsider.client.post(`/api/v1/statuses/${post.id}/share_to_group`, {
+          groupId: group.id,
+        })
+      ).statusCode,
+    ).toBe(403);
+    const quiet = (
+      await friend.client.post('/api/v1/statuses', {
+        content: 'Only followers',
+        visibility: 'followers',
+      })
+    ).json();
+    expect(
+      (
+        await friend.client.post(`/api/v1/statuses/${quiet.id}/share_to_group`, {
+          groupId: group.id,
+        })
+      ).statusCode,
+    ).toBe(403);
+
+    // Mentioning the group in a public post shares it there.
+    const tagged = (
+      await friend.client.post('/api/v1/statuses', { content: `Let it be @${group.handle}` })
+    ).json();
+    expect(tagged.mentions).toMatchObject([{ username: group.handle }]);
+    const after = (await outsider.client.get(`/api/v1/groups/${group.id}/timeline`)).json();
+    expect(after[0]).toMatchObject({ reblog: { id: tagged.id } });
+    // A mention by someone outside the group is only a link.
+    await outsider.client.post('/api/v1/statuses', { content: `Hey @${group.handle}` });
+    expect((await outsider.client.get(`/api/v1/groups/${group.id}/timeline`)).json()).toHaveLength(
+      1,
+    );
+  });
+
+  it('never shows secret groups in search', async () => {
+    const owner = await signedIn();
+    const group = await createGroup(owner.client, 'secret');
+    const found = (await owner.client.get(`/api/v1/search/accounts?q=${group.handle}`)).json();
+    expect(found).toEqual([]);
   });
 });

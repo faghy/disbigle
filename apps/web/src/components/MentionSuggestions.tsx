@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { type KeyboardEvent, type RefObject, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { social } from '../api/social.ts';
+import { GroupBadge } from './AccountList.tsx';
 import { Avatar } from './Avatar.tsx';
 import { cx } from './ui.tsx';
 
@@ -133,8 +134,11 @@ export function useMentionSuggestions({
         >
           <Avatar account={account} size="sm" />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">
-              {account.displayName || account.username}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-sm font-semibold">
+                {account.displayName || account.username}
+              </span>
+              {account.group && <GroupBadge />}
             </span>
             <span className="block truncate text-xs text-fg-muted">@{account.acct}</span>
           </span>

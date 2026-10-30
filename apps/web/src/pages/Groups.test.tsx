@@ -300,4 +300,63 @@ describe('groups', () => {
     expect(screen.queryByLabelText('Change the cover')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Change the group picture')).not.toBeInTheDocument();
   });
+  it('shares a public post in one of your groups from its menu', async () => {
+    const group = makeGroup({ membership: { role: 'member', state: 'member' } });
+    const post = makeStatus({ account: bob, content: '<p>Abbey Road</p>', visibility: 'public' });
+    const fetchMock = mockApi({
+      ...base,
+      'GET /timelines/home': { body: [post] },
+      'GET /groups': { body: [group] },
+      [`POST /statuses/${post.id}/share_to_group`]: { body: post },
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    await screen.findByText('Abbey Road');
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    await user.click(screen.getByRole('button', { name: 'Share in a group' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Share in a group' });
+    await user.click(await within(dialog).findByRole('button', { name: 'Share in Gardeners' }));
+    expect(
+      await within(dialog).findByRole('button', { name: 'Shared in Gardeners: take it back' }),
+    ).toBeInTheDocument();
+    const call = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith(`/statuses/${post.id}/share_to_group`),
+    );
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ groupId: group.id });
+  });
+
+  it('says in which group a post was shared', async () => {
+    const original = makeStatus({ account: bob, content: '<p>Let it be</p>' });
+    const share = makeStatus({
+      account: aliceUser.account,
+      reblog: original,
+      group: {
+        id: nextId(),
+        handle: 'beatles',
+        name: 'Beatles',
+        privacy: 'public',
+        avatarUrl: null,
+      },
+    });
+    mockApi({ ...base, 'GET /timelines/home': { body: [share] } });
+    renderApp('/');
+    expect(await screen.findByText(/shared in$/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Beatles' })).toHaveAttribute(
+      'href',
+      '/groups/beatles',
+    );
+  });
+
+  it('finds groups in search, marked as groups, opened rather than followed', async () => {
+    const beatles = makeAccount({ username: 'beatles', displayName: 'Beatles', group: true });
+    mockApi({ ...base, 'GET /search/accounts': { body: [beatles] } });
+    renderApp('/search?q=beatles');
+    const results = await screen.findByRole('list', { name: 'People' });
+    expect(within(results).getByText('Group')).toBeInTheDocument();
+    expect(within(results).getByRole('link', { name: 'Open' })).toHaveAttribute(
+      'href',
+      '/groups/beatles',
+    );
+    expect(within(results).queryByRole('button', { name: /Follow/ })).not.toBeInTheDocument();
+  });
 });

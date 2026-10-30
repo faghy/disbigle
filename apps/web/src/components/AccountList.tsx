@@ -4,8 +4,20 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../api/errors.ts';
 import { Avatar } from './Avatar.tsx';
+import { GroupIcon } from './icons.tsx';
 import { AccountLink, displayName } from './StatusCard.tsx';
 import { Alert, LoadingState } from './ui.tsx';
+
+/** A small "Group" tag next to a group's name among people. */
+export function GroupBadge() {
+  const { t } = useTranslation();
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
+      <GroupIcon size={12} />
+      {t('groups.badge')}
+    </span>
+  );
+}
 
 export function AccountRow({ account, actions }: { account: Account; actions?: ReactNode }) {
   return (
@@ -16,7 +28,10 @@ export function AccountRow({ account, actions }: { account: Account; actions?: R
       >
         <Avatar account={account} size="sm" />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold">{displayName(account)}</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-semibold">{displayName(account)}</span>
+            {account.group && <GroupBadge />}
+          </span>
           <span className="block truncate text-xs text-fg-muted">@{account.acct}</span>
         </span>
       </AccountLink>
