@@ -107,6 +107,21 @@ describe('status card', () => {
     expect(within(article).queryByRole('button', { name: 'Translate' })).toBeNull();
   });
 
+  it('offers translation only from languages the server has models for', async () => {
+    const portuguese = makeStatus({ language: 'pt', content: '<p>Olá a todos</p>' });
+    const article = await renderHomeWith(portuguese, {
+      'GET /instance': {
+        body: {
+          ...instance().body,
+          translation: true,
+          translationLanguages: { it: ['en', 'es'], en: ['it', 'es'] },
+        },
+      },
+    });
+    expect(within(article).getByText('Olá a todos')).toBeVisible();
+    expect(within(article).queryByRole('button', { name: 'Translate' })).toBeNull();
+  });
+
   it('says when a post cannot be translated', async () => {
     const status = makeStatus({ language: 'it', content: '<p>Ciao a tutti</p>' });
     const article = await renderHomeWith(status, {

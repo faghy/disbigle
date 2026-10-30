@@ -73,6 +73,8 @@ export interface InstanceInfo {
   analytics?: { matomoUrl: string; siteId: number };
   /** Whether posts can be translated ("Translate" under posts in another language). */
   translation?: boolean;
+  /** What the translation service handles: source language → languages it translates to. */
+  translationLanguages?: Record<string, string[]>;
   limits: {
     maxPostLength: number;
     maxMediaAttachments: number;

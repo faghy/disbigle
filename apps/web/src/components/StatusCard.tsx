@@ -639,7 +639,7 @@ export interface StatusCardProps {
 }
 
 /** `it` for `it-IT`. */
-const baseLanguage = (tag: string) => tag.toLowerCase().split(/[-_]/)[0];
+const baseLanguage = (tag: string) => tag.toLowerCase().split(/[-_]/)[0] ?? tag;
 
 /** "Spanish" for `es`, in the reader's language. */
 function languageName(code: string, locale: string) {
@@ -669,6 +669,11 @@ function useStatusTranslation(status: Status, isAuthor: boolean) {
     !isAuthor &&
     status.language !== null &&
     baseLanguage(status.language) !== baseLanguage(i18n.language) &&
+    // Only languages the server's translation service has models for (all, if it didn't say).
+    (instance.data?.translationLanguages?.[baseLanguage(status.language)]?.includes(
+      baseLanguage(i18n.language),
+    ) ??
+      !instance.data?.translationLanguages) &&
     Boolean(status.content || status.summary);
   return {
     offered,

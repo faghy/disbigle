@@ -25,7 +25,10 @@ const ITALIAN = 'Ciao amici, oggi andiamo al mare tutti insieme e torniamo stase
 describe('translation of posts', () => {
   it('says the server translates, and guesses the language of posts that have none', async () => {
     const bruno = await signedIn();
-    expect((await bruno.client.get('/api/v1/instance')).json().translation).toBe(true);
+    expect((await bruno.client.get('/api/v1/instance')).json()).toMatchObject({
+      translation: true,
+      translationLanguages: { it: ['en', 'es'], es: ['en', 'it'] },
+    });
     const post = (await bruno.client.post('/api/v1/statuses', { content: ITALIAN })).json();
     expect(post.language).toBe('it');
     const short = (await bruno.client.post('/api/v1/statuses', { content: 'Ciao!' })).json();
