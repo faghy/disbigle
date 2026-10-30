@@ -44,6 +44,9 @@ public struct Account: Codable, Hashable, Identifiable, Sendable {
     Self.isPlaceholder(avatar) ? nil : URL(string: avatar)
   }
 
+  /** An account of the server the app is signed in to (`acct` has no domain). */
+  public var isLocal: Bool { !acct.contains("@") }
+
   /** Initials for a picture-less avatar. */
   public var initials: String {
     let words = name.split(whereSeparator: { $0 == " " || $0 == "_" || $0 == "." }).prefix(2)
@@ -233,6 +236,11 @@ public struct Instance: Codable, Sendable {
 
   public struct Configuration: Codable, Sendable {
     public let statuses: Statuses?
+    public let translation: Translation?
+  }
+
+  public struct Translation: Codable, Sendable {
+    public let enabled: Bool
   }
 
   public struct Statuses: Codable, Sendable {
@@ -242,6 +250,8 @@ public struct Instance: Codable, Sendable {
 
   public var maxCharacters: Int { configuration?.statuses?.maxCharacters ?? 5000 }
   public var maxMediaAttachments: Int { configuration?.statuses?.maxMediaAttachments ?? 4 }
+  /** The server has a translation service. */
+  public var translationEnabled: Bool { configuration?.translation?.enabled ?? false }
 }
 
 /** An app registered with a server (`POST /api/v1/apps`). */

@@ -146,6 +146,64 @@
         }
       }
     },
+    "%lld items": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld elemento"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld elementos"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld elemento"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld elementi"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld people": {
       "localizations": {
         "es": {
@@ -382,6 +440,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aggiungi foto"
+          }
+        }
+      }
+    },
+    "Add to album": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir a un álbum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi a un album"
+          }
+        }
+      }
+    },
+    "Albums": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Álbumes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Album"
           }
         }
       }
@@ -818,6 +908,22 @@
         }
       }
     },
+    "Delete this album?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar este álbum?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminare questo album?"
+          }
+        }
+      }
+    },
     "Delete this post?": {
       "localizations": {
         "es": {
@@ -846,6 +952,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descrivi l'immagine per chi non può vederla"
+          }
+        }
+      }
+    },
+    "Description (optional)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descripción (opcional)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrizione (facoltativa)"
           }
         }
       }
@@ -898,6 +1020,22 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine"
+          }
+        }
+      }
+    },
     "Edit": {
       "localizations": {
         "es": {
@@ -910,6 +1048,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modifica"
+          }
+        }
+      }
+    },
+    "Edit album": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar álbum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifica album"
           }
         }
       }
@@ -1250,6 +1404,22 @@
         }
       }
     },
+    "Media": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multimedia"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media"
+          }
+        }
+      }
+    },
     "Messages": {
       "localizations": {
         "es": {
@@ -1346,6 +1516,22 @@
         }
       }
     },
+    "New album": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo álbum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo album"
+          }
+        }
+      }
+    },
     "New aspect": {
       "localizations": {
         "es": {
@@ -1394,6 +1580,22 @@
         }
       }
     },
+    "No albums yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay álbumes."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun album."
+          }
+        }
+      }
+    },
     "No messages yet.": {
       "localizations": {
         "es": {
@@ -1422,6 +1624,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ancora nessuna notifica."
+          }
+        }
+      }
+    },
+    "No photos or videos yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay fotos ni vídeos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuna foto o video."
+          }
+        }
+      }
+    },
+    "No photos yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay fotos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuna foto."
           }
         }
       }
@@ -1630,6 +1864,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apri"
+          }
+        }
+      }
+    },
+    "Open the post": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la publicación"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri il post"
           }
         }
       }
@@ -2034,6 +2284,22 @@
         }
       }
     },
+    "Sections": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secciones"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sezioni"
+          }
+        }
+      }
+    },
     "Security and account": {
       "localizations": {
         "es": {
@@ -2174,6 +2440,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra di più"
+          }
+        }
+      }
+    },
+    "Show original": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver original"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra originale"
           }
         }
       }
@@ -2322,6 +2604,22 @@
         }
       }
     },
+    "The photos stay in their posts: only the album goes away.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las fotos se quedan en sus publicaciones: solo desaparece el álbum."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le foto restano nei loro post: sparisce solo l'album."
+          }
+        }
+      }
+    },
     "These open your server's page, where you confirm with your password.": {
       "localizations": {
         "es": {
@@ -2430,6 +2728,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Timeline"
+          }
+        }
+      }
+    },
+    "Translate": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traducir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traduci"
+          }
+        }
+      }
+    },
+    "Translated from %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traducido del %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tradotto da %@"
+          }
+        }
+      }
+    },
+    "Translating…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traduciendo…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traduzione in corso…"
+          }
+        }
+      }
+    },
+    "Translation is not available right now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La traducción no está disponible ahora mismo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La traduzione non è disponibile al momento"
           }
         }
       }
@@ -2574,6 +2936,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Versione"
+          }
+        }
+      }
+    },
+    "Video": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vídeo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
           }
         }
       }

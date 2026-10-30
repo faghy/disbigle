@@ -29,6 +29,11 @@ public struct Page<Item: Sendable>: Sendable {
   public let items: [Item]
   /** Query for the next (older) page, if any. */
   public let next: [URLQueryItem]?
+
+  public init(items: [Item], next: [URLQueryItem]?) {
+    self.items = items
+    self.next = next
+  }
 }
 
 /** Sends requests to a server's Mastodon-compatible API with an access token. */

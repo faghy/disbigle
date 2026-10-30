@@ -40,6 +40,14 @@ final class AppModel {
   var pendingRoute: Route?
   /** The last post published or edited from this app, for lists to show at once. */
   private(set) var lastSaved: Status?
+  /** Source language → languages the server can translate it into (nil: no translation). */
+  private(set) var translationLanguages: [String: [String]]?
+  /** Translations already asked for, by post id (kept until the app closes). */
+  var translations: [String: StatusTranslation] = [:]
+  /** Posts shown translated. */
+  var showingTranslation: Set<String> = []
+  /** The language posts are translated into. */
+  let readerLanguage = Translations.readerLanguage()
 
   var client: Client? {
     session.map { Client(server: $0.server, token: $0.token) }
@@ -74,6 +82,9 @@ final class AppModel {
     do {
       me = try await client.me()
       instance = try? await client.instance()
+      if instance?.translationEnabled == true, translationLanguages == nil {
+        translationLanguages = try? await client.translationLanguages()
+      }
     } catch APIError.unauthorized {
       forget()
     } catch {
@@ -119,6 +130,26 @@ final class AppModel {
     session = nil
     me = nil
     instance = nil
+    translationLanguages = nil
+    translations = [:]
+    showingTranslation = []
+  }
+
+  /** A post others wrote, in a language the server can translate into the reader's. */
+  func canTranslate(_ status: Status) -> Bool {
+    guard instance?.translationEnabled == true, let languages = translationLanguages,
+      status.account.id != me?.id
+    else { return false }
+    return Translations.canTranslate(from: status.language, to: readerLanguage, languages: languages)
+  }
+
+  /** Translates a post (or reuses its translation) and shows it translated. */
+  func translate(_ status: Status) async throws {
+    if translations[status.id] == nil {
+      guard let client else { throw APIError.unauthorized }
+      translations[status.id] = try await client.translate(status.id, to: readerLanguage)
+    }
+    showingTranslation.insert(status.id)
   }
 
   func saved(_ status: Status) {

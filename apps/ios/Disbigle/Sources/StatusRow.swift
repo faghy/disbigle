@@ -15,6 +15,8 @@ struct StatusRow: View {
   @State private var revealed = false
   @State private var confirmDelete = false
   @State private var actionError: String?
+  @State private var translating = false
+  @State private var translationFailed = false
 
   private var shown: Status { updated ?? status.shown }
   private var isMine: Bool { model.me?.id == shown.account.id }
@@ -86,18 +88,60 @@ struct StatusRow: View {
   @ViewBuilder private var content: some View {
     if !shown.spoilerText.isEmpty {
       VStack(alignment: .leading, spacing: 6) {
-        Text(shown.spoilerText).font(.body.weight(.semibold))
+        Text(translation?.spoilerText.flatMap { $0.isEmpty ? nil : $0 } ?? shown.spoilerText)
+          .font(.body.weight(.semibold))
         Button(revealed ? LocalizedStringKey("Show less") : "Show more") { revealed.toggle() }
           .buttonStyle(.bordered)
           .controlSize(.small)
       }
     }
     if shown.spoilerText.isEmpty || revealed {
-      Text(RichText.attributed(shown.content))
+      Text(RichText.attributed(translation?.content ?? shown.content))
         .font(focused ? .title3 : .body)
         .textSelection(.enabled)
         .fixedSize(horizontal: false, vertical: true)
     }
+    translationControls
+  }
+
+  /** The translation on show, if the person asked for it. */
+  private var translation: StatusTranslation? {
+    model.showingTranslation.contains(shown.id) ? model.translations[shown.id] : nil
+  }
+
+  @ViewBuilder private var translationControls: some View {
+    if let translation {
+      HStack(spacing: 8) {
+        Text("Translated from \(languageName(translation.detectedSourceLanguage ?? shown.language))")
+          .foregroundStyle(.secondary)
+        Button("Show original") { _ = model.showingTranslation.remove(shown.id) }
+      }
+      .font(.footnote)
+      .buttonStyle(.borderless)
+    } else if model.canTranslate(shown) {
+      HStack(spacing: 8) {
+        if translating {
+          ProgressView().controlSize(.small)
+          Text("Translating…").foregroundStyle(.secondary)
+        } else {
+          Button {
+            Task { await translate() }
+          } label: {
+            Label("Translate", systemImage: "character.bubble")
+          }
+          if translationFailed {
+            Text("Translation is not available right now").foregroundStyle(.secondary)
+          }
+        }
+      }
+      .font(.footnote)
+      .buttonStyle(.borderless)
+    }
+  }
+
+  private func languageName(_ code: String?) -> String {
+    guard let code = Translations.baseLanguage(code) else { return "" }
+    return Locale.current.localizedString(forLanguageCode: code) ?? code
   }
 
   private var details: some View {
@@ -176,6 +220,17 @@ struct StatusRow: View {
       updated = result.shown
     } catch {
       actionError = error.localizedDescription
+    }
+  }
+
+  private func translate() async {
+    translating = true
+    translationFailed = false
+    defer { translating = false }
+    do {
+      try await model.translate(shown)
+    } catch {
+      translationFailed = true
     }
   }
 
@@ -349,6 +404,12 @@ struct MediaGrid: View {
 struct MediaViewer: View {
   let media: [MediaAttachment]
   @State var selection: String
+  /** Profile and album pictures: the post of each attachment, for "Open the post". */
+  var statusIds: [String: String] = [:]
+  var openPost: ((String) -> Void)? = nil
+  /** Set on your own pictures: they can go into your albums. */
+  var albumOwnerId: String? = nil
+  @State private var choosingAlbums = false
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -376,10 +437,41 @@ struct MediaViewer: View {
         ToolbarItem(placement: .cancellationAction) {
           Button("Close") { dismiss() }
         }
+        ToolbarItemGroup(placement: .bottomBar) {
+          if let openPost, let statusId = statusIds[selection] {
+            Button("Open the post") {
+              dismiss()
+              openPost(statusId)
+            }
+          }
+          Spacer()
+          if albumOwnerId != nil {
+            Button("Add to album") { choosingAlbums = true }
+          }
+        }
       }
       .toolbarBackground(.black, for: .navigationBar)
       .toolbarColorScheme(.dark, for: .navigationBar)
+      .toolbar(openPost != nil || albumOwnerId != nil ? .visible : .hidden, for: .bottomBar)
+      .toolbarBackground(.black, for: .bottomBar)
+      .toolbarColorScheme(.dark, for: .bottomBar)
+      .sheet(isPresented: $choosingAlbums) {
+        AlbumPicker(mediaId: selection)
+      }
     }
+  }
+}
+
+extension MediaViewer {
+  /** Pictures of a profile or an album, each linking to its post. */
+  init(
+    items: [MediaItem], selection: String, openPost: @escaping (String) -> Void,
+    albumOwnerId: String? = nil
+  ) {
+    self.init(
+      media: items.map(\.mediaAttachment), selection: selection,
+      statusIds: Dictionary(items.map { ($0.id, $0.statusId) }, uniquingKeysWith: { first, _ in first }),
+      openPost: openPost, albumOwnerId: albumOwnerId)
   }
 }
 

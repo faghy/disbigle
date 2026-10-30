@@ -12,25 +12,60 @@ struct ProfileScreen: View {
   @State private var memberOf: Set<String> = []
   @State private var openedDebugScreen = false
   @State private var following = false
+  @State private var tab: ProfileTab = .posts
+  @State private var media: PagedList<MediaItem>?
+  @State private var albums: [Album]?
+  @State private var albumsError: String?
+  @State private var viewing: MediaItem?
+  @State private var creatingAlbum = false
+
+  enum ProfileTab: Hashable {
+    case posts, media, albums
+  }
 
   var body: some View {
     List {
       header
         .listRowInsets(EdgeInsets())
         .listRowSeparator(.hidden)
-      if let list {
-        ForEach(list.items) { status in
-          StatusRow(status: status, onDelete: { list.remove(id: $0) })
-            .task { await list.reached(status) }
-        }
-        ListFooter(
-          loading: list.loading, error: list.error, empty: list.items.isEmpty,
-          emptyText: "No posts yet."
-        ) { Task { await list.loadMore() } }
+      Picker("Sections", selection: $tab) {
+        Text("Posts").tag(ProfileTab.posts)
+        Text("Media").tag(ProfileTab.media)
+        // Albums are a Disbigle extension: only for accounts of this server.
+        if account.isLocal { Text("Albums").tag(ProfileTab.albums) }
+      }
+      .pickerStyle(.segmented)
+      .labelsHidden()
+      .listRowSeparator(.hidden)
+      switch tab {
+      case .posts: posts
+      case .media: mediaGrid
+      case .albums: albumList
       }
     }
     .listStyle(.plain)
-    .refreshable { await list?.refresh() }
+    .refreshable {
+      switch tab {
+      case .posts: await list?.refresh()
+      case .media: await media?.refresh()
+      case .albums: await loadAlbums()
+      }
+    }
+    .task(id: tab) { await load(tab) }
+    .fullScreenCover(item: $viewing) { item in
+      MediaViewer(
+        items: media?.items ?? [item], selection: item.id,
+        openPost: { router.go(.statusID($0)) },
+        albumOwnerId: isMe && account.isLocal ? account.id : nil)
+    }
+    .sheet(isPresented: $creatingAlbum) {
+      if let client = model.client {
+        AlbumForm(album: nil) { draft in
+          _ = try await client.createAlbum(draft)
+          await loadAlbums()
+        }
+      }
+    }
     .navigationTitle(account.name)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
@@ -102,6 +137,93 @@ struct ProfileScreen: View {
         aspects = (try? await client.aspects()) ?? []
         memberOf = Set(((try? await client.aspects(containing: account.id)) ?? []).map(\.id))
       }
+    }
+  }
+
+  @ViewBuilder private var posts: some View {
+    if let list {
+      ForEach(list.items) { status in
+        StatusRow(status: status, onDelete: { list.remove(id: $0) })
+          .task { await list.reached(status) }
+      }
+      ListFooter(
+        loading: list.loading, error: list.error, empty: list.items.isEmpty,
+        emptyText: "No posts yet."
+      ) { Task { await list.loadMore() } }
+    }
+  }
+
+  @ViewBuilder private var mediaGrid: some View {
+    if let media {
+      MediaRows(items: media.items, open: { viewing = $0 }, reached: { await media.reached($0) })
+      ListFooter(
+        loading: media.loading, error: media.error, empty: media.items.isEmpty,
+        emptyText: "No photos or videos yet."
+      ) { Task { await media.loadMore() } }
+    }
+  }
+
+  @ViewBuilder private var albumList: some View {
+    if isMe {
+      Button {
+        creatingAlbum = true
+      } label: {
+        Label("New album", systemImage: "plus")
+      }
+      .buttonStyle(.borderless)
+      .listRowSeparator(.hidden)
+    }
+    if let albums {
+      ForEach(Array(stride(from: 0, to: albums.count, by: 2)), id: \.self) { start in
+        HStack(alignment: .top, spacing: 12) {
+          ForEach(albums[start..<min(start + 2, albums.count)]) { album in
+            Button {
+              router.go(.album(album.id))
+            } label: {
+              AlbumCard(album: album)
+            }
+            .buttonStyle(.borderless)
+            .frame(maxWidth: .infinity)
+          }
+          if start + 1 >= albums.count {
+            Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+          }
+        }
+        .listRowSeparator(.hidden)
+      }
+    }
+    ListFooter(
+      loading: albums == nil && albumsError == nil, error: albumsError,
+      empty: albums?.isEmpty == true, emptyText: "No albums yet."
+    ) { Task { await loadAlbums() } }
+  }
+
+  /** Loads a tab the first time it is shown (albums every time: they change elsewhere). */
+  private func load(_ tab: ProfileTab) async {
+    guard let client = model.client else { return }
+    switch tab {
+    case .posts:
+      break
+    case .media:
+      guard media == nil else { return }
+      let id = account.id
+      let newList = PagedList<MediaItem> { try await client.media(of: id, query: $0) }
+      media = newList
+      await newList.refresh()
+    case .albums:
+      await loadAlbums()
+    }
+  }
+
+  private func loadAlbums() async {
+    guard let client = model.client else { return }
+    do {
+      albums = try await client.albums(of: account.id)
+      albumsError = nil
+    } catch is CancellationError {
+      return
+    } catch {
+      albumsError = error.localizedDescription
     }
   }
 
