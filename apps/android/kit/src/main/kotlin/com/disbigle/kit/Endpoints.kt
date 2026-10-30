@@ -105,6 +105,13 @@ suspend fun Client.source(id: String): String = get<Source>("api/v1/statuses/$id
 
 suspend fun Client.delete(id: String) = perform("DELETE", "api/v1/statuses/$id")
 
+/** The post translated into `lang` (the person's language when null). */
+suspend fun Client.translate(id: String, lang: String? = null): Translation =
+  call("POST", "api/v1/statuses/$id/translate", body = Client.Body.Form(listOfNotNull(lang?.let { "lang" to it })))
+
+/** For each source language, the languages the server can translate it into. */
+suspend fun Client.translationLanguages(): Map<String, List<String>> = get("api/v1/instance/translation_languages")
+
 suspend fun Client.vote(pollId: String, choices: List<Int>): Poll =
   call("POST", "api/v1/polls/$pollId/votes", body = json("choices" to JsonArray(choices.map(::JsonPrimitive))))
 
@@ -135,6 +142,12 @@ suspend fun Client.account(id: String): Account = get("api/v1/accounts/$id")
 
 suspend fun Client.statuses(accountId: String, query: Query = emptyList()): Page<Status> =
   page("api/v1/accounts/$accountId/statuses", query)
+
+/** Posts with photos or videos, 40 at a time; the next page starts before the last post. */
+suspend fun Client.mediaStatuses(accountId: String, query: Query = emptyList()): Page<Status> {
+  val page = page<Status>("api/v1/accounts/$accountId/statuses", listOf("only_media" to "true", "limit" to "40") + query)
+  return Page(page.items, page.items.lastOrNull()?.let { listOf("max_id" to it.id) })
+}
 
 suspend fun Client.relationship(accountId: String): Relationship? =
   get<List<Relationship>>("api/v1/accounts/relationships", listOf("id[]" to accountId)).firstOrNull()
@@ -182,6 +195,28 @@ suspend fun Client.addMember(accountId: String, aspectId: String) =
 
 suspend fun Client.removeMember(accountId: String, aspectId: String) =
   perform("DELETE", "api/v1/lists/$aspectId/accounts", body = json("account_ids" to JsonArray(listOf(JsonPrimitive(accountId)))))
+
+// Albums (Disbigle extension)
+
+/** An account's albums; with `mediaId` (your own account) each says whether it holds that picture. */
+suspend fun Client.albums(accountId: String, mediaId: String? = null): List<Album> =
+  get("api/v1/accounts/$accountId/albums", listOfNotNull(mediaId?.let { "media_id" to it }))
+
+/** An album with its owner and pictures. */
+suspend fun Client.album(id: String): Album = get("api/v1/albums/$id")
+
+suspend fun Client.createAlbum(name: String, description: String): Album =
+  call("POST", "api/v1/albums", body = json("name" to JsonPrimitive(name), "description" to JsonPrimitive(description)))
+
+suspend fun Client.updateAlbum(id: String, name: String, description: String): Album =
+  call("PUT", "api/v1/albums/$id", body = json("name" to JsonPrimitive(name), "description" to JsonPrimitive(description)))
+
+suspend fun Client.deleteAlbum(id: String) = perform("DELETE", "api/v1/albums/$id")
+
+/** Adds a picture of one of your posts to an album. */
+suspend fun Client.addToAlbum(albumId: String, mediaId: String) = perform("PUT", "api/v1/albums/$albumId/media/$mediaId")
+
+suspend fun Client.removeFromAlbum(albumId: String, mediaId: String) = perform("DELETE", "api/v1/albums/$albumId/media/$mediaId")
 
 // Read markers
 

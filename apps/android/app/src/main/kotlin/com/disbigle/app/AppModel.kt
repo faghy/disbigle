@@ -3,6 +3,7 @@ package com.disbigle.app
 import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
@@ -14,8 +15,10 @@ import com.disbigle.kit.Instance
 import com.disbigle.kit.RegisteredApp
 import com.disbigle.kit.SignIn
 import com.disbigle.kit.Status
+import com.disbigle.kit.Translation
 import com.disbigle.kit.instance
 import com.disbigle.kit.me
+import com.disbigle.kit.translationLanguages
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -61,6 +64,13 @@ class AppModel(application: Application) : AndroidViewModel(application) {
   val statuses = mutableMapOf<String, Status>()
   val accounts = mutableMapOf<String, Account>()
 
+  /** What the server translates: source language → target languages (null until known, or when it doesn't). */
+  var translationLanguages by mutableStateOf<Map<String, List<String>>?>(null)
+    private set
+  /** Translations already fetched, by post; `showingOriginal` holds those switched back. */
+  val translations = mutableStateMapOf<String, Translation>()
+  val showingOriginal = mutableStateMapOf<String, Boolean>()
+
   val client: Client? get() = session?.let { Client(it.server, it.token) }
 
   /** Debug builds: `--es server <url> --es token <token> --es screen <name>` sign in without the browser (screenshots). */
@@ -78,6 +88,9 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     try {
       me = client.me().also { accounts[it.id] = it }
       instance = runCatching { client.instance() }.getOrNull()
+      if (instance?.translationEnabled == true && translationLanguages == null) {
+        translationLanguages = runCatching { client.translationLanguages() }.getOrNull()
+      }
     } catch (_: ApiException.Unauthorized) {
       forget()
     } catch (_: Exception) {
@@ -136,6 +149,9 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     session = null
     me = null
     instance = null
+    translationLanguages = null
+    translations.clear()
+    showingOriginal.clear()
     statuses.clear()
     accounts.clear()
   }

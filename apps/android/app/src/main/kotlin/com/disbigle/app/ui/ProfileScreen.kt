@@ -1,6 +1,7 @@
 package com.disbigle.app.ui
 
 import android.content.Intent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
@@ -33,14 +36,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,22 +64,30 @@ import coil3.compose.AsyncImage
 import com.disbigle.app.R
 import com.disbigle.kit.Account
 import com.disbigle.kit.AccountAction
+import com.disbigle.kit.Album
 import com.disbigle.kit.AspectList
+import com.disbigle.kit.GalleryItem
+import com.disbigle.kit.Page
 import com.disbigle.kit.Relationship
 import com.disbigle.kit.Status
 import com.disbigle.kit.account
 import com.disbigle.kit.act
 import com.disbigle.kit.addMember
+import com.disbigle.kit.albums
 import com.disbigle.kit.aspects
 import com.disbigle.kit.aspectsContaining
+import com.disbigle.kit.createAlbum
 import com.disbigle.kit.follow
+import com.disbigle.kit.mediaStatuses
 import com.disbigle.kit.relationship
 import com.disbigle.kit.removeMember
 import com.disbigle.kit.statuses
 import com.disbigle.kit.unfollow
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+private enum class ProfileTab(val label: Int) { POSTS(R.string.posts), MEDIA(R.string.media), ALBUMS(R.string.albums) }
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
   val model = LocalApp.current
@@ -88,6 +103,11 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
   var menu by remember { mutableStateOf(false) }
   var busy by remember { mutableStateOf(false) }
   val list = store.list<Status>("profile:$id", { it.id }) { q -> client!!.statuses(id, q) }
+  val mediaList = store.list<Status>("profile-media:$id", { it.id }) { q -> client!!.mediaStatuses(id, q) }
+  val albumList = store.list<Album>("albums:$id", { it.id }) { Page(client!!.albums(id), null) }
+  var tab by rememberSaveable(id) { mutableIntStateOf(ProfileTab.POSTS.ordinal) }
+  var viewing by remember { mutableStateOf<Int?>(null) }
+  var creatingAlbum by remember { mutableStateOf(false) }
 
   LaunchedEffect(id, isMe) {
     client ?: return@LaunchedEffect
@@ -107,6 +127,15 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
     }
   }
 
+  // Albums again each time they show: one may have changed on its own screen.
+  LaunchedEffect(tab) {
+    when (ProfileTab.entries[tab]) {
+      ProfileTab.POSTS -> {}
+      ProfileTab.MEDIA -> if (!mediaList.loaded) mediaList.refresh()
+      ProfileTab.ALBUMS -> albumList.refresh()
+    }
+  }
+
   fun act(action: AccountAction) {
     scope.launch { runCatching { client?.act(action, id) }.getOrNull()?.let { relationship = it } }
   }
@@ -120,6 +149,10 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
     }
   }
 
+  // The account's own photos and videos (not reshares), newest first.
+  val gallery = mediaList.items.filter { it.reblog == null }.flatMap { status ->
+    status.mediaAttachments.filter { it.isVisual }.map { GalleryItem(it, status.id, status.sensitive, status.createdAt) }
+  }
   val shown = account
   Screen(
     shown?.name ?: "", nav, back = !isMe,
@@ -170,7 +203,15 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
       if (error != null) Hint(error!!) else Loading()
       return@Screen
     }
-    PullToRefreshBox(isRefreshing = list.loading && list.items.isNotEmpty(), onRefresh = { list.refresh() }, modifier = modifier.fillMaxSize()) {
+    // Albums are only on accounts of this server.
+    val tabs = if (shown.acct.contains('@')) ProfileTab.entries - ProfileTab.ALBUMS else ProfileTab.entries
+    val current = ProfileTab.entries[tab].takeIf { it in tabs } ?: ProfileTab.POSTS
+    val shownList: PagedList<*> = when (current) {
+      ProfileTab.POSTS -> list
+      ProfileTab.MEDIA -> mediaList
+      ProfileTab.ALBUMS -> albumList
+    }
+    PullToRefreshBox(isRefreshing = shownList.loading && shownList.items.isNotEmpty(), onRefresh = { shownList.refresh() }, modifier = modifier.fillMaxSize()) {
       LazyColumn(Modifier.fillMaxSize()) {
         item {
           ProfileHeader(shown, relationship.takeIf { !isMe }, busy) {
@@ -182,17 +223,61 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
               busy = false
             }
           }
-          HorizontalDivider()
         }
-        itemsIndexed(list.items, key = { _, s -> s.id }) { index, status ->
-          LaunchedEffect(index) { list.reached(index) }
-          StatusRow(status, nav, onDelete = { list.remove(it) })
-          HorizontalDivider()
+        stickyHeader {
+          PrimaryTabRow(selectedTabIndex = tabs.indexOf(current)) {
+            for (each in tabs) {
+              Tab(selected = each == current, onClick = { tab = each.ordinal }, text = { Text(stringResource(each.label)) })
+            }
+          }
         }
-        item {
-          ListFooter(list.loading && list.items.isEmpty(), list.error, list.loaded && list.items.isEmpty(), stringResource(R.string.no_posts)) { list.refresh() }
+        when (current) {
+          ProfileTab.POSTS -> {
+            itemsIndexed(list.items, key = { _, s -> s.id }) { index, status ->
+              LaunchedEffect(index) { list.reached(index) }
+              StatusRow(status, nav, onDelete = { list.remove(it) })
+              HorizontalDivider()
+            }
+            item {
+              ListFooter(list.loading && list.items.isEmpty(), list.error, list.loaded && list.items.isEmpty(), stringResource(R.string.no_posts)) { list.refresh() }
+            }
+          }
+          ProfileTab.MEDIA -> {
+            item { Spacer(Modifier.height(2.dp)) }
+            galleryRows(gallery, "media", onOpen = { viewing = it }, onReachEnd = { mediaList.loadMore() })
+            item {
+              ListFooter(mediaList.loading, mediaList.error, mediaList.loaded && gallery.isEmpty(), stringResource(R.string.no_media)) { mediaList.refresh() }
+            }
+          }
+          ProfileTab.ALBUMS -> {
+            if (isMe) {
+              item {
+                OutlinedButton(onClick = { creatingAlbum = true }, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                  Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp).size(18.dp))
+                  Text(stringResource(R.string.new_album))
+                }
+              }
+            }
+            albumRows(albumList.items) { nav.album(it.id) }
+            item {
+              ListFooter(albumList.loading && albumList.items.isEmpty(), albumList.error, albumList.loaded && albumList.items.isEmpty(), stringResource(R.string.no_albums)) { albumList.refresh() }
+            }
+          }
         }
       }
+    }
+  }
+
+  viewing?.let { start ->
+    if (gallery.isEmpty()) {
+      LaunchedEffect(Unit) { viewing = null }
+    } else {
+      GalleryViewer(gallery, start, nav, canAddToAlbum = isMe, onClose = { viewing = null })
+    }
+  }
+  if (creatingAlbum && client != null) {
+    AlbumDialog(null, onDismiss = { creatingAlbum = false }) { name, description ->
+      albumList.prepend(client.createAlbum(name, description))
     }
   }
 }

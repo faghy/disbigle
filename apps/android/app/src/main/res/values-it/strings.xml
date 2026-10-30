@@ -219,4 +219,33 @@
   <string name="new_aspect">Nuovo aspetto</string>
   <string name="add">Aggiungi</string>
   <string name="aspect_empty">Ancora nessuno in questo aspetto.</string>
+
+  <!-- Media and albums -->
+  <string name="media">Media</string>
+  <string name="albums">Album</string>
+  <string name="no_media">Ancora nessuna foto o video.</string>
+  <string name="no_albums">Ancora nessun album.</string>
+  <string name="open_post">Apri il post</string>
+  <string name="add_to_album">Aggiungi a un album</string>
+  <string name="new_album">Nuovo album</string>
+  <string name="edit_album">Modifica album</string>
+  <string name="delete_album">Elimina album</string>
+  <string name="album_name">Nome</string>
+  <string name="album_description">Descrizione (facoltativa)</string>
+  <string name="create">Crea</string>
+  <string name="delete_album_question">Eliminare l\'album «%1$s»?</string>
+  <string name="delete_album_note">Le foto restano nei loro post: sparisce solo l\'album.</string>
+  <string name="album_empty">Questo album è vuoto.</string>
+  <plurals name="album_items">
+    <item quantity="one">%1$d elemento</item>
+    <item quantity="many">%1$d elementi</item>
+    <item quantity="other">%1$d elementi</item>
+  </plurals>
+
+  <!-- Translation -->
+  <string name="translate">Traduci</string>
+  <string name="translating">Traduzione in corso…</string>
+  <string name="translated_from">Tradotto da %1$s</string>
+  <string name="show_original">Mostra l\'originale</string>
+  <string name="translation_unavailable">La traduzione non è disponibile al momento.</string>
 </resources>

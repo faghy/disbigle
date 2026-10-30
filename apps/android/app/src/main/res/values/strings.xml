@@ -218,4 +218,32 @@
   <string name="new_aspect">New aspect</string>
   <string name="add">Add</string>
   <string name="aspect_empty">Nobody in this aspect yet.</string>
+
+  <!-- Media and albums -->
+  <string name="media">Media</string>
+  <string name="albums">Albums</string>
+  <string name="no_media">No photos or videos yet.</string>
+  <string name="no_albums">No albums yet.</string>
+  <string name="open_post">Open the post</string>
+  <string name="add_to_album">Add to album</string>
+  <string name="new_album">New album</string>
+  <string name="edit_album">Edit album</string>
+  <string name="delete_album">Delete album</string>
+  <string name="album_name">Name</string>
+  <string name="album_description">Description (optional)</string>
+  <string name="create">Create</string>
+  <string name="delete_album_question">Delete the album «%1$s»?</string>
+  <string name="delete_album_note">The photos stay in their posts: only the album goes away.</string>
+  <string name="album_empty">This album is empty.</string>
+  <plurals name="album_items">
+    <item quantity="one">%1$d item</item>
+    <item quantity="other">%1$d items</item>
+  </plurals>
+
+  <!-- Translation -->
+  <string name="translate">Translate</string>
+  <string name="translating">Translating…</string>
+  <string name="translated_from">Translated from %1$s</string>
+  <string name="show_original">Show original</string>
+  <string name="translation_unavailable">Translation is not available right now.</string>
 </resources>

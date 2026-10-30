@@ -143,6 +143,76 @@ class ClientTest {
   }
 }
 
+class AlbumsAndTranslationTest {
+  @Test fun albumsMediaPagesAndTranslations() = runTest {
+    val server = MockWebServer()
+    val bodies = mutableMapOf<String, String>()
+    val media = """{"id":"m1","type":"image","url":"https://x.test/m1.webp","preview_url":"https://x.test/m1-small.webp"}"""
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        bodies["${request.method} ${request.path}"] = request.body.readUtf8()
+        return when (request.path) {
+          "/api/v1/accounts/1/statuses?only_media=true&limit=40" -> MockResponse().setBody("[${Fixtures.status}]")
+          "/api/v1/accounts/1/albums?media_id=m1" -> MockResponse().setBody(
+            """[{"id":"a1","account_id":"1","name":"Gatti","description":"","media_count":2,"cover":$media,"updated_at":"2026-10-30T10:00:00Z","includes":true}]""",
+          )
+          "/api/v1/albums/a1" -> MockResponse().setBody(
+            """{"id":"a1","account_id":"1","name":"Gatti","media_count":1,"cover":null,"account":${Fixtures.account},
+            "items":[{"media_attachment":$media,"status_id":"s1","sensitive":true,"created_at":"2026-10-30T10:00:00Z"}]}""",
+          )
+          "/api/v1/albums/a1/media/m1" -> MockResponse().setBody("{}")
+          "/api/v1/statuses/s1/translate" -> MockResponse().setBody(
+            """{"content":"<p>Tea or coffee?</p>","spoiler_text":"","detected_source_language":"it","provider":"Bergamot"}""",
+          )
+          "/api/v1/albums/missing" -> MockResponse().setResponseCode(404).setBody("{\"error\":\"Album not found\"}")
+          else -> MockResponse().setResponseCode(500)
+        }
+      }
+    }
+    server.start()
+    try {
+      val client = Client(server.url("/").toString(), "t0k")
+      val page = client.mediaStatuses("1")
+      assertEquals(listOf("max_id" to page.items.last().id), page.next)
+
+      val albums = client.albums("1", mediaId = "m1")
+      assertEquals(true, albums.single().includes)
+      assertEquals("https://x.test/m1-small.webp", albums.single().cover?.thumbnailUrl)
+      val album = client.album("a1")
+      assertEquals("faghy", album.account?.acct)
+      assertEquals("s1", album.items.single().statusId)
+      assertTrue(album.items.single().sensitive)
+
+      client.addToAlbum("a1", "m1")
+      assertTrue(bodies.containsKey("PUT /api/v1/albums/a1/media/m1"))
+      client.removeFromAlbum("a1", "m1")
+      assertTrue(bodies.containsKey("DELETE /api/v1/albums/a1/media/m1"))
+
+      val translation = client.translate("s1", "en")
+      assertEquals("it", translation.detectedSourceLanguage)
+      assertEquals("lang=en", bodies["POST /api/v1/statuses/s1/translate"])
+
+      try {
+        client.album("missing")
+        fail("expected an error")
+      } catch (e: ApiException.Server) {
+        assertEquals("Album not found", e.message)
+      }
+    } finally {
+      server.shutdown()
+    }
+  }
+
+  @Test fun translationSettingsAndLanguages() {
+    val instance = Client.json.decodeFromString(Instance.serializer(), """{"domain":"x","configuration":{"translation":{"enabled":true}}}""")
+    assertTrue(instance.translationEnabled)
+    assertFalse(Instance().translationEnabled)
+    val status = Client.json.decodeFromString(Status.serializer(), Fixtures.status).copy(language = "pt-BR")
+    assertEquals("pt", status.baseLanguage)
+    assertNull(status.copy(language = "").baseLanguage)
+  }
+}
+
 class RichTextTest {
   @Test fun paragraphsLinksAndMentions() {
     val html = "<p>Ciao <span class=\"h-card\"><a href=\"https://app.disbigle.com/@alice\" class=\"u-url mention\">@<span>alice</span></a></span> &amp; tutti!</p>" +
@@ -160,6 +230,20 @@ class RichTextTest {
     assertEquals("a\nb", RichText.plain("<p>a</p><p>b</p>"))
     val bold = RichText.parse("<p>a <strong>b</strong></p>")
     assertEquals(listOf(RichText.Span(2, 3, RichText.Style.BOLD)), bold.spans)
+  }
+
+  @Test fun paragraphsAreOneEmptyLineApart() {
+    // Newlines between paragraphs, as markdown renderers write them.
+    assertEquals("uno\n\ndue\n\ntre", RichText.parse("<p>uno</p>\n<p>due</p>\n\n<p>tre</p>\n").text)
+    // Empty paragraphs and repeated line breaks collapse; none at the start or end.
+    assertEquals("uno\n\ndue", RichText.parse("\n<p><br></p><p>uno</p><p></p><p> </p><br><br><p>due<br><br></p>\n").text)
+    assertEquals("a\n\nb\nc", RichText.parse("<p>a<br><br><br><br>b<br>\n  c</p>").text)
+    assertEquals("a b", RichText.parse("<p>  a \n   b  </p>").text)
+    assertEquals("• uno\n• due\n\nfine", RichText.parse("<ul>\n<li>uno</li>\n<li>due</li>\n</ul>\n<p>fine</p>").text)
+    assertEquals("x  y\n  z", RichText.parse("<pre><code>x  y\n  z\n</code></pre>").text)
+    val bold = RichText.parse("<p><strong>a </strong></p>\n<p>b</p>")
+    assertEquals("a\n\nb", bold.text)
+    assertEquals(listOf(RichText.Span(0, 1, RichText.Style.BOLD)), bold.spans)
   }
 
   @Test fun onlyWebLinksAreKept() {

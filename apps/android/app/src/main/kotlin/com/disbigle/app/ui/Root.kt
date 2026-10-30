@@ -74,6 +74,8 @@ class Nav(val controller: NavHostController, private val model: AppModel) {
 
   fun accountId(id: String) = controller.navigate("account/$id")
 
+  fun album(id: String) = controller.navigate("album/$id")
+
   fun tag(name: String) = controller.navigate("tag/${android.net.Uri.encode(name)}")
 
   fun settings(page: String = "") = controller.navigate(if (page.isEmpty()) "settings" else "settings/$page")
@@ -195,6 +197,7 @@ fun MainScreen(model: AppModel) {
         val id = it.arguments?.getString("id")!!
         ProfileScreen(nav, id, isMe = id == model.me?.id)
       }
+      composable("album/{id}") { AlbumScreen(nav, it.arguments?.getString("id")!!) }
       composable("tag/{name}") { TagScreen(nav, it.arguments?.getString("name")!!) }
       composable("compose") {
         val target = model.composing

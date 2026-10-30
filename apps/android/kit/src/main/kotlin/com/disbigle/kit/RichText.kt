@@ -79,6 +79,7 @@ data class RichText(val text: String, val spans: List<Span>) {
   }
 
   private class Parser {
+    val whitespace = Regex("\\s+")
     val out = StringBuilder()
     val spans = mutableListOf<Span>()
     var bold = 0
@@ -87,6 +88,7 @@ data class RichText(val text: String, val spans: List<Span>) {
     var strike = 0
     var hidden = 0
     var quote = 0
+    var pre = 0
     val links = mutableListOf<String?>()
     val openSpans = mutableListOf<String>()
     var blockStarted = false
@@ -107,7 +109,7 @@ data class RichText(val text: String, val spans: List<Span>) {
         }
       }
       flush(text)
-      while (out.endsWith("\n")) out.setLength(out.length - 1)
+      trimEnd()
       val length = out.length
       return RichText(out.toString(), spans.mapNotNull { s ->
         val end = minOf(s.end, length)
@@ -120,10 +122,30 @@ data class RichText(val text: String, val spans: List<Span>) {
       val raw = text.toString()
       text.setLength(0)
       if (hidden > 0) return
-      // Source newlines are not line breaks in HTML.
-      val decoded = decodeEntities(raw.replace('\n', ' '))
-      if (!blockStarted && decoded.isBlank()) return
+      if (pre > 0) return append(decodeEntities(raw))
+      // Source newlines and runs of spaces are one space in HTML, and none at the start of a line
+      // (servers put newlines between paragraphs: kept, they became lines of their own).
+      var decoded = decodeEntities(raw.replace(whitespace, " "))
+      if (out.isEmpty() || out.endsWith("\n") || out.endsWith(" ")) decoded = decoded.trimStart(' ')
+      if (decoded.isEmpty()) return
       append(decoded)
+    }
+
+    /** Drops trailing spaces and newlines (and the part of spans over them). */
+    fun trimEnd() {
+      var length = out.length
+      while (length > 0 && (out[length - 1] == '\n' || out[length - 1] == ' ')) length--
+      if (length == out.length) return
+      out.setLength(length)
+      spans.replaceAll { if (it.end > length) it.copy(end = length) else it }
+      spans.removeAll { it.end <= it.start }
+    }
+
+    /** A line break: at most one empty line in a row, none before the text. */
+    fun lineBreak() {
+      if (!blockStarted || out.endsWith("\n\n")) return
+      while (out.endsWith(" ")) out.setLength(out.length - 1)
+      out.append("\n")
     }
 
     fun append(string: String) {
@@ -141,8 +163,8 @@ data class RichText(val text: String, val spans: List<Span>) {
     fun newBlock(separator: String = "\n\n") {
       if (!blockStarted) return
       // Collapse to the separator: no stack of empty lines between blocks.
-      while (out.endsWith("\n")) out.setLength(out.length - 1)
-      out.append(separator)
+      trimEnd()
+      if (out.isNotEmpty()) out.append(separator)
     }
 
     fun tag(raw: String) {
@@ -154,12 +176,12 @@ data class RichText(val text: String, val spans: List<Span>) {
         !closing && name in setOf("p", "blockquote", "ul", "ol", "pre") -> {
           newBlock()
           if (name == "blockquote") quote++
-          if (name == "pre") code++
+          if (name == "pre") { code++; pre++ }
         }
         closing && name == "blockquote" -> { quote = maxOf(0, quote - 1); newBlock() }
-        closing && name == "pre" -> { code = maxOf(0, code - 1); newBlock() }
+        closing && name == "pre" -> { code = maxOf(0, code - 1); pre = maxOf(0, pre - 1); newBlock() }
         closing && name in setOf("p", "ul", "ol") -> newBlock()
-        name == "br" -> out.append("\n")
+        name == "br" -> lineBreak()
         !closing && name == "li" -> { newBlock("\n"); append("• ") }
         name == "strong" || name == "b" -> bold = step(bold)
         name == "em" || name == "i" -> italic = step(italic)

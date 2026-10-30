@@ -84,6 +84,12 @@ data class MediaAttachment(
 
   val isVideo: Boolean get() = type == "video" || type == "gifv"
 
+  /** A photo or a video (not audio or an unknown file), for galleries. */
+  val isVisual: Boolean get() = type == "image" || isVideo
+
+  /** The small picture, or the original when there is none. */
+  val thumbnailUrl: String get() = previewUrl?.takeIf { it.isNotEmpty() } ?: url
+
   /** Width / height of the original, when known. */
   val aspectRatio: Float?
     get() {
@@ -158,6 +164,49 @@ data class Status(
 
   /** The post to show: the original of a reblog, or this one. */
   val shown: Status get() = reblog ?: this
+
+  /** The base language code ("it" for "it-IT"), when the post has one. */
+  val baseLanguage: String? get() = language?.substringBefore('-')?.substringBefore('_')?.lowercase()?.takeIf { it.isNotEmpty() }
+}
+
+/** A post translated by the server (`POST /api/v1/statuses/:id/translate`). */
+@Serializable
+data class Translation(
+  val content: String = "",
+  val spoilerText: String = "",
+  val detectedSourceLanguage: String = "",
+  val provider: String = "",
+)
+
+/** A photo or video of a post, as galleries and albums show it. */
+@Serializable
+data class GalleryItem(
+  val mediaAttachment: MediaAttachment,
+  val statusId: String,
+  val sensitive: Boolean = false,
+  val createdAt: String? = null,
+)
+
+/** Pictures of a person's own posts gathered under a name (Disbigle extension). */
+@Serializable
+data class Album(
+  val id: String,
+  val accountId: String,
+  val name: String,
+  val description: String = "",
+  val mediaCount: Int = 0,
+  val cover: MediaAttachment? = null,
+  val updatedAt: String? = null,
+  /** Asked with a `media_id`: whether that picture is in the album. */
+  val includes: Boolean? = null,
+  /** Only when the album is opened on its own: the owner and the pictures, latest addition first. */
+  val account: Account? = null,
+  val items: List<GalleryItem> = emptyList(),
+) {
+  companion object {
+    const val MAX_NAME = 100
+    const val MAX_DESCRIPTION = 500
+  }
 }
 
 @Serializable
@@ -222,13 +271,17 @@ data class Instance(
   val configuration: Configuration? = null,
 ) {
   @Serializable
-  data class Configuration(val statuses: Statuses? = null)
+  data class Configuration(val statuses: Statuses? = null, val translation: TranslationSettings? = null)
+
+  @Serializable
+  data class TranslationSettings(val enabled: Boolean = false)
 
   @Serializable
   data class Statuses(val maxCharacters: Int? = null, val maxMediaAttachments: Int? = null)
 
   val maxCharacters: Int get() = configuration?.statuses?.maxCharacters ?: 5000
   val maxMediaAttachments: Int get() = configuration?.statuses?.maxMediaAttachments ?: 4
+  val translationEnabled: Boolean get() = configuration?.translation?.enabled == true
 }
 
 /** An app registered with a server (`POST /api/v1/apps`). */

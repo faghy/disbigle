@@ -8,12 +8,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -69,9 +71,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -91,9 +95,11 @@ import com.disbigle.kit.Visibility
 import com.disbigle.kit.act
 import com.disbigle.kit.delete
 import com.disbigle.kit.status
+import com.disbigle.kit.translate
 import com.disbigle.kit.vote
 import java.text.DateFormat
 import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 /** One post in a list: tap to open its thread. */
@@ -117,6 +123,33 @@ fun StatusRow(
   var confirmDelete by remember { mutableStateOf(false) }
   var actionError by remember { mutableStateOf<String?>(null) }
   val linkColor = MaterialTheme.colorScheme.primary
+  // Translation: offered for other people's posts in another language the server can translate.
+  val appLocale = LocalConfiguration.current.locales[0]
+  val source = shown.baseLanguage
+  val canTranslate = !isMine && source != null && source != appLocale.language &&
+    model.instance?.translationEnabled == true && model.translationLanguages?.get(source)?.contains(appLocale.language) == true
+  val translation = model.translations[shown.id]?.takeIf { canTranslate && model.showingOriginal[shown.id] != true }
+  var translating by remember(shown.id) { mutableStateOf(false) }
+  var translateError by remember(shown.id) { mutableStateOf<String?>(null) }
+
+  fun translate() {
+    if (model.translations.containsKey(shown.id)) {
+      model.showingOriginal.remove(shown.id)
+      return
+    }
+    val client = model.client ?: return
+    translating = true
+    translateError = null
+    scope.launch {
+      try {
+        model.translations[shown.id] = client.translate(shown.id, appLocale.language)
+      } catch (e: Exception) {
+        translateError = context.getString(R.string.translation_unavailable)
+      } finally {
+        translating = false
+      }
+    }
+  }
 
   fun act(action: StatusAction) {
     val client = model.client ?: return
@@ -157,16 +190,23 @@ fun StatusRow(
           Text(relative(shown.created), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
         if (shown.spoilerText.isNotEmpty()) {
-          Text(shown.spoilerText, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+          Text(translation?.spoilerText?.takeIf { it.isNotEmpty() } ?: shown.spoilerText, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
           OutlinedButton(onClick = { revealed = !revealed }) {
             Text(stringResource(if (revealed) R.string.show_less else R.string.show_more))
           }
         }
         if (shown.spoilerText.isEmpty() || revealed) {
-          val text = remember(shown.content, linkColor) { richText(shown.content, linkColor) { nav.link(shown, it, context) } }
+          val content = translation?.content ?: shown.content
+          val text = remember(content, linkColor) { richText(content, linkColor) { nav.link(shown, it, context) } }
           if (text.isNotEmpty()) {
             Text(text, style = if (focused) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal) else MaterialTheme.typography.bodyLarge)
           }
+        }
+        if (canTranslate) {
+          TranslationLine(
+            translating, translation?.let { languageName(it.detectedSourceLanguage.ifEmpty { source!! }, appLocale) }, translateError,
+            onTranslate = { translate() }, onShowOriginal = { model.showingOriginal[shown.id] = true },
+          )
         }
         if (shown.mediaAttachments.isNotEmpty()) MediaGrid(shown.mediaAttachments, shown.sensitive)
         shown.poll?.let { poll ->
@@ -231,6 +271,33 @@ fun StatusRow(
     )
   }
 }
+
+/** "Translate", "Translating…", or where the translation comes from with the way back to the original. */
+@Composable
+private fun TranslationLine(translating: Boolean, translatedFrom: String?, error: String?, onTranslate: () -> Unit, onShowOriginal: () -> Unit) {
+  val muted = MaterialTheme.colorScheme.onSurfaceVariant
+  @Composable
+  fun Link(label: String, onClick: () -> Unit) = Text(
+    label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+    modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable(role = Role.Button, onClick = onClick).padding(vertical = 4.dp),
+  )
+
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    when {
+      translating -> Text(stringResource(R.string.translating), style = MaterialTheme.typography.labelLarge, color = muted, modifier = Modifier.padding(vertical = 4.dp))
+      translatedFrom != null -> {
+        Text(stringResource(R.string.translated_from, translatedFrom), style = MaterialTheme.typography.bodySmall, color = muted, modifier = Modifier.weight(1f, fill = false))
+        Link(stringResource(R.string.show_original), onShowOriginal)
+      }
+      else -> Link(stringResource(R.string.translate), onTranslate)
+    }
+  }
+  error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+}
+
+/** A language's name in the app's language ("German" for "de"). */
+private fun languageName(code: String, locale: Locale): String =
+  Locale.forLanguageTag(code).getDisplayLanguage(locale).ifEmpty { code }
 
 @Composable
 private fun MoreMenu(status: Status, isMine: Boolean, onEdit: () -> Unit, onDelete: () -> Unit) {
@@ -338,7 +405,11 @@ fun MediaGrid(media: List<MediaAttachment>, sensitive: Boolean) {
   }
 
   if (media.size == 1) {
-    Tile(0, Modifier.fillMaxWidth().heightIn(max = 320.dp).aspectRatio(media[0].aspectRatio?.coerceIn(0.6f, 2.5f) ?: 1.5f))
+    // A box of known height: tall pictures are cropped to it, never drawn past it over the actions.
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+      val ratio = media[0].aspectRatio ?: 1.5f
+      Tile(0, Modifier.fillMaxWidth().height((maxWidth / ratio).coerceIn(120.dp, 360.dp)))
+    }
   } else {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
       for (row in media.indices.chunked(2)) {
@@ -349,12 +420,13 @@ fun MediaGrid(media: List<MediaAttachment>, sensitive: Boolean) {
       }
     }
   }
-  viewing?.let { start -> MediaViewer(media, start) { viewing = null } }
+  viewing?.let { start -> MediaViewer(media, start, onClose = { viewing = null }) }
 }
 
+/** Pictures full screen, swiping between them; `actions` draws a bar at the bottom for the page shown. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit) {
+fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit, actions: (@Composable (page: Int) -> Unit)? = null) {
   val context = LocalContext.current
   Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
     Box(Modifier.fillMaxSize().background(Color.Black)) {
@@ -372,6 +444,14 @@ fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit) {
       CompositionLocalProvider(LocalContentColor provides Color.White) {
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopStart).padding(top = 32.dp, start = 8.dp)) {
           Icon(Icons.Filled.Close, stringResource(R.string.close))
+        }
+        if (actions != null) {
+          Row(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = 0.6f))
+              .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+          ) { actions(pager.currentPage) }
         }
       }
     }
