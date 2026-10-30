@@ -5,6 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=disbigle
+# The bergamot package keeps its own cache and settings in the home directory.
+Environment=HOME=/var/lib/disbigle/translator
 Environment=TRANSLATOR_MODELS=/var/lib/disbigle/translator/models
 Environment=TRANSLATOR_PORT=5100
 ExecStart=/opt/disbigle/translator-venv/bin/python /opt/disbigle/apps/translator/server.py
