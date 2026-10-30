@@ -715,7 +715,8 @@
       "domains": "Domini bloccati",
       "instance": "Istanza",
       "federation": "Federazione",
-      "users": "Iscritti"
+      "users": "Iscritti",
+      "groups": "Gruppi"
     },
     "roles": {
       "user": "Utente",
@@ -964,6 +965,24 @@
         "disabled": "Disattivato",
         "deleting": "In cancellazione"
       }
+    },
+    "groups": {
+      "description": "Tutti i gruppi di questo server, compresi quelli segreti. I gruppi segreti restano chiusi: li aprono solo i loro membri.",
+      "search": "Cerca gruppi",
+      "searchPlaceholder": "Nome o indirizzo",
+      "noMatch": "Nessun gruppo corrisponde a “{{query}}”.",
+      "empty": "Ancora nessun gruppo.",
+      "count_one": "{{count}} gruppo",
+      "count_other": "{{count}} gruppi",
+      "created": "Creato il",
+      "creator": "Da",
+      "members": "Membri",
+      "membersSplit": "{{local}} qui + {{remote}} fuori",
+      "requests": "Richieste",
+      "invitations": "Inviti",
+      "posts": "Post",
+      "lastPost": "Ultimo post",
+      "never": "Mai"
     }
   },
   "poll": {

@@ -85,7 +85,7 @@ function Stat({
   label: string;
   value: number;
   note?: ReactNode;
-  to?: '/admin/users';
+  to?: '/admin/users' | '/admin/groups';
 }) {
   const { i18n } = useTranslation();
   const body = (
@@ -156,7 +156,7 @@ function Numbers({ data }: { data: AdminDashboard }) {
         value={federation.instances}
         note={t('admin.dashboard.remoteAccounts', { count: federation.remoteAccounts })}
       />
-      <Stat label={t('admin.dashboard.groups')} value={content.groups} />
+      <Stat label={t('admin.dashboard.groups')} value={content.groups} to="/admin/groups" />
       <Stat label={t('admin.dashboard.remoteFollowers')} value={federation.remoteFollowers} />
       <Stat label={t('admin.dashboard.remoteFollowing')} value={federation.remoteFollowing} />
       <Stat label={t('admin.dashboard.suspended')} value={users.suspended} />

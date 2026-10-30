@@ -1,3 +1,5 @@
+import { schema } from '@disbigle/db';
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { Client, newUser, useTestApp } from './helpers.ts';
 
@@ -70,5 +72,46 @@ describe('admin dashboard', () => {
     const user = await signUp();
     expect((await user.client.get('/api/v1/admin/dashboard')).statusCode).toBe(403);
     expect((await user.client.get('/api/v1/admin/users')).statusCode).toBe(403);
+  });
+
+  it('lists every group for administrators, secret ones too', async () => {
+    const admin = await signUp();
+    const user = await signUp();
+    // The first account of this file is the administrator; this one is made one.
+    await app
+      .ctx()
+      .db.update(schema.users)
+      .set({ role: 'admin' })
+      .where(eq(schema.users.email, admin.user.email));
+    const club = (
+      await user.client.post('/api/v1/groups', {
+        name: 'Club',
+        handle: 'adm_club',
+        privacy: 'public',
+      })
+    ).json();
+    await user.client.post('/api/v1/groups', {
+      name: 'Hidden',
+      handle: 'adm_hidden',
+      privacy: 'secret',
+    });
+    await admin.client.post(`/api/v1/groups/${club.id}/join`);
+    await user.client.post('/api/v1/statuses', { content: 'Hi', groupId: club.id });
+
+    const list = (await admin.client.get('/api/v1/admin/groups')).json();
+    expect(list.map((g: { handle: string }) => g.handle)).toEqual(['adm_hidden', 'adm_club']);
+    expect(list[1]).toMatchObject({
+      name: 'Club',
+      privacy: 'public',
+      creatorUsername: user.user.username,
+      localMembers: 2,
+      remoteMembers: 0,
+      posts: 1,
+    });
+    expect(list[1].lastPostAt).not.toBeNull();
+    expect(list[0]).toMatchObject({ privacy: 'secret', localMembers: 1, posts: 0 });
+    const found = (await admin.client.get('/api/v1/admin/groups?q=hidd')).json();
+    expect(found.map((g: { handle: string }) => g.handle)).toEqual(['adm_hidden']);
+    expect((await user.client.get('/api/v1/admin/groups')).statusCode).toBe(403);
   });
 });

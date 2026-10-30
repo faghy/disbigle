@@ -733,7 +733,8 @@
       "domains": "Dominios bloqueados",
       "instance": "Instancia",
       "federation": "Federación",
-      "users": "Usuarios"
+      "users": "Usuarios",
+      "groups": "Grupos"
     },
     "roles": {
       "user": "Usuario",
@@ -985,6 +986,24 @@
         "disabled": "Desactivada",
         "deleting": "Borrándose"
       }
+    },
+    "groups": {
+      "description": "Todos los grupos de este servidor, también los secretos. Los grupos secretos siguen cerrados: solo los abren sus miembros.",
+      "search": "Buscar grupos",
+      "searchPlaceholder": "Nombre o dirección",
+      "noMatch": "Ningún grupo coincide con «{{query}}».",
+      "empty": "Aún no hay grupos.",
+      "count_one": "{{count}} grupo",
+      "count_other": "{{count}} grupos",
+      "created": "Creado el",
+      "creator": "Por",
+      "members": "Miembros",
+      "membersSplit": "{{local}} aquí + {{remote}} fuera",
+      "requests": "Solicitudes",
+      "invitations": "Invitaciones",
+      "posts": "Publicaciones",
+      "lastPost": "Última publicación",
+      "never": "Nunca"
     }
   },
   "poll": {

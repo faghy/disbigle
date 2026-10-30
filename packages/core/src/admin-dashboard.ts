@@ -2,8 +2,17 @@ import { schema } from '@disbigle/db';
 import { and, desc, eq, gte, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { type CoreContext, lastDays } from './context.ts';
 
-const { users, actors, sessions, oauthAccessTokens, webauthnCredentials, follows, posts, groups } =
-  schema;
+const {
+  users,
+  actors,
+  sessions,
+  oauthAccessTokens,
+  webauthnCredentials,
+  follows,
+  posts,
+  groups,
+  groupMembers,
+} = schema;
 
 /** Federation traffic metrics kept in `ctx.counters`: activities received and failed deliveries. */
 export const federationMetrics = {
@@ -253,5 +262,50 @@ export async function listUsersForAdmin(
     suspended: suspendedAt !== null,
     disabled: disabledAt !== null,
     deletionRequested: deletionRequestedAt !== null,
+  }));
+}
+
+/** Every group of this server, secret ones included, with what an administrator needs to know. */
+export async function listGroupsForAdmin(ctx: CoreContext, options: { query?: string } = {}) {
+  const term = options.query ? `%${options.query.replace(/[%_\\]/g, (c) => `\\${c}`)}%` : null;
+  const members = (state: 'member' | 'requested' | 'invited', where = sql`true`) =>
+    sql<number>`(select count(*)::int from ${groupMembers} gm
+      inner join ${actors} ma on ma.id = gm.actor_id
+      where gm.group_id = ${groups.id} and gm.state = ${state} and ${where})`;
+  const rows = await ctx.db
+    .select({
+      id: groups.id,
+      handle: actors.username,
+      name: actors.displayName,
+      avatarUrl: actors.avatarUrl,
+      description: actors.summary,
+      privacy: groups.privacy,
+      createdAt: groups.createdAt,
+      creatorUsername: sql<
+        string | null
+      >`(select username from ${actors} c where c.id = ${groups.createdById})`,
+      creatorName: sql<
+        string | null
+      >`(select display_name from ${actors} c where c.id = ${groups.createdById})`,
+      localMembers: members('member', sql`ma.domain is null`),
+      remoteMembers: members('member', sql`ma.domain is not null`),
+      requests: members('requested'),
+      invitations: members('invited'),
+      posts: sql<number>`(select count(*)::int from ${posts} where ${posts.groupId} = ${groups.id})`,
+      lastPostAt: sql<
+        string | null
+      >`(select max(${posts.createdAt}) from ${posts} where ${posts.groupId} = ${groups.id})`,
+      suspended: sql<boolean>`${actors.suspendedAt} is not null`,
+    })
+    .from(groups)
+    .innerJoin(actors, eq(actors.id, groups.actorId))
+    .where(term ? or(ilike(actors.username, term), ilike(actors.displayName, term)) : undefined)
+    .orderBy(desc(groups.createdAt))
+    .limit(500);
+  const iso = (value: Date | string | null) => (value ? new Date(value).toISOString() : null);
+  return rows.map((row) => ({
+    ...row,
+    createdAt: iso(row.createdAt) as string,
+    lastPostAt: iso(row.lastPostAt),
   }));
 }

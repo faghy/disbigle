@@ -715,7 +715,8 @@
       "domains": "Domain blocks",
       "instance": "Instance",
       "federation": "Federation",
-      "users": "People"
+      "users": "People",
+      "groups": "Groups"
     },
     "roles": {
       "user": "User",
@@ -964,6 +965,24 @@
         "disabled": "Disabled",
         "deleting": "Being deleted"
       }
+    },
+    "groups": {
+      "description": "Every group on this server, secret ones included. Secret groups stay closed: only their members can open them.",
+      "search": "Search groups",
+      "searchPlaceholder": "Name or address",
+      "noMatch": "No group matches “{{query}}”.",
+      "empty": "No groups yet.",
+      "count_one": "{{count}} group",
+      "count_other": "{{count}} groups",
+      "created": "Created",
+      "creator": "By",
+      "members": "Members",
+      "membersSplit": "{{local}} here + {{remote}} elsewhere",
+      "requests": "Requests",
+      "invitations": "Invitations",
+      "posts": "Posts",
+      "lastPost": "Last post",
+      "never": "Never"
     }
   },
   "poll": {

@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { AdminDashboard, AdminUser } from '../../api/admin.ts';
 import { withRole } from '../../test/fixtures.ts';
@@ -148,5 +149,69 @@ describe('admin dashboard', () => {
     expect(router.state.location.pathname).toBe('/admin/pending');
     expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/admin/users'))).toBe(false);
+  });
+
+  it('opens the list of all groups from the overview', async () => {
+    mockApi({
+      'GET /me': { body: withRole('admin') },
+      'GET /instance': instance(),
+      'GET /admin/summary': { body: { pendingUsers: 0, openReports: 0 } },
+      'GET /admin/dashboard': { body: dashboard },
+      'GET /admin/users': { body: [] },
+      'GET /admin/groups': {
+        body: [
+          {
+            id: 'g1',
+            handle: 'beatles',
+            name: 'Beatles',
+            avatarUrl: null,
+            description: 'Liverpool',
+            privacy: 'public',
+            createdAt: '2026-10-30T07:16:39.768Z',
+            creatorUsername: 'faghy',
+            creatorName: 'Faghy',
+            localMembers: 2,
+            remoteMembers: 1,
+            requests: 0,
+            invitations: 0,
+            posts: 5,
+            lastPostAt: '2026-10-30T09:00:00.000Z',
+            suspended: false,
+          },
+          {
+            id: 'g2',
+            handle: 'hidden',
+            name: 'Hidden',
+            avatarUrl: null,
+            description: '',
+            privacy: 'secret',
+            createdAt: '2026-10-29T07:16:39.768Z',
+            creatorUsername: 'faghy',
+            creatorName: 'Faghy',
+            localMembers: 1,
+            remoteMembers: 0,
+            requests: 0,
+            invitations: 1,
+            posts: 0,
+            lastPostAt: null,
+            suspended: false,
+          },
+        ],
+      },
+    });
+    const { router } = renderApp('/admin/dashboard');
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('link', { name: /Groups\s*4/ }));
+    expect(router.state.location.pathname).toBe('/admin/groups');
+    const list = await screen.findByRole('list', { name: 'Groups' });
+    expect(within(list).getByRole('link', { name: 'Beatles' })).toHaveAttribute(
+      'href',
+      '/groups/beatles',
+    );
+    expect(within(list).getByText('Public group')).toBeInTheDocument();
+    expect(within(list).getByText('2 here + 1 elsewhere')).toBeInTheDocument();
+    // Secret groups are listed but not opened.
+    expect(within(list).getByText('Hidden')).toBeInTheDocument();
+    expect(within(list).queryByRole('link', { name: 'Hidden' })).not.toBeInTheDocument();
   });
 });

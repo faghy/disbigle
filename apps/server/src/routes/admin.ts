@@ -10,6 +10,7 @@ import {
   instanceSettingsPatchSchema,
   listAccountsForAdmin,
   listDomainBlocks,
+  listGroupsForAdmin,
   listKnownInstances,
   listPendingUsers,
   listReports,
@@ -79,6 +80,11 @@ export async function adminRoutes(
       request.query,
     );
     return listUsersForAdmin(ctx, { ...query, ...(query.q ? { query: query.q } : {}) });
+  });
+  app.get('/groups', async (request) => {
+    requireAdmin(request);
+    const { q } = parse(z.object({ q: z.string().trim().max(200).optional() }), request.query);
+    return listGroupsForAdmin(ctx, q ? { query: q } : {});
   });
 
   app.get('/summary', async (request) => {

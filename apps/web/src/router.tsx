@@ -13,6 +13,7 @@ import { fullNavigation, safeRedirect } from './lib/redirect.ts';
 import { AboutPage } from './pages/About.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
+import { AdminGroupsPage } from './pages/admin/AdminGroups.tsx';
 import { AdminLayout } from './pages/admin/AdminLayout.tsx';
 import { DashboardPage } from './pages/admin/Dashboard.tsx';
 import { DomainBlocksPage } from './pages/admin/DomainBlocks.tsx';
@@ -329,6 +330,13 @@ const adminDashboardRoute = createRoute({
   component: DashboardPage,
 });
 
+const adminGroupsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/groups',
+  beforeLoad: adminsOnly,
+  component: AdminGroupsPage,
+});
+
 const adminUsersRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/users',
@@ -430,6 +438,7 @@ export const routeTree = rootRoute.addChildren([
     adminIndexRoute,
     adminDashboardRoute,
     adminUsersRoute,
+    adminGroupsRoute,
     adminPendingRoute,
     adminReportsRoute,
     adminAccountsRoute,

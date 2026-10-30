@@ -50,9 +50,14 @@ export function AdminLayout() {
           <Count value={summary.data?.openReports} />
         </Link>
         {user?.role === 'admin' && (
-          <Link to="/admin/users" className={tabClass}>
-            {t('admin.tabs.users')}
-          </Link>
+          <>
+            <Link to="/admin/users" className={tabClass}>
+              {t('admin.tabs.users')}
+            </Link>
+            <Link to="/admin/groups" className={tabClass}>
+              {t('admin.tabs.groups')}
+            </Link>
+          </>
         )}
         <Link to="/admin/accounts" className={tabClass}>
           {t('admin.tabs.accounts')}

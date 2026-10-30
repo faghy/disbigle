@@ -2,6 +2,7 @@ import type {
   AdminAccount,
   CurrentUser,
   DomainBlock,
+  GroupPrivacy,
   InstanceSettings,
   KnownInstance,
   PendingUser,
@@ -109,11 +110,33 @@ export interface AdminUser {
   deletionRequested: boolean;
 }
 
+/** `GET /admin/groups`: a group of this server, as administrators see it. */
+export interface AdminGroup {
+  id: string;
+  handle: string;
+  name: string;
+  avatarUrl: string | null;
+  description: string;
+  privacy: GroupPrivacy;
+  createdAt: string;
+  creatorUsername: string | null;
+  creatorName: string | null;
+  localMembers: number;
+  remoteMembers: number;
+  requests: number;
+  invitations: number;
+  posts: number;
+  lastPostAt: string | null;
+  suspended: boolean;
+}
+
 type Ok = { status: 'ok' };
 const id = (value: string) => encodeURIComponent(value);
 
 export const admin = {
   dashboard: () => api.get<AdminDashboard>('/admin/dashboard'),
+  groups: (q?: string) =>
+    api.get<AdminGroup[]>(`/admin/groups${queryString({ q: q || undefined })}`),
   users: (q?: string) =>
     api.get<AdminUser[]>(`/admin/users${queryString({ q: q || undefined, limit: 500 })}`),
   summary: () => api.get<ModerationSummary>('/admin/summary'),
@@ -145,6 +168,7 @@ export const adminKeys = {
   summary: ['admin', 'summary'] as const,
   dashboard: ['admin', 'dashboard'] as const,
   users: (q: string) => ['admin', 'users', q] as const,
+  groups: (q: string) => ['admin', 'groups', q] as const,
   pending: ['admin', 'pending'] as const,
   reports: (resolved: boolean) => ['admin', 'reports', resolved] as const,
   accounts: (filter: AdminAccountFilter) => ['admin', 'accounts', filter] as const,
