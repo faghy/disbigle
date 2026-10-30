@@ -16,6 +16,8 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
+# Each model folder gets the engine configuration written next to it.
+ReadWritePaths=/var/lib/disbigle/translator
 
 [Install]
 WantedBy=multi-user.target
