@@ -16,6 +16,7 @@ REGISTRY = (
     "https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data"
     "/db/models.json"
 )
+RELEASES = ("Release", "Release Desktop", "Release Android")
 
 
 def fetch(url: str) -> bytes:
@@ -33,13 +34,15 @@ def main():
     base = registry["baseUrl"]
     for language in args.languages:
         for pair in (f"{language}-en", f"en-{language}"):
-            releases = [
-                m for m in registry["models"].get(pair, []) if m.get("releaseStatus") == "Release"
-            ]
-            if not releases:
+            # "Release" models are in every Firefox; some pairs only have desktop or Android ones.
+            candidates = registry["models"].get(pair, [])
+            model = next(
+                (m for status in RELEASES for m in candidates if m.get("releaseStatus") == status),
+                None,
+            )
+            if model is None:
                 print(f"{pair}: no released model, skipped")
                 continue
-            model = releases[0]
             directory = os.path.join(args.models, pair)
             os.makedirs(directory, exist_ok=True)
             for kind, file in model["files"].items():
