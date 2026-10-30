@@ -6,6 +6,7 @@ import { mastodonErrorHandler, parseFormBody } from './http.ts';
 import { oauthRoutes } from './oauth/routes.ts';
 import type { Deps, MastodonApiOptions } from './options.ts';
 import { accountRoutes } from './routes/accounts.ts';
+import { albumRoutes } from './routes/albums.ts';
 import { filterRoutes } from './routes/filters.ts';
 import { instanceRoutes } from './routes/instance.ts';
 import { listRoutes } from './routes/lists.ts';
@@ -100,6 +101,7 @@ export async function mastodonApi(app: FastifyInstance, opts: MastodonApiOptions
 
   await oauthRoutes(app, deps);
   await accountRoutes(app, deps);
+  await albumRoutes(app, deps);
   await statusRoutes(app, deps);
   await notificationRoutes(app, deps);
   await listRoutes(app, deps);
