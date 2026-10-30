@@ -1,9 +1,11 @@
 import {
+  adminDashboardStats,
   approveUser,
   blockDomain,
   type CoreContext,
   countOpenModerationItems,
   createReport,
+  federationTraffic,
   getInstanceSettings,
   instanceSettingsPatchSchema,
   listAccountsForAdmin,
@@ -11,6 +13,7 @@ import {
   listKnownInstances,
   listPendingUsers,
   listReports,
+  listUsersForAdmin,
   rejectUser,
   resolveReport,
   setUserRole,
@@ -20,9 +23,11 @@ import {
   updateInstanceSettings,
 } from '@disbigle/core';
 import type { FastifyInstance } from 'fastify';
+import type { Redis } from 'ioredis';
 import { z } from 'zod';
 import { parse } from '../http.ts';
 import { requireAdmin, requireModerator, requireUser } from '../plugins/auth.ts';
+import { serverHealth } from '../server-health.ts';
 
 const idParams = z.object({ id: z.uuid() });
 const reportCategories = ['spam', 'illegal', 'harassment', 'violation', 'other'] as const;
@@ -49,7 +54,33 @@ export async function reportRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
 }
 
 /** Moderation API under `/api/v1/admin`. */
-export async function adminRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
+export async function adminRoutes(
+  app: FastifyInstance,
+  { ctx, redis }: { ctx: CoreContext; redis?: Redis | undefined },
+) {
+  // The dashboard shows email addresses and server internals: administrators only.
+  app.get('/dashboard', async (request) => {
+    requireAdmin(request);
+    const [stats, federation, server] = await Promise.all([
+      adminDashboardStats(ctx),
+      federationTraffic(ctx),
+      serverHealth(ctx, redis),
+    ]);
+    return { ...stats, traffic: federation, server, generatedAt: new Date().toISOString() };
+  });
+  app.get('/users', async (request) => {
+    requireAdmin(request);
+    const query = parse(
+      z.object({
+        q: z.string().trim().max(200).optional(),
+        limit: z.coerce.number().int().min(1).max(500).default(100),
+        offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
+      }),
+      request.query,
+    );
+    return listUsersForAdmin(ctx, { ...query, ...(query.q ? { query: query.q } : {}) });
+  });
+
   app.get('/summary', async (request) => {
     requireModerator(request);
     return countOpenModerationItems(ctx);

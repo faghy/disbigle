@@ -1,6 +1,11 @@
 import { createDisbigleFederation, federationOrigin } from '@disbigle/activitypub';
 import type { Config } from '@disbigle/config';
-import { type CoreContext, MemoryKeyValueStore, MemoryMailer } from '@disbigle/core';
+import {
+  type CoreContext,
+  MemoryDailyCounters,
+  MemoryKeyValueStore,
+  MemoryMailer,
+} from '@disbigle/core';
 import { createTestDatabase } from '@disbigle/db/testing';
 import { MemoryKvStore } from '@fedify/fedify';
 import type { FastifyInstance, InjectOptions, LightMyRequestResponse } from 'fastify';
@@ -41,6 +46,7 @@ export function useTestApp(
       db: testDb.db,
       config: { ...testConfig, ...overrides },
       kv: new MemoryKeyValueStore(),
+      counters: new MemoryDailyCounters(),
       rsaKeyBits: 1024,
     };
     core = ctx;

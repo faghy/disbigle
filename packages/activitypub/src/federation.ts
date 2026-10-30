@@ -36,6 +36,7 @@ import {
   type InboxContext,
   type KvStore,
   type MessageQueue,
+  SendActivityError,
 } from '@fedify/fedify';
 import {
   Accept,
@@ -88,6 +89,8 @@ export interface FederationOptions {
   manuallyStartQueue?: boolean;
   /** Split domain: handles on one host, the app on another. See {@link federationOrigin}. */
   origin?: { handleHost: string; webOrigin: string };
+  /** Called for each failed delivery, with the receiving server when it is known. */
+  onDeliveryFailure?: (host: string | null) => void | Promise<void>;
 }
 
 /**
@@ -217,6 +220,14 @@ export function createDisbigleFederation(options: FederationOptions): Federation
     manuallyStartQueue: options.manuallyStartQueue ?? false,
     ...(options.origin ? { origin: options.origin } : {}),
     userAgent: { software: `Disbigle/${SOFTWARE_VERSION}` },
+    ...(options.onDeliveryFailure
+      ? {
+          onOutboxError: (error: Error) =>
+            options.onDeliveryFailure?.(
+              error instanceof SendActivityError ? error.inbox.host : null,
+            ),
+        }
+      : {}),
   });
 
   federation

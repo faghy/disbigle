@@ -37,10 +37,85 @@ export interface DomainBlockRequest {
 
 export type RegistrationMode = InstanceSettings['registrationMode'];
 
+/** One count per UTC day, oldest first. */
+export interface DailyCount {
+  day: string;
+  count: number;
+}
+
+/** `GET /admin/dashboard` (administrators only). */
+export interface AdminDashboard {
+  users: {
+    total: number;
+    pending: number;
+    suspended: number;
+    active: { day: number; week: number; month: number };
+    new: { week: number; month: number };
+  };
+  content: { localPosts: number; remotePosts: number; groups: number };
+  federation: {
+    remoteAccounts: number;
+    instances: number;
+    remoteFollowers: number;
+    remoteFollowing: number;
+  };
+  daily: { signups: DailyCount[]; localPosts: DailyCount[]; remotePosts: DailyCount[] };
+  traffic: {
+    counting: boolean;
+    daily: { received: DailyCount[]; rejected: DailyCount[]; failed: DailyCount[] };
+    servers: { domain: string; received: number; rejected: number; failedDeliveries: number }[];
+  };
+  server: {
+    host: {
+      cpus: number;
+      load: number[];
+      memoryTotal: number;
+      memoryFree: number;
+      uptimeSeconds: number;
+    };
+    process: { rss: number; heapUsed: number; uptimeSeconds: number; node: string };
+    disk: { total: number; free: number } | null;
+    databaseBytes: number | null;
+    redisBytes: number | null;
+    queues: {
+      activitypub: { waiting: number; retrying: number };
+      diaspora: { waiting: number; retrying: number; failed: number };
+    } | null;
+  };
+  generatedAt: string;
+}
+
+/** `GET /admin/users`: a local person, as administrators see them. */
+export interface AdminUser {
+  userId: string;
+  actorId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  email: string;
+  role: Role;
+  approved: boolean;
+  locale: string;
+  createdAt: string;
+  lastSignInAt: string | null;
+  lastActiveAt: string | null;
+  lastIp: string | null;
+  posts: number;
+  followers: number;
+  following: number;
+  twoFactor: boolean;
+  suspended: boolean;
+  disabled: boolean;
+  deletionRequested: boolean;
+}
+
 type Ok = { status: 'ok' };
 const id = (value: string) => encodeURIComponent(value);
 
 export const admin = {
+  dashboard: () => api.get<AdminDashboard>('/admin/dashboard'),
+  users: (q?: string) =>
+    api.get<AdminUser[]>(`/admin/users${queryString({ q: q || undefined, limit: 500 })}`),
   summary: () => api.get<ModerationSummary>('/admin/summary'),
   pending: () => api.get<PendingUser[]>('/admin/pending'),
   approve: (userId: string) => api.post<Ok>(`/admin/pending/${id(userId)}/approve`),
@@ -68,6 +143,8 @@ export const admin = {
 export const adminKeys = {
   all: ['admin'] as const,
   summary: ['admin', 'summary'] as const,
+  dashboard: ['admin', 'dashboard'] as const,
+  users: (q: string) => ['admin', 'users', q] as const,
   pending: ['admin', 'pending'] as const,
   reports: (resolved: boolean) => ['admin', 'reports', resolved] as const,
   accounts: (filter: AdminAccountFilter) => ['admin', 'accounts', filter] as const,

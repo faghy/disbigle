@@ -14,11 +14,13 @@ import { AboutPage } from './pages/About.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
 import { AdminLayout } from './pages/admin/AdminLayout.tsx';
+import { DashboardPage } from './pages/admin/Dashboard.tsx';
 import { DomainBlocksPage } from './pages/admin/DomainBlocks.tsx';
 import { FederationPage } from './pages/admin/Federation.tsx';
 import { InstanceSettingsPage } from './pages/admin/InstanceSettings.tsx';
 import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
+import { UsersPage } from './pages/admin/Users.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { GroupPage } from './pages/Group.tsx';
@@ -308,9 +310,30 @@ const adminRoute = createRoute({
 const adminIndexRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/',
-  beforeLoad: () => {
-    throw redirect({ to: '/admin/pending' });
+  // Administrators start from the overview, moderators from the waiting list.
+  beforeLoad: async ({ context }) => {
+    const me = await context.queryClient.ensureQueryData(meQueryOptions);
+    throw redirect({ to: isAdmin(me) ? '/admin/dashboard' : '/admin/pending' });
   },
+});
+
+const adminsOnly = async ({ context }: { context: { queryClient: QueryClient } }) => {
+  const me = await context.queryClient.ensureQueryData(meQueryOptions);
+  if (!isAdmin(me)) throw redirect({ to: '/admin/pending' });
+};
+
+const adminDashboardRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/dashboard',
+  beforeLoad: adminsOnly,
+  component: DashboardPage,
+});
+
+const adminUsersRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/users',
+  beforeLoad: adminsOnly,
+  component: UsersPage,
 });
 
 const adminPendingRoute = createRoute({
@@ -405,6 +428,8 @@ export const routeTree = rootRoute.addChildren([
   resetPasswordRoute,
   adminRoute.addChildren([
     adminIndexRoute,
+    adminDashboardRoute,
+    adminUsersRoute,
     adminPendingRoute,
     adminReportsRoute,
     adminAccountsRoute,

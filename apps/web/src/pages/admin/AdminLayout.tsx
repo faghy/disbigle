@@ -36,6 +36,11 @@ export function AdminLayout() {
         icon={ShieldIcon}
       />
       <nav aria-label={t('admin.sections')} className="flex flex-wrap gap-2">
+        {user?.role === 'admin' && (
+          <Link to="/admin/dashboard" className={tabClass}>
+            {t('admin.tabs.dashboard')}
+          </Link>
+        )}
         <Link to="/admin/pending" className={tabClass}>
           {t('admin.tabs.pending')}
           <Count value={summary.data?.pendingUsers} />
@@ -44,6 +49,11 @@ export function AdminLayout() {
           {t('admin.tabs.reports')}
           <Count value={summary.data?.openReports} />
         </Link>
+        {user?.role === 'admin' && (
+          <Link to="/admin/users" className={tabClass}>
+            {t('admin.tabs.users')}
+          </Link>
+        )}
         <Link to="/admin/accounts" className={tabClass}>
           {t('admin.tabs.accounts')}
         </Link>

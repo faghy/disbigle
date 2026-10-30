@@ -56,7 +56,7 @@ describe('moderation area', () => {
         return { body: { status: 'ok' } };
       },
     });
-    renderApp('/admin');
+    renderApp('/admin/pending');
     const user = userEvent.setup();
 
     expect(await screen.findByText('I run a diaspora pod')).toBeInTheDocument();

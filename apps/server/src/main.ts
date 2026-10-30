@@ -6,7 +6,7 @@ import {
   resolveRemoteAccount,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
-import { type CoreContext, PushPublisher } from '@disbigle/core';
+import { type CoreContext, PushPublisher, recordFailedDelivery } from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   chainResolvers,
@@ -23,7 +23,7 @@ import { DrizzleMastodonPushStore } from '@disbigle/mastodon-api/push-drizzle-st
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
-import { RedisKeyValueStore } from './kv.ts';
+import { RedisDailyCounters, RedisKeyValueStore } from './kv.ts';
 import { SmtpMailer } from './mailer.ts';
 import { RedisEventBus, StreamingHub, subscribeHubToRedis } from './streaming.ts';
 
@@ -32,13 +32,19 @@ const { db, close } = createDatabase(config.DATABASE_URL);
 const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
 
 const subscriber = new Redis(config.REDIS_URL);
-const ctx: CoreContext = { db, config, kv: new RedisKeyValueStore(redis) };
+const ctx: CoreContext = {
+  db,
+  config,
+  kv: new RedisKeyValueStore(redis),
+  counters: new RedisDailyCounters(redis),
+};
 const federation = createDisbigleFederation({
   kv: new RedisKvStore(redis),
   queue: new RedisMessageQueue(() => new Redis(config.REDIS_URL)),
   // The worker process can drain the queue instead: set RUN_FEDERATION_QUEUE=false here.
   manuallyStartQueue: process.env.RUN_FEDERATION_QUEUE === 'false',
   origin: federationOrigin(config),
+  onDeliveryFailure: (host) => recordFailedDelivery(ctx, host ?? 'unknown'),
 });
 const oauthStore = new DrizzleOAuthStore(db);
 const mastodonPushStore = new DrizzleMastodonPushStore(db);

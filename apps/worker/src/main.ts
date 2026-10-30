@@ -5,7 +5,12 @@ import {
   federationOrigin,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
-import { type CoreContext, LocalMediaStorage, PushPublisher } from '@disbigle/core';
+import {
+  type CoreContext,
+  LocalMediaStorage,
+  PushPublisher,
+  recordFailedDelivery,
+} from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   DbRelayableStore,
@@ -20,7 +25,7 @@ import { DrizzleMastodonPushStore } from '@disbigle/mastodon-api/push-drizzle-st
 import { RedisKvStore, RedisMessageQueue } from '@fedify/redis';
 import { Redis } from 'ioredis';
 import { scheduledJobs } from './jobs.ts';
-import { RedisKeyValueStore } from './kv.ts';
+import { RedisDailyCounters, RedisKeyValueStore } from './kv.ts';
 
 /**
  * Background process: drains the federation delivery queue and runs periodic maintenance.
@@ -35,12 +40,14 @@ const ctx: CoreContext = {
   db,
   config,
   kv: new RedisKeyValueStore(redis),
+  counters: new RedisDailyCounters(redis),
 };
 const federation = createDisbigleFederation({
   kv: new RedisKvStore(redis),
   queue: new RedisMessageQueue(() => new Redis(config.REDIS_URL)),
   manuallyStartQueue: true,
   origin: federationOrigin(config),
+  onDeliveryFailure: (host) => recordFailedDelivery(ctx, host ?? 'unknown'),
 });
 const publishChannel = new Redis(config.REDIS_URL);
 const diaspora = new DiasporaBridge({

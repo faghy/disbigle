@@ -861,9 +861,7 @@ function GroupImages({ group }: { group: Group }) {
           <div key={kind} className="flex flex-wrap items-center gap-3">
             <span className="w-full sm:w-60">
               <span className="block text-sm font-medium">{t(`groups.image.${kind}`)}</span>
-              <span className="block text-xs text-fg-muted">
-                {t(`groups.image.${kind}Size`)}
-              </span>
+              <span className="block text-xs text-fg-muted">{t(`groups.image.${kind}Size`)}</span>
             </span>
             <label className={buttonClass('secondary', 'cursor-pointer')}>
               {current ? t('groups.image.change') : t('groups.image.choose')}

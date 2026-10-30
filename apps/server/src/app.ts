@@ -8,6 +8,7 @@ import {
   type Mailer,
   type MediaStorage,
   MemoryMailer,
+  recordInboundActivity,
 } from '@disbigle/core';
 import { type MastodonPushStore, mastodonApi, type OAuthStore } from '@disbigle/mastodon-api';
 import { DrizzleOAuthStore } from '@disbigle/mastodon-api/drizzle-store';
@@ -78,6 +79,21 @@ export interface AppOptions {
   disableRegistrationGuard?: boolean;
 }
 
+/** POSTs that deliver activities: ActivityPub inboxes and diaspora* receive endpoints. */
+const isInboxDelivery = (url: string) => /^\/(inbox|users\/[^/?]+\/inbox|receive\/)/.test(url);
+
+/** The sending server of a signed delivery, from the HTTP signature's key id. */
+function senderDomain(headers: Record<string, string | string[] | undefined>, url: string) {
+  if (url.startsWith('/receive/')) return 'diaspora*';
+  const signature = [headers.signature, headers['signature-input']].flat().join(' ');
+  const keyId = /keyid="([^"]+)"/i.exec(signature)?.[1];
+  try {
+    return keyId ? new URL(keyId).host.toLowerCase() : 'unsigned';
+  } catch {
+    return 'unsigned';
+  }
+}
+
 const isFederationEndpoint = (url: string) =>
   /^\/(inbox|receive\/|users\/[^/]+\/inbox|\.well-known\/|nodeinfo|users\/|hcard\/|fetch\/)/.test(
     url,
@@ -120,6 +136,15 @@ export async function buildApp(options: AppOptions) {
       ...(redis ? { redis, nameSpace: 'disbigle:ratelimit:' } : {}),
     });
   }
+  // Count deliveries to our inboxes, per sending server, for the admin dashboard.
+  app.addHook('onResponse', async (request, reply) => {
+    if (request.method !== 'POST' || !isInboxDelivery(request.url)) return;
+    await recordInboundActivity(
+      ctx,
+      senderDomain(request.headers, request.url),
+      reply.statusCode < 400,
+    ).catch(() => {});
+  });
   if (options.federation) {
     await app.register(fedifyPlugin, {
       federation: options.federation,
@@ -216,7 +241,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(pushRoutes, { ctx, prefix: '/push' });
       await api.register(inviteRoutes, { ctx, prefix: '/invites' });
       await api.register(filterRoutes, { ctx, prefix: '/filters' });
-      await api.register(adminRoutes, { ctx, prefix: '/admin' });
+      await api.register(adminRoutes, { ctx, redis, prefix: '/admin' });
       await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
       await api.register(groupRoutes, { ctx, mediaCtx, prefix: '/groups' });
       if (options.federation) {
