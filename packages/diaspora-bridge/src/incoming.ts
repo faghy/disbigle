@@ -506,6 +506,8 @@ export async function applyEntity(
       if (!(await comment(bridge, entity, author, parent, recipient, sender))) return;
       const stored = await findPostByGuid(ctx, entity.guid);
       await storeRelayable(bridge, entity, { postId: stored?.id ?? null });
+      // Waiting for a group's moderators: relayed once approved.
+      if (stored?.pendingApproval) return;
       return relay(bridge, entity, await threadRootOf(ctx, parent), author.id);
     }
     case 'Like':

@@ -257,6 +257,9 @@ export const groupNotificationTypes: NotificationType[] = [
   'group_request',
   'group_invite',
   'group_accepted',
+  'group_post_pending',
+  'group_post_approved',
+  'group_post_rejected',
 ];
 
 /** Our notification types as Mastodon types: a reply is a mention, a like a favourite. */
@@ -269,6 +272,9 @@ export function mapNotificationType(type: NotificationType): MNotificationType {
     case 'group_request':
     case 'group_invite':
     case 'group_accepted':
+    case 'group_post_pending':
+    case 'group_post_approved':
+    case 'group_post_rejected':
       // Never sent to apps (see groupNotificationTypes); a mention is the closest kind.
       return 'mention';
     default:

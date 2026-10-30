@@ -406,4 +406,126 @@ describe('groups', () => {
     const found = (await owner.client.get(`/api/v1/search/accounts?q=${group.handle}`)).json();
     expect(found).toEqual([]);
   });
+
+  it('lets a public group approve its new members', async () => {
+    const owner = await signedIn();
+    const fan = await signedIn();
+    const reader = new Client(app);
+    const group = await createGroup(owner.client, 'public');
+    const updated = await owner.client.patch(`/api/v1/groups/${group.id}`, { joinApproval: true });
+    expect(updated.json()).toMatchObject({ joinApproval: true, postApproval: false });
+
+    const joined = (await fan.client.post(`/api/v1/groups/${group.id}/join`)).json();
+    expect(joined.membership).toMatchObject({ state: 'requested' });
+    const requests = (
+      await owner.client.get(`/api/v1/groups/${group.id}/members?state=requested`)
+    ).json();
+    expect(requests.map((m: { account: { id: string } }) => m.account.id)).toEqual([
+      fan.account.id,
+    ]);
+    await owner.client.post(`/api/v1/groups/${group.id}/members/${fan.account.id}/approve`);
+    expect((await fan.client.get(`/api/v1/groups/${group.id}`)).json().membership).toMatchObject({
+      state: 'member',
+    });
+    // Still a public group: anyone reads it.
+    await owner.client.post('/api/v1/statuses', {
+      content: 'Open to all readers',
+      groupId: group.id,
+    });
+    const timeline = (await reader.get(`/api/v1/groups/${group.id}/timeline`)).json();
+    expect(timeline).toHaveLength(1);
+  });
+
+  it('holds posts and comments for a moderator when the group approves posts', async () => {
+    const owner = await signedIn();
+    const fan = await signedIn();
+    const other = await signedIn();
+    const group = await createGroup(owner.client, 'public');
+    await owner.client.patch(`/api/v1/groups/${group.id}`, { postApproval: true });
+    await fan.client.post(`/api/v1/groups/${group.id}/join`);
+    await other.client.post(`/api/v1/groups/${group.id}/join`);
+
+    // A member's post waits: its author sees it, marked; nobody else does.
+    const post = (
+      await fan.client.post('/api/v1/statuses', {
+        content: `Ciao @${other.account.username}`,
+        groupId: group.id,
+      })
+    ).json();
+    expect(post.pendingApproval).toBe(true);
+    expect(ids((await fan.client.get(`/api/v1/groups/${group.id}/timeline`)).json())).toEqual([
+      post.id,
+    ]);
+    expect((await other.client.get(`/api/v1/groups/${group.id}/timeline`)).json()).toEqual([]);
+    expect((await other.client.get(`/api/v1/statuses/${post.id}`)).statusCode).toBe(404);
+    const otherNotes = (await other.client.get('/api/v1/notifications')).json();
+    expect(otherNotes.some((n: { type: string }) => n.type === 'mention')).toBe(false);
+
+    // Moderators find it apart, with a notification, and approve it.
+    const ownerNotes = (await owner.client.get('/api/v1/notifications')).json();
+    expect(ownerNotes[0]).toMatchObject({ type: 'group_post_pending', status: { id: post.id } });
+    expect((await owner.client.get(`/api/v1/groups/${group.id}`)).json().pendingPostsCount).toBe(1);
+    expect(ids((await owner.client.get(`/api/v1/groups/${group.id}/pending`)).json())).toEqual([
+      post.id,
+    ]);
+    expect((await fan.client.get(`/api/v1/groups/${group.id}/pending`)).statusCode).toBe(403);
+    await owner.client.post(`/api/v1/statuses/${post.id}/approve`);
+    expect(ids((await other.client.get(`/api/v1/groups/${group.id}/timeline`)).json())).toEqual([
+      post.id,
+    ]);
+    const mention = (await other.client.get('/api/v1/notifications')).json();
+    expect(mention.some((n: { type: string }) => n.type === 'mention')).toBe(true);
+    const fanNotes = (await fan.client.get('/api/v1/notifications')).json();
+    expect(fanNotes[0]).toMatchObject({ type: 'group_post_approved' });
+
+    // Comments wait too, and a turned-down one is gone.
+    const comment = (
+      await other.client.post('/api/v1/statuses', { content: 'Spam!', inReplyToId: post.id })
+    ).json();
+    expect(comment.pendingApproval).toBe(true);
+    expect((await fan.client.get(`/api/v1/statuses/${post.id}`)).json().repliesCount).toBe(0);
+    await owner.client.post(`/api/v1/statuses/${comment.id}/reject`);
+    expect((await other.client.get(`/api/v1/statuses/${comment.id}`)).statusCode).toBe(404);
+    const otherAfter = (await other.client.get('/api/v1/notifications')).json();
+    expect(otherAfter[0]).toMatchObject({ type: 'group_post_rejected' });
+
+    // Moderators' own posts don't wait.
+    const own = (
+      await owner.client.post('/api/v1/statuses', { content: 'Rules', groupId: group.id })
+    ).json();
+    expect(own.pendingApproval).toBeUndefined();
+  });
+
+  it('names all your mutual contacts with @all', async () => {
+    const me = await signedIn();
+    const friend = await signedIn();
+    const fan = await signedIn();
+    const idol = await signedIn();
+    // friend: both ways; fan: follows me only; idol: I follow only.
+    await me.client.post(`/api/v1/accounts/${friend.account.id}/follow`);
+    await friend.client.post(`/api/v1/accounts/${me.account.id}/follow`);
+    await fan.client.post(`/api/v1/accounts/${me.account.id}/follow`);
+    await me.client.post(`/api/v1/accounts/${idol.account.id}/follow`);
+
+    const post = (
+      await me.client.post('/api/v1/statuses', { content: 'Festa sabato @all!' })
+    ).json();
+    expect(post.mentions.map((m: { username: string }) => m.username)).toEqual([
+      friend.account.username,
+    ]);
+    const notes = (await friend.client.get('/api/v1/notifications')).json();
+    expect(
+      notes.some(
+        (n: { type: string; status: { id: string } | null }) =>
+          n.type === 'mention' && n.status?.id === post.id,
+      ),
+    ).toBe(true);
+    // An address that only starts with @all is not @all.
+    const other = (
+      await me.client.post('/api/v1/statuses', { content: 'Write to @all@example.com' })
+    ).json();
+    expect(other.mentions.map((m: { username: string }) => m.username)).not.toContain(
+      friend.account.username,
+    );
+  });
 });

@@ -1,4 +1,4 @@
-import type { CreatePostRequest, GroupSummary, Status, Visibility } from '@disbigle/shared';
+import type { CreatePostRequest, Group, GroupSummary, Status, Visibility } from '@disbigle/shared';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -43,8 +43,12 @@ export interface ComposerProps {
   /** Shown above the text, e.g. a recipient picker. */
   header?: ReactNode;
   /** Writes in this group: its members (or everyone, for a public group) read the post. */
-  group?: GroupSummary;
+  group?: GroupSummary | Group;
 }
+
+/** Posts of plain members wait for a moderator in groups that approve them. */
+const needsApproval = (group: GroupSummary | Group) =>
+  'postApproval' in group && group.postApproval && group.membership?.role === 'member';
 
 export function Composer({
   replyTo,
@@ -214,9 +218,14 @@ export function Composer({
           {group ? (
             <p className="flex items-center gap-2 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent">
               <GroupIcon size={16} className="shrink-0" />
-              {t(group.privacy === 'public' ? 'composer.inPublicGroup' : 'composer.inGroup', {
-                name: group.name,
-              })}
+              <span>
+                {t(group.privacy === 'public' ? 'composer.inPublicGroup' : 'composer.inGroup', {
+                  name: group.name,
+                })}
+                {needsApproval(group) && (
+                  <span className="block text-xs">{t('composer.needsApproval')}</span>
+                )}
+              </span>
             </p>
           ) : (
             replyTo &&

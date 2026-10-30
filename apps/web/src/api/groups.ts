@@ -26,6 +26,9 @@ export const groups = {
   timeline: (groupId: string, page: PageParams) =>
     api.get<Status[]>(`/groups/${id(groupId)}/timeline${queryString({ ...page })}`),
   join: (groupId: string) => api.post<Group>(`/groups/${id(groupId)}/join`),
+  pending: (groupId: string) => api.get<Status[]>(`/groups/${id(groupId)}/pending`),
+  approvePost: (statusId: string) => api.post<Ok>(`/statuses/${id(statusId)}/approve`),
+  rejectPost: (statusId: string) => api.post<Ok>(`/statuses/${id(statusId)}/reject`),
   /** Shares a public post into one of your groups; `unshare` takes it back. */
   share: (statusId: string, groupId: string) =>
     api.post<Status>(`/statuses/${id(statusId)}/share_to_group`, { groupId }),

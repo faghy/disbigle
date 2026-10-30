@@ -280,6 +280,28 @@ export class ActivityPubPublisher implements EventBus {
         );
         return;
       }
+      case 'group.member_accepted': {
+        const record = await findGroup(this.core, event.groupId);
+        const [member] = (await this.actors([event.actorId])).values();
+        if (!record || !event.apUri || !speaksActivityPub(member)) return;
+        const group = record.actor.username;
+        await ctx.sendActivity(
+          { identifier: group },
+          recipient(member),
+          new Accept({
+            id: freshId(ctx, group, 'accepts'),
+            actor: ctx.getActorUri(group),
+            object: new Follow({
+              id: new URL(event.apUri),
+              actor: new URL(member.apUri ?? ''),
+              object: ctx.getActorUri(group),
+            }),
+          }),
+        );
+        return;
+      }
+      case 'post.approved':
+        return this.postCreated(ctx, event.postId);
       case 'group.member_removed': {
         const record = await findGroup(this.core, event.groupId);
         const [member] = (await this.actors([event.actorId])).values();

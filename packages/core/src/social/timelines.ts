@@ -103,7 +103,7 @@ export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: Pag
     viewerActorId,
     sql`(
       ${posts.actorId} = ${viewerActorId}
-      or (${posts.groupId} is not null and ${posts.inReplyToId} is null and exists (
+      or (${posts.groupId} is not null and ${posts.inReplyToId} is null and not ${posts.pendingApproval} and exists (
         select 1 from ${groupMembers} where ${groupMembers.groupId} = ${posts.groupId}
           and ${groupMembers.actorId} = ${viewerActorId} and ${groupMembers.state} = 'member'
       ))
@@ -215,7 +215,14 @@ export function groupTimeline(
   return page(
     ctx,
     viewerActorId,
-    and(eq(posts.groupId, groupId), isNull(posts.inReplyToId)),
+    and(
+      eq(posts.groupId, groupId),
+      isNull(posts.inReplyToId),
+      // Waiting posts are listed apart for moderators; their authors still see their own.
+      viewerActorId
+        ? sql`(not ${posts.pendingApproval} or ${posts.actorId} = ${viewerActorId})`
+        : eq(posts.pendingApproval, false),
+    ),
     query,
     'home',
   );

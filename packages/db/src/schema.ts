@@ -52,6 +52,9 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'group_request',
   'group_invite',
   'group_accepted',
+  'group_post_pending',
+  'group_post_approved',
+  'group_post_rejected',
 ]);
 /** public: anyone reads; private: members only, the group is listed; secret: members only, unlisted. */
 export const groupPrivacyEnum = pgEnum('group_privacy', ['public', 'private', 'secret']);
@@ -334,6 +337,10 @@ export const groups = pgTable(
     /** RSA key of the group's actor, which signs what the group shares on other servers. */
     privateKeyPem: text('private_key_pem').notNull(),
     createdById: uuid('created_by_id').references(() => actors.id, { onDelete: 'set null' }),
+    /** A public group whose new members wait for a moderator (private groups always do). */
+    joinApproval: boolean('join_approval').notNull().default(false),
+    /** Posts and comments of members wait for a moderator before the group sees them. */
+    postApproval: boolean('post_approval').notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('groups_actor_idx').on(t.actorId)],
@@ -393,6 +400,8 @@ export const posts = pgTable(
     likesCount: integer('likes_count').notNull().default(0),
     createdAt: createdAt(),
     editedAt: timestamp('edited_at', { withTimezone: true }),
+    /** In a group with post approval: seen only by its author and the moderators until approved. */
+    pendingApproval: boolean('pending_approval').notNull().default(false),
   },
   (t) => [
     index('posts_actor_idx').on(t.actorId, t.id),
@@ -729,7 +738,10 @@ export type PushAlerts = Partial<
     | 'poll'
     | 'group_request'
     | 'group_invite'
-    | 'group_accepted',
+    | 'group_accepted'
+    | 'group_post_pending'
+    | 'group_post_approved'
+    | 'group_post_rejected',
     boolean
   >
 >;

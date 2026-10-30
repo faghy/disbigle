@@ -439,7 +439,9 @@
     },
     "mentionSuggestions": "People to mention",
     "inGroup": "Only members of {{name}} will see this",
-    "inPublicGroup": "Posting in {{name}}: anyone can read it"
+    "inPublicGroup": "Posting in {{name}}: anyone can read it",
+    "needsApproval": "A moderator approves posts before the group sees them.",
+    "mentionAll": "All your mutual contacts"
   },
   "status": {
     "reshared": "{{name}} reshared",
@@ -490,7 +492,8 @@
       "likes_other": "{{count}} likes"
     },
     "inGroup": "In {{name}}",
-    "sharedInGroup": "{{name}} shared in"
+    "sharedInGroup": "{{name}} shared in",
+    "pendingApproval": "Waiting for approval"
   },
   "timeline": {
     "loadMore": "Load more",
@@ -565,7 +568,10 @@
       "poll": "ended a poll",
       "group_request": "asked to join {{group}}",
       "group_invite": "invited you to {{group}}",
-      "group_accepted": "let you into {{group}}"
+      "group_accepted": "let you into {{group}}",
+      "group_post_pending": "wrote in {{group}}: it waits for your approval",
+      "group_post_approved": "approved your post in {{group}}",
+      "group_post_rejected": "did not approve your post in {{group}}"
     },
     "pollEnded": "A poll you voted in has ended",
     "pollOwnEnded": "Your poll has ended",
@@ -1271,7 +1277,8 @@
       "posts": "Discussion",
       "members": "Members",
       "requests": "Requests",
-      "settings": "Settings"
+      "settings": "Settings",
+      "pending": "To approve"
     },
     "privacy": {
       "public": {
@@ -1297,10 +1304,19 @@
       "privacy": "Who can see it",
       "submit": "Create group",
       "privacyOneWay": "A group can become more private, never less.",
-      "saved": "Saved."
+      "saved": "Saved.",
+      "approval": "Approval",
+      "joinApproval": "New members need approval",
+      "joinApprovalHint": "Anyone can still read the group; joining becomes a request that a moderator approves.",
+      "postApproval": "Posts and comments need approval",
+      "postApprovalHint": "What members write shows in the group only after a moderator approves it. Admins and moderators don’t wait."
     },
     "badge": "Group",
-    "open": "Open"
+    "open": "Open",
+    "pendingComment": "Comment on a post",
+    "approvePost": "Approve",
+    "rejectPost": "Turn down",
+    "noPending": "Nothing waiting for approval."
   },
   "shareToGroup": {
     "menu": "Share in a group",

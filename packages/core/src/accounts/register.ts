@@ -13,6 +13,8 @@ import { welcomeNewAccount } from './welcome.ts';
 
 /** Usernames that would collide with routes or impersonate the instance. */
 export const reservedUsernames = new Set([
+  // @all names all your contacts.
+  'all',
   'root',
   'support',
   'help',

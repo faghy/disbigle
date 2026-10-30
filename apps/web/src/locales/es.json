@@ -446,7 +446,9 @@
     },
     "mentionSuggestions": "Personas para mencionar",
     "inGroup": "Solo lo verán los miembros de {{name}}",
-    "inPublicGroup": "Estás escribiendo en {{name}}: cualquiera puede leerlo"
+    "inPublicGroup": "Estás escribiendo en {{name}}: cualquiera puede leerlo",
+    "needsApproval": "Un moderador aprueba las publicaciones antes de que el grupo las vea.",
+    "mentionAll": "Todos tus contactos mutuos"
   },
   "status": {
     "reshared": "{{name}} ha compartido",
@@ -500,7 +502,8 @@
       "likes_other": "{{count}} Me gusta"
     },
     "inGroup": "En {{name}}",
-    "sharedInGroup": "{{name}} compartió en"
+    "sharedInGroup": "{{name}} compartió en",
+    "pendingApproval": "Pendiente de aprobación"
   },
   "timeline": {
     "loadMore": "Cargar más",
@@ -578,7 +581,10 @@
       "poll": "ha finalizado una encuesta",
       "group_request": "quiere unirse a {{group}}",
       "group_invite": "te ha invitado a {{group}}",
-      "group_accepted": "te ha dejado entrar en {{group}}"
+      "group_accepted": "te ha dejado entrar en {{group}}",
+      "group_post_pending": "escribió en {{group}}: espera tu aprobación",
+      "group_post_approved": "aprobó tu publicación en {{group}}",
+      "group_post_rejected": "no aprobó tu publicación en {{group}}"
     },
     "pollEnded": "Ha finalizado una encuesta en la que votaste",
     "pollOwnEnded": "Tu encuesta ha finalizado",
@@ -1297,7 +1303,8 @@
       "posts": "Conversación",
       "members": "Miembros",
       "requests": "Solicitudes",
-      "settings": "Ajustes"
+      "settings": "Ajustes",
+      "pending": "Por aprobar"
     },
     "privacy": {
       "public": {
@@ -1323,10 +1330,19 @@
       "privacy": "Quién puede verlo",
       "submit": "Crear grupo",
       "privacyOneWay": "Un grupo puede volverse más reservado, nunca menos.",
-      "saved": "Guardado."
+      "saved": "Guardado.",
+      "approval": "Aprobación",
+      "joinApproval": "Unirse solo con aprobación",
+      "joinApprovalHint": "Cualquiera puede seguir leyendo el grupo; unirse pasa a ser una solicitud que aprueba un moderador.",
+      "postApproval": "Publicaciones y comentarios con aprobación",
+      "postApprovalHint": "Lo que escriben los miembros aparece en el grupo solo cuando lo aprueba un moderador. Administradores y moderadores no esperan."
     },
     "badge": "Grupo",
-    "open": "Abrir"
+    "open": "Abrir",
+    "pendingComment": "Comentario en una publicación",
+    "approvePost": "Aprobar",
+    "rejectPost": "Rechazar",
+    "noPending": "Nada pendiente de aprobación."
   },
   "shareToGroup": {
     "menu": "Compartir en un grupo",

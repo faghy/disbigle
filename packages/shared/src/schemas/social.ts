@@ -152,6 +152,8 @@ export interface Status {
   source?: string;
   /** The group the post was written in. */
   group?: GroupSummary | null;
+  /** In a group with post approval: waiting for a moderator (seen by its author and moderators). */
+  pendingApproval?: boolean;
 }
 
 export interface StatusContext {
@@ -187,7 +189,10 @@ export type NotificationType =
   | 'poll'
   | 'group_request'
   | 'group_invite'
-  | 'group_accepted';
+  | 'group_accepted'
+  | 'group_post_pending'
+  | 'group_post_approved'
+  | 'group_post_rejected';
 
 export interface Notification {
   id: string;
@@ -229,6 +234,12 @@ export interface Group extends GroupSummary {
   membership: { role: GroupRole; state: GroupMemberState } | null;
   /** Join requests waiting, for moderators and admins. */
   requestsCount?: number;
+  /** A public group whose new members wait for a moderator (private groups always do). */
+  joinApproval: boolean;
+  /** Posts and comments of members wait for a moderator. */
+  postApproval: boolean;
+  /** Posts waiting for approval, for moderators and admins. */
+  pendingPostsCount?: number;
 }
 
 export interface GroupMember {
@@ -253,6 +264,8 @@ export const updateGroupRequestSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   description: z.string().trim().max(2000).optional(),
   privacy: z.enum(groupPrivacies).optional(),
+  joinApproval: z.boolean().optional(),
+  postApproval: z.boolean().optional(),
 });
 export type UpdateGroupRequest = z.input<typeof updateGroupRequestSchema>;
 

@@ -15,13 +15,14 @@ import { ConfirmDialog } from '../components/Dialog.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
 import { GroupAvatar, PrivacyLabel } from '../components/GroupParts.tsx';
 import { InfoIcon, PencilIcon } from '../components/icons.tsx';
-import { CurrentGroupContext } from '../components/StatusCard.tsx';
+import { CurrentGroupContext, StatusCard } from '../components/StatusCard.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import {
   Alert,
   Button,
   buttonClass,
   Card,
+  CheckboxField,
   cx,
   LoadingState,
   Spinner,
@@ -47,7 +48,7 @@ export function GroupPage() {
   );
 }
 
-type TabId = 'posts' | 'members' | 'requests' | 'settings';
+type TabId = 'posts' | 'members' | 'requests' | 'pending' | 'settings';
 
 const isMember = (group: Group) => group.membership?.state === 'member';
 const isModerator = (group: Group) =>
@@ -70,9 +71,18 @@ function GroupView({ group }: { group: Group }) {
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: 'posts', label: t('groups.tabs.posts') },
     { id: 'members', label: t('groups.tabs.members'), count: group.membersCount },
-    // Public groups take everyone at once: no requests to look at.
-    ...(isModerator(group) && group.privacy !== 'public'
+    // Public groups take everyone at once, unless they approve their members.
+    ...(isModerator(group) && (group.privacy !== 'public' || group.joinApproval)
       ? [{ id: 'requests' as const, label: t('groups.tabs.requests'), count: group.requestsCount }]
+      : []),
+    ...(isModerator(group) && (group.postApproval || (group.pendingPostsCount ?? 0) > 0)
+      ? [
+          {
+            id: 'pending' as const,
+            label: t('groups.tabs.pending'),
+            count: group.pendingPostsCount,
+          },
+        ]
       : []),
     ...(isAdmin(group) ? [{ id: 'settings' as const, label: t('groups.tabs.settings') }] : []),
   ];
@@ -84,6 +94,7 @@ function GroupView({ group }: { group: Group }) {
         {current === 'posts' && <GroupPosts group={group} />}
         {current === 'members' && <Members group={group} />}
         {current === 'requests' && <Requests group={group} />}
+        {current === 'pending' && <PendingPosts group={group} />}
         {current === 'settings' && <GroupSettings group={group} />}
       </Tabs>
     </div>
@@ -197,7 +208,9 @@ function MembershipActions({ group }: { group: Group }) {
       <div className="flex flex-wrap gap-2">
         {!state && group.privacy !== 'secret' && (
           <Button loading={join.isPending} onClick={() => join.mutate()}>
-            {group.privacy === 'public' ? t('groups.join') : t('groups.askToJoin')}
+            {group.privacy === 'public' && !group.joinApproval
+              ? t('groups.join')
+              : t('groups.askToJoin')}
           </Button>
         )}
         {state === 'invited' && (
@@ -650,6 +663,68 @@ function PersonRow({ account, children }: { account: Account; children: React.Re
 
 const strictness = { public: 0, private: 1, secret: 2 } as const;
 
+/** Posts and comments waiting for a moderator: approve or turn down each one. */
+function PendingPosts({ group }: { group: Group }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const pending = useQuery({
+    queryKey: ['groups', 'pending', group.id],
+    queryFn: () => groups.pending(group.id),
+  });
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['groups', 'pending', group.id] });
+    void queryClient.invalidateQueries({ queryKey: groupKeys.group(group.handle) });
+    void queryClient.invalidateQueries({ queryKey: socialKeys.timeline('group', group.id) });
+  };
+  const answer = useMutation({
+    mutationFn: ({ id, approve }: { id: string; approve: boolean }) =>
+      approve ? groups.approvePost(id) : groups.rejectPost(id),
+    onSuccess: refresh,
+  });
+  if (pending.isPending) return <LoadingState label={t('common.loading')} />;
+  if (pending.isError) return <Alert className="m-4">{errorMessage(pending.error)}</Alert>;
+  if (pending.data.length === 0) return <Notice>{t('groups.noPending')}</Notice>;
+  return (
+    <ul aria-label={t('groups.tabs.pending')} className="divide-y divide-border">
+      {pending.data.map((status) => (
+        <li key={status.id}>
+          <StatusCard status={status} />
+          <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 pb-3 sm:px-5">
+            {status.inReplyToId && (
+              <Link
+                to="/@{$username}/$statusId"
+                params={{ username: status.account.acct, statusId: status.inReplyToId }}
+                className="mr-auto text-sm text-fg-muted hover:underline"
+              >
+                {t('groups.pendingComment')}
+              </Link>
+            )}
+            <Button
+              className="ml-auto"
+              loading={
+                answer.isPending && answer.variables?.id === status.id && answer.variables.approve
+              }
+              onClick={() => answer.mutate({ id: status.id, approve: true })}
+            >
+              {t('groups.approvePost')}
+            </Button>
+            <Button
+              variant="ghost"
+              loading={
+                answer.isPending && answer.variables?.id === status.id && !answer.variables.approve
+              }
+              onClick={() => answer.mutate({ id: status.id, approve: false })}
+            >
+              {t('groups.rejectPost')}
+            </Button>
+          </div>
+        </li>
+      ))}
+      {answer.error && <Alert className="m-4">{errorMessage(answer.error)}</Alert>}
+    </ul>
+  );
+}
+
 function GroupSettings({ group }: { group: Group }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -659,11 +734,20 @@ function GroupSettings({ group }: { group: Group }) {
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description);
   const [privacy, setPrivacy] = useState(group.privacy);
+  const [joinApproval, setJoinApproval] = useState(group.joinApproval);
+  const [postApproval, setPostApproval] = useState(group.postApproval);
   const [saved, setSaved] = useState(false);
   const [confirmPrivacy, setConfirmPrivacy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const update = useMutation({
-    mutationFn: () => groups.update(group.id, { name: name.trim(), description, privacy }),
+    mutationFn: () =>
+      groups.update(group.id, {
+        name: name.trim(),
+        description,
+        privacy,
+        joinApproval,
+        postApproval,
+      }),
     onSuccess: (updated) => {
       setConfirmPrivacy(false);
       setSaved(true);
@@ -716,6 +800,23 @@ function GroupSettings({ group }: { group: Group }) {
             />
           ))}
           <p className="text-sm text-fg-muted">{t('groups.form.privacyOneWay')}</p>
+        </fieldset>
+        <fieldset className="space-y-3">
+          <legend className="mb-1 text-sm font-medium">{t('groups.form.approval')}</legend>
+          {privacy === 'public' && (
+            <CheckboxField
+              label={t('groups.form.joinApproval')}
+              hint={t('groups.form.joinApprovalHint')}
+              checked={joinApproval}
+              onChange={(event) => setJoinApproval(event.target.checked)}
+            />
+          )}
+          <CheckboxField
+            label={t('groups.form.postApproval')}
+            hint={t('groups.form.postApprovalHint')}
+            checked={postApproval}
+            onChange={(event) => setPostApproval(event.target.checked)}
+          />
         </fieldset>
         <Alert>
           {update.error && Object.keys(fieldErrors).length === 0

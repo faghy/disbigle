@@ -5,7 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { social } from '../api/social.ts';
 import { GroupBadge } from './AccountList.tsx';
 import { Avatar } from './Avatar.tsx';
+import { AspectsIcon } from './icons.tsx';
 import { cx } from './ui.tsx';
+
+/** The "@all" suggestion: not an account, it names all your mutual contacts. */
+const allContacts = { id: '@all', acct: 'all', username: 'all', displayName: '' } as Account;
 
 const MAX_SUGGESTIONS = 6;
 
@@ -53,7 +57,12 @@ export function useMentionSuggestions({
     enabled: query.length > 0,
     staleTime: 30_000,
   });
-  const accounts = (results.data ?? []).slice(0, MAX_SUGGESTIONS);
+  // "@all" (all your mutual contacts) comes first while what you type could be it.
+  const everyone = query.length > 0 && 'all'.startsWith(query.toLowerCase());
+  const accounts = [
+    ...(everyone ? [allContacts] : []),
+    ...(results.data ?? []).filter((a) => a.acct.toLowerCase() !== 'all'),
+  ].slice(0, MAX_SUGGESTIONS);
   const open =
     mention !== null && mention.start !== dismissed && query.length > 0 && accounts.length > 0;
 
@@ -132,16 +141,32 @@ export function useMentionSuggestions({
             index === active ? 'bg-accent-soft' : 'hover:bg-surface-muted',
           )}
         >
-          <Avatar account={account} size="sm" />
-          <span className="min-w-0">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <span className="truncate text-sm font-semibold">
-                {account.displayName || account.username}
+          {account === allContacts ? (
+            <>
+              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <AspectsIcon size={16} />
               </span>
-              {account.group && <GroupBadge />}
-            </span>
-            <span className="block truncate text-xs text-fg-muted">@{account.acct}</span>
-          </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold">@all</span>
+                <span className="block truncate text-xs text-fg-muted">
+                  {t('composer.mentionAll')}
+                </span>
+              </span>
+            </>
+          ) : (
+            <>
+              <Avatar account={account} size="sm" />
+              <span className="min-w-0">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold">
+                    {account.displayName || account.username}
+                  </span>
+                  {account.group && <GroupBadge />}
+                </span>
+                <span className="block truncate text-xs text-fg-muted">@{account.acct}</span>
+              </span>
+            </>
+          )}
         </div>
       ))}
     </div>

@@ -15,7 +15,13 @@ import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
 import { notFilteredFor } from './filters.ts';
-import { canModerateGroupPost, findGroup, groupOfActor, isGroupMember } from './groups.ts';
+import {
+  canModerateGroupPost,
+  findGroup,
+  groupOfActor,
+  isGroupMember,
+  notifyModerators,
+} from './groups.ts';
 import { createNotification } from './notifications.ts';
 import { hydrateStatuses, type PostRow } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
@@ -106,6 +112,10 @@ export async function createPost(
   if (group && !(await isGroupMember(ctx, group.group.id, authorActorId)))
     throw new DomainError('forbidden', 'Join the group to write in it');
   const publicGroup = group?.group.privacy === 'public';
+  // In a group that approves posts, what members write waits for a moderator.
+  const pending =
+    Boolean(group?.group.postApproval) &&
+    !(await canModerateGroupPost(ctx, authorActorId, group?.group.id ?? ''));
 
   if (group) {
     visibility = publicGroup ? 'public' : 'limited';
@@ -139,14 +149,18 @@ export async function createPost(
   }
 
   const mentioned = await resolveMentions(ctx, input.content);
+  if (mentionsAll(input.content)) {
+    // @all: every mutual contact, within an aspects post only those it was shared with.
+    for (const contact of await mutualContacts(ctx, authorActorId)) {
+      if (visibility === 'limited' && !group && !audience.has(contact.id)) continue;
+      mentioned.set(`${contact.username.toLowerCase()}@${contact.domain ?? ''}`, contact);
+    }
+  }
   const mentionedIds = new Set([...mentioned.values()].map((a) => a.id));
   // In a private group a mention reaches no one outside it.
   if (!group || publicGroup) for (const id of mentionedIds) audience.add(id);
   audience.delete(authorActorId);
   mentionedIds.delete(authorActorId);
-  /** Who may hear about this post: in a private group, its members only. */
-  const mayNotify = async (actorId: string) =>
-    !group || publicGroup || (await isGroupMember(ctx, group.group.id, actorId));
 
   if (visibility === 'direct' && audience.size === 0) {
     throw new DomainError('validation_failed', 'Mention at least one person', [
@@ -193,6 +207,7 @@ export async function createPost(
     inReplyToActorId: parent?.actorId ?? null,
     threadRootId: parent ? (parent.threadRootId ?? parent.id) : id,
     groupId: group?.group.id ?? null,
+    pendingApproval: pending,
     apUri: `${author.apUri}/statuses/${id}`,
     apUrl: `${base}/@${author.username}/${id}`,
     diasporaGuid: randomBytes(16).toString('hex'),
@@ -240,7 +255,7 @@ export async function createPost(
         .set({ postId: id, position })
         .where(eq(mediaAttachments.id, mediaId));
     }
-    if (parent) {
+    if (parent && !pending) {
       await tx
         .update(posts)
         .set({ repliesCount: sql`${posts.repliesCount} + 1` })
@@ -248,24 +263,17 @@ export async function createPost(
     }
   });
 
-  const groupActorIds = new Set([...mentioned.values()].filter((a) => a.isGroup).map((a) => a.id));
-  for (const actorId of mentionedIds) {
-    if (groupActorIds.has(actorId) || !(await mayNotify(actorId))) continue;
-    await createNotification(ctx, {
-      actorId,
-      type: 'mention',
-      fromActorId: authorActorId,
-      postId: id,
-    });
+  if (pending && group) {
+    // Nobody hears about it until a moderator approves it.
+    await notifyModerators(ctx, group.group.id, authorActorId, 'group_post_pending', id);
+    const [created] = await ctx.db.select().from(posts).where(eq(posts.id, id));
+    if (!created) throw new Error('Post vanished after insert');
+    const [status] = await hydrateStatuses(ctx, authorActorId, [created]);
+    if (!status) throw new Error('Serialization failed');
+    return status;
   }
-  if (parent && !mentionedIds.has(parent.actorId) && (await mayNotify(parent.actorId))) {
-    await createNotification(ctx, {
-      actorId: parent.actorId,
-      type: 'reply',
-      fromActorId: authorActorId,
-      postId: id,
-    });
-  }
+
+  await notifyPostRecipients(ctx, id);
   await emit(ctx, { type: 'post.created', postId: id, actorId: authorActorId });
 
   // Naming one of your groups in a public post shares it there too.
@@ -283,6 +291,165 @@ export async function createPost(
   const [status] = await hydrateStatuses(ctx, authorActorId, [created]);
   if (!status) throw new Error('Serialization failed');
   return status;
+}
+
+/** `@all` on its own (not an address such as `@all@example.com`). */
+function mentionsAll(source: string): boolean {
+  return /(^|[^\w@/])@all(?![\w@.-])/i.test(source);
+}
+
+/** People who follow you and whom you follow, the ones `@all` names (at most 500). */
+async function mutualContacts(ctx: CoreContext, actorId: string) {
+  return ctx.db
+    .select()
+    .from(actors)
+    .where(
+      and(
+        isNull(actors.suspendedAt),
+        eq(actors.isGroup, false),
+        sql`exists (select 1 from ${schema.follows} f where f.actor_id = ${actorId} and f.target_actor_id = ${actors.id})`,
+        sql`exists (select 1 from ${schema.follows} f where f.actor_id = ${actors.id} and f.target_actor_id = ${actorId})`,
+      ),
+    )
+    .limit(500);
+}
+
+/**
+ * Mention and reply notifications of a new post: the people it names and the author it
+ * answers. In a private group, only members hear about it.
+ */
+async function notifyPostRecipients(ctx: CoreContext, postId: string): Promise<void> {
+  const [post] = await ctx.db.select().from(posts).where(eq(posts.id, postId));
+  if (!post) return;
+  const group = post.groupId ? await findGroup(ctx, post.groupId) : null;
+  const mayNotify = async (actorId: string) =>
+    actorId !== post.actorId &&
+    (!group ||
+      group.group.privacy === 'public' ||
+      (await isGroupMember(ctx, group.group.id, actorId)));
+  const named = await ctx.db
+    .select({ actor: actors })
+    .from(mentions)
+    .innerJoin(actors, eq(actors.id, mentions.actorId))
+    .where(eq(mentions.postId, post.id));
+  const namedIds = new Set<string>();
+  for (const { actor } of named) {
+    // Naming a group shares the post there; nobody gets a notification for it.
+    if (actor.isGroup) continue;
+    namedIds.add(actor.id);
+    if (!(await mayNotify(actor.id))) continue;
+    await createNotification(ctx, {
+      actorId: actor.id,
+      type: 'mention',
+      fromActorId: post.actorId,
+      postId: post.id,
+    });
+  }
+  const parentAuthor = post.inReplyToActorId;
+  if (parentAuthor && !namedIds.has(parentAuthor) && (await mayNotify(parentAuthor))) {
+    await createNotification(ctx, {
+      actorId: parentAuthor,
+      type: 'reply',
+      fromActorId: post.actorId,
+      postId: post.id,
+    });
+  }
+}
+
+/** Posts and comments waiting in a group, oldest first, for its moderators. */
+export async function pendingGroupPosts(
+  ctx: CoreContext,
+  moderatorActorId: string,
+  groupId: string,
+) {
+  if (!(await canModerateGroupPost(ctx, moderatorActorId, groupId)))
+    throw new DomainError('forbidden', 'Only moderators see posts waiting for approval');
+  const rows = await ctx.db
+    .select()
+    .from(posts)
+    .where(and(eq(posts.groupId, groupId), eq(posts.pendingApproval, true)))
+    .orderBy(posts.id)
+    .limit(200);
+  return hydrateStatuses(ctx, moderatorActorId, rows);
+}
+
+/**
+ * A moderator lets a waiting post or comment into the group: it shows there, its author and the
+ * people it names hear about it, and it goes out to other servers.
+ */
+export async function approveGroupPost(
+  ctx: CoreContext,
+  moderatorActorId: string,
+  postId: string,
+): Promise<void> {
+  const [post] = await ctx.db.select().from(posts).where(eq(posts.id, postId));
+  if (!post?.groupId || !post.pendingApproval) throw new DomainError('not_found', 'Post not found');
+  if (!(await canModerateGroupPost(ctx, moderatorActorId, post.groupId)))
+    throw new DomainError('forbidden', 'Only moderators approve posts');
+  const updated = await ctx.db
+    .update(posts)
+    .set({ pendingApproval: false })
+    .where(and(eq(posts.id, post.id), eq(posts.pendingApproval, true)))
+    .returning({ id: posts.id });
+  if (updated.length === 0) return;
+  if (post.inReplyToId) {
+    await ctx.db
+      .update(posts)
+      .set({ repliesCount: sql`${posts.repliesCount} + 1` })
+      .where(eq(posts.id, post.inReplyToId));
+  }
+  if (post.reblogOfId) {
+    await ctx.db
+      .update(posts)
+      .set({ reblogsCount: sql`${posts.reblogsCount} + 1` })
+      .where(eq(posts.id, post.reblogOfId));
+  }
+  await clearPendingNotifications(ctx, post.id);
+  if (post.local) {
+    await createNotification(ctx, {
+      actorId: post.actorId,
+      type: 'group_post_approved',
+      fromActorId: moderatorActorId,
+      postId: post.id,
+      groupId: post.groupId,
+    });
+  }
+  await notifyPostRecipients(ctx, post.id);
+  await emit(ctx, { type: 'post.approved', postId: post.id, actorId: post.actorId });
+}
+
+/** A moderator turns down a waiting post or comment: it is deleted and its author told. */
+export async function rejectGroupPost(
+  ctx: CoreContext,
+  moderatorActorId: string,
+  postId: string,
+): Promise<void> {
+  const [post] = await ctx.db.select().from(posts).where(eq(posts.id, postId));
+  if (!post?.groupId || !post.pendingApproval) throw new DomainError('not_found', 'Post not found');
+  if (!(await canModerateGroupPost(ctx, moderatorActorId, post.groupId)))
+    throw new DomainError('forbidden', 'Only moderators turn down posts');
+  await clearPendingNotifications(ctx, post.id);
+  // It never left this server, so it goes without telling anyone else.
+  await ctx.db.delete(posts).where(eq(posts.id, post.id));
+  if (post.local) {
+    await createNotification(ctx, {
+      actorId: post.actorId,
+      type: 'group_post_rejected',
+      fromActorId: moderatorActorId,
+      groupId: post.groupId,
+    });
+  }
+}
+
+async function clearPendingNotifications(ctx: CoreContext, postId: string) {
+  await ctx.db
+    .delete(schema.notifications)
+    .where(
+      and(
+        eq(schema.notifications.postId, postId),
+        eq(schema.notifications.type, 'group_post_pending'),
+      ),
+    );
 }
 
 /**
@@ -448,13 +615,14 @@ export async function deletePost(
   await ctx.db.transaction(async (tx) => {
     await tx.delete(posts).where(eq(posts.reblogOfId, post.id));
     await tx.delete(posts).where(eq(posts.id, post.id));
-    if (post.inReplyToId) {
+    // A post still waiting for approval was never counted.
+    if (post.inReplyToId && !post.pendingApproval) {
       await tx
         .update(posts)
         .set({ repliesCount: sql`greatest(${posts.repliesCount} - 1, 0)` })
         .where(eq(posts.id, post.inReplyToId));
     }
-    if (post.reblogOfId) {
+    if (post.reblogOfId && !post.pendingApproval) {
       await tx
         .update(posts)
         .set({ reblogsCount: sql`greatest(${posts.reblogsCount} - 1, 0)` })
@@ -645,6 +813,8 @@ export async function shareToGroup(
   ) {
     throw new DomainError('forbidden', 'Only public posts can be shared in a group');
   }
+  const pending =
+    record.group.postApproval && !(await canModerateGroupPost(ctx, actorId, record.group.id));
   const id = uuidv7();
   const inserted = await ctx.db
     .insert(posts)
@@ -655,13 +825,16 @@ export async function shareToGroup(
       visibility: record.group.privacy === 'public' ? 'public' : 'limited',
       reblogOfId: target.id,
       groupId: record.group.id,
+      pendingApproval: pending,
       threadRootId: id,
       apUri: `${actor.apUri}/statuses/${id}/activity`,
       diasporaGuid: randomBytes(16).toString('hex'),
     })
     .onConflictDoNothing()
     .returning({ id: posts.id });
-  if (inserted.length > 0) {
+  if (inserted.length > 0 && pending) {
+    await notifyModerators(ctx, record.group.id, actorId, 'group_post_pending', id);
+  } else if (inserted.length > 0) {
     await ctx.db
       .update(posts)
       .set({ reblogsCount: sql`${posts.reblogsCount} + 1` })
@@ -701,8 +874,11 @@ export async function unshareFromGroup(
       apUri: posts.apUri,
       diasporaGuid: posts.diasporaGuid,
       visibility: posts.visibility,
+      pendingApproval: posts.pendingApproval,
     });
   for (const row of removed) {
+    // A share still waiting for approval never counted nor left this server.
+    if (row.pendingApproval) continue;
     await ctx.db
       .update(posts)
       .set({ reblogsCount: sql`greatest(${posts.reblogsCount} - 1, 0)` })

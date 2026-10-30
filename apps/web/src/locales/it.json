@@ -439,7 +439,9 @@
     },
     "mentionSuggestions": "Persone da menzionare",
     "inGroup": "Lo vedranno solo i membri di {{name}}",
-    "inPublicGroup": "Stai scrivendo in {{name}}: chiunque può leggerlo"
+    "inPublicGroup": "Stai scrivendo in {{name}}: chiunque può leggerlo",
+    "needsApproval": "Un moderatore approva i post prima che il gruppo li veda.",
+    "mentionAll": "Tutti i tuoi contatti reciproci"
   },
   "status": {
     "reshared": "{{name}} ha ricondiviso",
@@ -490,7 +492,8 @@
       "likes_other": "{{count}} mi piace"
     },
     "inGroup": "In {{name}}",
-    "sharedInGroup": "{{name}} ha condiviso in"
+    "sharedInGroup": "{{name}} ha condiviso in",
+    "pendingApproval": "In attesa di approvazione"
   },
   "timeline": {
     "loadMore": "Carica altri",
@@ -565,7 +568,10 @@
       "poll": "ha chiuso un sondaggio",
       "group_request": "chiede di entrare in {{group}}",
       "group_invite": "ti ha invitato in {{group}}",
-      "group_accepted": "ti ha fatto entrare in {{group}}"
+      "group_accepted": "ti ha fatto entrare in {{group}}",
+      "group_post_pending": "ha scritto in {{group}}: aspetta la tua approvazione",
+      "group_post_approved": "ha approvato il tuo post in {{group}}",
+      "group_post_rejected": "non ha approvato il tuo post in {{group}}"
     },
     "pollEnded": "Un sondaggio a cui hai votato è terminato",
     "pollOwnEnded": "Il tuo sondaggio è terminato",
@@ -1271,7 +1277,8 @@
       "posts": "Discussione",
       "members": "Membri",
       "requests": "Richieste",
-      "settings": "Impostazioni"
+      "settings": "Impostazioni",
+      "pending": "Da approvare"
     },
     "privacy": {
       "public": {
@@ -1297,10 +1304,19 @@
       "privacy": "Chi può vederlo",
       "submit": "Crea gruppo",
       "privacyOneWay": "Un gruppo può diventare più riservato, non meno.",
-      "saved": "Salvato."
+      "saved": "Salvato.",
+      "approval": "Approvazione",
+      "joinApproval": "Iscrizione solo su approvazione",
+      "joinApprovalHint": "Il gruppo resta leggibile da tutti; entrare diventa una richiesta che un moderatore approva.",
+      "postApproval": "Post e commenti da approvare",
+      "postApprovalHint": "Quello che scrivono i membri compare nel gruppo solo dopo l’approvazione di un moderatore. Admin e moderatori non aspettano."
     },
     "badge": "Gruppo",
-    "open": "Apri"
+    "open": "Apri",
+    "pendingComment": "Commento a un post",
+    "approvePost": "Approva",
+    "rejectPost": "Rifiuta",
+    "noPending": "Niente da approvare."
   },
   "shareToGroup": {
     "menu": "Condividi in un gruppo",

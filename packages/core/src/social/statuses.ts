@@ -182,6 +182,7 @@ export async function hydrateStatuses(
     if (post.actorId === viewerActorId && post.source !== null) status.source = post.source;
     if (pinnedIds.has(post.id)) status.pinned = true;
     if (post.groupId) status.group = groupsById.get(post.groupId) ?? null;
+    if (post.pendingApproval) status.pendingApproval = true;
     if (post.actorId === viewerActorId && post.visibility === 'limited') {
       status.aspectIds = aspectRows.filter((r) => r.postId === post.id).map((r) => r.aspectId);
     }

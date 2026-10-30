@@ -138,7 +138,7 @@ async function serializeGroups(
 ): Promise<Group[]> {
   if (records.length === 0) return [];
   const ids = records.map((r) => r.group.id);
-  const [counts, memberships] = await Promise.all([
+  const [counts, pendingPosts, memberships] = await Promise.all([
     ctx.db
       .select({
         groupId: groupMembers.groupId,
@@ -148,6 +148,11 @@ async function serializeGroups(
       .from(groupMembers)
       .where(inArray(groupMembers.groupId, ids))
       .groupBy(groupMembers.groupId),
+    ctx.db
+      .select({ groupId: posts.groupId, n: sql<number>`count(*)::int` })
+      .from(posts)
+      .where(and(inArray(posts.groupId, ids), eq(posts.pendingApproval, true)))
+      .groupBy(posts.groupId),
     viewerActorId
       ? ctx.db
           .select()
@@ -156,6 +161,7 @@ async function serializeGroups(
       : Promise.resolve([] as MemberRow[]),
   ]);
   const countById = new Map(counts.map((c) => [c.groupId, c]));
+  const pendingById = new Map(pendingPosts.map((c) => [c.groupId, c.n]));
   const membershipById = new Map(memberships.map((m) => [m.groupId, m]));
   return records.map((record) => {
     const { group, actor } = record;
@@ -169,8 +175,13 @@ async function serializeGroups(
       membersCount: count?.members ?? 0,
       createdAt: group.createdAt.toISOString(),
       membership: membership ? { role: membership.role, state: membership.state } : null,
+      joinApproval: group.joinApproval,
+      postApproval: group.postApproval,
     };
-    if (isModerator(membership)) result.requestsCount = count?.requests ?? 0;
+    if (isModerator(membership)) {
+      result.requestsCount = count?.requests ?? 0;
+      result.pendingPostsCount = pendingById.get(group.id) ?? 0;
+    }
     return result;
   });
 }
@@ -284,12 +295,18 @@ export async function updateGroup(
     ]);
   }
   const privacy = input.privacy ?? group.privacy;
+  const joinApproval = input.joinApproval ?? group.joinApproval;
+  const postApproval = input.postApproval ?? group.postApproval;
+  if (joinApproval !== group.joinApproval || postApproval !== group.postApproval) {
+    await ctx.db.update(groups).set({ joinApproval, postApproval }).where(eq(groups.id, group.id));
+  }
   await ctx.db
     .update(actors)
     .set({
       displayName: input.name ?? actor.displayName,
       summary: input.description ?? actor.summary,
-      locked: privacy !== 'public',
+      // Elsewhere on the fediverse, a group that approves its members takes follow requests.
+      locked: privacy !== 'public' || joinApproval,
       discoverable: privacy !== 'secret',
       updatedAt: new Date(),
     })
@@ -408,10 +425,12 @@ async function blockedByAdmins(ctx: CoreContext, groupId: string, actorId: strin
   return Boolean(row);
 }
 
-async function notifyModerators(
+export async function notifyModerators(
   ctx: CoreContext,
   groupId: string,
   fromActorId: string,
+  type: 'group_request' | 'group_post_pending' = 'group_request',
+  postId?: string,
 ): Promise<void> {
   const moderators = await ctx.db
     .select({ actorId: groupMembers.actorId })
@@ -424,11 +443,13 @@ async function notifyModerators(
       ),
     );
   for (const m of moderators) {
+    if (m.actorId === fromActorId) continue;
     await createNotification(ctx, {
       actorId: m.actorId,
-      type: 'group_request',
+      type,
       fromActorId,
       groupId,
+      ...(postId ? { postId } : {}),
     });
   }
 }
@@ -448,7 +469,7 @@ export async function joinGroup(
     return serializeGroup(ctx, actorId, record);
   if (await blockedByAdmins(ctx, group.id, actorId))
     throw new DomainError('forbidden', 'You cannot join this group');
-  if (membership?.state === 'invited' || group.privacy === 'public') {
+  if (membership?.state === 'invited' || (group.privacy === 'public' && !group.joinApproval)) {
     await ctx.db
       .insert(groupMembers)
       .values({ groupId: group.id, actorId, state: 'member' })
@@ -456,7 +477,7 @@ export async function joinGroup(
         target: [groupMembers.groupId, groupMembers.actorId],
         set: { state: 'member', createdAt: new Date() },
       });
-  } else if (group.privacy === 'private') {
+  } else if (group.privacy !== 'secret') {
     await ctx.db
       .insert(groupMembers)
       .values({ groupId: group.id, actorId, state: 'requested' })
@@ -574,8 +595,11 @@ export async function answerGroupRequest(
         .update(groupMembers)
         .set({ state: 'member', createdAt: new Date() })
         .where(where)
-        .returning({ actorId: groupMembers.actorId })
-    : await ctx.db.delete(groupMembers).where(where).returning({ actorId: groupMembers.actorId });
+        .returning({ actorId: groupMembers.actorId, apUri: groupMembers.apUri })
+    : await ctx.db
+        .delete(groupMembers)
+        .where(where)
+        .returning({ actorId: groupMembers.actorId, apUri: groupMembers.apUri });
   if (changed.length === 0) throw new DomainError('not_found', 'Request not found');
   // The other moderators no longer need to look at it.
   await ctx.db
@@ -587,7 +611,26 @@ export async function answerGroupRequest(
         eq(schema.notifications.type, 'group_request'),
       ),
     );
-  if (accept) {
+  const [target] = await ctx.db.select().from(actors).where(eq(actors.id, targetActorId));
+  if (target?.domain) {
+    // Someone elsewhere who asked to join: their server hears the answer.
+    await emit(
+      ctx,
+      accept
+        ? {
+            type: 'group.member_accepted',
+            groupId: group.id,
+            actorId: targetActorId,
+            apUri: changed[0]?.apUri ?? null,
+          }
+        : {
+            type: 'group.member_removed',
+            groupId: group.id,
+            actorId: targetActorId,
+            apUri: changed[0]?.apUri ?? '',
+          },
+    );
+  } else if (accept) {
     await createNotification(ctx, {
       actorId: targetActorId,
       type: 'group_accepted',
@@ -728,26 +771,33 @@ export async function canModerateGroupPost(
 }
 
 /**
- * Someone on another server follows a group: they join it if it is public (and federated);
- * private and secret groups stay on this server. Returns whether they are in.
+ * Someone on another server follows a group: they join it if it is public (and federated), or
+ * ask to when it approves its members; private and secret groups stay on this server.
  */
 export async function remoteJoinGroup(
   ctx: CoreContext,
   groupActorId: string,
   actorId: string,
   apUri: string | null,
-): Promise<boolean> {
+): Promise<'member' | 'requested' | false> {
   const record = await groupOfActor(ctx, groupActorId);
   if (record?.group.privacy !== 'public' || record.actor.suspendedAt) return false;
   if (await blockedByAdmins(ctx, record.group.id, actorId)) return false;
+  const [current] = await ctx.db
+    .select()
+    .from(groupMembers)
+    .where(and(eq(groupMembers.groupId, record.group.id), eq(groupMembers.actorId, actorId)));
+  const state = current?.state === 'member' || !record.group.joinApproval ? 'member' : 'requested';
   await ctx.db
     .insert(groupMembers)
-    .values({ groupId: record.group.id, actorId, state: 'member', apUri })
+    .values({ groupId: record.group.id, actorId, state, apUri })
     .onConflictDoUpdate({
       target: [groupMembers.groupId, groupMembers.actorId],
-      set: { state: 'member', apUri },
+      set: { state, apUri },
     });
-  return true;
+  if (state === 'requested' && current?.state !== 'requested')
+    await notifyModerators(ctx, record.group.id, actorId);
+  return state;
 }
 
 /** Someone on another server unfollows a group. */

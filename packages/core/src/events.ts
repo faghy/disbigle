@@ -46,7 +46,11 @@ export type DomainEvent =
   /** A public group stops federating (deleted, or made private); `actorId` is the group's actor. */
   | { type: 'group.closed'; groupId: string; actorId: string }
   /** A member from another server was removed from a group. */
-  | { type: 'group.member_removed'; groupId: string; actorId: string; apUri: string };
+  | { type: 'group.member_removed'; groupId: string; actorId: string; apUri: string }
+  /** A member from another server who asked to join was let in. */
+  | { type: 'group.member_accepted'; groupId: string; actorId: string; apUri: string | null }
+  /** A post (or comment) waiting in a group was approved: it goes out now. */
+  | { type: 'post.approved'; postId: string; actorId: string };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

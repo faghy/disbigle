@@ -5,7 +5,7 @@ import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { sanitizeRemoteHtml } from '../social/content.ts';
-import { groupOfActor, isGroupMember } from '../social/groups.ts';
+import { findGroup, groupOfActor, isGroupMember, notifyModerators } from '../social/groups.ts';
 import { createNotification } from '../social/notifications.ts';
 import { deletePost } from '../social/posts.ts';
 
@@ -322,6 +322,8 @@ export async function ingestRemotePost(
     audience.delete(data.groupActorId);
     mentioned.delete(data.groupActorId);
   }
+  // In a group that approves posts, what comes from elsewhere waits for a moderator too.
+  const pending = groupId ? Boolean((await findGroup(ctx, groupId))?.group.postApproval) : false;
   const tagNames = [
     ...new Set((data.tags ?? []).map((t) => t.replace(/^#/, '').toLowerCase()).filter(Boolean)),
   ];
@@ -341,6 +343,7 @@ export async function ingestRemotePost(
       inReplyToUri: parent ? null : (data.inReplyTo?.uri ?? null),
       threadRootId: parent ? (parent.threadRootId ?? parent.id) : id,
       groupId,
+      pendingApproval: pending,
       apUri: data.apUri ?? null,
       apUrl: safeHttpUrl(data.apUrl ?? data.apUri),
       diasporaGuid: data.diasporaGuid ?? null,
@@ -402,7 +405,7 @@ export async function ingestRemotePost(
         diasporaGuid: data.poll.diasporaGuid ?? null,
       });
     }
-    if (parent) {
+    if (parent && !pending) {
       await tx
         .update(posts)
         .set({ repliesCount: sql`${posts.repliesCount} + 1` })
@@ -410,6 +413,10 @@ export async function ingestRemotePost(
     }
   });
 
+  if (pending && groupId) {
+    await notifyModerators(ctx, groupId, data.authorActorId, 'group_post_pending', id);
+    return id;
+  }
   for (const actorId of mentioned) {
     await createNotification(ctx, {
       actorId,

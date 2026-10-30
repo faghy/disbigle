@@ -745,6 +745,11 @@ export function StatusCard({
 
           {status.inReplyToId && <ReplyContext status={status} />}
           <GroupContext status={status} />
+          {status.pendingApproval && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
+              {t('status.pendingApproval')}
+            </p>
+          )}
 
           {hasWarning && (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2">

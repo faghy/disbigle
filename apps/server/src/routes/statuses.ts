@@ -1,4 +1,5 @@
 import {
+  approveGroupPost,
   bookmark,
   type CoreContext,
   createPost,
@@ -9,6 +10,7 @@ import {
   like,
   pinPost,
   reblog,
+  rejectGroupPost,
   shareToGroup,
   unbookmark,
   unlike,
@@ -97,6 +99,20 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
     const { id } = parse(idParams, request.params);
     const { groupId } = parse(groupBody, request.body);
     await unshareFromGroup(ctx, session.actorId, id, groupId);
+    return { status: 'ok' };
+  });
+
+  // Moderators of a group with post approval let posts in, or turn them down.
+  app.post('/:id/approve', async (request) => {
+    const session = requireUser(request);
+    const { id } = parse(idParams, request.params);
+    await approveGroupPost(ctx, session.actorId, id);
+    return { status: 'ok' };
+  });
+  app.post('/:id/reject', async (request) => {
+    const session = requireUser(request);
+    const { id } = parse(idParams, request.params);
+    await rejectGroupPost(ctx, session.actorId, id);
     return { status: 'ok' };
   });
 }

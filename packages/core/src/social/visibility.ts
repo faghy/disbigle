@@ -13,22 +13,29 @@ const { posts, postAudiences, follows, blocks, groups, groupMembers } = schema;
  * - limited / direct: the author and explicit recipients only
  * - in a group, the group decides: public groups are read by everyone, the others by their
  *   members (and the author) only, whatever the post's own visibility says
+ * - a group post waiting for approval: its author and the group's moderators only
  */
 export function visibleTo(viewerActorId: string | null): SQL {
   const publicGroup = sql`exists (select 1 from ${groups} where ${groups.id} = ${posts.groupId} and ${groups.privacy} = 'public')`;
   if (!viewerActorId)
     return sql`(
       (${posts.groupId} is null and ${posts.visibility} in ('public', 'unlisted'))
-      or (${posts.groupId} is not null and ${publicGroup})
+      or (${posts.groupId} is not null and not ${posts.pendingApproval} and ${publicGroup})
     )`;
+  const moderator = sql`exists (
+    select 1 from ${groupMembers}
+    where ${groupMembers.groupId} = ${posts.groupId} and ${groupMembers.actorId} = ${viewerActorId}
+      and ${groupMembers.state} = 'member' and ${groupMembers.role} in ('admin', 'moderator')
+  )`;
   const inGroup = sql`(
     ${posts.actorId} = ${viewerActorId}
-    or ${publicGroup}
-    or exists (
+    or (${posts.pendingApproval} and ${moderator})
+    or (not ${posts.pendingApproval} and ${publicGroup})
+    or (not ${posts.pendingApproval} and exists (
       select 1 from ${groupMembers}
       where ${groupMembers.groupId} = ${posts.groupId} and ${groupMembers.actorId} = ${viewerActorId}
         and ${groupMembers.state} = 'member'
-    )
+    ))
   )`;
   const outsideGroups = sql`(
     ${posts.visibility} in ('public', 'unlisted')

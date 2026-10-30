@@ -25,6 +25,8 @@ function makeGroup(overrides: Partial<Group> = {}): Group {
     membersCount: 12,
     createdAt: '2026-10-01T10:00:00.000Z',
     membership: null,
+    joinApproval: false,
+    postApproval: false,
     ...overrides,
   };
 }
@@ -358,5 +360,79 @@ describe('groups', () => {
       '/groups/beatles',
     );
     expect(within(results).queryByRole('button', { name: /Follow/ })).not.toBeInTheDocument();
+  });
+  it('turns on approval of members and posts in the settings', async () => {
+    const group = makeGroup({ membership: { role: 'admin', state: 'member' } });
+    const fetchMock = mockApi({
+      ...base,
+      [`GET /groups/${group.handle}`]: { body: group },
+      [`GET /groups/${group.id}/timeline`]: { body: [] },
+      [`PATCH /groups/${group.id}`]: (body) => ({ body: { ...group, ...(body as object) } }),
+    });
+    renderApp(`/groups/${group.handle}`);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('tab', { name: 'Settings' }));
+    await user.click(screen.getByRole('checkbox', { name: /New members need approval/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Posts and comments need approval/ }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH');
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+        joinApproval: true,
+        postApproval: true,
+      });
+    });
+  });
+
+  it('lets moderators approve waiting posts', async () => {
+    const group = makeGroup({
+      membership: { role: 'moderator', state: 'member' },
+      postApproval: true,
+      pendingPostsCount: 1,
+    });
+    const waiting = makeStatus({
+      account: bob,
+      content: '<p>Please let me in</p>',
+      pendingApproval: true,
+      group: {
+        id: group.id,
+        handle: group.handle,
+        name: group.name,
+        privacy: 'public',
+        avatarUrl: null,
+      },
+    });
+    const fetchMock = mockApi({
+      ...base,
+      [`GET /groups/${group.handle}`]: { body: group },
+      [`GET /groups/${group.id}/timeline`]: { body: [] },
+      [`GET /groups/${group.id}/pending`]: { body: [waiting] },
+      [`POST /statuses/${waiting.id}/approve`]: { body: { status: 'ok' } },
+    });
+    renderApp(`/groups/${group.handle}`);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('tab', { name: /To approve/ }));
+    expect(await screen.findByText('Please let me in')).toBeInTheDocument();
+    expect(screen.getByText('Waiting for approval')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Approve' }));
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(([url]) =>
+          String(url).endsWith(`/statuses/${waiting.id}/approve`),
+        ),
+      ).toBe(true),
+    );
+  });
+
+  it('suggests @all for all your mutual contacts', async () => {
+    mockApi({ ...base, 'GET /search/accounts': { body: [] }, 'GET /timelines/home': { body: [] } });
+    renderApp('/');
+    const user = userEvent.setup();
+    const composer = await screen.findByRole('textbox', { name: 'New post' });
+    await user.type(composer, 'Party @al');
+    const option = await screen.findByRole('option', { name: /@all/ });
+    expect(option).toHaveTextContent('All your mutual contacts');
+    await user.click(option);
+    expect(composer).toHaveValue('Party @all ');
   });
 });

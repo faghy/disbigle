@@ -61,7 +61,8 @@ export class StreamingHub {
   async handle(event: DomainEvent): Promise<void> {
     if (this.connections.size === 0) return;
     try {
-      if (event.type === 'post.created') await this.onPostCreated(event.postId, 'update');
+      if (event.type === 'post.created' || event.type === 'post.approved')
+        await this.onPostCreated(event.postId, 'update');
       else if (event.type === 'post.updated' || event.type === 'poll.voted')
         await this.onPostCreated(event.postId, 'status.update');
       else if (event.type === 'post.deleted') {

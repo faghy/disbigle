@@ -28,6 +28,9 @@ export function nativeAlerts(alerts: Record<string, boolean | undefined>): Requi
     like: on('favourite'),
     poll: on('poll'),
     group_request: false,
+    group_post_pending: false,
+    group_post_approved: false,
+    group_post_rejected: false,
     group_invite: false,
     group_accepted: false,
   };

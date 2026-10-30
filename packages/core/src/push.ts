@@ -21,6 +21,9 @@ export const defaultPushAlerts: Required<PushAlerts> = {
   group_request: true,
   group_invite: true,
   group_accepted: true,
+  group_post_pending: true,
+  group_post_approved: true,
+  group_post_rejected: true,
 };
 
 /** The instance's VAPID key pair, created on first use (needs the instance_keys row). */
@@ -140,6 +143,9 @@ const titles: Record<string, Record<string, string>> = {
     group_request: '{name} asked to join {group}',
     group_invite: '{name} invited you to {group}',
     group_accepted: 'You are now a member of {group}',
+    group_post_pending: '{name} wrote in {group}: it waits for your approval',
+    group_post_approved: 'Your post in {group} was approved',
+    group_post_rejected: 'Your post in {group} was not approved',
   },
   it: {
     follow: '{name} ha iniziato a seguirti',
@@ -152,6 +158,9 @@ const titles: Record<string, Record<string, string>> = {
     group_request: '{name} chiede di entrare in {group}',
     group_invite: '{name} ti ha invitato in {group}',
     group_accepted: 'Ora fai parte di {group}',
+    group_post_pending: '{name} ha scritto in {group}: aspetta la tua approvazione',
+    group_post_approved: 'Il tuo post in {group} è stato approvato',
+    group_post_rejected: 'Il tuo post in {group} non è stato approvato',
   },
   es: {
     follow: '{name} ha empezado a seguirte',
@@ -164,6 +173,9 @@ const titles: Record<string, Record<string, string>> = {
     group_request: '{name} quiere unirse a {group}',
     group_invite: '{name} te ha invitado a {group}',
     group_accepted: 'Ya eres miembro de {group}',
+    group_post_pending: '{name} escribió en {group}: espera tu aprobación',
+    group_post_approved: 'Tu publicación en {group} fue aprobada',
+    group_post_rejected: 'Tu publicación en {group} no fue aprobada',
   },
 };
 

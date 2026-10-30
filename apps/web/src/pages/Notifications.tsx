@@ -38,6 +38,9 @@ export const typeStyle: Record<
   group_request: { icon: GroupIcon, tone: 'bg-accent-soft text-accent' },
   group_invite: { icon: GroupIcon, tone: 'bg-accent-soft text-accent' },
   group_accepted: { icon: GroupIcon, tone: 'bg-success-soft text-success' },
+  group_post_pending: { icon: GroupIcon, tone: 'bg-accent-soft text-accent' },
+  group_post_approved: { icon: GroupIcon, tone: 'bg-success-soft text-success' },
+  group_post_rejected: { icon: GroupIcon, tone: 'bg-danger-soft text-danger' },
 };
 
 /** Plain-text excerpt of a post for one-line summaries. */

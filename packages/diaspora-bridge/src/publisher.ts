@@ -38,6 +38,7 @@ import {
   threadRootOf,
 } from './actors.ts';
 import type { DiasporaBridge } from './bridge.ts';
+import { relayStored } from './incoming.ts';
 import {
   commentFor,
   diasporaText,
@@ -152,6 +153,8 @@ export class DiasporaPublisher implements EventBus {
     switch (event.type) {
       case 'post.created':
         return this.postCreated(event.postId);
+      case 'post.approved':
+        return this.postApproved(event.postId);
       case 'post.updated':
         return this.postUpdated(event.postId);
       case 'post.deleted':
@@ -236,6 +239,21 @@ export class DiasporaPublisher implements EventBus {
       signer,
       await recipientsFor(ctx, post),
     );
+  }
+
+  /**
+   * A post or comment let into a group by a moderator goes out now. A diaspora* comment was kept
+   * as signed when it arrived: the thread's author relays that copy.
+   */
+  private async postApproved(postId: string): Promise<void> {
+    const post = await postById(this.ctx, postId);
+    if (!post) return;
+    const author = await actorById(this.ctx, post.actorId);
+    if (!post.local && post.inReplyToId && post.diasporaGuid && deliversViaDiaspora(author)) {
+      await relayStored(this.bridge, post.diasporaGuid);
+      return;
+    }
+    return this.postCreated(postId);
   }
 
   /**

@@ -14,6 +14,7 @@ import {
   listMyGroups,
   MAX_IMAGE_BYTES,
   type MediaStorage,
+  pendingGroupPosts,
   removeGroupMember,
   removeProfileImage,
   requireGroupAdmin,
@@ -118,6 +119,16 @@ export async function groupRoutes(
       parse(membersQuery, request.query).state,
     ),
   );
+
+  // Posts and comments waiting for a moderator.
+  app.get('/:id/pending', async (request) => {
+    const { group } = await requireReadableGroup(
+      ctx,
+      viewer(request),
+      parse(groupParams, request.params).id,
+    );
+    return pendingGroupPosts(ctx, requireUser(request).actorId, group.id);
+  });
 
   app.post('/:id/members/:accountId/approve', async (request) => {
     const { id, accountId } = parse(memberParams, request.params);

@@ -611,6 +611,8 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       if (target.isGroup) {
         // Following a group is joining it.
         const joined = await remoteJoinGroup(ctx.data, target.id, follower.id, activity.id.href);
+        // A request waits for a moderator: the answer comes when they decide.
+        if (joined === 'requested') return;
         const remote = await activity.getActor(ctx);
         if (!remote) return;
         const Answer = joined ? Accept : Reject;

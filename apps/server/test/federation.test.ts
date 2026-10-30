@@ -613,6 +613,59 @@ describe('groups across servers', () => {
     expect(shared.reblog.content).toContain('Here comes the sun');
   });
 
+  it('lets moderators approve members and posts from other servers', async () => {
+    const owner = await signUp(a);
+    const bob = await signUp(b);
+    const handle = `mod_${Math.random().toString(36).slice(2, 7)}`;
+    const group = (
+      await owner.client.post('/api/v1/groups', { name: 'Mod', handle, privacy: 'public' })
+    ).json();
+    await owner.client.patch(`/api/v1/groups/${group.id}`, {
+      joinApproval: true,
+      postApproval: true,
+    });
+    const remoteGroup = (
+      await bob.client.post('/api/v1/search/resolve', { q: `${a.url}/users/${handle}` })
+    ).json();
+    await bob.client.post(`/api/v1/accounts/${remoteGroup.id}/follow`);
+    const request = await eventually(async () => {
+      const list = (
+        await owner.client.get(`/api/v1/groups/${group.id}/members?state=requested`)
+      ).json();
+      return list[0];
+    });
+    // Until a moderator says yes, Bob only asked.
+    const before = (
+      await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteGroup.id}`)
+    ).json();
+    expect(before[0]).toMatchObject({ following: false, requested: true });
+    await owner.client.post(`/api/v1/groups/${group.id}/members/${request.account.id}/approve`);
+    await eventually(async () => {
+      const rel = (
+        await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteGroup.id}`)
+      ).json();
+      return rel[0]?.following;
+    });
+
+    // Bob's answer to a group post waits for a moderator, then joins the thread.
+    const post = (
+      await owner.client.post('/api/v1/statuses', { content: 'Moderated', groupId: group.id })
+    ).json();
+    const shared = await eventually(async () => {
+      const home = (await bob.client.get('/api/v1/timelines/home')).json();
+      return home.find((s: { reblog: { uri: string } | null }) => s.reblog?.uri === post.uri);
+    });
+    await bob.client.post('/api/v1/statuses', { content: 'Posso?', inReplyToId: shared.reblog.id });
+    const waiting = await eventually(async () => {
+      const list = (await owner.client.get(`/api/v1/groups/${group.id}/pending`)).json();
+      return list[0];
+    });
+    expect(waiting.content).toContain('Posso?');
+    await owner.client.post(`/api/v1/statuses/${waiting.id}/approve`);
+    const context = (await owner.client.get(`/api/v1/statuses/${post.id}/context`)).json();
+    expect(context.descendants[0]).toMatchObject({ id: waiting.id });
+  });
+
   it('keeps private groups out of reach of other servers', async () => {
     const owner = await signUp(a);
     const bob = await signUp(b);
