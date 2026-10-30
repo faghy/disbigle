@@ -17,6 +17,11 @@ export const socialKeys = {
   following: (accountId: string) => ['following', accountId] as const,
   notifications: ['notifications'] as const,
   pinned: (accountId: string) => ['pinned', accountId] as const,
+  media: (accountId: string) => ['media', accountId] as const,
+  albums: ['albums'] as const,
+  accountAlbums: (accountId: string, mediaId?: string) =>
+    ['albums', accountId, ...(mediaId ? [mediaId] : [])] as const,
+  album: (albumId: string) => ['albums', 'one', albumId] as const,
   unreadCount: ['unreadCount'] as const,
 };
 

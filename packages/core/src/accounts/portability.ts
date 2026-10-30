@@ -18,7 +18,7 @@ const {
   mutes,
   sessions,
 } = schema;
-const { mediaAttachments, postAspects } = schema;
+const { mediaAttachments, postAspects, albums, albumItems } = schema;
 
 type ActorRow = typeof actors.$inferSelect;
 
@@ -159,11 +159,41 @@ export async function exportAccount(ctx: CoreContext, userId: string) {
     following: await handles(following.map((f) => f.id)),
     followers: await handles(followers.map((f) => f.id)),
     aspects: aspectList,
+    albums: await exportAlbums(ctx, actor.id),
     likes: liked,
     bookmarks: bookmarked.map((b) => b.uri),
     blocks: await handles(blocked.map((b) => b.id)),
     mutes: await handles(muted.map((m) => m.id)),
   };
+}
+
+/** The user's albums, with the address of each photo (the files are with their posts). */
+async function exportAlbums(ctx: CoreContext, actorId: string) {
+  const owned = await ctx.db
+    .select()
+    .from(albums)
+    .where(eq(albums.ownerActorId, actorId))
+    .orderBy(asc(albums.createdAt));
+  if (owned.length === 0) return [];
+  const items = await ctx.db
+    .select({ albumId: albumItems.albumId, media: mediaAttachments })
+    .from(albumItems)
+    .innerJoin(mediaAttachments, eq(mediaAttachments.id, albumItems.mediaId))
+    .where(
+      inArray(
+        albumItems.albumId,
+        owned.map((a) => a.id),
+      ),
+    )
+    .orderBy(asc(albumItems.createdAt));
+  return owned.map((album) => ({
+    name: album.name,
+    description: album.description,
+    createdAt: album.createdAt.toISOString(),
+    media: items
+      .filter((i) => i.albumId === album.id)
+      .map((i) => (i.media.filePath ? mediaUrl(ctx, i.media.filePath) : i.media.remoteUrl)),
+  }));
 }
 
 /** How long a deleted account's identity is kept so the deletion can federate. */

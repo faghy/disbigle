@@ -28,6 +28,7 @@ import { authPlugin } from './plugins/auth.ts';
 import { findRemoteAccount } from './resolve.ts';
 import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
 import { adminRoutes, reportRoutes } from './routes/admin.ts';
+import { albumRoutes } from './routes/albums.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { authorizedAppRoutes } from './routes/authorized-apps.ts';
@@ -233,6 +234,7 @@ export async function buildApp(options: AppOptions) {
       });
       await api.register(followRequestRoutes, { ctx, prefix: '/follow_requests' });
       await api.register(aspectRoutes, { ctx, prefix: '/aspects' });
+      await api.register(albumRoutes, { ctx, prefix: '/albums' });
       await api.register(notificationRoutes, { ctx, prefix: '/notifications' });
       await api.register(mediaRoutes, { ctx: mediaCtx, prefix: '/media' });
       await api.register(reportRoutes, { ctx, prefix: '/reports' });

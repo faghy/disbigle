@@ -11,6 +11,7 @@ import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
 import { fullNavigation, safeRedirect } from './lib/redirect.ts';
 import { AboutPage } from './pages/About.tsx';
+import { AlbumPage } from './pages/Album.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
 import { AdminGroupsPage } from './pages/admin/AdminGroups.tsx';
@@ -189,6 +190,12 @@ const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/@{$username}',
   component: ProfilePage,
+});
+
+const albumRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/albums/$albumId',
+  component: AlbumPage,
 });
 
 const statusRoute = createRoute({
@@ -418,6 +425,7 @@ export const routeTree = rootRoute.addChildren([
     settingsAppsRoute,
   ]),
   profileRoute,
+  albumRoute,
   statusRoute,
   localRoute,
   federatedRoute,

@@ -1,11 +1,15 @@
 import type {
   Account,
+  Album,
+  AlbumRequest,
+  AlbumWithMedia,
   Aspect,
   Conversation,
   CreatePostRequest,
   EditPostRequest,
   MediaAttachment,
   Notification,
+  ProfileMedia,
   Relationship,
   Status,
   StatusContext,
@@ -98,6 +102,23 @@ export const social = {
   /** An account's pinned posts (up to 5), each with `pinned: true`. */
   pinnedStatuses: (accountId: string) =>
     api.get<Status[]>(`/accounts/${id(accountId)}/statuses?pinned=true`),
+
+  // Photos and albums
+  /** Photos and videos of an account's posts, newest first. */
+  accountMedia: (accountId: string, page: PageParams) =>
+    api.get<ProfileMedia[]>(`/accounts/${id(accountId)}/media${queryString({ ...page })}`),
+  /** With `mediaId` (own albums only), each album says whether it holds that attachment. */
+  accountAlbums: (accountId: string, mediaId?: string) =>
+    api.get<Album[]>(`/accounts/${id(accountId)}/albums${queryString({ mediaId })}`),
+  album: (albumId: string) => api.get<AlbumWithMedia>(`/albums/${id(albumId)}`),
+  createAlbum: (body: AlbumRequest) => api.post<Album>('/albums', body),
+  updateAlbum: (albumId: string, body: AlbumRequest) =>
+    api.patch<Album>(`/albums/${id(albumId)}`, body),
+  deleteAlbum: (albumId: string) => api.delete<Ok>(`/albums/${id(albumId)}`),
+  setInAlbum: (albumId: string, mediaId: string, included: boolean) =>
+    included
+      ? api.put<Ok>(`/albums/${id(albumId)}/media/${id(mediaId)}`, {})
+      : api.delete<Ok>(`/albums/${id(albumId)}/media/${id(mediaId)}`),
 
   // Accounts
   relationships: (ids: string[]) =>

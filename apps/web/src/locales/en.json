@@ -130,6 +130,8 @@
       "label": "Profile sections",
       "posts": "Posts",
       "replies": "Posts and replies",
+      "media": "Media",
+      "albums": "Albums",
       "followers": "Followers",
       "following": "Following"
     },
@@ -1332,5 +1334,26 @@
     "shared": "Shared",
     "shareIn": "Share in {{name}}",
     "undoIn": "Shared in {{name}}: take it back"
+  },
+  "albums": {
+    "new": "New album",
+    "edit": "Edit album",
+    "save": "Save",
+    "create": "Create",
+    "name": "Name",
+    "description": "Description (optional)",
+    "hint": "Open a photo in the Media tab to add it to your albums.",
+    "addTo": "Add to album",
+    "inAlbums": "In these albums",
+    "noneYet": "No albums yet.",
+    "none": "No albums to show.",
+    "noMedia": "No photos or videos yet.",
+    "empty": "This album is empty.",
+    "openPost": "Open the post",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items",
+    "delete": "Delete album",
+    "deleteTitle": "Delete «{{name}}»?",
+    "deleteDescription": "The photos stay in their posts: only the album goes away."
   }
 }

@@ -89,6 +89,42 @@ export interface MediaAttachment {
   blurhash: string | null;
 }
 
+/** A photo or video of an account, with the post it belongs to. */
+export interface ProfileMedia {
+  media: MediaAttachment;
+  statusId: string;
+  /** The post is marked sensitive: the preview is hidden until clicked. */
+  sensitive: boolean;
+  createdAt: string;
+}
+
+export const MAX_ALBUMS = 100;
+export const MAX_ALBUM_ITEMS = 1000;
+
+export const albumRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).default(''),
+});
+export type AlbumRequest = z.input<typeof albumRequestSchema>;
+
+/** A photo album. Counts and cover only take into account what the viewer may see. */
+export interface Album {
+  id: string;
+  accountId: string;
+  name: string;
+  description: string;
+  mediaCount: number;
+  cover: MediaAttachment | null;
+  updatedAt: string;
+  /** Only when asked about one attachment: whether the album holds it. */
+  includes?: boolean;
+}
+
+export interface AlbumWithMedia extends Album {
+  account: Account;
+  items: ProfileMedia[];
+}
+
 export interface Poll {
   id: string;
   expiresAt: string | null;

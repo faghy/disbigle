@@ -130,6 +130,8 @@
       "label": "Sezioni del profilo",
       "posts": "Post",
       "replies": "Post e risposte",
+      "media": "Media",
+      "albums": "Album",
       "followers": "Follower",
       "following": "Seguiti"
     },
@@ -1332,5 +1334,26 @@
     "shared": "Condiviso",
     "shareIn": "Condividi in {{name}}",
     "undoIn": "Condiviso in {{name}}: ritira"
+  },
+  "albums": {
+    "new": "Nuovo album",
+    "edit": "Modifica album",
+    "save": "Salva",
+    "create": "Crea",
+    "name": "Nome",
+    "description": "Descrizione (facoltativa)",
+    "hint": "Apri una foto nella scheda Media per aggiungerla ai tuoi album.",
+    "addTo": "Aggiungi all'album",
+    "inAlbums": "In questi album",
+    "noneYet": "Ancora nessun album.",
+    "none": "Nessun album da mostrare.",
+    "noMedia": "Ancora nessuna foto o video.",
+    "empty": "Questo album è vuoto.",
+    "openPost": "Apri il post",
+    "count_one": "{{count}} elemento",
+    "count_other": "{{count}} elementi",
+    "delete": "Elimina album",
+    "deleteTitle": "Eliminare «{{name}}»?",
+    "deleteDescription": "Le foto restano nei loro post: sparisce solo l'album."
   }
 }

@@ -133,6 +133,8 @@
       "label": "Secciones del perfil",
       "posts": "Publicaciones",
       "replies": "Publicaciones y respuestas",
+      "media": "Multimedia",
+      "albums": "Álbumes",
       "followers": "Seguidores",
       "following": "Siguiendo"
     },
@@ -1358,5 +1360,26 @@
     "shared": "Compartido",
     "shareIn": "Compartir en {{name}}",
     "undoIn": "Compartido en {{name}}: retirar"
+  },
+  "albums": {
+    "new": "Nuevo álbum",
+    "edit": "Editar álbum",
+    "save": "Guardar",
+    "create": "Crear",
+    "name": "Nombre",
+    "description": "Descripción (opcional)",
+    "hint": "Abre una foto en la pestaña Multimedia para añadirla a tus álbumes.",
+    "addTo": "Añadir al álbum",
+    "inAlbums": "En estos álbumes",
+    "noneYet": "Todavía no hay álbumes.",
+    "none": "No hay álbumes que mostrar.",
+    "noMedia": "Todavía no hay fotos ni vídeos.",
+    "empty": "Este álbum está vacío.",
+    "openPost": "Abrir la publicación",
+    "count_one": "{{count}} elemento",
+    "count_other": "{{count}} elementos",
+    "delete": "Eliminar álbum",
+    "deleteTitle": "¿Eliminar «{{name}}»?",
+    "deleteDescription": "Las fotos se quedan en sus publicaciones: solo desaparece el álbum."
   }
 }

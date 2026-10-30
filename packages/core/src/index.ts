@@ -29,6 +29,7 @@ export * from './moderation.ts';
 export * from './net.ts';
 export * from './push.ts';
 export * from './settings.ts';
+export * from './social/albums.ts';
 export * from './social/aspects.ts';
 export * from './social/content.ts';
 export * from './social/conversations.ts';

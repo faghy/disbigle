@@ -15,6 +15,7 @@ import { Avatar } from '../components/Avatar.tsx';
 import { ConfirmDialog } from '../components/Dialog.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
+import { ProfileAlbumsTab, ProfileMediaTab } from '../components/Gallery.tsx';
 import { InfoIcon, MailIcon, MoreIcon } from '../components/icons.tsx';
 import { ReportDialog } from '../components/ReportDialog.tsx';
 import { displayName, StatusCard, StatusContent } from '../components/StatusCard.tsx';
@@ -451,7 +452,7 @@ function ProfileMenu({ account, relationship }: { account: Account; relationship
 // Posts, replies, followers and following
 // ---------------------------------------------------------------------------------------------
 
-export type TabId = 'posts' | 'replies' | 'followers' | 'following';
+export type TabId = 'posts' | 'replies' | 'media' | 'albums' | 'followers' | 'following';
 const LIST_PAGE = 40;
 
 function ProfileTabs({
@@ -471,6 +472,9 @@ function ProfileTabs({
   const tabs: { id: TabId; label: string; count?: string | undefined }[] = [
     { id: 'posts', label: t('profile.tabs.posts') },
     { id: 'replies', label: t('profile.tabs.replies') },
+    { id: 'media', label: t('profile.tabs.media') },
+    // Only accounts of this server have albums.
+    ...(account.local ? [{ id: 'albums' as const, label: t('profile.tabs.albums') }] : []),
     { id: 'followers', label: t('profile.tabs.followers'), count: format(account.followersCount) },
     { id: 'following', label: t('profile.tabs.following'), count: format(account.followingCount) },
   ];
@@ -530,6 +534,10 @@ function ProfileTabs({
             label={tabs.find((item) => item.id === tab)?.label ?? ''}
             empty={t('profile.noPosts')}
           />
+        ) : tab === 'media' ? (
+          <ProfileMediaTab account={account} />
+        ) : tab === 'albums' ? (
+          <ProfileAlbumsTab account={account} />
         ) : (
           <div className="p-2">
             <PagedAccountList

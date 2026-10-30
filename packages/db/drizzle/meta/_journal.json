@@ -169,6 +169,13 @@
       "when": 1793374821217,
       "tag": "0023_post_translations",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793392252322,
+      "tag": "0024_albums",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { backfillRemoteOutbox } from '@disbigle/activitypub';
 import {
   acceptFollowRequest,
+  accountMedia,
   accountTimeline,
   block,
   type CoreContext,
@@ -8,6 +9,7 @@ import {
   follow,
   getAccountWithCounts,
   getRelationships,
+  listAlbums,
   listFollowers,
   listFollowing,
   listFollowRequests,
@@ -84,6 +86,21 @@ export async function accountRoutes(
       await Promise.race([backfill, new Promise((resolve) => setTimeout(resolve, 5000))]);
     }
     return accountTimeline(ctx, viewer, id, query);
+  });
+
+  app.get('/:id/media', async (request) => {
+    const { id } = parse(idParams, request.params);
+    await loadActor(id);
+    const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+    return accountMedia(ctx, viewer, id, parse(paginationQuerySchema, request.query));
+  });
+
+  app.get('/:id/albums', async (request) => {
+    const { id } = parse(idParams, request.params);
+    await loadActor(id);
+    const { mediaId } = parse(z.object({ mediaId: z.uuid().optional() }), request.query);
+    const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+    return listAlbums(ctx, viewer, id, mediaId);
   });
 
   app.get('/:id/followers', async (request) => {

@@ -587,6 +587,40 @@ export const mediaAttachments = pgTable(
   ],
 );
 
+/**
+ * Photo albums of a local account. An album only gathers attachments of its owner's posts:
+ * whoever opens it sees the ones whose post they may see, and nothing of an album without any.
+ */
+export const albums = pgTable(
+  'albums',
+  {
+    id: uuid('id').primaryKey(),
+    ownerActorId: actorRef('owner_actor_id'),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    createdAt: createdAt(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('albums_owner_idx').on(t.ownerActorId, t.updatedAt)],
+);
+
+export const albumItems = pgTable(
+  'album_items',
+  {
+    albumId: uuid('album_id')
+      .notNull()
+      .references(() => albums.id, { onDelete: 'cascade' }),
+    mediaId: uuid('media_id')
+      .notNull()
+      .references(() => mediaAttachments.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.albumId, t.mediaId] }),
+    index('album_items_media_idx').on(t.mediaId),
+  ],
+);
+
 export const notifications = pgTable(
   'notifications',
   {

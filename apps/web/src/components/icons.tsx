@@ -268,3 +268,18 @@ export const EyeOffIcon = (p: IconProps) => (
     <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
   </Icon>
 );
+
+export const AlbumIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="7" y="7" width="14" height="14" rx="2" />
+    <path d="M17 3H5a2 2 0 0 0-2 2v12" />
+    <path d="M21 17l-4-4-6 6" />
+    <circle cx="12" cy="12" r="1.5" />
+  </Icon>
+);
+
+export const PlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);
