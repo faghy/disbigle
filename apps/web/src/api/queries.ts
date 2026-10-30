@@ -78,8 +78,8 @@ export function clearUserData(queryClient: QueryClient) {
 export const DEFAULT_LIMITS: InstanceInfo['limits'] = {
   maxPostLength: MAX_POST_LENGTH,
   maxMediaAttachments: 4,
-  maxImageBytes: 16 * 1024 * 1024,
-  maxVideoBytes: 40 * 1024 * 1024,
+  maxImageBytes: 8 * 1024 * 1024,
+  maxVideoBytes: 20 * 1024 * 1024,
   acceptedMediaTypes: [
     'image/jpeg',
     'image/png',

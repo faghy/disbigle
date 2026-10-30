@@ -7,8 +7,8 @@ import { DomainError } from '../errors.ts';
 import { serializeMedia } from '../social/statuses.ts';
 import type { MediaStorage } from './storage.ts';
 
-export const MAX_IMAGE_BYTES = 16 * 1024 * 1024;
-export const MAX_VIDEO_BYTES = 40 * 1024 * 1024;
+export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 export const ACCEPTED_MEDIA_TYPES = [
   'image/jpeg',
   'image/png',
@@ -24,7 +24,7 @@ export const ACCEPTED_MEDIA_TYPES = [
 const MAX_IMAGE_SIDE = 2560;
 const PREVIEW_SIDE = 640;
 /** Decoding bigger images (a few KB of PNG can claim gigapixels) is refused outright. */
-const MAX_INPUT_PIXELS = 50_000_000;
+const MAX_INPUT_PIXELS = 25_000_000;
 
 const imageFormats: Record<string, 'jpeg' | 'png' | 'webp' | 'gif' | 'avif'> = {
   'image/jpeg': 'jpeg',

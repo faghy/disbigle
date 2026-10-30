@@ -168,7 +168,7 @@ describe('composer', () => {
     const big = new File(['x'], 'huge.png', { type: 'image/png' });
     Object.defineProperty(big, 'size', { value: 17 * 1024 * 1024 });
     await user.upload(screen.getByTestId('composer-file-input'), big);
-    expect(await screen.findByText('huge.png is larger than 16 MB.')).toBeInTheDocument();
+    expect(await screen.findByText('huge.png is larger than 8 MB.')).toBeInTheDocument();
   });
 
   it('inserts an emoji where the cursor is, found by searching', async () => {
