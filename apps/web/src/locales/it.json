@@ -929,7 +929,10 @@
       "busy": "La macchina in questo momento è sotto sforzo",
       "calm": "La macchina va tranquilla",
       "memory": "Memoria",
-      "disk": "Disco (media)"
+      "disk": "Disco (media)",
+      "latestUsers": "Ultimi iscritti",
+      "allUsers_one": "Vedi tutti ({{count}})",
+      "allUsers_other": "Vedi tutti ({{count}})"
     },
     "users": {
       "description": "Tutte le persone iscritte a questo server, con l'indirizzo email. Questa pagina la vedono solo gli amministratori.",

@@ -8,6 +8,7 @@ import { CheckIcon, WarningIcon } from '../../components/icons.tsx';
 import { Alert, Card, cx, LoadingState } from '../../components/ui.tsx';
 import { fullDateTime } from '../../lib/time.ts';
 import { BarChart } from './BarChart.tsx';
+import { UserRow } from './Users.tsx';
 
 /** "1.2 GB", "340 MB"… in the reader's language. */
 export function formatBytes(bytes: number, language: string) {
@@ -61,6 +62,7 @@ export function DashboardPage() {
         </p>
       </div>
       <Numbers data={data} />
+      <LatestUsers />
       <Card className="grid gap-6 p-4 sm:grid-cols-2 sm:p-5">
         <BarChart title={t('admin.dashboard.charts.signups')} data={data.daily.signups} />
         <BarChart title={t('admin.dashboard.charts.localPosts')} data={data.daily.localPosts} />
@@ -73,14 +75,41 @@ export function DashboardPage() {
   );
 }
 
-function Stat({ label, value, note }: { label: string; value: number; note?: ReactNode }) {
+/** A headline number; with `to`, the label and number open that page. */
+function Stat({
+  label,
+  value,
+  note,
+  to,
+}: {
+  label: string;
+  value: number;
+  note?: ReactNode;
+  to?: '/admin/users';
+}) {
   const { i18n } = useTranslation();
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
-      <p className="text-sm text-fg-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
+  const body = (
+    <>
+      <span className="block text-sm text-fg-muted">{label}</span>
+      <span className="mt-1 block text-2xl font-semibold tracking-tight tabular-nums">
         {new Intl.NumberFormat(i18n.language).format(value)}
-      </p>
+      </span>
+    </>
+  );
+  return (
+    <div
+      className={cx(
+        'rounded-2xl border border-border bg-surface p-4',
+        to && 'transition-colors hover:border-accent hover:bg-accent-soft',
+      )}
+    >
+      {to ? (
+        <Link to={to} className="block rounded focus-ring">
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
       {note && <p className="mt-0.5 text-xs text-fg-muted">{note}</p>}
     </div>
   );
@@ -94,6 +123,7 @@ function Numbers({ data }: { data: AdminDashboard }) {
       <Stat
         label={t('admin.dashboard.users')}
         value={users.total}
+        to="/admin/users"
         note={
           <>
             {t('admin.dashboard.newThisWeek', { count: users.new.week })}
@@ -131,6 +161,35 @@ function Numbers({ data }: { data: AdminDashboard }) {
       <Stat label={t('admin.dashboard.remoteFollowing')} value={federation.remoteFollowing} />
       <Stat label={t('admin.dashboard.suspended')} value={users.suspended} />
     </div>
+  );
+}
+
+/** The newest people, with their details, and the way to the full list. */
+function LatestUsers() {
+  const { t } = useTranslation();
+  const users = useQuery({ queryKey: adminKeys.users(''), queryFn: () => admin.users() });
+  return (
+    <Card className="p-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 pt-4 sm:px-5">
+        <h3 className="font-semibold">{t('admin.dashboard.latestUsers')}</h3>
+        <Link to="/admin/users" className="text-sm font-medium text-accent hover:underline">
+          {t('admin.dashboard.allUsers', { count: users.data?.length ?? 0 })}
+        </Link>
+      </div>
+      {users.isPending ? (
+        <LoadingState label={t('common.loading')} />
+      ) : users.isError ? (
+        <Alert className="m-4">{errorMessage(users.error)}</Alert>
+      ) : (
+        <ul aria-label={t('admin.dashboard.latestUsers')} className="divide-y divide-border">
+          {users.data.slice(0, 5).map((user) => (
+            <li key={user.userId}>
+              <UserRow user={user} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 

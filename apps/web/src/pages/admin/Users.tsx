@@ -118,7 +118,7 @@ export function UsersPage() {
   );
 }
 
-function UserRow({ user }: { user: AdminUser }) {
+export function UserRow({ user }: { user: AdminUser }) {
   const { t, i18n } = useTranslation();
   const number = new Intl.NumberFormat(i18n.language);
   const status = statusOf(user);

@@ -89,11 +89,16 @@ describe('admin dashboard', () => {
       'GET /instance': instance(),
       'GET /admin/summary': { body: { pendingUsers: 2, openReports: 0 } },
       'GET /admin/dashboard': { body: dashboard },
+      'GET /admin/users': { body: [carol] },
     });
     const { router } = renderApp('/admin');
     expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/admin/dashboard');
-    expect(screen.getByText('42')).toBeInTheDocument();
+    // The number of people opens the full list.
+    expect(screen.getByRole('link', { name: /People signed up\s*42/ })).toHaveAttribute(
+      'href',
+      '/admin/users',
+    );
     expect(screen.getByRole('link', { name: '2 waiting' })).toHaveAttribute(
       'href',
       '/admin/pending',
@@ -104,6 +109,13 @@ describe('admin dashboard', () => {
     // 95% of the memory is in use: said in words, not only in red.
     expect(screen.getByText('Almost full')).toBeInTheDocument();
     expect(screen.getByText('The machine is running smoothly')).toBeInTheDocument();
+    // The newest people are on the overview too, with their email.
+    const latest = await screen.findByRole('list', { name: 'Latest sign-ups' });
+    expect(within(latest).getByRole('link', { name: 'carol@example.com' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'See everyone (1)' })).toHaveAttribute(
+      'href',
+      '/admin/users',
+    );
   });
 
   it('lists people with their email for administrators', async () => {

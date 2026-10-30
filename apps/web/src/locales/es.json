@@ -950,7 +950,10 @@
       "busy": "La máquina está muy cargada ahora",
       "calm": "La máquina va tranquila",
       "memory": "Memoria",
-      "disk": "Disco (multimedia)"
+      "disk": "Disco (multimedia)",
+      "latestUsers": "Últimos registros",
+      "allUsers_one": "Ver a todos ({{count}})",
+      "allUsers_other": "Ver a todos ({{count}})"
     },
     "users": {
       "description": "Todas las personas registradas en este servidor, con su correo. Solo los administradores ven esta página.",

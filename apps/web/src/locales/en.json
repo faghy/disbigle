@@ -929,7 +929,10 @@
       "busy": "The machine is busy right now",
       "calm": "The machine is running smoothly",
       "memory": "Memory",
-      "disk": "Disk (media)"
+      "disk": "Disk (media)",
+      "latestUsers": "Latest sign-ups",
+      "allUsers_one": "See everyone ({{count}})",
+      "allUsers_other": "See everyone ({{count}})"
     },
     "users": {
       "description": "Everyone signed up on this server, with their email address. Only administrators see this page.",
