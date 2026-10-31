@@ -62,13 +62,17 @@ export function AccountLink({
   account,
   className,
   children,
+  onClick,
+  title,
 }: {
   account: Account;
   className?: string;
   children: ReactNode;
+  onClick?: () => void;
+  title?: string;
 }) {
   return (
-    <Link {...profilePath(account)} className={className}>
+    <Link {...profilePath(account)} className={className} onClick={onClick} title={title}>
       {children}
     </Link>
   );

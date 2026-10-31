@@ -36,15 +36,19 @@ describe('notification bell', () => {
 
     const panel = await screen.findByRole('region', { name: 'Notifications' });
     expect(await within(panel).findByText('La mia gita')).toBeInTheDocument();
-    expect(
-      within(panel)
-        .getAllByRole('link')
-        .map((a) => a.textContent),
-    ).toEqual([
-      expect.stringContaining('liked your post'),
-      expect.stringContaining('followed you'),
-      'See all notifications',
-    ]);
+    // The row opens the post; who did it links to their profile.
+    expect(within(panel).getByRole('link', { name: 'liked your post' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/@alice\//),
+    );
+    expect(within(panel).getByRole('link', { name: 'followed you' })).toHaveAttribute(
+      'href',
+      '/@bob',
+    );
+    const bobLinks = within(panel).getAllByRole('link', { name: 'Bob' });
+    expect(bobLinks.length).toBeGreaterThan(0);
+    for (const link of bobLinks) expect(link).toHaveAttribute('href', '/@bob');
+    expect(within(panel).getByRole('link', { name: 'See all notifications' })).toBeVisible();
     await waitFor(() => expect(marked).toBe(true));
     expect(screen.getByRole('button', { name: 'Notifications' })).not.toHaveTextContent(/\d/);
 

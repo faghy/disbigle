@@ -12,7 +12,7 @@ import { relativeTime } from '../lib/time.ts';
 import { excerpt, typeStyle } from '../pages/Notifications.tsx';
 import { Avatar } from './Avatar.tsx';
 import { BellIcon } from './icons.tsx';
-import { displayName, profilePath, statusPath } from './StatusCard.tsx';
+import { AccountLink, displayName, profilePath, statusPath } from './StatusCard.tsx';
 import { Alert, cx, LoadingState } from './ui.tsx';
 
 const RECENT = 8;
@@ -134,16 +134,21 @@ function BellItem({ notification, onPick }: { notification: Notification; onPick
     : notification.group
       ? { to: '/groups/$handle' as const, params: { handle: notification.group.handle } }
       : profilePath(account);
+  // The whole row opens the post (or group); the avatar and the name open the profile of who did
+  // it, on top of the row's link (links can't nest).
   return (
-    <Link
-      {...target}
-      onClick={onPick}
+    <div
       className={cx(
-        'flex gap-3 px-4 py-3 hover:bg-surface-muted focus-ring',
+        'relative flex gap-3 px-4 py-3 hover:bg-surface-muted',
         !notification.read && 'bg-accent-soft/30',
       )}
     >
-      <span className="relative shrink-0">
+      <AccountLink
+        account={account}
+        onClick={onPick}
+        title={`@${account.acct}`}
+        className="relative z-10 shrink-0 rounded-full focus-ring"
+      >
         <Avatar account={account} size="sm" />
         <span
           className={cx(
@@ -153,13 +158,24 @@ function BellItem({ notification, onPick }: { notification: Notification; onPick
         >
           <Icon size={11} filled={type === 'like'} />
         </span>
-      </span>
+      </AccountLink>
       <span className="min-w-0 flex-1 text-sm">
         <span className="block">
-          <span className="font-semibold">{displayName(account)}</span>{' '}
-          <span className="text-fg-muted">
+          <AccountLink
+            account={account}
+            onClick={onPick}
+            title={`@${account.acct}`}
+            className="relative z-10 rounded font-semibold hover:underline focus-ring"
+          >
+            {displayName(account)}
+          </AccountLink>{' '}
+          <Link
+            {...target}
+            onClick={onPick}
+            className="text-fg-muted after:absolute after:inset-0 focus-ring"
+          >
             {t(`notifications.verbs.${type}`, { group: notification.group?.name ?? '' })}
-          </span>
+          </Link>
         </span>
         {status && (
           <span className="mt-0.5 block truncate text-fg-muted">
@@ -170,6 +186,6 @@ function BellItem({ notification, onPick }: { notification: Notification; onPick
       <time dateTime={notification.createdAt} className="shrink-0 text-xs text-fg-muted">
         {relativeTime(notification.createdAt, i18n.language)}
       </time>
-    </Link>
+    </div>
   );
 }

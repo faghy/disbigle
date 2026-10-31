@@ -158,7 +158,11 @@ function NotificationItem({ notification }: { notification: Notification }) {
             <Avatar account={account} size="sm" />
           </AccountLink>
           <p className="min-w-0 flex-1 text-sm">
-            <AccountLink account={account} className="font-semibold hover:underline">
+            <AccountLink
+              account={account}
+              title={`@${account.acct}`}
+              className="font-semibold hover:underline"
+            >
               {name}
             </AccountLink>{' '}
             <span className="text-fg-muted">
