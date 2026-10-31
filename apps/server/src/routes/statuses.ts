@@ -8,9 +8,12 @@ import {
   getStatus,
   getStatusContext,
   like,
+  listLikedBy,
+  listResharedBy,
   pinPost,
   reblog,
   rejectGroupPost,
+  serializeAccount,
   shareToGroup,
   translatePost,
   unbookmark,
@@ -26,6 +29,10 @@ import { parse } from '../http.ts';
 import { requireUser } from '../plugins/auth.ts';
 
 const idParams = z.object({ id: z.uuid() });
+const pageQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(80).default(40),
+  offset: z.coerce.number().int().min(0).max(100_000).default(0),
+});
 
 export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
   app.post(
@@ -61,6 +68,16 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       id,
     );
   });
+
+  // Who liked or reshared a post: anyone who may see the post may see these.
+  const lists = { liked_by: listLikedBy, reshared_by: listResharedBy } as const;
+  for (const [name, list] of Object.entries(lists)) {
+    app.get(`/:id/${name}`, async (request) => {
+      const { id } = parse(idParams, request.params);
+      const viewer = request.session?.stage === 'active' ? request.session.actorId : null;
+      return (await list(ctx, viewer, id, parse(pageQuery, request.query))).map(serializeAccount);
+    });
+  }
 
   app.delete('/:id', async (request) => {
     const session = requireUser(request);

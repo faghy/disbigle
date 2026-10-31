@@ -500,7 +500,14 @@
     "translate": "Traduci",
     "translating": "Traduzione…",
     "translatedFrom": "Tradotto da {{language}}",
-    "showOriginal": "Mostra originale"
+    "showOriginal": "Mostra originale",
+    "interactions": {
+      "title": "Mi piace e ricondivisioni",
+      "likes": "Mi piace",
+      "reshares": "Ricondivisioni",
+      "noLikes": "Ancora nessun mi piace.",
+      "noReshares": "Ancora nessuna ricondivisione."
+    }
   },
   "timeline": {
     "loadMore": "Carica altri",

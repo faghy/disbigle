@@ -975,3 +975,41 @@ export async function unbookmark(
     .where(and(eq(bookmarks.actorId, actorId), eq(bookmarks.postId, postId)));
   return getStatus(ctx, actorId, postId);
 }
+
+/** Who liked a post the viewer may see, newest first; `offset` pages through the list. */
+export async function listLikedBy(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  postId: string,
+  options: { limit?: number; offset?: number } = {},
+) {
+  const post = await getVisiblePost(ctx, viewerActorId, postId);
+  return ctx.db
+    .select({ actor: actors })
+    .from(likes)
+    .innerJoin(actors, eq(actors.id, likes.actorId))
+    .where(and(eq(likes.postId, post.id), isNull(actors.suspendedAt)))
+    .orderBy(sql`${likes.id} desc`)
+    .limit(Math.min(options.limit ?? 40, 80))
+    .offset(options.offset ?? 0)
+    .then((rows) => rows.map((r) => r.actor));
+}
+
+/** Who reshared a post the viewer may see, newest first; `offset` pages through the list. */
+export async function listResharedBy(
+  ctx: CoreContext,
+  viewerActorId: string | null,
+  postId: string,
+  options: { limit?: number; offset?: number } = {},
+) {
+  const post = await getVisiblePost(ctx, viewerActorId, postId);
+  return ctx.db
+    .select({ actor: actors })
+    .from(posts)
+    .innerJoin(actors, eq(actors.id, posts.actorId))
+    .where(and(eq(posts.reblogOfId, post.id), isNull(actors.suspendedAt)))
+    .orderBy(sql`${posts.id} desc`)
+    .limit(Math.min(options.limit ?? 40, 80))
+    .offset(options.offset ?? 0)
+    .then((rows) => rows.map((r) => r.actor));
+}

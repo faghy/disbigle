@@ -2,7 +2,7 @@ import type { Status } from '@disbigle/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { aliceUser, makeStatus } from '../test/fixtures.ts';
+import { aliceUser, bob, makeStatus, relationship } from '../test/fixtures.ts';
 import { instance, type MockResponse, mockApi, renderApp } from '../test/utils.tsx';
 
 /** A response the test releases by hand, to look at the UI while the request is in flight. */
@@ -26,6 +26,38 @@ async function renderHomeWith(status: Status, routes: Parameters<typeof mockApi>
 }
 
 describe('status card', () => {
+  it('shows who liked and reshared your own post', async () => {
+    const status = makeStatus({ account: aliceUser.account, likesCount: 1, reblogsCount: 0 });
+    const article = await renderHomeWith(status, {
+      [`GET /statuses/${status.id}/liked_by`]: { body: [bob] },
+      [`GET /statuses/${status.id}/reshared_by`]: { body: [] },
+      'GET /accounts/relationships': { body: [relationship(bob.id)] },
+    });
+    const user = userEvent.setup();
+
+    // The heart still likes; the count next to it opens the list.
+    expect(within(article).getByRole('button', { name: 'Like' })).toBeInTheDocument();
+    await user.click(within(article).getByRole('button', { name: '1 like' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Likes and reshares' });
+    expect(within(dialog).getByRole('tab', { name: /Likes/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(await within(dialog).findByRole('link', { name: /Bob/ })).toHaveAttribute(
+      'href',
+      '/@bob',
+    );
+    await user.click(within(dialog).getByRole('tab', { name: /Reshares/ }));
+    expect(await within(dialog).findByText('No reshares yet.')).toBeInTheDocument();
+  });
+
+  it("keeps the counts plain on other people's posts", async () => {
+    const status = makeStatus({ likesCount: 3 });
+    const article = await renderHomeWith(status, {});
+    expect(within(article).getByRole('button', { name: 'Like, 3 likes' })).toBeInTheDocument();
+    expect(within(article).queryByRole('button', { name: '3 likes' })).not.toBeInTheDocument();
+  });
+
   it('likes optimistically, then shows the server count', async () => {
     const status = makeStatus({ likesCount: 2 });
     const response = deferred();

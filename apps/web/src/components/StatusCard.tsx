@@ -28,6 +28,7 @@ import { Avatar } from './Avatar.tsx';
 import { Composer } from './Composer.tsx';
 import { ConfirmDialog } from './Dialog.tsx';
 import { EditStatusForm } from './EditStatusForm.tsx';
+import { type InteractionKind, InteractionsDialog } from './Interactions.tsx';
 import {
   BookmarkIcon,
   GroupIcon,
@@ -328,11 +329,14 @@ function ActionButton({
   onClick,
   children,
   pressed,
+  onCount,
 }: {
   label: string;
   count?: number;
   /** Spoken with the count, e.g. "3 likes". */
   countLabel?: string;
+  /** Makes the count a button of its own, e.g. to see who liked the post. */
+  onCount?: () => void;
   active?: boolean;
   activeClass?: string;
   disabled?: boolean;
@@ -340,10 +344,12 @@ function ActionButton({
   children: ReactNode;
   pressed?: boolean;
 }) {
-  return (
+  const shown = count !== undefined && count > 0;
+  const separate = shown && onCount !== undefined;
+  const button = (
     <button
       type="button"
-      aria-label={count && countLabel ? `${label}, ${countLabel}` : label}
+      aria-label={shown && countLabel && !separate ? `${label}, ${countLabel}` : label}
       aria-pressed={pressed}
       title={label}
       disabled={disabled}
@@ -352,15 +358,36 @@ function ActionButton({
         'inline-flex min-h-9 min-w-9 items-center justify-center gap-1.5 rounded-full px-2 text-sm text-fg-muted transition-colors focus-ring',
         'hover:bg-surface-muted hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
         active && activeClass,
+        separate && 'pr-1',
       )}
     >
       {children}
-      {count !== undefined && count > 0 && (
+      {shown && !separate && (
         <span aria-hidden="true" className="min-w-3 text-left text-xs font-medium tabular-nums">
           {count}
         </span>
       )}
     </button>
+  );
+  if (!separate) return button;
+  return (
+    <span className="inline-flex items-center">
+      {button}
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        title={countLabel}
+        onClick={onCount}
+        className={cx(
+          '-ml-1 inline-flex min-h-9 min-w-7 items-center justify-center rounded-full px-1.5 text-xs font-medium tabular-nums text-fg-muted transition-colors focus-ring',
+          'hover:bg-surface-muted hover:text-fg hover:underline underline-offset-2',
+          active && activeClass,
+        )}
+      >
+        <span className="sr-only">{countLabel}</span>
+        <span aria-hidden="true">{count}</span>
+      </button>
+    </span>
   );
 }
 
@@ -747,6 +774,7 @@ export function StatusCard({
   const [expanded, setExpanded] = useState(false);
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [interactions, setInteractions] = useState<InteractionKind | null>(null);
   const toggle = useToggleStatus();
   const contentId = useId();
   const headingId = useId();
@@ -912,6 +940,7 @@ export function StatusCard({
               active={status.reblogged}
               pressed={status.reblogged}
               activeClass="text-success"
+              onCount={isAuthor ? () => setInteractions('reshares') : undefined}
               disabled={!signedIn || !canReshare(status.visibility)}
               onClick={() => act('reblog', !status.reblogged)}
             >
@@ -924,6 +953,7 @@ export function StatusCard({
               active={status.liked}
               pressed={status.liked}
               activeClass="text-accent"
+              onCount={isAuthor ? () => setInteractions('likes') : undefined}
               disabled={!signedIn}
               onClick={() => {
                 if (!status.liked) setLikePops((n) => n + 1);
@@ -952,6 +982,13 @@ export function StatusCard({
             />
           </div>
           {toggle.error && <Alert className="mt-2">{errorMessage(toggle.error)}</Alert>}
+          {interactions && (
+            <InteractionsDialog
+              status={status}
+              initial={interactions}
+              onClose={() => setInteractions(null)}
+            />
+          )}
 
           {replying && (
             <div className="mt-3">

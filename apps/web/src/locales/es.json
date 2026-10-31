@@ -510,7 +510,14 @@
     "translate": "Traducir",
     "translating": "Traduciendo…",
     "translatedFrom": "Traducido del {{language}}",
-    "showOriginal": "Ver original"
+    "showOriginal": "Ver original",
+    "interactions": {
+      "title": "Me gusta y compartidos",
+      "likes": "Me gusta",
+      "reshares": "Compartidos",
+      "noLikes": "Todavía no hay Me gusta.",
+      "noReshares": "Todavía nadie lo ha compartido."
+    }
   },
   "timeline": {
     "loadMore": "Cargar más",

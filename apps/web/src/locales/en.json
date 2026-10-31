@@ -500,7 +500,14 @@
     "translate": "Translate",
     "translating": "Translating…",
     "translatedFrom": "Translated from {{language}}",
-    "showOriginal": "Show original"
+    "showOriginal": "Show original",
+    "interactions": {
+      "title": "Likes and reshares",
+      "likes": "Likes",
+      "reshares": "Reshares",
+      "noLikes": "No likes yet.",
+      "noReshares": "No reshares yet."
+    }
   },
   "timeline": {
     "loadMore": "Load more",

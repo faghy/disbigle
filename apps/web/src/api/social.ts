@@ -70,6 +70,10 @@ export const social = {
   createStatus: (body: CreatePostRequest) => api.post<Status>('/statuses', body),
   status: (statusId: string) => api.get<Status>(`/statuses/${id(statusId)}`),
   context: (statusId: string) => api.get<StatusContext>(`/statuses/${id(statusId)}/context`),
+  likedBy: (statusId: string, page: OffsetPage = {}) =>
+    api.get<Account[]>(`/statuses/${id(statusId)}/liked_by${queryString({ ...page })}`),
+  resharedBy: (statusId: string, page: OffsetPage = {}) =>
+    api.get<Account[]>(`/statuses/${id(statusId)}/reshared_by${queryString({ ...page })}`),
   editStatus: (statusId: string, body: EditPostRequest) =>
     api.put<Status>(`/statuses/${id(statusId)}`, body),
   deleteStatus: (statusId: string) => api.delete<Ok>(`/statuses/${id(statusId)}`),

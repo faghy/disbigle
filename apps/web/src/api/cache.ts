@@ -10,6 +10,7 @@ export const socialKeys = {
   timeline: (...parts: string[]) => ['timeline', ...parts] as const,
   status: (id: string) => ['status', id] as const,
   context: (id: string) => ['context', id] as const,
+  interactions: (id: string, kind: 'likes' | 'reshares') => ['interactions', id, kind] as const,
   aspects: ['aspects'] as const,
   aspectMembers: (id: string) => ['aspectMembers', id] as const,
   relationship: (accountId: string) => ['relationship', accountId] as const,
