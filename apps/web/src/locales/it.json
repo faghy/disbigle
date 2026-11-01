@@ -951,10 +951,12 @@
       "busy": "La macchina in questo momento è sotto sforzo",
       "calm": "La macchina va tranquilla",
       "memory": "Memoria",
-      "disk": "Disco (media)",
+      "disk": "Disco",
       "latestUsers": "Ultimi iscritti",
       "allUsers_one": "Vedi tutti ({{count}})",
-      "allUsers_other": "Vedi tutti ({{count}})"
+      "allUsers_other": "Vedi tutti ({{count}})",
+      "disbigleDisk": "Disbigle occupa",
+      "disbigleDiskDetail": "media {{media}} · database {{database}}"
     },
     "users": {
       "description": "Tutte le persone iscritte a questo server, con l'indirizzo email. Questa pagina la vedono solo gli amministratori.",

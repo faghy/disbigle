@@ -50,6 +50,7 @@ const dashboard: AdminDashboard = {
       node: 'v22.20.0',
     },
     disk: { total: 100 * 1024 ** 3, free: 60 * 1024 ** 3 },
+    mediaBytes: 1.5 * 1024 ** 3,
     databaseBytes: 512 * 1024 ** 2,
     redisBytes: 20 * 1024 ** 2,
     queues: {
@@ -110,6 +111,10 @@ describe('admin dashboard', () => {
     // 95% of the memory is in use: said in words, not only in red.
     expect(screen.getByText('Almost full')).toBeInTheDocument();
     expect(screen.getByText('The machine is running smoothly')).toBeInTheDocument();
+    // Of the disk in use, what is Disbigle's own: media plus database.
+    expect(screen.getByText('Disbigle uses').parentElement).toHaveTextContent(
+      'Disbigle uses2 GB(media 1.5 GB · database 512 MB)',
+    );
     // The newest people are on the overview too, with their email.
     const latest = await screen.findByRole('list', { name: 'Latest sign-ups' });
     expect(within(latest).getByRole('link', { name: 'carol@example.com' })).toBeInTheDocument();

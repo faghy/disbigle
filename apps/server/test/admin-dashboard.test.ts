@@ -52,6 +52,7 @@ describe('admin dashboard', () => {
     expect(dashboard.traffic.daily.received.at(-1).count).toBe(1);
     expect(dashboard.server.host.cpus).toBeGreaterThan(0);
     expect(dashboard.server.databaseBytes).toBeGreaterThan(0);
+    expect(dashboard.server.mediaBytes).toEqual(expect.any(Number));
 
     const users = (await admin.client.get('/api/v1/admin/users')).json();
     expect(users).toHaveLength(2);
