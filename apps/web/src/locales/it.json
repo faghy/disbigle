@@ -956,7 +956,8 @@
       "allUsers_one": "Vedi tutti ({{count}})",
       "allUsers_other": "Vedi tutti ({{count}})",
       "disbigleDisk": "Disco Disbigle",
-      "disbigleDiskDetail": "media {{media}} · {{path}}"
+      "disbigleDiskDetail": "media {{media}} · {{path}}",
+      "usedOfAvailable": "{{used}} su {{total}} disponibili ({{percent}})"
     },
     "users": {
       "description": "Tutte le persone iscritte a questo server, con l'indirizzo email. Questa pagina la vedono solo gli amministratori.",

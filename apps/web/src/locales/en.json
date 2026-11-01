@@ -956,7 +956,8 @@
       "allUsers_one": "See everyone ({{count}})",
       "allUsers_other": "See everyone ({{count}})",
       "disbigleDisk": "Disbigle disk",
-      "disbigleDiskDetail": "media {{media}} · {{path}}"
+      "disbigleDiskDetail": "media {{media}} · {{path}}",
+      "usedOfAvailable": "{{used}} of {{total}} available ({{percent}})"
     },
     "users": {
       "description": "Everyone signed up on this server, with their email address. Only administrators see this page.",

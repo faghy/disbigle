@@ -977,7 +977,8 @@
       "allUsers_one": "Ver a todos ({{count}})",
       "allUsers_other": "Ver a todos ({{count}})",
       "disbigleDisk": "Disco de Disbigle",
-      "disbigleDiskDetail": "multimedia {{media}} · {{path}}"
+      "disbigleDiskDetail": "multimedia {{media}} · {{path}}",
+      "usedOfAvailable": "{{used}} de {{total}} disponibles ({{percent}})"
     },
     "users": {
       "description": "Todas las personas registradas en este servidor, con su correo. Solo los administradores ven esta página.",

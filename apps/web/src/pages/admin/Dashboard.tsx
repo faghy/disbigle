@@ -289,12 +289,15 @@ function Meter({
   used,
   total,
   note,
+  ofAvailable = false,
 }: {
   label: string;
   used: number;
   total: number;
   /** A short line under the bar. */
   note?: string;
+  /** Says "of N available" rather than "of N". */
+  ofAvailable?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const share = total > 0 ? used / total : 0;
@@ -305,7 +308,7 @@ function Meter({
       <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-sm">
         <span className="font-medium">{label}</span>
         <span className="text-fg-muted tabular-nums">
-          {t('admin.dashboard.usedOf', {
+          {t(ofAvailable ? 'admin.dashboard.usedOfAvailable' : 'admin.dashboard.usedOf', {
             used: formatBytes(used, i18n.language),
             total: formatBytes(total, i18n.language),
             percent,
@@ -391,22 +394,26 @@ function Server({ data }: { data: AdminDashboard }) {
           total={host.memoryTotal}
         />
         {disk && (
-          <Meter
-            label={t('admin.dashboard.disk')}
-            used={disk.total - disk.free}
-            total={disk.total}
-          />
-        )}
-        {disk && mediaBytes !== null && (
-          <Meter
-            label={t('admin.dashboard.disbigleDisk')}
-            used={own ?? 0}
-            total={disk.total}
-            note={t('admin.dashboard.disbigleDiskDetail', {
-              media: formatBytes(mediaBytes, i18n.language),
-              path: mediaDir,
-            })}
-          />
+          <div className="space-y-4">
+            <Meter
+              label={t('admin.dashboard.disk')}
+              used={disk.total - disk.free}
+              total={disk.total}
+            />
+            {own !== null && mediaBytes !== null && (
+              // Measured against what Disbigle could still grow into: its own space plus the free one.
+              <Meter
+                label={t('admin.dashboard.disbigleDisk')}
+                used={own}
+                total={own + disk.free}
+                ofAvailable
+                note={t('admin.dashboard.disbigleDiskDetail', {
+                  media: formatBytes(mediaBytes, i18n.language),
+                  path: mediaDir,
+                })}
+              />
+            )}
+          </div>
         )}
       </div>
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">

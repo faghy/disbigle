@@ -114,7 +114,7 @@ describe('admin dashboard', () => {
     expect(screen.getByText('The machine is running smoothly')).toBeInTheDocument();
     // What Disbigle itself takes of the disk (media plus database), with where the media are.
     expect(screen.getByText('Disbigle disk').parentElement).toHaveTextContent(
-      '2 GB of 100 GB (2%)',
+      '2 GB of 62 GB available (3%)',
     );
     expect(screen.getByText('media 1.5 GB · /var/lib/disbigle/media')).toBeInTheDocument();
     // The newest people are on the overview too, with their email.
