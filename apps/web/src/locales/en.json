@@ -955,8 +955,8 @@
       "latestUsers": "Latest sign-ups",
       "allUsers_one": "See everyone ({{count}})",
       "allUsers_other": "See everyone ({{count}})",
-      "disbigleDisk": "Disbigle uses",
-      "disbigleDiskDetail": "media {{media}} · database {{database}}"
+      "disbigleDisk": "Disbigle disk",
+      "disbigleDiskDetail": "media {{media}} · {{path}}"
     },
     "users": {
       "description": "Everyone signed up on this server, with their email address. Only administrators see this page.",

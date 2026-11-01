@@ -976,8 +976,8 @@
       "latestUsers": "Últimos registros",
       "allUsers_one": "Ver a todos ({{count}})",
       "allUsers_other": "Ver a todos ({{count}})",
-      "disbigleDisk": "Disbigle ocupa",
-      "disbigleDiskDetail": "multimedia {{media}} · base de datos {{database}}"
+      "disbigleDisk": "Disco de Disbigle",
+      "disbigleDiskDetail": "multimedia {{media}} · {{path}}"
     },
     "users": {
       "description": "Todas las personas registradas en este servidor, con su correo. Solo los administradores ven esta página.",

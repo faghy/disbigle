@@ -43,6 +43,7 @@ export async function serverHealth(ctx: CoreContext, redis?: Redis) {
     },
     disk,
     mediaBytes: media,
+    mediaDir: ctx.config.MEDIA_DIR,
     databaseBytes: database,
     redisBytes: redisMemory,
     queues,

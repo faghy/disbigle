@@ -51,6 +51,7 @@ const dashboard: AdminDashboard = {
     },
     disk: { total: 100 * 1024 ** 3, free: 60 * 1024 ** 3 },
     mediaBytes: 1.5 * 1024 ** 3,
+    mediaDir: '/var/lib/disbigle/media',
     databaseBytes: 512 * 1024 ** 2,
     redisBytes: 20 * 1024 ** 2,
     queues: {
@@ -111,10 +112,11 @@ describe('admin dashboard', () => {
     // 95% of the memory is in use: said in words, not only in red.
     expect(screen.getByText('Almost full')).toBeInTheDocument();
     expect(screen.getByText('The machine is running smoothly')).toBeInTheDocument();
-    // Of the disk in use, what is Disbigle's own: media plus database.
-    expect(screen.getByText('Disbigle uses').parentElement).toHaveTextContent(
-      'Disbigle uses2 GB(media 1.5 GB · database 512 MB)',
+    // What Disbigle itself takes of the disk (media plus database), with where the media are.
+    expect(screen.getByText('Disbigle disk').parentElement).toHaveTextContent(
+      '2 GB of 100 GB (2%)',
     );
+    expect(screen.getByText('media 1.5 GB · /var/lib/disbigle/media')).toBeInTheDocument();
     // The newest people are on the overview too, with their email.
     const latest = await screen.findByRole('list', { name: 'Latest sign-ups' });
     expect(within(latest).getByRole('link', { name: 'carol@example.com' })).toBeInTheDocument();

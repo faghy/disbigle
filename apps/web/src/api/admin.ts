@@ -78,6 +78,7 @@ export interface AdminDashboard {
     disk: { total: number; free: number } | null;
     /** Disk space of the media folder (photos, videos, avatars and cached remote files). */
     mediaBytes: number | null;
+    mediaDir: string;
     databaseBytes: number | null;
     redisBytes: number | null;
     queues: {

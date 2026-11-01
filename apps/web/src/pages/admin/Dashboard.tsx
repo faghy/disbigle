@@ -288,17 +288,16 @@ function Meter({
   label,
   used,
   total,
-  part,
+  note,
 }: {
   label: string;
   used: number;
   total: number;
-  /** A slice of `used` shown apart, e.g. what Disbigle itself takes of the disk. */
-  part?: { label: string; bytes: number; detail?: string };
+  /** A short line under the bar. */
+  note?: string;
 }) {
   const { t, i18n } = useTranslation();
   const share = total > 0 ? used / total : 0;
-  const partShare = part && total > 0 ? Math.min(part.bytes, used) / total : 0;
   const level = share > 0.9 ? 'critical' : share > 0.8 ? 'high' : 'ok';
   const percent = new Intl.NumberFormat(i18n.language, { style: 'percent' }).format(share);
   return (
@@ -316,32 +315,13 @@ function Meter({
       <meter className="sr-only" min={0} max={1} value={share} aria-label={label}>
         {percent}
       </meter>
-      <div
-        className="relative h-2 overflow-hidden rounded-full bg-surface-muted"
-        aria-hidden="true"
-      >
+      <div className="h-2 overflow-hidden rounded-full bg-surface-muted" aria-hidden="true">
         <div
-          className={cx('h-full rounded-full', levelColor[level], part && 'opacity-35')}
+          className={cx('h-full rounded-full', levelColor[level])}
           style={{ width: `${Math.min(100, share * 100)}%` }}
         />
-        {part && (
-          <div
-            className={cx('absolute inset-y-0 left-0 rounded-full', levelColor[level])}
-            style={{ width: `${Math.min(100, partShare * 100)}%` }}
-          />
-        )}
       </div>
-      {part && (
-        <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-fg-muted">
-          <span
-            aria-hidden="true"
-            className={cx('inline-block size-2 rounded-full', levelColor[level])}
-          />
-          <span className="font-medium text-fg">{part.label}</span>
-          <span className="tabular-nums">{formatBytes(part.bytes, i18n.language)}</span>
-          {part.detail && <span>({part.detail})</span>}
-        </p>
-      )}
+      {note && <p className="break-all text-xs text-fg-muted">{note}</p>}
       {level !== 'ok' && (
         <p
           className={cx(
@@ -359,7 +339,7 @@ function Meter({
 
 function Server({ data }: { data: AdminDashboard }) {
   const { t, i18n } = useTranslation();
-  const { host, process, disk, mediaBytes, databaseBytes, redisBytes } = data.server;
+  const { host, process, disk, mediaBytes, mediaDir, databaseBytes, redisBytes } = data.server;
   // What Disbigle itself takes of the disk: its media folder plus the database.
   const own = mediaBytes !== null ? mediaBytes + (databaseBytes ?? 0) : null;
   const load = host.load[0] ?? 0;
@@ -415,18 +395,17 @@ function Server({ data }: { data: AdminDashboard }) {
             label={t('admin.dashboard.disk')}
             used={disk.total - disk.free}
             total={disk.total}
-            part={
-              own !== null && mediaBytes !== null
-                ? {
-                    label: t('admin.dashboard.disbigleDisk'),
-                    bytes: own,
-                    detail: t('admin.dashboard.disbigleDiskDetail', {
-                      media: formatBytes(mediaBytes, i18n.language),
-                      database: formatBytes(databaseBytes ?? 0, i18n.language),
-                    }),
-                  }
-                : undefined
-            }
+          />
+        )}
+        {disk && mediaBytes !== null && (
+          <Meter
+            label={t('admin.dashboard.disbigleDisk')}
+            used={own ?? 0}
+            total={disk.total}
+            note={t('admin.dashboard.disbigleDiskDetail', {
+              media: formatBytes(mediaBytes, i18n.language),
+              path: mediaDir,
+            })}
           />
         )}
       </div>

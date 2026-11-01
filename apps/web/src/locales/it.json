@@ -955,8 +955,8 @@
       "latestUsers": "Ultimi iscritti",
       "allUsers_one": "Vedi tutti ({{count}})",
       "allUsers_other": "Vedi tutti ({{count}})",
-      "disbigleDisk": "Disbigle occupa",
-      "disbigleDiskDetail": "media {{media}} · database {{database}}"
+      "disbigleDisk": "Disco Disbigle",
+      "disbigleDiskDetail": "media {{media}} · {{path}}"
     },
     "users": {
       "description": "Tutte le persone iscritte a questo server, con l'indirizzo email. Questa pagina la vedono solo gli amministratori.",
