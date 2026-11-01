@@ -246,4 +246,19 @@
   <string name="translated_from">Translated from %1$s</string>
   <string name="show_original">Show original</string>
   <string name="translation_unavailable">Translation is not available right now.</string>
+
+  <!-- Who liked and reshared -->
+  <string name="likes_and_reshares">Likes and reshares</string>
+  <string name="likes">Likes</string>
+  <string name="reshares">Reshares</string>
+  <string name="no_likes">No likes yet.</string>
+  <string name="no_reshares">No reshares yet.</string>
+  <plurals name="likes_count">
+    <item quantity="one">%1$d like</item>
+    <item quantity="other">%1$d likes</item>
+  </plurals>
+  <plurals name="reshares_count">
+    <item quantity="one">%1$d reshare</item>
+    <item quantity="other">%1$d reshares</item>
+  </plurals>
 </resources>

@@ -122,6 +122,7 @@ fun StatusRow(
   var revealed by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
   var actionError by remember { mutableStateOf<String?>(null) }
+  var interactions by remember { mutableStateOf<InteractionTab?>(null) }
   val linkColor = MaterialTheme.colorScheme.primary
   // Translation: offered for other people's posts in another language the server can translate.
   val appLocale = LocalConfiguration.current.locales[0]
@@ -223,13 +224,18 @@ fun StatusRow(
           ActionButton(Icons.AutoMirrored.Outlined.Reply, shown.repliesCount, false, stringResource(R.string.reply)) {
             model.composing = ComposeTarget.Reply(shown)
           }
+          // On your own posts the counts open who liked and reshared them.
           ActionButton(
             Icons.Outlined.Repeat, shown.reblogsCount, shown.reblogged == true, stringResource(R.string.reshare),
             enabled = shown.visibility != Visibility.PRIVATE && shown.visibility != Visibility.DIRECT,
+            countLabel = pluralStringResource(R.plurals.reshares_count, shown.reblogsCount, shown.reblogsCount),
+            onCountClick = if (isMine) ({ interactions = InteractionTab.RESHARES }) else null,
           ) { act(if (shown.reblogged == true) StatusAction.UNREBLOG else StatusAction.REBLOG) }
           ActionButton(
             if (shown.favourited == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, shown.favouritesCount,
             shown.favourited == true, stringResource(R.string.like),
+            countLabel = pluralStringResource(R.plurals.likes_count, shown.favouritesCount, shown.favouritesCount),
+            onCountClick = if (isMine) ({ interactions = InteractionTab.LIKES }) else null,
           ) { act(if (shown.favourited == true) StatusAction.UNFAVOURITE else StatusAction.FAVOURITE) }
           ActionButton(
             if (shown.bookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, null,
@@ -241,6 +247,9 @@ fun StatusRow(
     }
   }
 
+  interactions?.let { tab ->
+    InteractionsSheet(shown, tab, nav, onDismiss = { interactions = null })
+  }
   if (confirmDelete) {
     AlertDialog(
       onDismissRequest = { confirmDelete = false },
@@ -339,12 +348,46 @@ private fun MoreMenu(status: Status, isMine: Boolean, onEdit: () -> Unit, onDele
   }
 }
 
+/**
+ * An action of a post with its count. With `onCountClick` the count is a tap target of its own
+ * (described by `countLabel`), and the icon alone does the action.
+ */
 @Composable
-fun ActionButton(icon: ImageVector, count: Int?, active: Boolean, label: String, enabled: Boolean = true, onClick: () -> Unit) {
+fun ActionButton(
+  icon: ImageVector,
+  count: Int?,
+  active: Boolean,
+  label: String,
+  enabled: Boolean = true,
+  countLabel: String? = null,
+  onCountClick: (() -> Unit)? = null,
+  onClick: () -> Unit,
+) {
   val color = when {
     !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
     active -> MaterialTheme.colorScheme.primary
     else -> MaterialTheme.colorScheme.onSurfaceVariant
+  }
+  if (onCountClick != null && count != null && count > 0) {
+    val shape = RoundedCornerShape(8.dp)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Box(
+        Modifier.clip(shape)
+          .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+          .semantics { contentDescription = label; selected = active }
+          .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+      ) { Icon(icon, null, Modifier.size(20.dp), tint = color) }
+      Text(
+        compact(count), style = MaterialTheme.typography.labelMedium,
+        // Still readable when the action itself is unavailable (a reshare of a private post).
+        color = if (enabled) color else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.clip(shape)
+          .clickable(role = Role.Button, onClick = onCountClick)
+          .semantics { countLabel?.let { contentDescription = it } }
+          .padding(start = 4.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+      )
+    }
+    return
   }
   Row(
     Modifier.clip(RoundedCornerShape(8.dp))
@@ -536,7 +579,12 @@ fun Loading() {
 }
 
 @Composable
-fun AccountRow(account: com.disbigle.kit.Account, onClick: () -> Unit, trailing: @Composable () -> Unit = {}) {
+fun AccountRow(
+  account: com.disbigle.kit.Account,
+  onClick: () -> Unit,
+  handle: String = "@${account.acct}",
+  trailing: @Composable () -> Unit = {},
+) {
   Row(
     Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
     verticalAlignment = Alignment.CenterVertically,
@@ -545,7 +593,7 @@ fun AccountRow(account: com.disbigle.kit.Account, onClick: () -> Unit, trailing:
     Avatar(account, 40.dp)
     Column(Modifier.weight(1f)) {
       Text(account.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-      Text("@${account.acct}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+      Text(handle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     trailing()
   }

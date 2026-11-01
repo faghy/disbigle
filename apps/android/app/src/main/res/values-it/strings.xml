@@ -248,4 +248,21 @@
   <string name="translated_from">Tradotto da %1$s</string>
   <string name="show_original">Mostra l\'originale</string>
   <string name="translation_unavailable">La traduzione non è disponibile al momento.</string>
+
+  <!-- Who liked and reshared -->
+  <string name="likes_and_reshares">Mi piace e ricondivisioni</string>
+  <string name="likes">Mi piace</string>
+  <string name="reshares">Ricondivisioni</string>
+  <string name="no_likes">Ancora nessun mi piace.</string>
+  <string name="no_reshares">Ancora nessuna ricondivisione.</string>
+  <plurals name="likes_count">
+    <item quantity="one">%1$d mi piace</item>
+    <item quantity="many">%1$d mi piace</item>
+    <item quantity="other">%1$d mi piace</item>
+  </plurals>
+  <plurals name="reshares_count">
+    <item quantity="one">%1$d ricondivisione</item>
+    <item quantity="many">%1$d ricondivisioni</item>
+    <item quantity="other">%1$d ricondivisioni</item>
+  </plurals>
 </resources>

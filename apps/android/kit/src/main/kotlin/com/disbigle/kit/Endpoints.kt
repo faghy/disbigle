@@ -88,6 +88,14 @@ suspend fun Client.context(id: String): StatusContext = get("api/v1/statuses/$id
 suspend fun Client.act(action: StatusAction, id: String): Status =
   call("POST", "api/v1/statuses/$id/${action.name.lowercase()}")
 
+/** Who liked a post, latest first, page by page. */
+suspend fun Client.favouritedBy(id: String, query: Query = emptyList()): Page<Account> =
+  page("api/v1/statuses/$id/favourited_by", query)
+
+/** Who reshared a post, latest first, page by page. */
+suspend fun Client.rebloggedBy(id: String, query: Query = emptyList()): Page<Account> =
+  page("api/v1/statuses/$id/reblogged_by", query)
+
 suspend fun Client.publish(draft: PostDraft, idempotencyKey: String): Status {
   val (text, _) = send(request("POST", "api/v1/statuses", body = Client.Body.Json(draft.json()), headers = mapOf("Idempotency-Key" to idempotencyKey)))
   return Client.json.decodeFromString(Status.serializer(), text)

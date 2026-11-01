@@ -143,6 +143,46 @@ class ClientTest {
   }
 }
 
+class InteractionsTest {
+  @Test fun whoLikedAndResharedPageByPage() = runTest {
+    val server = MockWebServer()
+    val paths = mutableListOf<String>()
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        assertEquals("GET", request.method)
+        paths += request.path!!
+        return when (request.path) {
+          "/api/v1/statuses/s1/favourited_by" -> MockResponse().setBody("[${Fixtures.account}]")
+            .setHeader("Link", "<https://x.test/api/v1/statuses/s1/favourited_by?max_id=c1>; rel=\"next\"")
+          "/api/v1/statuses/s1/favourited_by?max_id=c1" -> MockResponse().setBody("[]")
+          "/api/v1/statuses/s1/reblogged_by" -> MockResponse().setBody("[${Fixtures.account}]")
+          else -> MockResponse().setResponseCode(404).setBody("{\"error\":\"Record not found\"}")
+        }
+      }
+    }
+    server.start()
+    try {
+      val client = Client(server.url("/").toString(), "t0k")
+      val likes = client.favouritedBy("s1")
+      assertEquals("faghy", likes.items.single().acct)
+      assertEquals(listOf("max_id" to "c1"), likes.next)
+      val more = client.favouritedBy("s1", likes.next!!)
+      assertTrue(more.items.isEmpty())
+      assertNull(more.next)
+
+      val reshares = client.rebloggedBy("s1")
+      assertEquals("Faghy", reshares.items.single().name)
+      assertNull(reshares.next)
+      assertEquals(
+        listOf("/api/v1/statuses/s1/favourited_by", "/api/v1/statuses/s1/favourited_by?max_id=c1", "/api/v1/statuses/s1/reblogged_by"),
+        paths,
+      )
+    } finally {
+      server.shutdown()
+    }
+  }
+}
+
 class AlbumsAndTranslationTest {
   @Test fun albumsMediaPagesAndTranslations() = runTest {
     val server = MockWebServer()
