@@ -19,6 +19,9 @@ struct ProfileScreen: View {
   @State private var viewing: MediaItem?
   @State private var creatingAlbum = false
 
+  /** Your own profile, also when reached from a post or an album (not only from the Me tab). */
+  private var isOwn: Bool { isMe || account.id == model.me?.id }
+
   enum ProfileTab: Hashable {
     case posts, media, albums
   }
@@ -56,7 +59,7 @@ struct ProfileScreen: View {
       MediaViewer(
         items: media?.items ?? [item], selection: item.id,
         openPost: { router.go(.statusID($0)) },
-        albumOwnerId: isMe && account.isLocal ? account.id : nil)
+        albumOwnerId: isOwn && account.isLocal ? account.id : nil)
     }
     .sheet(isPresented: $creatingAlbum) {
       if let client = model.client {
@@ -132,7 +135,7 @@ struct ProfileScreen: View {
         list = newList
         await newList.refresh()
       }
-      if !isMe {
+      if !isOwn {
         relationship = try? await client.relationship(with: account.id)
         aspects = (try? await client.aspects()) ?? []
         memberOf = Set(((try? await client.aspects(containing: account.id)) ?? []).map(\.id))
@@ -164,7 +167,7 @@ struct ProfileScreen: View {
   }
 
   @ViewBuilder private var albumList: some View {
-    if isMe {
+    if isOwn {
       Button {
         creatingAlbum = true
       } label: {
@@ -259,7 +262,7 @@ struct ProfileScreen: View {
             Text("@\(account.acct)").foregroundStyle(.secondary).textSelection(.enabled)
           }
           Spacer()
-          if !isMe, let relationship { followButton(relationship) }
+          if !isOwn, let relationship { followButton(relationship) }
         }
         if !account.note.isEmpty {
           Text(RichText.attributed(account.note)).fixedSize(horizontal: false, vertical: true)

@@ -112,6 +112,21 @@ extension Client {
     try await call("POST", "api/v1/statuses/\(id)/\(action.rawValue)")
   }
 
+  /** Who liked or who reshared a post. */
+  public enum Reaction: String, CaseIterable, Hashable, Identifiable, Sendable {
+    case likes = "favourited_by"
+    case reshares = "reblogged_by"
+
+    public var id: String { rawValue }
+  }
+
+  /** One page of the people who liked or reshared a post, latest first. */
+  public func accounts(
+    _ reaction: Reaction, on statusId: String, query: [URLQueryItem] = []
+  ) async throws -> Page<Account> {
+    try await page("api/v1/statuses/\(statusId)/\(reaction.rawValue)", query: query)
+  }
+
   public func publish(_ draft: PostDraft, idempotencyKey: String = UUID().uuidString) async throws -> Status {
     var request = try request("POST", "api/v1/statuses", body: .json(draft.json))
     request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")

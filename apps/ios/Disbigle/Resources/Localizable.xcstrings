@@ -1404,6 +1404,38 @@
         }
       }
     },
+    "Likes": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me gusta"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi piace"
+          }
+        }
+      }
+    },
+    "Likes and reshares": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me gusta y compartidos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi piace e ricondivisioni"
+          }
+        }
+      }
+    },
     "Media": {
       "localizations": {
         "es": {
@@ -1596,6 +1628,22 @@
         }
       }
     },
+    "No likes yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay Me gusta."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun mi piace."
+          }
+        }
+      }
+    },
     "No messages yet.": {
       "localizations": {
         "es": {
@@ -1672,6 +1720,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ancora nessun post."
+          }
+        }
+      }
+    },
+    "No reshares yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía nadie lo ha compartido."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuna ricondivisione."
           }
         }
       }
@@ -2216,6 +2280,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ricondividi"
+          }
+        }
+      }
+    },
+    "Reshares": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartidos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricondivisioni"
           }
         }
       }

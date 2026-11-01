@@ -17,6 +17,8 @@ struct StatusRow: View {
   @State private var actionError: String?
   @State private var translating = false
   @State private var translationFailed = false
+  /** Who liked or reshared one of your posts, shown in a sheet. */
+  @State private var reactions: Client.Reaction?
 
   private var shown: Status { updated ?? status.shown }
   private var isMine: Bool { model.me?.id == shown.account.id }
@@ -66,6 +68,12 @@ struct StatusRow: View {
     .environment(\.openURL, OpenURLAction(handler: open))
     .confirmationDialog("Delete this post?", isPresented: $confirmDelete, titleVisibility: .visible) {
       Button("Delete", role: .destructive) { Task { await delete() } }
+    }
+    .sheet(item: $reactions) { reaction in
+      ReactionsSheet(status: shown, reaction: reaction) { account in
+        reactions = nil
+        router.go(.account(account))
+      }
     }
     .alert(
       "Something went wrong", isPresented: .constant(actionError != nil),
@@ -165,12 +173,16 @@ struct StatusRow: View {
       ActionButton(
         systemImage: "arrow.2.squarepath", count: shown.reblogsCount,
         active: shown.reblogged == true, label: "Reshare",
-        disabled: shown.visibility == .private || shown.visibility == .direct
+        disabled: shown.visibility == .private || shown.visibility == .direct,
+        countLabel: "Reshares",
+        showCount: isMine ? { reactions = .reshares } : nil
       ) { await act(shown.reblogged == true ? .unreblog : .reblog) }
       Spacer()
       ActionButton(
         systemImage: shown.favourited == true ? "heart.fill" : "heart", count: shown.favouritesCount,
-        active: shown.favourited == true, label: "Like"
+        active: shown.favourited == true, label: "Like",
+        countLabel: "Likes",
+        showCount: isMine ? { reactions = .likes } : nil
       ) { await act(shown.favourited == true ? .unfavourite : .favourite) }
       Spacer()
       ActionButton(
@@ -272,29 +284,120 @@ struct ActionButton: View {
   let active: Bool
   let label: LocalizedStringKey
   var disabled = false
+  /** What the count is, for VoiceOver when it is a button of its own. */
+  var countLabel: LocalizedStringKey = ""
+  /** Set on your own posts: the count becomes a button showing who liked or reshared. */
+  var showCount: (() -> Void)? = nil
   let action: () async -> Void
   @State private var busy = false
 
   var body: some View {
-    Button {
-      guard !busy else { return }
-      busy = true
-      Task {
-        await action()
-        busy = false
+    HStack(spacing: 0) {
+      Button {
+        guard !busy else { return }
+        busy = true
+        Task {
+          await action()
+          busy = false
+        }
+      } label: {
+        HStack(spacing: 4) {
+          Image(systemName: systemImage)
+          if showCount == nil, let shownCount { Text(shownCount, format: .number.notation(.compactName)) }
+        }
+        .foregroundStyle(active ? Color.brand : .secondary)
+        .frame(minWidth: 32, minHeight: 28)
+        .contentShape(Rectangle())
       }
-    } label: {
-      HStack(spacing: 4) {
-        Image(systemName: systemImage)
-        if let count, count > 0 { Text(count, format: .number.notation(.compactName)) }
+      .disabled(disabled)
+      .accessibilityLabel(Text(label))
+      .accessibilityAddTraits(active ? .isSelected : [])
+      if let showCount, let shownCount {
+        Button(action: showCount) {
+          Text(shownCount, format: .number.notation(.compactName))
+            .foregroundStyle(active ? Color.brand : .secondary)
+            .padding(.trailing, 4)
+            .frame(minWidth: 24, minHeight: 28)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text(countLabel))
+        .accessibilityValue(Text(shownCount, format: .number))
       }
-      .foregroundStyle(active ? Color.brand : .secondary)
-      .frame(minWidth: 32, minHeight: 28)
-      .contentShape(Rectangle())
     }
-    .disabled(disabled)
-    .accessibilityLabel(Text(label))
-    .accessibilityAddTraits(active ? .isSelected : [])
+  }
+
+  /** The count, when there is something to count. */
+  private var shownCount: Int? {
+    guard let count, count > 0 else { return nil }
+    return count
+  }
+}
+
+/** Who liked and who reshared one of your posts. */
+struct ReactionsSheet: View {
+  @Environment(AppModel.self) private var model
+  @Environment(\.dismiss) private var dismiss
+  let status: Status
+  @State var reaction: Client.Reaction
+  /** Opens a profile (the sheet closes first). */
+  let open: (Account) -> Void
+  @State private var lists: [Client.Reaction: PagedList<Account>] = [:]
+
+  var body: some View {
+    NavigationStack {
+      List {
+        Picker("Likes and reshares", selection: $reaction) {
+          Text(verbatim: "\(String(localized: "Likes")) \(status.favouritesCount)")
+            .tag(Client.Reaction.likes)
+          Text(verbatim: "\(String(localized: "Reshares")) \(status.reblogsCount)")
+            .tag(Client.Reaction.reshares)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .listRowSeparator(.hidden)
+        if let list = lists[reaction] {
+          ForEach(list.items) { account in
+            Button {
+              open(account)
+            } label: {
+              AccountRow(account: account)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .task { await list.reached(account) }
+          }
+          ListFooter(
+            loading: list.loading, error: list.error, empty: list.items.isEmpty,
+            emptyText: emptyText
+          ) { Task { await list.loadMore() } }
+        }
+      }
+      .listStyle(.plain)
+      .refreshable { await lists[reaction]?.refresh() }
+      .navigationTitle("Likes and reshares")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") { dismiss() }
+        }
+      }
+      .task(id: reaction) { await load(reaction) }
+    }
+    .presentationDetents([.medium, .large])
+  }
+
+  private var emptyText: LocalizedStringKey {
+    reaction == .likes ? "No likes yet." : "No reshares yet."
+  }
+
+  /** Loads a tab the first time it is shown. */
+  private func load(_ reaction: Client.Reaction) async {
+    guard lists[reaction] == nil, let client = model.client else { return }
+    let id = status.id
+    let list = PagedList<Account> { try await client.accounts(reaction, on: id, query: $0) }
+    lists[reaction] = list
+    await list.refresh()
   }
 }
 
