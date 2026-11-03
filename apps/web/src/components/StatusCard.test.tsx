@@ -63,6 +63,30 @@ describe('status card', () => {
     expect(await within(dialog).findByText('No reshares yet.')).toBeInTheDocument();
   });
 
+  it('removes a reply someone left on your post', async () => {
+    const status = makeStatus({
+      content: '<p>maleducato</p>',
+      inReplyToId: 'parent',
+      inReplyToAccountId: aliceUser.account.id,
+    });
+    let deleted = false;
+    const article = await renderHomeWith(status, {
+      [`DELETE /statuses/${status.id}`]: () => {
+        deleted = true;
+        return { body: { status: 'ok' } };
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(within(article).getByRole('button', { name: 'More actions' }));
+    await user.click(screen.getByRole('button', { name: 'Remove from your post' }));
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'Remove this reply from your post?',
+    });
+    expect(dialog).toHaveTextContent('Servers like Mastodon');
+    await user.click(within(dialog).getByRole('button', { name: 'Remove from your post' }));
+    await waitFor(() => expect(deleted).toBe(true));
+  });
+
   it("keeps the counts plain on other people's posts", async () => {
     const status = makeStatus({ likesCount: 3 });
     const article = await renderHomeWith(status, {});

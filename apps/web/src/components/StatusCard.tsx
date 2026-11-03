@@ -468,6 +468,9 @@ function MoreMenu({
   const menuId = useId();
   const router = useRouter();
   const remove = useDeleteStatus();
+  const me = useCurrentUser();
+  // As on diaspora*, you may remove the replies others leave on your posts.
+  const onYourPost = !isAuthor && !!me && status.inReplyToAccountId === me.account.id;
   const close = useCallback(() => setOpen(false), []);
   useDismiss(open, close, containerRef, buttonRef);
 
@@ -551,7 +554,7 @@ function MoreMenu({
             {pin.pinned ? t('status.unpin') : t('status.pin')}
           </button>
         )}
-        {isAuthor && (
+        {(isAuthor || onYourPost) && (
           <button
             type="button"
             className={cx(itemClass, 'text-danger')}
@@ -560,7 +563,7 @@ function MoreMenu({
               setConfirming(true);
             }}
           >
-            {t('status.delete')}
+            {onYourPost ? t('status.removeReply') : t('status.delete')}
           </button>
         )}
         {signedIn && !isAuthor && (
@@ -605,15 +608,17 @@ function MoreMenu({
       )}
       {confirming && (
         <ConfirmDialog
-          title={t('status.deleteTitle')}
+          title={onYourPost ? t('status.removeReplyTitle') : t('status.deleteTitle')}
           description={
             remove.error ? (
               <span className="text-danger">{errorMessage(remove.error)}</span>
+            ) : onYourPost ? (
+              t('status.removeReplyDescription')
             ) : (
               t('status.deleteDescription')
             )
           }
-          confirmLabel={t('status.delete')}
+          confirmLabel={onYourPost ? t('status.removeReply') : t('status.delete')}
           pending={remove.isPending}
           onCancel={() => {
             setConfirming(false);

@@ -17,6 +17,8 @@ export type DomainEvent =
       inReplyToActorId?: string | null;
       /** The group the post was in. */
       groupId?: string | null;
+      /** Set when the author of the thread removed someone else's reply from it. */
+      removedBy?: string | null;
     }
   | { type: 'notification.created'; notificationId: string; recipientActorId: string }
   | {

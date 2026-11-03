@@ -507,7 +507,10 @@
       "reshares": "Ricondivisioni",
       "noLikes": "Ancora nessun mi piace.",
       "noReshares": "Ancora nessuna ricondivisione."
-    }
+    },
+    "removeReply": "Rimuovi dal tuo post",
+    "removeReplyTitle": "Rimuovere questa risposta dal tuo post?",
+    "removeReplyDescription": "Sparisce qui su Disbigle e sui pod diaspora*. I server come Mastodon non accettano rimozioni fatte da altri: lì potrebbe restare visibile."
   },
   "timeline": {
     "loadMore": "Carica altri",

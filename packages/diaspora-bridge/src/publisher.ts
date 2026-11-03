@@ -349,6 +349,37 @@ export class DiasporaPublisher implements EventBus {
     await this.bridge.relayables.delete(targetGuid);
   }
 
+  private async fromDiaspora(actorId: string): Promise<boolean> {
+    const actor = await actorById(this.ctx, actorId);
+    return Boolean(actor?.protocols.includes('diaspora'));
+  }
+
+  /**
+   * A diaspora* comment the thread's author removed from their post. diaspora* accepts the
+   * retraction of a comment from the author of the post it is on, as it does on diaspora* itself.
+   */
+  private async rootAuthorRetraction(rootId: string, removedBy: string, targetGuid: string) {
+    const ctx = this.ctx;
+    const root = await postById(ctx, rootId);
+    if (!root?.local || !root.diasporaGuid || root.actorId !== removedBy) return;
+    const rootAuthor = await this.localActor(root.actorId);
+    const signer = rootAuthor ? await signerFor(ctx, rootAuthor) : null;
+    if (!rootAuthor || !signer) return;
+    const retraction: Retraction = {
+      type: 'Retraction',
+      author: diasporaIdOf(ctx, rootAuthor),
+      targetGuid,
+      targetType: 'Comment',
+    };
+    await sendToRecipients(
+      this.bridge,
+      serializeEntity(retraction),
+      signer,
+      await recipientsFor(ctx, root),
+    );
+    await this.bridge.relayables.delete(targetGuid);
+  }
+
   private bridgeId(bridge: { username: string }): string {
     return `${bridge.username}@${this.ctx.config.LOCAL_DOMAIN}`.toLowerCase();
   }
@@ -404,6 +435,8 @@ export class DiasporaPublisher implements EventBus {
     const author = await this.localActor(event.actorId);
     if (!author) {
       if (!event.threadRootId || event.threadRootId === event.postId) return;
+      if (event.removedBy && (await this.fromDiaspora(event.actorId)))
+        return this.rootAuthorRetraction(event.threadRootId, event.removedBy, event.diasporaGuid);
       return this.bridgeRetraction(
         event.actorId,
         event.threadRootId,

@@ -118,6 +118,36 @@ describe('federation over diaspora* between three Disbigle instances', () => {
       async () => (await alice.client.get(`/api/v1/statuses/${onA.id}`)).json().likesCount === 0,
     );
 
+    // Bob removes a comment Alice left on his post, as diaspora* lets him: it goes on A and C too.
+    await alice.client.post('/api/v1/statuses', { content: 'brutto!', inReplyToId: onA.id });
+    const unwanted = await eventually(async () =>
+      findIn(
+        (await bob.client.get(`/api/v1/statuses/${post.id}/context`)).json().descendants,
+        'brutto!',
+      ),
+    );
+    await eventually(async () =>
+      findIn(
+        (await carol.client.get(`/api/v1/statuses/${onC.id}/context`)).json().descendants,
+        'brutto!',
+      ),
+    );
+    expect((await bob.client.delete(`/api/v1/statuses/${unwanted.id}`)).statusCode).toBe(200);
+    await eventually(
+      async () =>
+        !findIn(
+          (await carol.client.get(`/api/v1/statuses/${onC.id}/context`)).json().descendants,
+          'brutto!',
+        ),
+    );
+    await eventually(
+      async () =>
+        !findIn(
+          (await alice.client.get(`/api/v1/statuses/${onA.id}/context`)).json().descendants,
+          'brutto!',
+        ),
+    );
+
     // Aspect-limited post: encrypted, only for Alice.
     const aliceOnB = followers.find((f: { acct: string }) => f.acct === alice.diasporaId);
     const aspects = (await bob.client.get('/api/v1/aspects')).json();

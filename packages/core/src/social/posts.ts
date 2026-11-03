@@ -605,7 +605,13 @@ export async function deletePost(
     post?.groupId && post.actorId !== actorId
       ? await canModerateGroupPost(ctx, actorId, post.groupId)
       : false;
-  if (!post || (post.actorId !== actorId && !options.asModerator && !groupModerator)) {
+  // As on diaspora*, whoever wrote a post may remove the replies others left under it.
+  const threadOwner =
+    post && post.actorId !== actorId ? await ownsThreadOf(ctx, actorId, post) : false;
+  if (
+    !post ||
+    (post.actorId !== actorId && !options.asModerator && !groupModerator && !threadOwner)
+  ) {
     throw new DomainError('not_found', 'Post not found');
   }
   const audience = await ctx.db
@@ -628,7 +634,8 @@ export async function deletePost(
         .set({ reblogsCount: sql`greatest(${posts.reblogsCount} - 1, 0)` })
         .where(eq(posts.id, post.reblogOfId));
     }
-    if (post.apUri && post.local) {
+    // A reply removed by the thread's author stays gone even if its server sends it again.
+    if (post.apUri && (post.local || threadOwner)) {
       await tx
         .insert(tombstones)
         .values({ id: uuidv7(), uri: post.apUri, actorId: post.actorId })
@@ -647,7 +654,20 @@ export async function deletePost(
     threadRootId: post.threadRootId,
     inReplyToActorId: post.inReplyToActorId,
     groupId: post.groupId,
+    removedBy: threadOwner ? actorId : null,
   });
+}
+
+/** Whether `actorId`, an account of this server, wrote the post `post` answers or its thread's first post. */
+async function ownsThreadOf(ctx: CoreContext, actorId: string, post: PostRow): Promise<boolean> {
+  if (!post.inReplyToId || post.reblogOfId) return false;
+  const ids = [post.inReplyToId, ...(post.threadRootId ? [post.threadRootId] : [])];
+  const [owned] = await ctx.db
+    .select({ id: posts.id })
+    .from(posts)
+    .innerJoin(actors, eq(actors.id, posts.actorId))
+    .where(and(inArray(posts.id, ids), eq(posts.actorId, actorId), isNull(actors.domain)));
+  return Boolean(owned);
 }
 
 export async function getStatus(

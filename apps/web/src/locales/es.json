@@ -517,7 +517,10 @@
       "reshares": "Compartidos",
       "noLikes": "Todavía no hay Me gusta.",
       "noReshares": "Todavía nadie lo ha compartido."
-    }
+    },
+    "removeReply": "Quitar de tu publicación",
+    "removeReplyTitle": "¿Quitar esta respuesta de tu publicación?",
+    "removeReplyDescription": "Desaparece aquí en Disbigle y en los pods de diaspora*. Servidores como Mastodon no aceptan que otros borren contenido: allí podría seguir visible."
   },
   "timeline": {
     "loadMore": "Cargar más",

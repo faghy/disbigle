@@ -507,7 +507,10 @@
       "reshares": "Reshares",
       "noLikes": "No likes yet.",
       "noReshares": "No reshares yet."
-    }
+    },
+    "removeReply": "Remove from your post",
+    "removeReplyTitle": "Remove this reply from your post?",
+    "removeReplyDescription": "It disappears here on Disbigle and on diaspora* pods. Servers like Mastodon don't accept removals by others: there it may stay visible."
   },
   "timeline": {
     "loadMore": "Load more",

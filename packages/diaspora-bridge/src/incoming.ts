@@ -361,8 +361,15 @@ async function retraction(bridge: DiasporaBridge, entity: Retraction, sender: st
     return;
   }
   const post = await findPostByGuid(ctx, entity.targetGuid);
-  if (!post || post.local) return;
+  if (!post) return;
   const root = post.inReplyToId ? await threadRootOf(ctx, post) : null;
+  if (post.local) {
+    // Our own comment, removed from their post by the post's author (as diaspora* allows).
+    const rootAuthor = root && !root.local ? await actorById(ctx, root.actorId) : null;
+    if (!rootAuthor || diasporaIdOf(ctx, rootAuthor) !== sender) return;
+    await deletePost(ctx, post.actorId, post.id, { asModerator: true }).catch(ignoreDomainErrors);
+    return;
+  }
   // The sender was checked by the protocol layer: the author, or the root author for comments.
   const postAuthor = await actorById(ctx, post.actorId);
   const asModerator = !postAuthor || diasporaIdOf(ctx, postAuthor) !== sender;
