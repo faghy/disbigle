@@ -134,7 +134,15 @@ export function StatusContent({
         router.history.push(`/@${mention.acct}`);
         return;
       }
-      if (url.origin !== window.location.origin || !INTERNAL_PATH.test(url.pathname)) return;
+      if (url.origin !== window.location.origin) {
+        // Links to other sites open in a new tab, also in posts stored before they said so.
+        if (anchor.target !== '_blank' && /^https?:$/.test(url.protocol)) {
+          event.preventDefault();
+          window.open(url.href, '_blank', 'noopener,noreferrer');
+        }
+        return;
+      }
+      if (!INTERNAL_PATH.test(url.pathname)) return;
       event.preventDefault();
       router.history.push(url.pathname);
     };

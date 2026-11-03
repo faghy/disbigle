@@ -1,7 +1,7 @@
 import type { Status } from '@disbigle/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { aliceUser, bob, makeStatus, relationship } from '../test/fixtures.ts';
 import { instance, type MockResponse, mockApi, renderApp } from '../test/utils.tsx';
 
@@ -26,6 +26,18 @@ async function renderHomeWith(status: Status, routes: Parameters<typeof mockApi>
 }
 
 describe('status card', () => {
+  it('opens links to other sites in a new tab', async () => {
+    const status = makeStatus({
+      content: '<p>Look <a href="https://example.com/page">here</a></p>',
+    });
+    const article = await renderHomeWith(status, {});
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const user = userEvent.setup();
+    await user.click(within(article).getByRole('link', { name: 'here' }));
+    expect(open).toHaveBeenCalledWith('https://example.com/page', '_blank', 'noopener,noreferrer');
+    open.mockRestore();
+  });
+
   it('shows who liked and reshared your own post', async () => {
     const status = makeStatus({ account: aliceUser.account, likesCount: 1, reblogsCount: 0 });
     const article = await renderHomeWith(status, {

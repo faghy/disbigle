@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractMentions, extractTags, renderMarkdown } from '../src/index.ts';
+import { extractMentions, extractTags, renderMarkdown, sanitizeRemoteHtml } from '../src/index.ts';
 
 const options = {
   resolveMention: (username: string, domain: string | null) =>
@@ -8,6 +8,12 @@ const options = {
 };
 
 describe('content', () => {
+  it('opens links of posts from other servers in a new tab', () => {
+    expect(sanitizeRemoteHtml('<p><a href="https://example.com" target="_self">x</a></p>')).toBe(
+      '<p><a href="https://example.com" target="_blank" rel="nofollow noopener noreferrer">x</a></p>',
+    );
+  });
+
   it('extracts mentions and tags, ignoring code and emails', () => {
     const source =
       'Hi @alice and @bob@example.org! #Disbigle #2026 #ok_1 mail me@x.org `@code #code`';

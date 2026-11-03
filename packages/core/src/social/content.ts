@@ -150,7 +150,7 @@ export function renderMarkdown(source: string, options: RenderOptions): string {
 export function sanitizeRemoteHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags,
-    allowedAttributes: { a: ['href', 'rel', 'class'], span: ['class'] },
+    allowedAttributes: { a: ['href', 'rel', 'class', 'target'], span: ['class'] },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowedClasses: {
       a: ['mention', 'hashtag', 'u-url'],
