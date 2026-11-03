@@ -39,7 +39,8 @@
     "sidePanel": "Sobre este servidor y tus hashtags",
     "aboutServer": "Sobre este servidor",
     "contacts": "Contactos",
-    "groups": "Grupos"
+    "groups": "Grupos",
+    "backToTop": "Volver arriba"
   },
   "footer": {
     "tagline": "Disbigle · una red social federada",

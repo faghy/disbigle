@@ -12,6 +12,7 @@ import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { setTheme, themes, useTheme } from '../lib/theme.ts';
 import { Avatar } from './Avatar.tsx';
+import { BackToTop } from './BackToTop.tsx';
 import { ComposeButton } from './ComposeSheet.tsx';
 import { useFocusTrap } from './Dialog.tsx';
 import {
@@ -83,6 +84,7 @@ export function RootLayout() {
         {!me.isPending && <SidePanel user={user} />}
       </div>
       <Footer signedIn={Boolean(user)} />
+      <BackToTop signedIn={Boolean(user)} />
       {user && <ComposeButton />}
       {user && <BottomNav />}
     </div>
