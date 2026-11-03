@@ -64,16 +64,29 @@ describe('moderation', () => {
     await admin.post(`/api/v1/admin/reports/${reports[0].id}/resolve`);
     expect((await admin.get('/api/v1/admin/reports')).json()).toEqual([]);
 
-    // Suspending signs the user out and hides the profile; admins cannot be suspended.
+    // Suspending signs the user out and hides the profile and what they wrote, replies too;
+    // admins cannot be suspended.
     const userAccount = (await pendingClient.get('/api/v1/me')).json().account;
+    const reply = (
+      await pendingClient.post('/api/v1/statuses', { content: 'rude', inReplyToId: post.id })
+    ).json();
+    const replies = async (client: Client) =>
+      (await client.get(`/api/v1/statuses/${post.id}/context`))
+        .json()
+        .descendants.map((s: { id: string }) => s.id);
+    expect(await replies(admin)).toEqual([reply.id]);
     await admin.post(`/api/v1/admin/accounts/${userAccount.id}/suspend`, { reason: 'test' });
     expect((await pendingClient.get('/api/v1/me')).statusCode).toBe(401);
     expect((await admin.get(`/api/v1/accounts/${userAccount.id}`)).statusCode).toBe(404);
+    expect(await replies(admin)).toEqual([]);
+    expect(await replies(new Client(app))).toEqual([]);
+    expect((await admin.get(`/api/v1/statuses/${reply.id}`)).statusCode).toBe(404);
     expect(
       (await admin.post(`/api/v1/admin/accounts/${adminAccount.id}/suspend`, {})).statusCode,
     ).toBe(400);
     await admin.post(`/api/v1/admin/accounts/${userAccount.id}/unsuspend`);
     expect((await admin.get(`/api/v1/accounts/${userAccount.id}`)).statusCode).toBe(200);
+    expect(await replies(admin)).toEqual([reply.id]);
 
     // Domain blocks (admins only). The unsuspended user signs in again first.
     await pendingClient.post('/api/v1/auth/login', {

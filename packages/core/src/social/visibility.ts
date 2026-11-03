@@ -2,7 +2,7 @@ import { schema } from '@disbigle/db';
 import { and, eq, type SQL, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 
-const { posts, postAudiences, follows, blocks, groups, groupMembers } = schema;
+const { posts, postAudiences, follows, blocks, groups, groupMembers, actors } = schema;
 
 /**
  * SQL condition: the post is visible to `viewerActorId` (null = signed out).
@@ -14,13 +14,20 @@ const { posts, postAudiences, follows, blocks, groups, groupMembers } = schema;
  * - in a group, the group decides: public groups are read by everyone, the others by their
  *   members (and the author) only, whatever the post's own visibility says
  * - a group post waiting for approval: its author and the group's moderators only
+ * - nobody sees the posts of a suspended account
  */
 export function visibleTo(viewerActorId: string | null): SQL {
   const publicGroup = sql`exists (select 1 from ${groups} where ${groups.id} = ${posts.groupId} and ${groups.privacy} = 'public')`;
+  const notSuspended = sql`not exists (
+    select 1 from ${actors} where ${actors.id} = ${posts.actorId} and ${actors.suspendedAt} is not null
+  )`;
   if (!viewerActorId)
     return sql`(
-      (${posts.groupId} is null and ${posts.visibility} in ('public', 'unlisted'))
-      or (${posts.groupId} is not null and not ${posts.pendingApproval} and ${publicGroup})
+      (
+        (${posts.groupId} is null and ${posts.visibility} in ('public', 'unlisted'))
+        or (${posts.groupId} is not null and not ${posts.pendingApproval} and ${publicGroup})
+      )
+      and ${notSuspended}
     )`;
   const moderator = sql`exists (
     select 1 from ${groupMembers}
@@ -60,6 +67,7 @@ export function visibleTo(viewerActorId: string | null): SQL {
       select 1 from ${blocks}
       where ${blocks.actorId} = ${posts.actorId} and ${blocks.targetActorId} = ${viewerActorId}
     )
+    and ${notSuspended}
   )`;
 }
 
