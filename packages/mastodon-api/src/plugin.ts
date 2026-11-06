@@ -8,6 +8,7 @@ import type { Deps, MastodonApiOptions } from './options.ts';
 import { accountRoutes } from './routes/accounts.ts';
 import { albumRoutes } from './routes/albums.ts';
 import { filterRoutes } from './routes/filters.ts';
+import { hidingRoutes } from './routes/hiding.ts';
 import { instanceRoutes } from './routes/instance.ts';
 import { listRoutes } from './routes/lists.ts';
 import { mediaRoutes } from './routes/media.ts';
@@ -109,6 +110,7 @@ export async function mastodonApi(app: FastifyInstance, opts: MastodonApiOptions
   await searchRoutes(app, deps);
   await instanceRoutes(app, deps);
   await filterRoutes(app, deps);
+  await hidingRoutes(app, deps);
   await pushRoutes(app, deps);
   if (opts.hub) await streamingRoutes(app, { ...deps, hub: opts.hub });
 }

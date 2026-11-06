@@ -93,6 +93,8 @@ export interface MTag {
   url: string;
   history: { day: string; uses: string; accounts: string }[];
   following?: boolean;
+  /** Disbigle extension: the viewer hid this hashtag from everyone. */
+  hidden?: boolean;
 }
 
 export interface MPoll {

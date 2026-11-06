@@ -443,7 +443,12 @@ export async function accountRoutes(app: FastifyInstance, deps: Deps) {
 
   const tagEntity = async (request: FastifyRequest, name: string) => {
     const info = await getTag(ctx, optionalUser(request, 'read')?.actorId ?? null, name);
-    return { ...mapTag(new Presenter(ctx, null).map, info.name, info.following), id: info.name };
+    return {
+      ...mapTag(new Presenter(ctx, null).map, info.name, info.following),
+      id: info.name,
+      // Disbigle extension: whether the viewer hid this hashtag from everyone.
+      hidden: info.hidden,
+    };
   };
 
   app.get('/api/v1/followed_tags', async (request) => {
