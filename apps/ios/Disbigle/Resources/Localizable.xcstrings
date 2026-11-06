@@ -1276,6 +1276,38 @@
         }
       }
     },
+    "From @%@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De @%@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di @%@"
+          }
+        }
+      }
+    },
+    "From everyone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De todos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di tutti"
+          }
+        }
+      }
+    },
     "Hashtags": {
       "localizations": {
         "es": {
@@ -1288,6 +1320,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hashtag"
+          }
+        }
+      }
+    },
+    "Hidden hashtags": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hashtags ocultos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hashtag nascosti"
+          }
+        }
+      }
+    },
+    "Hide #%@ from %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar #%1$@ de %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi #%1$@ di %2$@"
+          }
+        }
+      }
+    },
+    "Hide hashtag": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar hashtag"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi hashtag"
+          }
+        }
+      }
+    },
+    "Hide this post": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar esta publicación"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi questo post"
           }
         }
       }
@@ -2060,6 +2156,22 @@
         }
       }
     },
+    "Post hidden: you won't see it in your timelines.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicación oculta: ya no la verás en tus cronologías."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post nascosto: non lo vedrai più nelle tue timeline."
+          }
+        }
+      }
+    },
     "Posting": {
       "localizations": {
         "es": {
@@ -2088,6 +2200,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Post"
+          }
+        }
+      }
+    },
+    "Posts with these hashtags don't appear in your timelines, from everyone or only from the person shown.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las publicaciones con estos hashtags no aparecen en tus cronologías, de todos o solo de la persona indicada."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I post con questi hashtag non compaiono nelle tue timeline, di tutti o solo della persona indicata."
           }
         }
       }
@@ -2488,6 +2616,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Più risposte"
+          }
+        }
+      }
+    },
+    "Show again": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar de nuevo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra di nuovo"
           }
         }
       }
@@ -2908,6 +3052,22 @@
         }
       }
     },
+    "Undo": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla"
+          }
+        }
+      }
+    },
     "Unlisted": {
       "localizations": {
         "es": {
@@ -3128,6 +3288,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scrivi @nome@server per scegliere chi riceve il messaggio"
+          }
+        }
+      }
+    },
+    "You won't see %@'s posts with #%@ in your timelines.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya no verás en tus cronologías las publicaciones de %1$@ con #%2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vedrai più nelle tue timeline i post di %1$@ con #%2$@."
           }
         }
       }

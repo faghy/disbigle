@@ -172,6 +172,36 @@ extension Client {
     return try await call("POST", "api/v2/media", body: .multipart(form.finished()))
   }
 
+  // MARK: Hiding (Disbigle extension)
+
+  /** Hides someone else's post from your timelines, without unfollowing them. */
+  public func hide(_ id: String) async throws {
+    try await perform("POST", "api/v1/statuses/\(id)/hide")
+  }
+
+  public func unhide(_ id: String) async throws {
+    try await perform("POST", "api/v1/statuses/\(id)/unhide")
+  }
+
+  public func tag(_ name: String) async throws -> Tag {
+    try await get("api/v1/tags/\(name)")
+  }
+
+  public func hiddenTags() async throws -> [HiddenTag] {
+    try await get("api/v1/hidden_tags")
+  }
+
+  /** Hides a hashtag from your timelines: everyone's posts with it, or only those of `accountId`. */
+  public func hideTag(_ name: String, from accountId: String? = nil) async throws -> HiddenTag {
+    var form = [URLQueryItem(name: "name", value: name)]
+    if let accountId { form.append(URLQueryItem(name: "account_id", value: accountId)) }
+    return try await call("POST", "api/v1/hidden_tags", body: .form(form))
+  }
+
+  public func unhideTag(_ id: String) async throws {
+    try await perform("DELETE", "api/v1/hidden_tags/\(id)")
+  }
+
   // MARK: Notifications and messages
 
   public func notifications(query: [URLQueryItem] = []) async throws -> Page<Notification> {

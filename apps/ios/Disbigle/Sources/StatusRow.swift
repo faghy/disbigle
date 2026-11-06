@@ -19,11 +19,51 @@ struct StatusRow: View {
   @State private var translationFailed = false
   /** Who liked or reshared one of your posts, shown in a sheet. */
   @State private var reactions: Client.Reaction?
+  /** What was just hidden in place of the post, to say so and offer to undo it. */
+  @State private var hidden: HiddenNote?
+
+  private enum HiddenNote: Equatable {
+    case post
+    case tag(id: String, name: String, accountName: String)
+  }
 
   private var shown: Status { updated ?? status.shown }
   private var isMine: Bool { model.me?.id == shown.account.id }
 
   var body: some View {
+    if let hidden {
+      hiddenPlaceholder(hidden)
+    } else {
+      post
+    }
+  }
+
+  /** In place of a post just hidden: what will no longer be shown, and the way back. */
+  private func hiddenPlaceholder(_ note: HiddenNote) -> some View {
+    HStack(spacing: 12) {
+      Image(systemName: "eye.slash")
+      Group {
+        switch note {
+        case .post: Text("Post hidden: you won't see it in your timelines.")
+        case .tag(_, let name, let accountName):
+          Text("You won't see \(accountName)'s posts with #\(name) in your timelines.")
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      Button("Undo") { Task { await undoHiding(note) } }
+        .buttonStyle(.borderless)
+    }
+    .font(.subheadline)
+    .foregroundStyle(.secondary)
+    .padding(.vertical, 6)
+    .alert(
+      "Something went wrong", isPresented: .constant(actionError != nil),
+      actions: { Button("OK") { actionError = nil } }, message: { Text(actionError ?? "") })
+  }
+
+  private var canHide: Bool { !isMine && !focused && model.me != nil }
+
+  private var post: some View {
     VStack(alignment: .leading, spacing: 8) {
       if status.reblog != nil {
         Label {
@@ -199,6 +239,21 @@ struct StatusRow: View {
             Label("Copy link", systemImage: "link")
           }
         }
+        if canHide {
+          Button {
+            Task { await hidePost() }
+          } label: {
+            Label("Hide this post", systemImage: "eye.slash")
+          }
+          // A hashtag from this person only; everyone's is hidden from the hashtag's page.
+          ForEach(hideableTags, id: \.self) { tag in
+            Button {
+              Task { await hideTag(tag) }
+            } label: {
+              Label("Hide #\(tag) from \(shown.account.name)", systemImage: "number")
+            }
+          }
+        }
         if isMine {
           Button {
             model.composing = .edit(shown)
@@ -230,6 +285,44 @@ struct StatusRow: View {
       let result = try await client.act(action, on: shown.id)
       // A reshare comes back wrapped in the new reblog: keep the original.
       updated = result.shown
+    } catch {
+      actionError = error.localizedDescription
+    }
+  }
+
+  private var hideableTags: [String] {
+    var seen = Set<String>()
+    return Array(shown.tags.map { $0.name.lowercased() }.filter { seen.insert($0).inserted }.prefix(3))
+  }
+
+  private func hidePost() async {
+    guard let client = model.client else { return }
+    do {
+      try await client.hide(shown.id)
+      hidden = .post
+    } catch {
+      actionError = error.localizedDescription
+    }
+  }
+
+  private func hideTag(_ name: String) async {
+    guard let client = model.client else { return }
+    do {
+      let result = try await client.hideTag(name, from: shown.account.id)
+      hidden = .tag(id: result.id, name: name, accountName: shown.account.name)
+    } catch {
+      actionError = error.localizedDescription
+    }
+  }
+
+  private func undoHiding(_ note: HiddenNote) async {
+    guard let client = model.client else { return }
+    do {
+      switch note {
+      case .post: try await client.unhide(shown.id)
+      case .tag(let id, _, _): try await client.unhideTag(id)
+      }
+      hidden = nil
     } catch {
       actionError = error.localizedDescription
     }

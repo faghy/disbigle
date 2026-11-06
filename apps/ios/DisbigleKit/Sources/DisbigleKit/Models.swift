@@ -110,6 +110,17 @@ public struct Mention: Codable, Hashable, Sendable {
 public struct Tag: Codable, Hashable, Sendable {
   public let name: String
   public let url: String
+  /** Whether you follow it (only when the hashtag itself was asked for). */
+  public var following: Bool? = nil
+  /** Whether you hid it from everyone (Disbigle extension, as `following`). */
+  public var hidden: Bool? = nil
+}
+
+/** A hashtag hidden from your timelines: from everyone (`account` nil) or from one account (Disbigle extension). */
+public struct HiddenTag: Codable, Hashable, Identifiable, Sendable {
+  public let id: String
+  public let name: String
+  public let account: Account?
 }
 
 public struct Poll: Codable, Hashable, Identifiable, Sendable {

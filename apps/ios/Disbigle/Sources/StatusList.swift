@@ -247,10 +247,48 @@ struct TagScreen: View {
       if let list { StatusListView(list: list) } else { ProgressView() }
     }
     .navigationTitle("#\(name)")
+    .toolbar {
+      // Hidden from your timelines; its own page still shows it.
+      if loaded, model.me != nil {
+        ToolbarItem(placement: .primaryAction) {
+          Button(hiddenId == nil ? LocalizedStringKey("Hide hashtag") : "Show again") {
+            Task { await toggleHidden() }
+          }
+          .disabled(busy)
+        }
+      }
+    }
     .onAppear {
       guard list == nil, let client = model.client else { return }
       let tag = name
       list = PagedList { try await client.timeline(.tag(tag), query: $0) }
+    }
+    .task { await loadHidden() }
+  }
+
+  /** The hide of this hashtag from everyone, when there is one. */
+  @State private var hiddenId: String?
+  @State private var loaded = false
+  @State private var busy = false
+
+  private func loadHidden() async {
+    guard let client = model.client, !loaded else { return }
+    do {
+      if try await client.tag(name).hidden == true {
+        hiddenId = try await client.hiddenTags().first { $0.account == nil && $0.name == name.lowercased() }?.id
+      }
+      loaded = true
+    } catch {}
+  }
+
+  private func toggleHidden() async {
+    guard let client = model.client else { return }
+    busy = true
+    defer { busy = false }
+    if let id = hiddenId {
+      if (try? await client.unhideTag(id)) != nil { hiddenId = nil }
+    } else if let result = try? await client.hideTag(name) {
+      hiddenId = result.id
     }
   }
 }

@@ -7,7 +7,7 @@ import UserNotifications
 /** The pages of the settings, as navigation routes. */
 enum SettingsPage: Hashable {
   case root, profile, notifications, posting, followRequests, blocks, mutes, bookmarks, favourites
-  case aspects
+  case aspects, hiddenTags
   case aspect(AspectList)
 }
 
@@ -24,6 +24,7 @@ extension SettingsPage {
     case .bookmarks: SavedPostsScreen(bookmarks: true)
     case .favourites: SavedPostsScreen(bookmarks: false)
     case .aspects: AspectsScreen()
+    case .hiddenTags: HiddenTagsScreen()
     case .aspect(let aspect): AspectMembersScreen(aspect: aspect)
     }
   }
@@ -75,6 +76,7 @@ struct SettingsScreen: View {
         link("Blocked", systemImage: "hand.raised", page: .blocks)
         link("Muted", systemImage: "speaker.slash", page: .mutes)
         link("Aspects", systemImage: "person.2", page: .aspects)
+        link("Hidden hashtags", systemImage: "eye.slash", page: .hiddenTags)
       }
 
       Section("Saved") {
@@ -403,6 +405,81 @@ struct EditProfileScreen: View {
 }
 
 // MARK: People
+
+/** The hashtags hidden from your timelines, from everyone or from one person, to show them again. */
+struct HiddenTagsScreen: View {
+  @Environment(AppModel.self) private var model
+  @Environment(Router.self) private var router
+  @State private var items: [HiddenTag]?
+  @State private var error: String?
+
+  var body: some View {
+    List {
+      Section {
+        ForEach(items ?? []) { hidden in
+          HStack {
+            Button {
+              router.go(.tag(hidden.name))
+            } label: {
+              HStack(spacing: 12) {
+                if let account = hidden.account {
+                  Avatar(account: account, size: 36)
+                } else {
+                  Image(systemName: "number").frame(width: 36, height: 36)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                  Text("#\(hidden.name)").font(.body)
+                  Group {
+                    if let account = hidden.account {
+                      Text("From @\(account.acct)")
+                    } else {
+                      Text("From everyone")
+                    }
+                  }
+                  .font(.footnote)
+                  .foregroundStyle(.secondary)
+                }
+              }
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            Button("Show again") { Task { await show(hidden) } }
+              .buttonStyle(.bordered)
+          }
+        }
+        ListFooter(
+          loading: items == nil && error == nil, error: error, empty: items?.isEmpty == true,
+          emptyText: "Nothing here yet."
+        ) { Task { await load() } }
+      } footer: {
+        Text("Posts with these hashtags don't appear in your timelines, from everyone or only from the person shown.")
+      }
+    }
+    .navigationTitle("Hidden hashtags")
+    .refreshable { await load() }
+    .task { if items == nil { await load() } }
+  }
+
+  private func load() async {
+    guard let client = model.client else { return }
+    error = nil
+    do {
+      items = try await client.hiddenTags()
+    } catch {
+      self.error = error.localizedDescription
+    }
+  }
+
+  private func show(_ hidden: HiddenTag) async {
+    guard let client = model.client else { return }
+    do {
+      try await client.unhideTag(hidden.id)
+      items?.removeAll { $0.id == hidden.id }
+    } catch {
+      self.error = error.localizedDescription
+    }
+  }
+}
 
 struct AccountListScreen: View {
   @Environment(AppModel.self) private var model
