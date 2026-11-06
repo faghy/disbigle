@@ -327,8 +327,8 @@ describe('accounts and notifications', () => {
     });
     const found = (await new Client(app).get(`/api/v1/search/tags?q=%23${stem}`)).json();
     expect(found).toEqual([
-      { name: `${stem}fresca`, postsCount: 2, following: false },
-      { name: `${stem}secca`, postsCount: 1, following: false },
+      { name: `${stem}fresca`, postsCount: 2, following: false, hidden: false },
+      { name: `${stem}secca`, postsCount: 1, following: false, hidden: false },
     ]);
     expect((await client.get(`/api/v1/tags/${stem}segreta`)).json().postsCount).toBe(0);
   });
