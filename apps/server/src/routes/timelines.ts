@@ -3,11 +3,12 @@ import {
   bookmarksTimeline,
   type CoreContext,
   homeTimeline,
+  listActivity,
   listConversations,
   publicTimeline,
   tagTimeline,
 } from '@disbigle/core';
-import { paginationQuerySchema } from '@disbigle/shared';
+import { activityKinds, paginationQuerySchema } from '@disbigle/shared';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { parse } from '../http.ts';
@@ -56,6 +57,16 @@ export async function timelineRoutes(app: FastifyInstance, { ctx }: { ctx: CoreC
       requireUser(request).actorId,
       parse(paginationQuerySchema, request.query),
     ),
+  );
+
+  // Your own activity: likes, replies, reshares and saved posts, by the time you did them.
+  const activityQuery = z.object({
+    type: z.enum(activityKinds).optional(),
+    maxId: z.string().max(200).optional(),
+    limit: z.coerce.number().int().min(1).max(40).default(20),
+  });
+  app.get('/activity', async (request) =>
+    listActivity(ctx, requireUser(request).actorId, parse(activityQuery, request.query)),
   );
 
   app.get('/conversations', async (request) => {

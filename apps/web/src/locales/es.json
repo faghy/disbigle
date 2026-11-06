@@ -26,6 +26,7 @@
     "federated": "Federada",
     "notifications": "Notificaciones",
     "aspects": "Aspectos",
+    "activity": "Mi actividad",
     "bookmarks": "Guardados",
     "unread_one": "{{count}} notificación sin leer",
     "unread_many": "{{count}} notificaciones sin leer",
@@ -1407,5 +1408,29 @@
     "delete": "Eliminar álbum",
     "deleteTitle": "¿Eliminar «{{name}}»?",
     "deleteDescription": "Las fotos se quedan en sus publicaciones: solo desaparece el álbum."
+  },
+  "activity": {
+    "title": "Mi actividad",
+    "description": "Lo que te gustó, comentaste, compartiste y guardaste, de lo más reciente a lo más antiguo. Solo tú ves esta página.",
+    "tabs": {
+      "all": "Todo",
+      "like": "Me gusta",
+      "reply": "Comentarios",
+      "reblog": "Compartidos",
+      "bookmark": "Guardados"
+    },
+    "did": {
+      "like": "Te gustó",
+      "reply": "Comentaste",
+      "reblog": "Compartiste",
+      "bookmark": "Guardaste"
+    },
+    "empty": {
+      "all": "Aún no hay nada: da me gusta, comenta, comparte o guarda una publicación y aparecerá aquí.",
+      "like": "Aún no te ha gustado ninguna publicación.",
+      "reply": "Aún no has comentado ninguna publicación.",
+      "reblog": "Aún no has compartido ninguna publicación.",
+      "bookmark": "Aún no has guardado ninguna publicación."
+    }
   }
 }

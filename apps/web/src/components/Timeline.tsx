@@ -21,7 +21,7 @@ export interface TimelineProps {
 }
 
 /** Calls `onVisible` when the element scrolls into view (no-op where unsupported). */
-function useOnVisible(onVisible: () => void, enabled: boolean) {
+export function useOnVisible(onVisible: () => void, enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null);
   const callback = useRef(onVisible);
   callback.current = onVisible;

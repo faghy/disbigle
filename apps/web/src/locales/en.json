@@ -26,6 +26,7 @@
     "federated": "Federated",
     "notifications": "Notifications",
     "aspects": "Aspects",
+    "activity": "My activity",
     "bookmarks": "Bookmarks",
     "unread_one": "{{count}} unread notification",
     "unread_other": "{{count}} unread notifications",
@@ -1381,5 +1382,29 @@
     "delete": "Delete album",
     "deleteTitle": "Delete «{{name}}»?",
     "deleteDescription": "The photos stay in their posts: only the album goes away."
+  },
+  "activity": {
+    "title": "My activity",
+    "description": "What you liked, answered, reshared and saved, newest first. Only you can see this page.",
+    "tabs": {
+      "all": "All",
+      "like": "Likes",
+      "reply": "Comments",
+      "reblog": "Reshares",
+      "bookmark": "Saved"
+    },
+    "did": {
+      "like": "You liked",
+      "reply": "You commented",
+      "reblog": "You reshared",
+      "bookmark": "You saved"
+    },
+    "empty": {
+      "all": "Nothing here yet: like, comment, reshare or save a post and it will show up here.",
+      "like": "You haven't liked any post yet.",
+      "reply": "You haven't commented on any post yet.",
+      "reblog": "You haven't reshared any post yet.",
+      "bookmark": "You haven't saved any post yet."
+    }
   }
 }

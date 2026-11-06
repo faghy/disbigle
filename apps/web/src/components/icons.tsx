@@ -84,6 +84,14 @@ export const BookmarkIcon = ({ filled, ...p }: IconProps & { filled?: boolean })
     <path d="M6 3h12v18l-6-4.5L6 21z" />
   </Icon>
 );
+/** A clock with an arrow going back: your past activity. */
+export const ActivityIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 12a9 9 0 1 0 3-6.7" />
+    <path d="M3 4v4h4" />
+    <path d="M12 7v5l3 2" />
+  </Icon>
+);
 export const MoreIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="5" cy="12" r="1" fill="currentColor" />

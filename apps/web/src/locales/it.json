@@ -26,6 +26,7 @@
     "federated": "Federata",
     "notifications": "Notifiche",
     "aspects": "Aspetti",
+    "activity": "La mia attività",
     "bookmarks": "Segnalibri",
     "unread_one": "{{count}} notifica non letta",
     "unread_other": "{{count}} notifiche non lette",
@@ -1381,5 +1382,29 @@
     "delete": "Elimina album",
     "deleteTitle": "Eliminare «{{name}}»?",
     "deleteDescription": "Le foto restano nei loro post: sparisce solo l'album."
+  },
+  "activity": {
+    "title": "La mia attività",
+    "description": "Quello che hai messo mi piace, commentato, condiviso e salvato, dal più recente. Questa pagina la vedi solo tu.",
+    "tabs": {
+      "all": "Tutto",
+      "like": "Mi piace",
+      "reply": "Commenti",
+      "reblog": "Condivisioni",
+      "bookmark": "Salvati"
+    },
+    "did": {
+      "like": "Ti è piaciuto",
+      "reply": "Hai commentato",
+      "reblog": "Hai condiviso",
+      "bookmark": "Hai salvato"
+    },
+    "empty": {
+      "all": "Ancora niente: metti mi piace, commenta, condividi o salva un post e lo trovi qui.",
+      "like": "Non hai ancora messo mi piace a nessun post.",
+      "reply": "Non hai ancora commentato nessun post.",
+      "reblog": "Non hai ancora condiviso nessun post.",
+      "bookmark": "Non hai ancora salvato nessun post."
+    }
   }
 }

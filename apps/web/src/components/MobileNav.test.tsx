@@ -45,6 +45,7 @@ describe('mobile navigation', () => {
       '/public',
       '/groups',
       '/contacts',
+      '/activity',
       '/bookmarks',
       '/settings',
       '/admin',

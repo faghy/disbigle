@@ -1,5 +1,7 @@
 import type {
   Account,
+  ActivityKind,
+  ActivityPage,
   Album,
   AlbumRequest,
   AlbumWithMedia,
@@ -96,6 +98,8 @@ export const social = {
     api.get<Status[]>(`/timelines/tag/${id(tag)}${queryString({ ...page })}`),
   aspectTimeline: (aspectId: string, page: PageParams) =>
     api.get<Status[]>(`/timelines/aspect/${id(aspectId)}${queryString({ ...page })}`),
+  activity: (page: PageParams & { type?: ActivityKind | undefined }) =>
+    api.get<ActivityPage>(`/timelines/activity${queryString({ ...page })}`),
   bookmarks: (page: PageParams) =>
     api.get<Status[]>(`/timelines/bookmarks${queryString({ ...page })}`),
   accountStatuses: (accountId: string, page: PageParams & { excludeReplies?: boolean }) =>

@@ -733,6 +733,8 @@ export interface StatusCardProps {
   /** Overrides the reply button (the post page focuses its own composer). */
   onReply?: () => void;
   position?: number;
+  /** A line above the post saying why it is listed (My activity: "You liked · 2h"). */
+  note?: ReactNode;
 }
 
 /** `it` for `it-IT`. */
@@ -828,6 +830,7 @@ export function StatusCard({
   highlighted = false,
   onReply,
   position,
+  note,
 }: StatusCardProps) {
   const { t, i18n } = useTranslation();
   const user = useCurrentUser();
@@ -869,6 +872,7 @@ export function StatusCard({
       aria-setsize={position !== undefined ? -1 : undefined}
       className={cx('border-b border-border px-4 py-4 sm:px-5', highlighted && 'bg-accent-soft/30')}
     >
+      {note && <p className="mb-2 flex items-center gap-2 pl-6 text-sm text-fg-muted">{note}</p>}
       {item.pinned && !item.reblog && (
         <p className="mb-2 flex items-center gap-2 pl-6 text-sm font-medium text-fg-muted">
           <PinIcon size={16} />

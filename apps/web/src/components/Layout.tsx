@@ -21,6 +21,7 @@ import { BackToTop } from './BackToTop.tsx';
 import { ComposeButton } from './ComposeSheet.tsx';
 import { useFocusTrap } from './Dialog.tsx';
 import {
+  ActivityIcon,
   AspectsIcon,
   BookmarkIcon,
   CloseIcon,
@@ -105,6 +106,7 @@ interface NavItem {
     | '/groups'
     | '/aspects'
     | '/contacts'
+    | '/activity'
     | '/bookmarks'
     | '/settings'
     | '/admin';
@@ -132,6 +134,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     { to: '/groups', label: t('nav.groups'), icon: GroupIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
     { to: '/contacts', label: t('nav.contacts'), icon: ContactsIcon },
+    { to: '/activity', label: t('nav.activity'), icon: ActivityIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
     { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
     ...(moderator
@@ -390,6 +393,7 @@ const morePaths = [
   '/public',
   '/groups',
   '/contacts',
+  '/activity',
   '/bookmarks',
   '/settings',
   '/admin',

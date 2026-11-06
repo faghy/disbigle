@@ -11,6 +11,7 @@ import { meQueryOptions } from './api/queries.ts';
 import { RootLayout } from './components/Layout.tsx';
 import { fullNavigation, safeRedirect } from './lib/redirect.ts';
 import { AboutPage } from './pages/About.tsx';
+import { ActivityPage } from './pages/Activity.tsx';
 import { AlbumPage } from './pages/Album.tsx';
 import { AspectsPage } from './pages/Aspects.tsx';
 import { AccountsPage } from './pages/admin/Accounts.tsx';
@@ -222,6 +223,13 @@ const tagRoute = createRoute({
   component: TagTimelinePage,
 });
 
+const activityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/activity',
+  beforeLoad: signedInOnly,
+  component: ActivityPage,
+});
+
 const bookmarksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/bookmarks',
@@ -430,6 +438,7 @@ export const routeTree = rootRoute.addChildren([
   localRoute,
   federatedRoute,
   tagRoute,
+  activityRoute,
   bookmarksRoute,
   notificationsRoute,
   groupsRoute,

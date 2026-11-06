@@ -338,3 +338,22 @@ export interface HiddenTag {
   name: string;
   account: Account | null;
 }
+
+/** What you did to a post, in "My activity". */
+export const activityKinds = ['like', 'reply', 'reblog', 'bookmark'] as const;
+export type ActivityKind = (typeof activityKinds)[number];
+
+/** One thing you did: liked, replied (the reply itself), reshared or saved a post. */
+export interface ActivityItem {
+  /** Cursor of this item, for `maxId`. */
+  id: string;
+  type: ActivityKind;
+  createdAt: string;
+  status: Status;
+}
+
+export interface ActivityPage {
+  items: ActivityItem[];
+  /** Cursor of the next (older) page, null at the end. */
+  next: string | null;
+}
