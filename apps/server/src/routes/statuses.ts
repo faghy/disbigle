@@ -7,6 +7,7 @@ import {
   editPost,
   getStatus,
   getStatusContext,
+  hidePost,
   like,
   listLikedBy,
   listResharedBy,
@@ -17,6 +18,7 @@ import {
   shareToGroup,
   translatePost,
   unbookmark,
+  unhidePost,
   unlike,
   unpinPost,
   unreblog,
@@ -67,6 +69,17 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       request.session?.stage === 'active' ? request.session.actorId : null,
       id,
     );
+  });
+
+  app.post('/:id/hide', async (request) => {
+    const { id } = parse(idParams, request.params);
+    await hidePost(ctx, requireUser(request).actorId, id);
+    return { status: 'ok' };
+  });
+  app.post('/:id/unhide', async (request) => {
+    const { id } = parse(idParams, request.params);
+    await unhidePost(ctx, requireUser(request).actorId, id);
+    return { status: 'ok' };
   });
 
   // Who liked or reshared a post: anyone who may see the post may see these.

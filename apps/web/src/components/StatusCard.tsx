@@ -19,7 +19,7 @@ import { errorMessage } from '../api/errors.ts';
 import { type ToggleKind, useDeleteStatus, useToggleStatus } from '../api/mutations.ts';
 import { useCurrentUser, useInstance } from '../api/queries.ts';
 import { social } from '../api/social.ts';
-import { useAspects } from '../api/socialQueries.ts';
+import { useAspects, useHidePost, useHideTag, useUnhideTag } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { fullDateTime, relativeTime } from '../lib/time.ts';
 import { canReshare, visibilityIcons } from '../lib/visibility.tsx';
@@ -31,6 +31,7 @@ import { EditStatusForm } from './EditStatusForm.tsx';
 import { type InteractionKind, InteractionsDialog } from './Interactions.tsx';
 import {
   BookmarkIcon,
+  EyeOffIcon,
   GroupIcon,
   HeartIcon,
   MoreIcon,
@@ -440,16 +441,21 @@ function usePinToggle(status: Status, enabled: boolean) {
   };
 }
 
+/** What was just hidden from a card, shown in its place with "Undo". */
+type HiddenNote = { kind: 'post' } | { kind: 'tag'; id: string; name: string };
+
 function MoreMenu({
   status,
   isAuthor,
   signedIn,
   onEdit,
+  onHidden,
 }: {
   status: Status;
   isAuthor: boolean;
   signedIn: boolean;
   onEdit: () => void;
+  onHidden: (note: HiddenNote) => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -468,6 +474,9 @@ function MoreMenu({
   const menuId = useId();
   const router = useRouter();
   const remove = useDeleteStatus();
+  const hidePost = useHidePost();
+  const hideTag = useHideTag();
+  const hideError = hidePost.error ?? hideTag.error;
   const me = useCurrentUser();
   // As on diaspora*, you may remove the replies others leave on your posts.
   const onYourPost = !isAuthor && !!me && status.inReplyToAccountId === me.account.id;
@@ -569,6 +578,42 @@ function MoreMenu({
         {signedIn && !isAuthor && (
           <button
             type="button"
+            className={itemClass}
+            onClick={() => {
+              setOpen(false);
+              hidePost.mutate(
+                { statusId: status.id, hide: true },
+                { onSuccess: () => onHidden({ kind: 'post' }) },
+              );
+            }}
+          >
+            {t('status.hide')}
+          </button>
+        )}
+        {signedIn &&
+          !isAuthor &&
+          status.tags.slice(0, 3).map((tag) => (
+            <button
+              key={tag.name}
+              type="button"
+              className={itemClass}
+              onClick={() => {
+                setOpen(false);
+                hideTag.mutate(
+                  { name: tag.name, accountId: status.account.id, fromPost: true },
+                  {
+                    onSuccess: (hidden) =>
+                      onHidden({ kind: 'tag', id: hidden.id, name: hidden.name }),
+                  },
+                );
+              }}
+            >
+              {t('status.hideTagFrom', { tag: tag.name, name: displayName(status.account) })}
+            </button>
+          ))}
+        {signedIn && !isAuthor && (
+          <button
+            type="button"
             className={cx(itemClass, 'text-danger')}
             onClick={() => {
               setOpen(false);
@@ -579,6 +624,14 @@ function MoreMenu({
           </button>
         )}
       </div>
+      {hideError && (
+        <p
+          role="alert"
+          className="absolute right-0 bottom-full mb-1 w-60 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2 text-xs text-danger shadow"
+        >
+          {errorMessage(hideError)}
+        </p>
+      )}
       {pin.error && (
         <p
           role="alert"
@@ -804,6 +857,10 @@ export function StatusCard({
   const act = (kind: ToggleKind, value: boolean) => toggle.mutate({ status, kind, value });
   // Bumped on each new like: the heart pops then, not for posts already liked on load.
   const [likePops, setLikePops] = useState(0);
+  const [hidden, setHidden] = useState<HiddenNote | null>(null);
+
+  if (hidden)
+    return <HiddenStatus note={hidden} status={status} onUndone={() => setHidden(null)} />;
 
   return (
     <article
@@ -992,6 +1049,7 @@ export function StatusCard({
               isAuthor={isAuthor}
               signedIn={signedIn}
               onEdit={() => setEditing(true)}
+              onHidden={setHidden}
             />
           </div>
           {toggle.error && <Alert className="mt-2">{errorMessage(toggle.error)}</Alert>}
@@ -1017,5 +1075,51 @@ export function StatusCard({
         </div>
       </div>
     </article>
+  );
+}
+
+/** In place of a post just hidden: what was hidden, and "Undo". */
+function HiddenStatus({
+  note,
+  status,
+  onUndone,
+}: {
+  note: HiddenNote;
+  status: Status;
+  onUndone: () => void;
+}) {
+  const { t } = useTranslation();
+  const showPost = useHidePost();
+  const showTag = useUnhideTag();
+  const error = showPost.error ?? showTag.error;
+  const undo = () =>
+    note.kind === 'post'
+      ? showPost.mutate({ statusId: status.id, hide: false }, { onSuccess: onUndone })
+      : showTag.mutate({ id: note.id, fromPost: true }, { onSuccess: onUndone });
+  return (
+    <div
+      role="status"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3 text-sm text-fg-muted sm:px-5"
+    >
+      <EyeOffIcon size={16} />
+      <span className="min-w-0 flex-1">
+        {note.kind === 'post'
+          ? t('status.hidden.post')
+          : t('status.hidden.tag', { tag: note.name, name: displayName(status.account) })}
+      </span>
+      <button
+        type="button"
+        onClick={undo}
+        disabled={showPost.isPending || showTag.isPending}
+        className="rounded font-medium text-accent hover:underline focus-ring disabled:opacity-50"
+      >
+        {t('status.hidden.undo')}
+      </button>
+      {error && (
+        <span role="alert" className="w-full text-danger">
+          {errorMessage(error)}
+        </span>
+      )}
+    </div>
   );
 }

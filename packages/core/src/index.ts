@@ -35,6 +35,7 @@ export * from './social/content.ts';
 export * from './social/conversations.ts';
 export * from './social/filters.ts';
 export * from './social/groups.ts';
+export * from './social/hiding.ts';
 export * from './social/language.ts';
 export * from './social/notification-list.ts';
 export * from './social/notifications.ts';

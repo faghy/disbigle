@@ -7,7 +7,12 @@ import { isModerator, summaryQueryOptions } from '../api/admin.ts';
 import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
-import { useFollowedTags, useFollowTag } from '../api/socialQueries.ts';
+import {
+  useFollowedTags,
+  useFollowTag,
+  useHiddenTags,
+  useUnhideTag,
+} from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { setTheme, themes, useTheme } from '../lib/theme.ts';
@@ -195,7 +200,56 @@ function FollowedTags() {
         </ul>
       )}
       <FollowTagForm />
+      <HiddenTags />
     </section>
+  );
+}
+
+/** Hashtags hidden from your timelines, from everyone or from one person, each with "show again". */
+function HiddenTags() {
+  const { t } = useTranslation();
+  const hidden = useHiddenTags();
+  const show = useUnhideTag();
+  if (!hidden.data || hidden.data.length === 0) return null;
+  return (
+    <div className="mt-4">
+      <h3 className="px-3 text-xs font-semibold tracking-wide text-fg-muted uppercase">
+        {t('tags.hiddenTitle')}
+      </h3>
+      <ul className="mt-2 space-y-0.5">
+        {hidden.data.map((item) => (
+          <li key={item.id} className="flex items-center gap-1 pr-1">
+            <Link
+              to="/tags/$tag"
+              params={{ tag: item.name }}
+              className="min-w-0 flex-1 truncate rounded-lg px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring"
+            >
+              #{item.name}
+              {item.account && <span className="text-xs"> · @{item.account.acct}</span>}
+            </Link>
+            <button
+              type="button"
+              aria-label={
+                item.account
+                  ? t('tags.showAgainFrom', { tag: item.name, name: item.account.acct })
+                  : t('tags.showAgain', { tag: item.name })
+              }
+              title={t('tags.unhide')}
+              disabled={show.isPending}
+              onClick={() => show.mutate({ id: item.id })}
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-fg-muted hover:bg-surface-muted hover:text-fg focus-ring"
+            >
+              <CloseIcon size={14} />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {show.error && (
+        <p role="alert" className="mt-1 px-3 text-xs text-danger">
+          {errorMessage(show.error)}
+        </p>
+      )}
+    </div>
   );
 }
 

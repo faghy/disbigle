@@ -5,6 +5,7 @@ import { and, eq, gt, isNull, lt, type SQL, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
 import { type FilterContext, notFilteredFor } from './filters.ts';
+import { notHiddenFor } from './hiding.ts';
 import { hydrateStatuses } from './statuses.ts';
 import { visibleTo } from './visibility.ts';
 
@@ -59,6 +60,7 @@ export async function streamableTo(
         visibleTo(viewerActorId),
         notSilenced(viewerActorId),
         notFilteredFor(viewerActorId, context),
+        notHiddenFor(viewerActorId),
         context === 'public' ? notFromBlockedDomain : undefined,
       ),
     );
@@ -71,6 +73,7 @@ async function page(
   where: SQL | undefined,
   query: PaginationQuery,
   filterContext?: FilterContext,
+  options: { hiddenTags?: boolean } = {},
 ): Promise<Status[]> {
   const { maxId, minId, limit } = paginationQuerySchema.parse(query);
   const rows = await ctx.db
@@ -82,6 +85,8 @@ async function page(
         visibleTo(viewerActorId),
         notSilenced(viewerActorId),
         filterContext ? notFilteredFor(viewerActorId, filterContext) : undefined,
+        // What you hid stays out of your timelines, not off profiles, threads and bookmarks.
+        filterContext ? notHiddenFor(viewerActorId, { tags: options.hiddenTags }) : undefined,
         maxId ? lt(posts.id, maxId) : undefined,
         minId ? gt(posts.id, minId) : undefined,
       ),
@@ -157,6 +162,8 @@ export function tagTimeline(
     ),
     query,
     'public',
+    // Opening a hashtag's page shows its posts, even when you hid it from your timelines.
+    { hiddenTags: false },
   );
 }
 

@@ -1,9 +1,9 @@
 import { schema, uuidv7 } from '@disbigle/db';
-import { and, eq, type SQL, sql } from 'drizzle-orm';
+import { and, eq, isNull, type SQL, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
 import { DomainError } from '../errors.ts';
 
-const { tags, tagFollows } = schema;
+const { tags, tagFollows, tagHides } = schema;
 
 /**
  * Public posts using a tag (in queries on `tags`). Tag lists and counts only ever reflect public posts, so a hashtag
@@ -17,10 +17,12 @@ export const publicTagUses = (): SQL<number> =>
 export interface TagInfo {
   name: string;
   following: boolean;
+  /** Hidden from the viewer's timelines (from everyone). */
+  hidden: boolean;
   postsCount: number;
 }
 
-const normalize = (name: string) => {
+export const normalizeTag = (name: string) => {
   const tag = name.replace(/^#/, '').toLowerCase();
   if (!/^[\p{L}\p{N}_]{1,100}$/u.test(tag) || /^\d+$/.test(tag)) {
     throw new DomainError('validation_failed', 'Invalid hashtag', [
@@ -35,10 +37,10 @@ export async function getTag(
   viewerActorId: string | null,
   name: string,
 ): Promise<TagInfo> {
-  const tag = normalize(name);
+  const tag = normalizeTag(name);
   const [row] = await ctx.db.select().from(tags).where(eq(tags.name, tag));
-  if (!row) return { name: tag, following: false, postsCount: 0 };
-  const [[count], following] = await Promise.all([
+  if (!row) return { name: tag, following: false, hidden: false, postsCount: 0 };
+  const [[count], following, hidden] = await Promise.all([
     ctx.db.select({ n: publicTagUses() }).from(tags).where(eq(tags.id, row.id)),
     viewerActorId
       ? ctx.db
@@ -46,12 +48,29 @@ export async function getTag(
           .from(tagFollows)
           .where(and(eq(tagFollows.tagId, row.id), eq(tagFollows.actorId, viewerActorId)))
       : Promise.resolve([]),
+    viewerActorId
+      ? ctx.db
+          .select({ id: tagHides.id })
+          .from(tagHides)
+          .where(
+            and(
+              eq(tagHides.tagId, row.id),
+              eq(tagHides.actorId, viewerActorId),
+              isNull(tagHides.targetActorId),
+            ),
+          )
+      : Promise.resolve([]),
   ]);
-  return { name: tag, following: following.length > 0, postsCount: count?.n ?? 0 };
+  return {
+    name: tag,
+    following: following.length > 0,
+    hidden: hidden.length > 0,
+    postsCount: count?.n ?? 0,
+  };
 }
 
 export async function followTag(ctx: CoreContext, actorId: string, name: string): Promise<TagInfo> {
-  const tag = normalize(name);
+  const tag = normalizeTag(name);
   await ctx.db.insert(tags).values({ id: uuidv7(), name: tag }).onConflictDoNothing();
   const [row] = await ctx.db.select().from(tags).where(eq(tags.name, tag));
   if (!row) throw new Error('Tag insert failed');
@@ -64,7 +83,7 @@ export async function unfollowTag(
   actorId: string,
   name: string,
 ): Promise<TagInfo> {
-  const tag = normalize(name);
+  const tag = normalizeTag(name);
   const [row] = await ctx.db.select().from(tags).where(eq(tags.name, tag));
   if (row) {
     await ctx.db
@@ -120,9 +139,20 @@ export async function searchTags(
         ).map((r) => r.id),
       )
     : new Set<string>();
+  const hidden = viewerActorId
+    ? new Set(
+        (
+          await ctx.db
+            .select({ id: tagHides.tagId })
+            .from(tagHides)
+            .where(and(eq(tagHides.actorId, viewerActorId), isNull(tagHides.targetActorId)))
+        ).map((r) => r.id),
+      )
+    : new Set<string>();
   return rows.map((r) => ({
     name: r.name,
     postsCount: r.postsCount,
     following: followed.has(r.id),
+    hidden: hidden.has(r.id),
   }));
 }

@@ -7,6 +7,7 @@ import type {
   Conversation,
   CreatePostRequest,
   EditPostRequest,
+  HiddenTag,
   MediaAttachment,
   Notification,
   ProfileMedia,
@@ -39,6 +40,8 @@ export type { Conversation };
 export interface TagInfo {
   name: string;
   following: boolean;
+  /** Hidden from your timelines (from everyone). */
+  hidden: boolean;
   postsCount: number;
 }
 
@@ -171,6 +174,13 @@ export const social = {
   followTag: (name: string, follow: boolean) =>
     api.post<TagInfo>(`/tags/${id(name)}/${follow ? 'follow' : 'unfollow'}`),
   followedTags: () => api.get<string[]>('/tags/followed'),
+  hiddenTags: () => api.get<HiddenTag[]>('/hidden_tags'),
+  /** Hides a hashtag from your timelines: from everyone, or only from `accountId`. */
+  hideTag: (name: string, accountId: string | null = null) =>
+    api.post<HiddenTag>('/hidden_tags', { name, accountId }),
+  unhideTag: (hiddenId: string) => api.delete<{ status: string }>(`/hidden_tags/${id(hiddenId)}`),
+  hidePost: (statusId: string, hide: boolean) =>
+    api.post<{ status: string }>(`/statuses/${id(statusId)}/${hide ? 'hide' : 'unhide'}`),
 
   // Search and reports
   /** Full-text search in posts the viewer may see, newest first. */

@@ -34,6 +34,7 @@ import { authRoutes } from './routes/auth.ts';
 import { authorizedAppRoutes } from './routes/authorized-apps.ts';
 import { filterRoutes } from './routes/filters.ts';
 import { groupRoutes } from './routes/groups.ts';
+import { hiddenTagRoutes } from './routes/hidden-tags.ts';
 import { inviteRoutes } from './routes/invites.ts';
 import { legacyDiasporaRoutes } from './routes/legacy.ts';
 import { meRoutes } from './routes/me.ts';
@@ -243,6 +244,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(pushRoutes, { ctx, prefix: '/push' });
       await api.register(inviteRoutes, { ctx, prefix: '/invites' });
       await api.register(filterRoutes, { ctx, prefix: '/filters' });
+      await api.register(hiddenTagRoutes, { ctx, prefix: '/hidden_tags' });
       await api.register(adminRoutes, { ctx, redis, prefix: '/admin' });
       await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
       await api.register(groupRoutes, { ctx, mediaCtx, prefix: '/groups' });

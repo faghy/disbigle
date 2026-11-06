@@ -521,7 +521,14 @@
     },
     "removeReply": "Quitar de tu publicación",
     "removeReplyTitle": "¿Quitar esta respuesta de tu publicación?",
-    "removeReplyDescription": "Desaparece aquí en Disbigle y en los pods de diaspora*. Servidores como Mastodon no aceptan que otros borren contenido: allí podría seguir visible."
+    "removeReplyDescription": "Desaparece aquí en Disbigle y en los pods de diaspora*. Servidores como Mastodon no aceptan que otros borren contenido: allí podría seguir visible.",
+    "hide": "Ocultar esta publicación",
+    "hideTagFrom": "Ocultar #{{tag}} de {{name}}",
+    "hidden": {
+      "post": "Publicación oculta: ya no la verás en tus cronologías.",
+      "tag": "Ya no verás en tus cronologías las publicaciones de {{name}} con #{{tag}}.",
+      "undo": "Deshacer"
+    }
   },
   "timeline": {
     "loadMore": "Cargar más",
@@ -633,7 +640,12 @@
     "unfollow": "Dejar de seguir hashtag",
     "followedTitle": "Hashtags seguidos",
     "followNew": "Seguir una etiqueta",
-    "followNewPlaceholder": "Seguir #etiqueta"
+    "followNewPlaceholder": "Seguir #etiqueta",
+    "hide": "Ocultar",
+    "unhide": "Mostrar de nuevo",
+    "hiddenTitle": "Hashtags ocultos",
+    "showAgain": "Mostrar de nuevo #{{tag}}",
+    "showAgainFrom": "Mostrar de nuevo #{{tag}} de @{{name}}"
   },
   "edit": {
     "label": "Editar publicación",

@@ -511,7 +511,14 @@
     },
     "removeReply": "Remove from your post",
     "removeReplyTitle": "Remove this reply from your post?",
-    "removeReplyDescription": "It disappears here on Disbigle and on diaspora* pods. Servers like Mastodon don't accept removals by others: there it may stay visible."
+    "removeReplyDescription": "It disappears here on Disbigle and on diaspora* pods. Servers like Mastodon don't accept removals by others: there it may stay visible.",
+    "hide": "Hide this post",
+    "hideTagFrom": "Hide #{{tag}} from {{name}}",
+    "hidden": {
+      "post": "Post hidden: you won't see it in your timelines.",
+      "tag": "You won't see {{name}}'s posts with #{{tag}} in your timelines.",
+      "undo": "Undo"
+    }
   },
   "timeline": {
     "loadMore": "Load more",
@@ -619,7 +626,12 @@
     "unfollow": "Unfollow hashtag",
     "followedTitle": "Followed hashtags",
     "followNew": "Follow a hashtag",
-    "followNewPlaceholder": "Follow #hashtag"
+    "followNewPlaceholder": "Follow #hashtag",
+    "hide": "Hide",
+    "unhide": "Show again",
+    "hiddenTitle": "Hidden hashtags",
+    "showAgain": "Show #{{tag}} again",
+    "showAgainFrom": "Show #{{tag}} from @{{name}} again"
   },
   "edit": {
     "label": "Edit post",

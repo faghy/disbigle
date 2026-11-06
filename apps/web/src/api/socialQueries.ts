@@ -78,6 +78,7 @@ export function useRelationships(ids: string[]) {
 export const tagKeys = {
   tag: (name: string) => ['tag', name] as const,
   followed: ['tags', 'followed'] as const,
+  hidden: ['tags', 'hidden'] as const,
 };
 
 /** Follows or unfollows a hashtag, updating its info, the followed list and Home. */
@@ -105,5 +106,56 @@ export function useFollowedTags() {
     queryFn: social.followedTags,
     enabled: Boolean(user),
     staleTime: 60_000,
+  });
+}
+
+/** Hashtags hidden from the signed-in user's timelines, from everyone or from one account. */
+export function useHiddenTags() {
+  const user = useCurrentUser();
+  return useQuery({
+    queryKey: tagKeys.hidden,
+    queryFn: social.hiddenTags,
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * After hiding or showing again: the lists and the hashtag pages catch up, and the timelines too
+ * unless the change was made from a post, which then stays in place to offer "Undo".
+ */
+function afterHiding(queryClient: ReturnType<typeof useQueryClient>, timelines: boolean) {
+  void queryClient.invalidateQueries({ queryKey: ['tags'] });
+  void queryClient.invalidateQueries({ queryKey: ['tag'] });
+  if (timelines) void queryClient.invalidateQueries({ queryKey: socialKeys.timelines });
+}
+
+export function useHideTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, accountId = null }: HideTagInput) => social.hideTag(name, accountId),
+    onSuccess: (_, input) => afterHiding(queryClient, !input.fromPost),
+  });
+}
+
+interface HideTagInput {
+  name: string;
+  accountId?: string | null;
+  fromPost?: boolean;
+}
+
+export function useUnhideTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: string; fromPost?: boolean }) => social.unhideTag(id),
+    onSuccess: (_, input) => afterHiding(queryClient, !input.fromPost),
+  });
+}
+
+/** Hides one post from your timelines; it stays on screen as a note with "Undo" until reloaded. */
+export function useHidePost() {
+  return useMutation({
+    mutationFn: ({ statusId, hide }: { statusId: string; hide: boolean }) =>
+      social.hidePost(statusId, hide),
   });
 }

@@ -5,7 +5,14 @@ import { socialKeys } from '../api/cache.ts';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser } from '../api/queries.ts';
 import { type PageParams, social } from '../api/social.ts';
-import { aspectsQueryOptions, tagKeys, useFollowTag } from '../api/socialQueries.ts';
+import {
+  aspectsQueryOptions,
+  tagKeys,
+  useFollowTag,
+  useHiddenTags,
+  useHideTag,
+  useUnhideTag,
+} from '../api/socialQueries.ts';
 import { Composer } from '../components/Composer.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { AspectsIcon, BookmarkIcon, GlobeIcon, HashIcon, LocalIcon } from '../components/icons.tsx';
@@ -72,7 +79,12 @@ export function TagTimelinePage() {
         title={`#${name}`}
         description={<TagSummary name={name} />}
         icon={HashIcon}
-        actions={<FollowTagButton name={name} />}
+        actions={
+          <div className="flex flex-wrap items-start justify-end gap-2">
+            <HideTagButton name={name} />
+            <FollowTagButton name={name} />
+          </div>
+        }
       />
       <FeedSection>
         <Timeline
@@ -178,6 +190,40 @@ function FollowTagButton({ name }: { name: string }) {
       {change.error && (
         <span role="alert" className="text-xs text-danger">
           {errorMessage(change.error)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Hides a hashtag from your timelines (its own page still shows it), or shows it again. */
+function HideTagButton({ name }: { name: string }) {
+  const { t } = useTranslation();
+  const user = useCurrentUser();
+  const tag = useQuery({ queryKey: tagKeys.tag(name), queryFn: () => social.tag(name) });
+  const hiddenTags = useHiddenTags();
+  const hide = useHideTag();
+  const show = useUnhideTag();
+  if (!user || !tag.data) return null;
+  const entry = hiddenTags.data?.find((h) => h.name === tag.data.name && !h.account);
+  const hidden = tag.data.hidden;
+  const error = hide.error ?? show.error;
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        variant="secondary"
+        loading={hide.isPending || show.isPending}
+        aria-pressed={hidden}
+        disabled={hidden && !entry}
+        onClick={() =>
+          hidden && entry ? show.mutate({ id: entry.id }) : hide.mutate({ name: tag.data.name })
+        }
+      >
+        {hidden ? t('tags.unhide') : t('tags.hide')}
+      </Button>
+      {error && (
+        <span role="alert" className="text-xs text-danger">
+          {errorMessage(error)}
         </span>
       )}
     </div>

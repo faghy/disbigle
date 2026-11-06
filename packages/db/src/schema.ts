@@ -532,6 +532,42 @@ export const tagFollows = pgTable(
   (t) => [primaryKey({ columns: [t.actorId, t.tagId] })],
 );
 
+/** Posts someone chose not to see in their timelines (as diaspora*'s "Hide"). */
+export const hiddenPosts = pgTable(
+  'hidden_posts',
+  {
+    actorId: actorRef('actor_id'),
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
+);
+
+/** Hashtags someone chose not to see: from everyone, or only from one account. */
+export const tagHides = pgTable(
+  'tag_hides',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+    /** Only this account's posts with the tag; null = everyone's. */
+    targetActorId: uuid('target_actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('tag_hides_everyone_idx')
+      .on(t.actorId, t.tagId)
+      .where(sql`${t.targetActorId} is null`),
+    uniqueIndex('tag_hides_account_idx')
+      .on(t.actorId, t.tagId, t.targetActorId)
+      .where(sql`${t.targetActorId} is not null`),
+  ],
+);
+
 export const likes = pgTable(
   'likes',
   {

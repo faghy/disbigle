@@ -331,3 +331,10 @@ export interface Conversation {
   accounts: Account[];
   lastStatus: Status;
 }
+
+/** A hashtag the user chose not to see: from everyone, or only from `account`. */
+export interface HiddenTag {
+  id: string;
+  name: string;
+  account: Account | null;
+}
