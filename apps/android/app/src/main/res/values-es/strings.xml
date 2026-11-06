@@ -265,4 +265,16 @@
     <item quantity="many">%1$d veces compartido</item>
     <item quantity="other">%1$d veces compartido</item>
   </plurals>
+  <string name="hide_post">Ocultar esta publicación</string>
+  <string name="hide_tag_from">Ocultar #%1$s de %2$s</string>
+  <string name="hidden_post">Publicación oculta: ya no la verás en tus cronologías.</string>
+  <string name="hidden_tag_from">Ya no verás en tus cronologías las publicaciones de %1$s con #%2$s.</string>
+  <string name="hidden_tag">Ya no verás en tus cronologías las publicaciones con #%1$s.</string>
+  <string name="undo">Deshacer</string>
+  <string name="hide_tag">Ocultar hashtag</string>
+  <string name="unhide_tag">Mostrar de nuevo</string>
+  <string name="hidden_tags">Hashtags ocultos</string>
+  <string name="hidden_tags_footer">Las publicaciones con estos hashtags no aparecen en tus cronologías, de todos o solo de la persona indicada.</string>
+  <string name="from_everyone">De todos</string>
+  <string name="from_account">De @%1$s</string>
 </resources>

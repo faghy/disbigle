@@ -265,4 +265,16 @@
     <item quantity="many">%1$d ricondivisioni</item>
     <item quantity="other">%1$d ricondivisioni</item>
   </plurals>
+  <string name="hide_post">Nascondi questo post</string>
+  <string name="hide_tag_from">Nascondi #%1$s di %2$s</string>
+  <string name="hidden_post">Post nascosto: non lo vedrai più nelle tue timeline.</string>
+  <string name="hidden_tag_from">Non vedrai più nelle tue timeline i post di %1$s con #%2$s.</string>
+  <string name="hidden_tag">Non vedrai più nelle tue timeline i post con #%1$s.</string>
+  <string name="undo">Annulla</string>
+  <string name="hide_tag">Nascondi hashtag</string>
+  <string name="unhide_tag">Mostra di nuovo</string>
+  <string name="hidden_tags">Hashtag nascosti</string>
+  <string name="hidden_tags_footer">I post con questi hashtag non compaiono nelle tue timeline, di tutti o solo della persona indicata.</string>
+  <string name="from_everyone">Di tutti</string>
+  <string name="from_account">Di @%1$s</string>
 </resources>

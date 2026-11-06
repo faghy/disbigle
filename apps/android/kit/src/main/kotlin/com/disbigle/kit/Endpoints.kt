@@ -134,6 +134,23 @@ suspend fun Client.upload(data: ByteArray, filename: String, mimeType: String, d
 suspend fun Client.describeMedia(id: String, description: String) =
   perform("PUT", "api/v1/media/$id", body = json("description" to JsonPrimitive(description)))
 
+// Hiding (Disbigle extension)
+
+/** Hides someone else's post from your timelines, without unfollowing them. */
+suspend fun Client.hide(id: String) = perform("POST", "api/v1/statuses/$id/hide")
+
+suspend fun Client.unhide(id: String) = perform("POST", "api/v1/statuses/$id/unhide")
+
+suspend fun Client.tag(name: String): Tag = get("api/v1/tags/$name")
+
+suspend fun Client.hiddenTags(): List<HiddenTag> = get("api/v1/hidden_tags")
+
+/** Hides a hashtag from your timelines: everyone's posts with it, or only those of `accountId`. */
+suspend fun Client.hideTag(name: String, accountId: String? = null): HiddenTag =
+  call("POST", "api/v1/hidden_tags", body = Client.Body.Form(listOfNotNull("name" to name, accountId?.let { "account_id" to it })))
+
+suspend fun Client.unhideTag(id: String) = perform("DELETE", "api/v1/hidden_tags/$id")
+
 // Notifications and messages
 
 suspend fun Client.notifications(query: Query = emptyList()): Page<Notification> = page("api/v1/notifications", query)

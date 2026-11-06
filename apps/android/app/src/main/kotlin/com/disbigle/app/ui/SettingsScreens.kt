@@ -42,6 +42,8 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SettingsApplications
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.ManageAccounts
+import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.VolumeOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -78,6 +80,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.disbigle.app.BuildConfig
 import com.disbigle.app.R
 import com.disbigle.kit.Account
+import com.disbigle.kit.HiddenTag
+import com.disbigle.kit.hiddenTags
+import com.disbigle.kit.unhideTag
 import com.disbigle.kit.AccountAction
 import com.disbigle.kit.AccountList
 import com.disbigle.kit.Alerts
@@ -153,6 +158,7 @@ fun SettingsScreen(nav: Nav) {
       Row(stringResource(R.string.blocked), Icons.Outlined.Block) { nav.settings("blocks") }
       Row(stringResource(R.string.muted), Icons.Outlined.VolumeOff) { nav.settings("mutes") }
       Row(stringResource(R.string.aspects), Icons.Outlined.Groups) { nav.settings("aspects") }
+      Row(stringResource(R.string.hidden_tags), Icons.Outlined.VisibilityOff) { nav.settings("hidden_tags") }
       SectionTitle(stringResource(R.string.saved))
       Row(stringResource(R.string.bookmarks), Icons.Outlined.BookmarkBorder) { nav.settings("bookmarks") }
       Row(stringResource(R.string.liked_posts), Icons.Outlined.FavoriteBorder) { nav.settings("favourites") }
@@ -429,6 +435,64 @@ fun AccountListScreen(nav: Nav, list: AccountList) {
         HorizontalDivider()
       }
       item { ListFooter(accounts.loading, accounts.error, accounts.loaded && accounts.items.isEmpty(), stringResource(R.string.nobody_here)) { accounts.refresh() } }
+    }
+  }
+}
+
+/** The hashtags hidden from your timelines, from everyone or from one person, to show them again. */
+@Composable
+fun HiddenTagsScreen(nav: Nav) {
+  val model = LocalApp.current
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+  val client = model.client
+  var items by remember { mutableStateOf<List<HiddenTag>?>(null) }
+  var error by remember { mutableStateOf<String?>(null) }
+  suspend fun load() {
+    error = null
+    try {
+      items = client?.hiddenTags() ?: emptyList()
+    } catch (e: Exception) {
+      error = context.messageOf(e)
+    }
+  }
+  LaunchedEffect(client) { load() }
+  Screen(stringResource(R.string.hidden_tags), nav) { modifier ->
+    LazyColumn(modifier.fillMaxSize()) {
+      item {
+        Text(
+          stringResource(R.string.hidden_tags_footer), style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp),
+        )
+      }
+      items(items.orEmpty(), key = { it.id }) { hidden ->
+        ListItem(
+          headlineContent = { Text("#${hidden.name}") },
+          supportingContent = {
+            Text(hidden.account?.let { stringResource(R.string.from_account, it.acct) } ?: stringResource(R.string.from_everyone))
+          },
+          leadingContent = { hidden.account?.let { Avatar(it, 36.dp) } ?: Icon(Icons.Outlined.Tag, null) },
+          trailingContent = {
+            OutlinedButton(onClick = {
+              scope.launch {
+                try {
+                  client?.unhideTag(hidden.id)
+                  items = items?.filter { it.id != hidden.id }
+                } catch (e: Exception) {
+                  error = context.messageOf(e)
+                }
+              }
+            }) { Text(stringResource(R.string.unhide_tag)) }
+          },
+          modifier = Modifier.clickable { nav.tag(hidden.name) },
+        )
+        HorizontalDivider()
+      }
+      item {
+        ListFooter(items == null && error == null, error, items?.isEmpty() == true, stringResource(R.string.nothing_here)) {
+          scope.launch { load() }
+        }
+      }
     }
   }
 }

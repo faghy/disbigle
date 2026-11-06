@@ -103,7 +103,18 @@ data class MediaAttachment(
 data class Mention(val id: String, val username: String, val acct: String, val url: String)
 
 @Serializable
-data class Tag(val name: String, val url: String = "")
+data class Tag(
+  val name: String,
+  val url: String = "",
+  /** Whether you follow it (only when the hashtag itself was asked for). */
+  val following: Boolean? = null,
+  /** Whether you hid it from everyone (Disbigle extension, as `following`). */
+  val hidden: Boolean? = null,
+)
+
+/** A hashtag hidden from your timelines: from everyone (`account` null) or from one account (Disbigle extension). */
+@Serializable
+data class HiddenTag(val id: String, val name: String, val account: Account? = null)
 
 @Serializable
 data class Poll(

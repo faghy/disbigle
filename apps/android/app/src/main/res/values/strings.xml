@@ -261,4 +261,16 @@
     <item quantity="one">%1$d reshare</item>
     <item quantity="other">%1$d reshares</item>
   </plurals>
+  <string name="hide_post">Hide this post</string>
+  <string name="hide_tag_from">Hide #%1$s from %2$s</string>
+  <string name="hidden_post">Post hidden: you won\'t see it in your timelines.</string>
+  <string name="hidden_tag_from">You won\'t see %1$s\'s posts with #%2$s in your timelines.</string>
+  <string name="hidden_tag">You won\'t see posts with #%1$s in your timelines.</string>
+  <string name="undo">Undo</string>
+  <string name="hide_tag">Hide hashtag</string>
+  <string name="unhide_tag">Show again</string>
+  <string name="hidden_tags">Hidden hashtags</string>
+  <string name="hidden_tags_footer">Posts with these hashtags don\'t appear in your timelines, from everyone or only from the person shown.</string>
+  <string name="from_everyone">From everyone</string>
+  <string name="from_account">From @%1$s</string>
 </resources>

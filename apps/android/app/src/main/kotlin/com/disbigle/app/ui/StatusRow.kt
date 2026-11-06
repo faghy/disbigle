@@ -101,6 +101,18 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.outlined.VisibilityOff
+import com.disbigle.kit.hide
+import com.disbigle.kit.hideTag
+import com.disbigle.kit.unhide
+import com.disbigle.kit.unhideTag
+
+/** What was just hidden in place of a post, to say so and offer to undo it. */
+private sealed interface HiddenNote {
+  data object Post : HiddenNote
+  data class Tag(val id: String, val name: String, val accountName: String) : HiddenNote
+}
 
 /** One post in a list: tap to open its thread. */
 @Composable
@@ -123,6 +135,7 @@ fun StatusRow(
   var confirmDelete by remember { mutableStateOf(false) }
   var actionError by remember { mutableStateOf<String?>(null) }
   var interactions by remember { mutableStateOf<InteractionTab?>(null) }
+  var hidden by remember(status.id) { mutableStateOf<HiddenNote?>(null) }
   val linkColor = MaterialTheme.colorScheme.primary
   // Translation: offered for other people's posts in another language the server can translate.
   val appLocale = LocalConfiguration.current.locales[0]
@@ -162,6 +175,38 @@ fun StatusRow(
         actionError = context.messageOf(e)
       }
     }
+  }
+
+  fun hiding(block: suspend () -> Unit) {
+    scope.launch {
+      try {
+        block()
+      } catch (e: Exception) {
+        actionError = context.messageOf(e)
+      }
+    }
+  }
+
+  hidden?.let { note ->
+    HiddenPlaceholder(note, modifier) {
+      val client = model.client ?: return@HiddenPlaceholder
+      hiding {
+        when (note) {
+          HiddenNote.Post -> client.unhide(shown.id)
+          is HiddenNote.Tag -> client.unhideTag(note.id)
+        }
+        hidden = null
+      }
+    }
+    actionError?.let { message ->
+      AlertDialog(
+        onDismissRequest = { actionError = null },
+        title = { Text(stringResource(R.string.something_went_wrong)) },
+        text = { Text(message) },
+        confirmButton = { TextButton(onClick = { actionError = null }) { Text(stringResource(R.string.ok)) } },
+      )
+    }
+    return
   }
 
   Column(
@@ -241,7 +286,18 @@ fun StatusRow(
             if (shown.bookmarked == true) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder, null,
             shown.bookmarked == true, stringResource(R.string.bookmark),
           ) { act(if (shown.bookmarked == true) StatusAction.UNBOOKMARK else StatusAction.BOOKMARK) }
-          MoreMenu(shown, isMine, onEdit = { model.composing = ComposeTarget.Edit(shown) }, onDelete = { confirmDelete = true })
+          MoreMenu(
+            shown, isMine, canHide = !isMine && !focused && model.me != null,
+            onEdit = { model.composing = ComposeTarget.Edit(shown) }, onDelete = { confirmDelete = true },
+            onHide = {
+              val client = model.client ?: return@MoreMenu
+              hiding { client.hide(shown.id); hidden = HiddenNote.Post }
+            },
+            onHideTag = { tag ->
+              val client = model.client ?: return@MoreMenu
+              hiding { hidden = HiddenNote.Tag(client.hideTag(tag, shown.account.id).id, tag, shown.account.name) }
+            },
+          )
         }
       }
     }
@@ -281,6 +337,28 @@ fun StatusRow(
   }
 }
 
+/** In place of a post just hidden: what will no longer be shown, and the way back. */
+@Composable
+private fun HiddenPlaceholder(note: HiddenNote, modifier: Modifier, onUndo: () -> Unit) {
+  Row(
+    modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Icon(Icons.Outlined.VisibilityOff, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+      when (note) {
+        HiddenNote.Post -> stringResource(R.string.hidden_post)
+        is HiddenNote.Tag -> stringResource(R.string.hidden_tag_from, note.accountName, note.name)
+      },
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.weight(1f),
+    )
+    TextButton(onClick = onUndo) { Text(stringResource(R.string.undo)) }
+  }
+}
+
 /** "Translate", "Translating…", or where the translation comes from with the way back to the original. */
 @Composable
 private fun TranslationLine(translating: Boolean, translatedFrom: String?, error: String?, onTranslate: () -> Unit, onShowOriginal: () -> Unit) {
@@ -309,7 +387,10 @@ private fun languageName(code: String, locale: Locale): String =
   Locale.forLanguageTag(code).getDisplayLanguage(locale).ifEmpty { code }
 
 @Composable
-private fun MoreMenu(status: Status, isMine: Boolean, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun MoreMenu(
+  status: Status, isMine: Boolean, canHide: Boolean,
+  onEdit: () -> Unit, onDelete: () -> Unit, onHide: () -> Unit, onHideTag: (String) -> Unit,
+) {
   val context = LocalContext.current
   var open by remember { mutableStateOf(false) }
   Box {
@@ -335,6 +416,21 @@ private fun MoreMenu(status: Status, isMine: Boolean, onEdit: () -> Unit, onDele
             context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("link", url))
           },
         )
+      }
+      if (canHide) {
+        DropdownMenuItem(
+          text = { Text(stringResource(R.string.hide_post)) },
+          leadingIcon = { Icon(Icons.Outlined.VisibilityOff, null) },
+          onClick = { open = false; onHide() },
+        )
+        // A hashtag from this person only; everyone's is hidden from the hashtag's page.
+        for (tag in status.tags.map { it.name.lowercase() }.distinct().take(3)) {
+          DropdownMenuItem(
+            text = { Text(stringResource(R.string.hide_tag_from, tag, status.account.name)) },
+            leadingIcon = { Icon(Icons.Outlined.Tag, null) },
+            onClick = { open = false; onHideTag(tag) },
+          )
+        }
       }
       if (isMine) {
         DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, leadingIcon = { Icon(Icons.Outlined.Edit, null) }, onClick = { open = false; onEdit() })

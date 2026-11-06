@@ -181,6 +181,46 @@ class InteractionsTest {
       server.shutdown()
     }
   }
+
+  @Test fun hidingPostsAndHashtags() = runTest {
+    val server = MockWebServer()
+    val calls = mutableListOf<String>()
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        calls += "${request.method} ${request.path} ${request.body.readUtf8()}".trim()
+        return when (request.path) {
+          "/api/v1/hidden_tags" -> if (request.method == "GET") {
+            MockResponse().setBody("""[{"id":"h1","name":"calcio","account":null},{"id":"h2","name":"meteo","account":${Fixtures.account}}]""")
+          } else {
+            MockResponse().setBody("""{"id":"h3","name":"calcio","account":${Fixtures.account}}""")
+          }
+          "/api/v1/tags/calcio" -> MockResponse().setBody("""{"name":"calcio","url":"https://x.test/tags/calcio","history":[],"following":false,"hidden":true}""")
+          else -> MockResponse().setBody("{}")
+        }
+      }
+    }
+    server.start()
+    try {
+      val client = Client(server.url("/").toString(), "t0k")
+      client.hide("s1")
+      client.unhide("s1")
+      assertEquals(true, client.tag("calcio").hidden)
+      val hidden = client.hiddenTags()
+      assertNull(hidden[0].account)
+      assertEquals("faghy", hidden[1].account?.acct)
+      assertEquals("h3", client.hideTag("calcio", "a1").id)
+      client.unhideTag("h3")
+      assertEquals(
+        listOf(
+          "POST /api/v1/statuses/s1/hide", "POST /api/v1/statuses/s1/unhide", "GET /api/v1/tags/calcio",
+          "GET /api/v1/hidden_tags", "POST /api/v1/hidden_tags name=calcio&account_id=a1", "DELETE /api/v1/hidden_tags/h3",
+        ),
+        calls,
+      )
+    } finally {
+      server.shutdown()
+    }
+  }
 }
 
 class AlbumsAndTranslationTest {

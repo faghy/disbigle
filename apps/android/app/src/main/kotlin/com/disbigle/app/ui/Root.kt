@@ -220,6 +220,7 @@ fun MainScreen(model: AppModel) {
       composable("settings/bookmarks") { SavedPostsScreen(nav, bookmarks = true) }
       composable("settings/favourites") { SavedPostsScreen(nav, bookmarks = false) }
       composable("settings/aspects") { AspectsScreen(nav) }
+      composable("settings/hidden_tags") { HiddenTagsScreen(nav) }
       composable("settings/aspect/{id}/{title}") {
         AspectMembersScreen(nav, AspectList(it.arguments?.getString("id")!!, it.arguments?.getString("title")!!))
       }

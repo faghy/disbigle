@@ -86,7 +86,11 @@ import com.disbigle.kit.markConversationRead
 import com.disbigle.kit.notifications
 import com.disbigle.kit.search
 import com.disbigle.kit.status
+import com.disbigle.kit.hiddenTags
+import com.disbigle.kit.hideTag
+import com.disbigle.kit.tag
 import com.disbigle.kit.timeline
+import com.disbigle.kit.unhideTag
 import kotlinx.coroutines.launch
 
 /** A screen with a top bar; `back` shows the arrow to go back. */
@@ -234,7 +238,38 @@ fun TagScreen(nav: Nav, name: String) {
   val store: ListStore = viewModel()
   val client = model.client
   val list = store.list<Status>("tag:$name", { it.id }) { q -> client!!.timeline(Timeline.Hashtag(name), q) }
-  Screen("#$name", nav) { modifier -> StatusList(list, nav, stringResource(R.string.nothing_here), modifier) }
+  val scope = rememberCoroutineScope()
+  // The hide of this hashtag from everyone, when there is one (null: shown; "": not known yet).
+  var hiddenId by remember(name) { mutableStateOf<String?>("") }
+  var busy by remember { mutableStateOf(false) }
+  LaunchedEffect(name, client) {
+    val c = client ?: return@LaunchedEffect
+    hiddenId = runCatching {
+      if (c.tag(name).hidden == true) c.hiddenTags().firstOrNull { it.account == null && it.name == name.lowercase() }?.id else null
+    }.getOrDefault("")
+  }
+  fun toggle() {
+    val c = client ?: return
+    busy = true
+    scope.launch {
+      runCatching {
+        val id = hiddenId
+        hiddenId = if (id.isNullOrEmpty()) c.hideTag(name).id else { c.unhideTag(id); null }
+      }
+      busy = false
+    }
+  }
+  Screen(
+    "#$name", nav,
+    actions = {
+      // Hidden from your timelines; its own page still shows it.
+      if (hiddenId != "" && model.me != null) {
+        TextButton(onClick = ::toggle, enabled = !busy) {
+          Text(stringResource(if (hiddenId == null) R.string.hide_tag else R.string.unhide_tag))
+        }
+      }
+    },
+  ) { modifier -> StatusList(list, nav, stringResource(R.string.nothing_here), modifier) }
 }
 
 /** A post with what it answers and the answers to it. */
