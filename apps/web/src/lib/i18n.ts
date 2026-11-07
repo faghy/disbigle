@@ -13,8 +13,25 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === 'string' && (languages as readonly string[]).includes(value);
 }
 
-/** Saved choice of a signed-out visitor, else the browser language when supported, else English. */
+/**
+ * `?lang=` in the address (links from the website say which language the reader was using),
+ * else the saved choice of a signed-out visitor, else the browser language when supported,
+ * else English. A `?lang=` is remembered as a choice.
+ */
 export function detectLanguage(): Language {
+  try {
+    const asked = new URLSearchParams(globalThis.location?.search ?? '').get('lang');
+    if (isLanguage(asked)) {
+      try {
+        globalThis.localStorage?.setItem(STORAGE_KEY, asked);
+      } catch {
+        // Storage unavailable: the language still applies to this visit.
+      }
+      return asked;
+    }
+  } catch {
+    // No address to read (tests, workers).
+  }
   try {
     const saved = globalThis.localStorage?.getItem(STORAGE_KEY);
     if (isLanguage(saved)) return saved;
