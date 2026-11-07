@@ -553,6 +553,28 @@ export const hiddenPosts = pgTable(
 );
 
 /**
+ * Lists brought from another server (Mastodon's CSV exports): people to follow, block or mute.
+ * Worked through a few rows at a time; `position` is the next row.
+ */
+export const accountImports = pgTable(
+  'account_imports',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    kind: text('kind').notNull(),
+    rows: text('rows').array().notNull(),
+    position: integer('position').notNull().default(0),
+    done: integer('done').notNull().default(0),
+    /** Addresses that could not be found or applied (the first ones, to show them). */
+    failed: text('failed').array().notNull().default(sql`'{}'`),
+    failedCount: integer('failed_count').notNull().default(0),
+    createdAt: createdAt(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+  },
+  (t) => [index('account_imports_actor_idx').on(t.actorId)],
+);
+
+/**
  * Link previews (title, description, image of a page, from its Open Graph tags), one per
  * address and shared by every post that links it. The image is stored here: readers never
  * contact the linked site until they open the link.

@@ -1,4 +1,5 @@
 export type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server';
+export * from './accounts/imports.ts';
 export * from './accounts/invites.ts';
 export * from './accounts/moves.ts';
 export * from './accounts/passkeys.ts';

@@ -1464,8 +1464,22 @@
       "openOld": "Open the move page on {{domain}}",
       "linkFirst": "Link your old account first.",
       "otherSoftware": "On Mastodon the page is Account → Move to a different account; on other software look for \"migration\" or \"move\" in its settings.",
-      "step3": "3. The people you followed",
-      "step3Help": "Importing the list of people you follow, blocked and muted accounts, exported from your old server, is coming. Keep those files."
+      "step3": "3. The people you followed"
+    },
+    "imports": {
+      "help": "On your old server, export the lists (on Mastodon: Settings → Import and export → Data export) and load them here, one at a time. People are followed, blocked or muted in the background; addresses that cannot be found are listed.",
+      "kind": "List",
+      "kinds": {
+        "following": "People you follow",
+        "blocks": "Blocked accounts",
+        "mutes": "Muted accounts"
+      },
+      "file": "File (CSV)",
+      "start": "Import",
+      "list": "Imports",
+      "progress": "{{handled}} of {{total}}…",
+      "finished": "{{done}} done, {{failed}} not found",
+      "notFound": "Not found"
     }
   }
 }

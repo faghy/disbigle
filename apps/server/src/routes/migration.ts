@@ -1,5 +1,13 @@
 import { resolveRemoteAccount } from '@disbigle/activitypub';
-import { type CoreContext, DomainError, moveAccount, setAccountAliases } from '@disbigle/core';
+import {
+  type CoreContext,
+  createAccountImport,
+  DomainError,
+  listAccountImports,
+  moveAccount,
+  setAccountAliases,
+} from '@disbigle/core';
+import { accountImportKinds } from '@disbigle/shared';
 import type { Federation } from '@fedify/fedify';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -26,6 +34,21 @@ export async function migrationRoutes(
     }
     return { aliases: await setAccountAliases(ctx, session.actorId, ids) };
   });
+
+  /** Lists exported from another server (CSV): people to follow, block or mute here. */
+  app.get('/imports', async (request) => listAccountImports(ctx, requireUser(request).actorId));
+  app.post(
+    '/imports',
+    { bodyLimit: 1024 * 1024, config: { rateLimit: { max: 10, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const session = requireUser(request);
+      const { kind, text } = parse(
+        z.object({ kind: z.enum(accountImportKinds), text: z.string().max(1024 * 1024) }),
+        request.body,
+      );
+      return reply.status(201).send(await createAccountImport(ctx, session.actorId, kind, text));
+    },
+  );
 
   /** Moves this account to another one, which must already list this account as an alias. */
   app.post(

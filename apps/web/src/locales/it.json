@@ -1464,8 +1464,22 @@
       "openOld": "Apri la pagina del trasloco su {{domain}}",
       "linkFirst": "Prima collega il vecchio account.",
       "otherSoftware": "Su Mastodon la pagina è Account → Sposta su un altro account; su altri software cerca \"migrazione\" o \"sposta\" nelle impostazioni.",
-      "step3": "3. Le persone che seguivi",
-      "step3Help": "L'import dell'elenco di chi segui, dei bloccati e dei silenziati, esportati dal vecchio server, è in arrivo. Conserva quei file."
+      "step3": "3. Le persone che seguivi"
+    },
+    "imports": {
+      "help": "Sul vecchio server esporta gli elenchi (su Mastodon: Preferenze → Importa ed esporta → Esportazione dati) e caricali qui, uno alla volta. Le persone vengono seguite, bloccate o silenziate in sottofondo; gli indirizzi che non si trovano vengono elencati.",
+      "kind": "Elenco",
+      "kinds": {
+        "following": "Persone che segui",
+        "blocks": "Account bloccati",
+        "mutes": "Account silenziati"
+      },
+      "file": "File (CSV)",
+      "start": "Importa",
+      "list": "Importazioni",
+      "progress": "{{handled}} su {{total}}…",
+      "finished": "{{done}} fatti, {{failed}} non trovati",
+      "notFound": "Non trovati"
     }
   }
 }

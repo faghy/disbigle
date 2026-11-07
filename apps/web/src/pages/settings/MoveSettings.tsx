@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useState } from 'react';
+import { type AccountImportKind, accountImportKinds } from '@disbigle/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type FormEvent, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { endpoints } from '../../api/endpoints.ts';
 import { errorMessage } from '../../api/errors.ts';
@@ -126,11 +127,115 @@ export function MoveSettingsPage() {
           <p className="mt-3 text-sm text-fg-muted">{t('move.settings.otherSoftware')}</p>
         </Card>
 
-        <Card>
-          <h2 className="font-semibold">{t('move.settings.step3')}</h2>
-          <p className="mt-1 text-sm text-fg-muted">{t('move.settings.step3Help')}</p>
-        </Card>
+        <ImportLists />
       </div>
     </>
+  );
+}
+
+/** Step 3: lists exported from the old server (CSV) — people to follow, block or mute. */
+function ImportLists() {
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const [kind, setKind] = useState<AccountImportKind>('following');
+  const [file, setFile] = useState<File | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const ids = { kind: useId(), file: useId() };
+  const list = useQuery({
+    queryKey: ['account-imports'],
+    queryFn: endpoints.accountImports,
+    // Worked through in the background: watch it while something is still running.
+    refetchInterval: (query) => (query.state.data?.some((item) => !item.finishedAt) ? 5000 : false),
+  });
+  const upload = useMutation({
+    mutationFn: async () => endpoints.importAccounts(kind, await (file as File).text()),
+    onSuccess: () => {
+      setFile(null);
+      if (fileInput.current) fileInput.current.value = '';
+      void queryClient.invalidateQueries({ queryKey: ['account-imports'] });
+    },
+  });
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (file) upload.mutate();
+  };
+  return (
+    <Card>
+      <h2 className="font-semibold">{t('move.settings.step3')}</h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('move.imports.help')}</p>
+      <form onSubmit={onSubmit} className="mt-4 flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <label htmlFor={ids.kind} className="block text-sm font-medium">
+            {t('move.imports.kind')}
+          </label>
+          <select
+            id={ids.kind}
+            value={kind}
+            onChange={(event) => setKind(event.target.value as AccountImportKind)}
+            className="rounded-lg border border-border bg-surface py-2 pr-8 pl-3 text-sm focus-ring"
+          >
+            {accountImportKinds.map((value) => (
+              <option key={value} value={value}>
+                {t(`move.imports.kinds.${value}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-60 flex-1 space-y-1">
+          <label htmlFor={ids.file} className="block text-sm font-medium">
+            {t('move.imports.file')}
+          </label>
+          <input
+            id={ids.file}
+            ref={fileInput}
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-surface-muted file:px-3 file:py-2 file:text-sm"
+          />
+        </div>
+        <Button type="submit" loading={upload.isPending} disabled={!file}>
+          {t('move.imports.start')}
+        </Button>
+      </form>
+      {upload.isError && <Alert className="mt-3">{errorMessage(upload.error)}</Alert>}
+      {(list.data ?? []).length > 0 && (
+        <ul className="mt-4 space-y-3" aria-label={t('move.imports.list')}>
+          {(list.data ?? []).map((item) => {
+            const handled = item.done + item.failedCount;
+            return (
+              <li key={item.id} className="rounded-lg border border-border px-3 py-2 text-sm">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-medium">{t(`move.imports.kinds.${item.kind}`)}</span>
+                  <span className="text-fg-muted">
+                    {item.finishedAt
+                      ? t('move.imports.finished', {
+                          done: item.done,
+                          failed: item.failedCount,
+                        })
+                      : t('move.imports.progress', { handled, total: item.total })}
+                    {' · '}
+                    {new Date(item.createdAt).toLocaleDateString(i18n.language)}
+                  </span>
+                </div>
+                {!item.finishedAt && (
+                  <progress
+                    className="mt-2 h-1.5 w-full accent-accent"
+                    value={handled}
+                    max={item.total}
+                  />
+                )}
+                {item.failed.length > 0 && (
+                  <details className="mt-1 text-fg-muted">
+                    <summary className="cursor-pointer">{t('move.imports.notFound')}</summary>
+                    <p className="mt-1 break-words">{item.failed.join(', ')}</p>
+                  </details>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
   );
 }

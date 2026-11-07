@@ -63,4 +63,45 @@ describe('bringing an account here', () => {
       screen.getByRole('link', { name: 'Open the move page on mastodon.example' }),
     ).toHaveAttribute('href', 'https://mastodon.example/settings/migration');
   });
+
+  it('imports the list of people you follow from an exported file', async () => {
+    let sent: { kind?: string; text?: string } = {};
+    let imports: unknown[] = [];
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /me/migration/imports': () => ({ body: imports }),
+      'POST /me/migration/imports': (body) => {
+        sent = body as typeof sent;
+        imports = [
+          {
+            id: 'i1',
+            kind: 'following',
+            total: 2,
+            done: 1,
+            failedCount: 1,
+            failed: ['nobody@nowhere.example'],
+            createdAt: new Date().toISOString(),
+            finishedAt: new Date().toISOString(),
+          },
+        ];
+        return { status: 201, body: imports[0] };
+      },
+    });
+    renderApp('/settings/move');
+    const user = userEvent.setup();
+    const csv = new File(
+      ['Account address,Show boosts\nbob@disbigle.test,true\n'],
+      'following_accounts.csv',
+      {
+        type: 'text/csv',
+      },
+    );
+    await user.upload(await screen.findByLabelText('File (CSV)'), csv);
+    await user.click(screen.getByRole('button', { name: 'Import' }));
+    await waitFor(() => expect(sent.kind).toBe('following'));
+    expect(sent.text).toContain('bob@disbigle.test');
+    const list = await screen.findByRole('list', { name: 'Imports' });
+    expect(within(list).getByText(/1 done, 1 not found/)).toBeInTheDocument();
+  });
 });

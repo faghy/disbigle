@@ -1490,8 +1490,22 @@
       "openOld": "Abrir la página de mudanza en {{domain}}",
       "linkFirst": "Primero vincula tu cuenta anterior.",
       "otherSoftware": "En Mastodon la página es Cuenta → Mudarse a otra cuenta; en otros programas busca \"migración\" o \"mudanza\" en los ajustes.",
-      "step3": "3. Las personas que seguías",
-      "step3Help": "La importación de la lista de personas que sigues, bloqueadas y silenciadas, exportadas de tu servidor anterior, llegará pronto. Guarda esos archivos."
+      "step3": "3. Las personas que seguías"
+    },
+    "imports": {
+      "help": "En tu servidor anterior, exporta las listas (en Mastodon: Preferencias → Importar y exportar → Exportar datos) y cárgalas aquí, una a una. Las personas se siguen, bloquean o silencian en segundo plano; las direcciones que no se encuentran se muestran.",
+      "kind": "Lista",
+      "kinds": {
+        "following": "Personas que sigues",
+        "blocks": "Cuentas bloqueadas",
+        "mutes": "Cuentas silenciadas"
+      },
+      "file": "Archivo (CSV)",
+      "start": "Importar",
+      "list": "Importaciones",
+      "progress": "{{handled}} de {{total}}…",
+      "finished": "{{done}} hechos, {{failed}} no encontrados",
+      "notFound": "No encontrados"
     }
   }
 }

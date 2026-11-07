@@ -1,5 +1,7 @@
 import type {
   Account,
+  AccountImport,
+  AccountImportKind,
   ChangePasswordRequest,
   CurrentUser,
   InstanceInfo,
@@ -61,6 +63,9 @@ export const endpoints = {
   deleteAccount: (password: string) => api.post<Ok>('/me/delete', { password }),
   updateSettings: (body: UpdateSettingsRequest) => api.patch<CurrentUser>('/me/settings', body),
   /** Replaces the former accounts linked to this one (needed to move an account here). */
+  accountImports: () => api.get<AccountImport[]>('/me/migration/imports'),
+  importAccounts: (kind: AccountImportKind, text: string) =>
+    api.post<AccountImport>('/me/migration/imports', { kind, text }),
   setAliases: (accounts: string[]) =>
     api.post<{ aliases: string[] }>('/me/migration/aliases', { accounts }),
   changePassword: (body: ChangePasswordRequest) => api.post<Ok>('/me/password', body),

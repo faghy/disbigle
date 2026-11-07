@@ -6,7 +6,12 @@ import {
   resolveRemoteAccount,
 } from '@disbigle/activitypub';
 import { loadConfig } from '@disbigle/config';
-import { type CoreContext, PushPublisher, recordFailedDelivery } from '@disbigle/core';
+import {
+  type CoreContext,
+  PushPublisher,
+  processAccountImports,
+  recordFailedDelivery,
+} from '@disbigle/core';
 import { createDatabase } from '@disbigle/db';
 import {
   chainResolvers,
@@ -25,6 +30,7 @@ import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { RedisDailyCounters, RedisKeyValueStore } from './kv.ts';
 import { SmtpMailer } from './mailer.ts';
+import { findRemoteAccount } from './resolve.ts';
 import {
   connectLiveEvents,
   RedisEventBus,
@@ -80,6 +86,29 @@ const hub = new StreamingHub(ctx);
 await subscribeHubToRedis(subscriber, hub);
 await connectLiveEvents(redis, subscriber, hub);
 
+// Lists brought from other servers (follows, blocks, mutes): worked through here, where every
+// protocol can find accounts. A Redis lock keeps one server process at it at a time.
+const importTimer = setInterval(async () => {
+  const lock = await redis.set(
+    'disbigle:job:account-imports',
+    String(process.pid),
+    'PX',
+    25_000,
+    'NX',
+  );
+  if (!lock) return;
+  try {
+    await processAccountImports(ctx, async (address) => {
+      const actor = await findRemoteAccount(federation, ctx, address).catch(() => null);
+      return actor?.id ?? null;
+    });
+  } catch (error) {
+    console.error('account imports failed', error);
+  } finally {
+    await redis.del('disbigle:job:account-imports');
+  }
+}, 20_000);
+
 const app = await buildApp({
   ctx,
   redis,
@@ -95,6 +124,7 @@ const app = await buildApp({
 await app.register(diasporaRoutes, { ctx, bridge: diaspora });
 
 const shutdown = async () => {
+  clearInterval(importTimer);
   await app.close();
   diasporaQueue.abort();
   await close();

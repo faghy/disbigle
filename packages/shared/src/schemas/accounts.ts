@@ -95,3 +95,20 @@ export interface InstanceInfo {
     acceptedMediaTypes: string[];
   };
 }
+
+/** Lists that can be brought from another server (Mastodon's CSV exports). */
+export const accountImportKinds = ['following', 'blocks', 'mutes'] as const;
+export type AccountImportKind = (typeof accountImportKinds)[number];
+
+/** An imported list being worked through: people to follow, block or mute. */
+export interface AccountImport {
+  id: string;
+  kind: AccountImportKind;
+  total: number;
+  done: number;
+  failedCount: number;
+  /** The first addresses that could not be found or applied. */
+  failed: string[];
+  createdAt: string;
+  finishedAt: string | null;
+}

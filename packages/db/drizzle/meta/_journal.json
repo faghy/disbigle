@@ -211,6 +211,13 @@
       "when": 1794066274665,
       "tag": "0029_user_move_from",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794093391212,
+      "tag": "0030_account_imports",
+      "breakpoints": true
     }
   ]
 }
