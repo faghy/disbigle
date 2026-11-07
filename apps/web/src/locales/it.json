@@ -1148,7 +1148,21 @@
     "typing": "{{names}} sta scrivendo…",
     "write": "Scrivi un messaggio",
     "send": "Invia",
-    "unread": "Messaggi nuovi"
+    "unread": "Messaggi nuovi",
+    "presence": {
+      "label": "Il tuo stato",
+      "hidden": "Nascosto",
+      "auto": "Visibile",
+      "busy": "Occupato",
+      "hiddenHelp": "Nessuno vede se sei in linea.",
+      "autoHelp": "Chi ti scrive vede se sei in linea o assente.",
+      "busyHelp": "Chi ti scrive vede che sei occupato.",
+      "state": {
+        "online": "In linea",
+        "away": "Assente",
+        "busy": "Occupato"
+      }
+    }
   },
   "filters": {
     "tab": "Parole silenziate",

@@ -17,6 +17,7 @@ import {
 } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
+import { usePresenceHeartbeat } from '../lib/presence.ts';
 import { setTheme, themes, useTheme } from '../lib/theme.ts';
 import { Avatar } from './Avatar.tsx';
 import { BackToTop } from './BackToTop.tsx';
@@ -70,6 +71,7 @@ export function RootLayout() {
   const me = useMe();
   const user = me.data ?? null;
   useUserLanguage(me.data);
+  usePresenceHeartbeat();
 
   return (
     <div className="flex min-h-dvh flex-col">

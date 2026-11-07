@@ -139,6 +139,11 @@ export const users = pgTable(
     ed25519PublicKeyPem: text('ed25519_public_key_pem'),
     role: userRoleEnum('role').notNull().default('user'),
     locale: text('locale').notNull().default('en'),
+    /**
+     * Whether people in private conversations see if this person is around: `hidden` (the
+     * default), `auto` (online or away, from their activity) or `busy`.
+     */
+    presence: text('presence').notNull().default('hidden'),
     approved: boolean('approved').notNull().default(true),
     registrationReason: text('registration_reason'),
     totpSecret: text('totp_secret'),

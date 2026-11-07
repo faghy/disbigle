@@ -16,8 +16,15 @@ export const updateProfileRequestSchema = z.object({
 });
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 
+/** What people in your private conversations see: nothing, whether you are around, or "busy". */
+export const presenceSettings = ['hidden', 'auto', 'busy'] as const;
+export type PresenceSetting = (typeof presenceSettings)[number];
+/** Shown next to someone who shares it: online, away (idle or another tab), or busy. */
+export type PresenceState = 'online' | 'away' | 'busy';
+
 export const updateSettingsRequestSchema = z.object({
   locale: z.enum(supportedLocales).optional(),
+  presence: z.enum(presenceSettings).optional(),
 });
 export type UpdateSettingsRequest = z.infer<typeof updateSettingsRequestSchema>;
 
@@ -57,6 +64,7 @@ export interface CurrentUser {
   locale: string;
   totpEnabled: boolean;
   passkeyCount: number;
+  presence: PresenceSetting;
 }
 
 export interface InstanceInfo {

@@ -197,6 +197,13 @@
       "when": 1794058874404,
       "tag": "0027_preview_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794060401807,
+      "tag": "0028_user_presence",
+      "breakpoints": true
     }
   ]
 }

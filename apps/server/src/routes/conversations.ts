@@ -4,6 +4,7 @@ import {
   countUnreadConversations,
   getConversation,
   markConversationRead,
+  presenceOf,
 } from '@disbigle/core';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -32,6 +33,17 @@ export async function conversationRoutes(
   app.get('/:id', async (request) => {
     const { id } = parse(idParams, request.params);
     return getConversation(ctx, requireUser(request).actorId, id, parse(pageQuery, request.query));
+  });
+
+  // Who of the others is around now, for those who share it (asked again every half minute).
+  app.get('/:id/presence', async (request) => {
+    const { id } = parse(idParams, request.params);
+    const { actorId } = requireUser(request);
+    const participants = await conversationParticipants(ctx, actorId, id);
+    return presenceOf(
+      ctx,
+      participants.filter((p) => p !== actorId),
+    );
   });
 
   app.post('/:id/read', async (request) => {

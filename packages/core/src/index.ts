@@ -44,6 +44,7 @@ export * from './social/notifications.ts';
 export * from './social/pins.ts';
 export * from './social/polls.ts';
 export * from './social/posts.ts';
+export * from './social/presence.ts';
 export * from './social/relationships.ts';
 export * from './social/statuses.ts';
 export * from './social/tags.ts';

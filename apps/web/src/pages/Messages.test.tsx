@@ -101,4 +101,28 @@ describe('messages', () => {
     expect(screen.getByRole('textbox', { name: 'New post' })).toHaveValue('@carol@diaspo.example ');
     expect(screen.getByRole('button', { name: /Share with/ })).toHaveTextContent('Direct');
   });
+
+  it('lets you choose whether others see your status', async () => {
+    let patched: unknown;
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/conversations': { body: [] },
+      'PATCH /me/settings': (body) => {
+        patched = body;
+        return { body: { ...aliceUser, presence: 'busy' } };
+      },
+      'POST /me/presence': { body: { status: 'ok' } },
+    });
+    renderApp('/messages');
+    const user = userEvent.setup();
+    const choice = await screen.findByRole('combobox', { name: 'Your status' });
+    expect(choice).toHaveValue('hidden');
+    expect(screen.getByText('Nobody sees whether you are online.')).toBeInTheDocument();
+    await user.selectOptions(choice, 'busy');
+    await waitFor(() => expect(patched).toEqual({ presence: 'busy' }));
+    expect(
+      await screen.findByText('People you write with see that you are busy.'),
+    ).toBeInTheDocument();
+  });
 });

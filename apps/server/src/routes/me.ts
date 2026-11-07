@@ -15,6 +15,7 @@ import {
   MAX_IMAGE_BYTES,
   type MediaStorage,
   type RegistrationResponseJSON,
+  recordPresence,
   regenerateRecoveryCodes,
   removeProfileImage,
   requestAccountDeletion,
@@ -138,6 +139,18 @@ export async function meRoutes(
     await updateSettings(ctx, session.userId, parse(updateSettingsRequestSchema, request.body));
     return getCurrentUser(ctx, session.userId);
   });
+
+  // The web app says every 45 seconds whether you are using it (see presence.ts).
+  app.post(
+    '/presence',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (request) => {
+      const session = requireUser(request);
+      const { active } = parse(z.object({ active: z.boolean() }), request.body);
+      await recordPresence(ctx, session.actorId, active);
+      return { status: 'ok' };
+    },
+  );
 
   app.post('/password', async (request) => {
     const session = requireUser(request);

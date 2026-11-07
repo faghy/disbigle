@@ -1148,7 +1148,21 @@
     "typing": "{{names}} is typing…",
     "write": "Write a message",
     "send": "Send",
-    "unread": "New messages"
+    "unread": "New messages",
+    "presence": {
+      "label": "Your status",
+      "hidden": "Hidden",
+      "auto": "Shown",
+      "busy": "Busy",
+      "hiddenHelp": "Nobody sees whether you are online.",
+      "autoHelp": "People you write with see whether you are online or away.",
+      "busyHelp": "People you write with see that you are busy.",
+      "state": {
+        "online": "Online",
+        "away": "Away",
+        "busy": "Busy"
+      }
+    }
   },
   "filters": {
     "tab": "Muted words",

@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "presence" text DEFAULT 'hidden' NOT NULL;

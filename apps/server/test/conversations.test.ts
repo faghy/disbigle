@@ -120,4 +120,33 @@ describe('conversations as a chat', () => {
     expect(other).toEqual([]);
     expect(publicOnly).toEqual([]);
   });
+
+  it('shows who is around only to people in a conversation, and only if they share it', async () => {
+    const alice = await signedIn();
+    const bruno = await signedIn();
+    const carla = await signedIn();
+    const first = await write(alice, `ciao @${bruno.account.username}`);
+    const presence = (user: User) =>
+      user.client.get(`/api/v1/timelines/conversations/${first.id}/presence`);
+
+    // Hidden by default: Alice is active, but Bruno sees nothing.
+    await alice.client.post('/api/v1/me/presence', { active: true });
+    expect((await presence(bruno)).json()).toEqual({});
+
+    expect(
+      (await alice.client.patch('/api/v1/me/settings', { presence: 'auto' })).json().presence,
+    ).toBe('auto');
+    await alice.client.post('/api/v1/me/presence', { active: true });
+    expect((await presence(bruno)).json()).toEqual({ [alice.account.id]: 'online' });
+    await alice.client.post('/api/v1/me/presence', { active: false });
+    expect((await presence(bruno)).json()).toEqual({ [alice.account.id]: 'away' });
+    await alice.client.patch('/api/v1/me/settings', { presence: 'busy' });
+    expect((await presence(bruno)).json()).toEqual({ [alice.account.id]: 'busy' });
+
+    // Hiding it again forgets it at once; outsiders never get it.
+    await alice.client.patch('/api/v1/me/settings', { presence: 'hidden' });
+    await alice.client.patch('/api/v1/me/settings', { presence: 'auto' });
+    expect((await presence(bruno)).json()).toEqual({});
+    expect((await presence(carla)).statusCode).toBe(404);
+  });
 });

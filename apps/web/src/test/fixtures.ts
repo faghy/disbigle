@@ -38,6 +38,7 @@ export const aliceUser: CurrentUser = {
   locale: 'en',
   totpEnabled: false,
   passkeyCount: 0,
+  presence: 'hidden',
 };
 
 export function makeStatus(overrides: Partial<Status> = {}): Status {

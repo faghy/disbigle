@@ -1,5 +1,10 @@
 import type { Account, ConversationDetail, Status } from '@disbigle/shared';
-import { type InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type InfiniteData,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import {
   type FormEvent,
@@ -28,6 +33,7 @@ import {
 } from '../components/StatusCard.tsx';
 import { useStream } from '../components/StreamingProvider.tsx';
 import { Alert, Button, cx, LoadingState } from '../components/ui.tsx';
+import { presenceColor } from '../lib/presence.ts';
 import { relativeTime } from '../lib/time.ts';
 
 const PAGE = 30;
@@ -78,6 +84,12 @@ export function ConversationPage() {
   const bottom = useRef<HTMLDivElement>(null);
   const key = conversationKey(conversationId);
 
+  // Who is around, for those who share it: asked again every half minute.
+  const presence = useQuery({
+    queryKey: [...key, 'presence'],
+    queryFn: () => social.conversationPresence(conversationId),
+    refetchInterval: 30_000,
+  });
   const query = useInfiniteQuery({
     queryKey: key,
     queryFn: ({ pageParam }) =>
@@ -193,14 +205,22 @@ export function ConversationPage() {
           <ChevronLeftIcon size={20} />
         </Link>
         <span className="flex shrink-0">
-          {people.slice(0, 3).map((account, index) => (
-            <Avatar
-              key={account.id}
-              account={account}
-              size="sm"
-              className={cx('ring-2 ring-surface', index > 0 && '-ml-3')}
-            />
-          ))}
+          {people.slice(0, 3).map((account, index) => {
+            const state = presence.data?.[account.id];
+            return (
+              <span key={account.id} className={cx('relative flex', index > 0 && '-ml-3')}>
+                <Avatar account={account} size="sm" className="ring-2 ring-surface" />
+                {state && (
+                  <span
+                    className={cx(
+                      'absolute right-0 bottom-0 size-3 rounded-full ring-2 ring-surface',
+                      presenceColor[state],
+                    )}
+                  />
+                )}
+              </span>
+            );
+          })}
         </span>
         <h1 className="min-w-0 flex-1 truncate font-semibold">
           {people.length === 1 && people[0] ? (
@@ -210,6 +230,16 @@ export function ConversationPage() {
           ) : (
             names
           )}
+          {people.map((account) => {
+            const state = presence.data?.[account.id];
+            if (!state) return null;
+            return (
+              <span key={account.id} className="block truncate text-xs font-normal text-fg-muted">
+                {people.length > 1 ? `${displayName(account)}: ` : ''}
+                {t(`messages.presence.state.${state}`)}
+              </span>
+            );
+          })}
         </h1>
       </header>
 

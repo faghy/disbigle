@@ -1,10 +1,16 @@
-import type { Account, Status } from '@disbigle/shared';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type Account,
+  type PresenceSetting,
+  presenceSettings,
+  type Status,
+} from '@disbigle/shared';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
-import { accountQueryOptions, useCurrentUser } from '../api/queries.ts';
+import { accountQueryOptions, queryKeys, useCurrentUser } from '../api/queries.ts';
 import { type Conversation, PAGE_SIZE, social } from '../api/social.ts';
 import { Avatar } from '../components/Avatar.tsx';
 import { Composer } from '../components/Composer.tsx';
@@ -53,6 +59,7 @@ export function MessagesPage() {
           !composing && <Button onClick={() => setComposing(true)}>{t('messages.new')}</Button>
         }
       />
+      <PresenceChoice />
       {composing && (
         <NewMessage
           to={to}
@@ -90,6 +97,40 @@ export function MessagesPage() {
           </div>
         )}
       </FeedSection>
+    </div>
+  );
+}
+
+/** "Your status": hidden (the default), shown from your activity, or busy. */
+function PresenceChoice() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const user = useCurrentUser();
+  const update = useMutation({
+    mutationFn: (presence: PresenceSetting) => endpoints.updateSettings({ presence }),
+    onSuccess: (me) => queryClient.setQueryData(queryKeys.me, me),
+  });
+  const id = useId();
+  if (!user) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm">
+      <label htmlFor={id} className="font-medium">
+        {t('messages.presence.label')}
+      </label>
+      <select
+        id={id}
+        value={user.presence}
+        disabled={update.isPending}
+        onChange={(event) => update.mutate(event.target.value as PresenceSetting)}
+        className="rounded-lg border border-border bg-surface py-1 pr-8 pl-2 text-sm focus-ring"
+      >
+        {presenceSettings.map((value) => (
+          <option key={value} value={value}>
+            {t(`messages.presence.${value}`)}
+          </option>
+        ))}
+      </select>
+      <span className="text-fg-muted">{t(`messages.presence.${user.presence}Help`)}</span>
     </div>
   );
 }

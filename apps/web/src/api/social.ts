@@ -13,6 +13,7 @@ import type {
   HiddenTag,
   MediaAttachment,
   Notification,
+  PresenceState,
   ProfileMedia,
   Relationship,
   Status,
@@ -177,6 +178,11 @@ export const social = {
     api.post<{ lastReadId: string | null }>(`/timelines/conversations/${id(conversationId)}/read`),
   typing: (conversationId: string) =>
     api.post<Ok>(`/timelines/conversations/${id(conversationId)}/typing`),
+  conversationPresence: (conversationId: string) =>
+    api.get<Record<string, PresenceState>>(
+      `/timelines/conversations/${id(conversationId)}/presence`,
+    ),
+  presence: (active: boolean) => api.post<Ok>('/me/presence', { active }),
   unreadConversations: () => api.get<{ count: number }>('/timelines/conversations/unread_count'),
 
   // Polls

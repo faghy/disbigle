@@ -3,6 +3,7 @@ import {
   type ChangePasswordRequest,
   type CurrentUser,
   changePasswordRequestSchema,
+  type PresenceSetting,
   type UpdateProfileRequest,
   type UpdateSettingsRequest,
   updateProfileRequestSchema,
@@ -12,6 +13,7 @@ import { eq, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { hashPassword, verifyPassword } from '../crypto/passwords.ts';
 import { DomainError } from '../errors.ts';
+import { clearPresence } from '../social/presence.ts';
 import { getAccountWithCounts, serializeAccount } from './serialize.ts';
 import { revokeOtherSessions } from './sessions.ts';
 
@@ -33,6 +35,7 @@ export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<
     locale: row.user.locale,
     totpEnabled: row.user.totpEnabledAt !== null,
     passkeyCount: row.passkeyCount,
+    presence: (row.user.presence as PresenceSetting | undefined) ?? 'hidden',
   };
 }
 
@@ -66,11 +69,22 @@ export async function updateSettings(
   request: UpdateSettingsRequest,
 ) {
   const input = updateSettingsRequestSchema.parse(request);
-  if (input.locale) {
+  if (input.locale || input.presence) {
     await ctx.db
       .update(schema.users)
-      .set({ locale: input.locale, updatedAt: new Date() })
+      .set({
+        ...(input.locale ? { locale: input.locale } : {}),
+        ...(input.presence ? { presence: input.presence } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(schema.users.id, userId));
+  }
+  if (input.presence === 'hidden') {
+    const [user] = await ctx.db
+      .select({ actorId: schema.users.actorId })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId));
+    if (user) await clearPresence(ctx, user.actorId);
   }
 }
 
