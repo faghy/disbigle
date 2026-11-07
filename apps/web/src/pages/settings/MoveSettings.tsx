@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { endpoints } from '../../api/endpoints.ts';
 import { errorMessage } from '../../api/errors.ts';
 import { queryKeys, useCurrentUser, useInstance } from '../../api/queries.ts';
-import { Alert, Button, Card, PageTitle, TextField } from '../../components/ui.tsx';
+import { Alert, Button, Card, CheckboxField, PageTitle, TextField } from '../../components/ui.tsx';
+import { type DiasporaSummary, readDiasporaExport } from '../../lib/diasporaExport.ts';
 import { moveInfoUrl } from '../Register.tsx';
 
 /** The server part of `name@server`. */
@@ -128,6 +129,7 @@ export function MoveSettingsPage() {
         </Card>
 
         <ImportLists />
+        <DiasporaImport />
       </div>
     </>
   );
@@ -235,6 +237,93 @@ function ImportLists() {
             );
           })}
         </ul>
+      )}
+    </Card>
+  );
+}
+
+/** From diaspora*: its export, read here in the browser, brings profile, aspects and contacts. */
+function DiasporaImport() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const id = useId();
+  const [summary, setSummary] = useState<DiasporaSummary | null>(null);
+  const [readError, setReadError] = useState(false);
+  const [useProfile, setUseProfile] = useState(true);
+  const send = useMutation({
+    mutationFn: () => {
+      const data = summary as DiasporaSummary;
+      return endpoints.importDiaspora({
+        aspects: data.aspects,
+        contacts: data.contacts,
+        tags: data.tags,
+        blocks: data.blocks,
+        ...(useProfile && data.displayName ? { displayName: data.displayName } : {}),
+        ...(useProfile && data.bio ? { bio: data.bio } : {}),
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['account-imports'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.me });
+      void queryClient.invalidateQueries({ queryKey: ['aspects'] });
+    },
+  });
+  const onFile = async (file: File | undefined) => {
+    setSummary(null);
+    setReadError(false);
+    send.reset();
+    if (!file) return;
+    try {
+      setSummary(await readDiasporaExport(file));
+    } catch {
+      setReadError(true);
+    }
+  };
+  return (
+    <Card>
+      <h2 className="font-semibold">{t('move.diaspora.title')}</h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('move.diaspora.help')}</p>
+      <div className="mt-4 space-y-1">
+        <label htmlFor={id} className="block text-sm font-medium">
+          {t('move.diaspora.file')}
+        </label>
+        <input
+          id={id}
+          type="file"
+          accept=".json,.gz,application/json,application/gzip"
+          onChange={(event) => void onFile(event.target.files?.[0])}
+          className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-surface-muted file:px-3 file:py-2 file:text-sm"
+        />
+      </div>
+      {readError && <Alert className="mt-3">{t('move.diaspora.unreadable')}</Alert>}
+      {summary && !send.isSuccess && (
+        <div className="mt-4 space-y-3 text-sm">
+          <p>
+            {t('move.diaspora.found', {
+              contacts: summary.contacts.length,
+              aspects: summary.aspects.length,
+              tags: summary.tags.length,
+              blocks: summary.blocks.length,
+            })}
+          </p>
+          {(summary.displayName || summary.bio) && (
+            <CheckboxField
+              label={t('move.diaspora.useProfile', { name: summary.displayName || '—' })}
+              checked={useProfile}
+              onChange={(event) => setUseProfile(event.target.checked)}
+            />
+          )}
+          <p className="text-fg-muted">{t('move.diaspora.notIncluded')}</p>
+          <Button loading={send.isPending} onClick={() => send.mutate()}>
+            {t('move.diaspora.start')}
+          </Button>
+        </div>
+      )}
+      {send.isError && <Alert className="mt-3">{errorMessage(send.error)}</Alert>}
+      {send.isSuccess && (
+        <Alert tone="success" className="mt-3">
+          {t('move.diaspora.done')}
+        </Alert>
       )}
     </Card>
   );

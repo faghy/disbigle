@@ -60,4 +60,37 @@ describe('lists brought from another server', () => {
       { id: carla.account.id, muting: true },
     ]);
   });
+
+  it('brings aspects, hashtags and contacts from a diaspora* export', async () => {
+    const alice = await signedIn();
+    const bruno = await signedIn();
+    const sent = await alice.client.post('/api/v1/me/migration/diaspora', {
+      displayName: 'Alice da diaspora',
+      bio: 'Ciao a tutti',
+      aspects: ['Ciclismo'],
+      contacts: [
+        { address: `${bruno.account.username}@disbigle.test`, aspects: ['Ciclismo'] },
+        { address: 'not an address', aspects: [] },
+      ],
+      tags: ['fotografia'],
+      blocks: [],
+    });
+    expect(sent.statusCode).toBe(201);
+    expect(sent.json()).toMatchObject({
+      aspects: 1,
+      tags: 1,
+      imports: [{ kind: 'following', total: 1 }],
+    });
+    await processAccountImports(app.ctx(), async () => null, 50);
+
+    const me = (await alice.client.get('/api/v1/me')).json();
+    expect(me.account.displayName).toBe('Alice da diaspora');
+    const aspects = (await alice.client.get('/api/v1/aspects')).json();
+    const cycling = aspects.find((a: { name: string }) => a.name === 'Ciclismo');
+    expect(cycling).toBeDefined();
+    const members = (await alice.client.get(`/api/v1/aspects/${cycling.id}/members`)).json();
+    expect(members.map((m: { id: string }) => m.id)).toEqual([bruno.account.id]);
+    const tags = (await alice.client.get('/api/v1/tags/followed')).json();
+    expect(JSON.stringify(tags)).toContain('fotografia');
+  });
 });

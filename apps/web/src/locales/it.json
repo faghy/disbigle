@@ -1480,6 +1480,17 @@
       "progress": "{{handled}} su {{total}}…",
       "finished": "{{done}} fatti, {{failed}} non trovati",
       "notFound": "Non trovati"
+    },
+    "diaspora": {
+      "title": "Arrivi da diaspora*?",
+      "help": "Sul tuo pod, Impostazioni → Account → \"Scarica i dati del mio profilo\" ti dà un file (.json.gz). Sceglilo qui: viene letto su questo computer, e vengono inviati solo nome e descrizione del profilo, aspetti, le persone con cui condividi, hashtag e bloccati. I tuoi post e la chiave privata dell'archivio restano a te.",
+      "file": "Esportazione di diaspora* (.json.gz)",
+      "unreadable": "Questo non sembra un'esportazione di diaspora*.",
+      "found": "Trovati: {{contacts}} contatti, {{aspects}} aspetti, {{tags}} hashtag, {{blocks}} persone bloccate.",
+      "useProfile": "Usa qui nome ({{name}}) e descrizione del vecchio profilo",
+      "notIncluded": "I contatti vengono seguiti di nuovo qui e rimessi nei loro aspetti, pochi alla volta; i contatti diaspora* vedono un nuovo follow dal tuo nuovo indirizzo. Post e foto non vengono importati.",
+      "start": "Importa da diaspora*",
+      "done": "Fatto: aspetti e hashtag sono qui, contatti e bloccati si stanno importando qui sopra."
     }
   }
 }

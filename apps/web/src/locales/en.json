@@ -1480,6 +1480,17 @@
       "progress": "{{handled}} of {{total}}…",
       "finished": "{{done}} done, {{failed}} not found",
       "notFound": "Not found"
+    },
+    "diaspora": {
+      "title": "Coming from diaspora*?",
+      "help": "On your pod, Settings → Account → \"Download my profile data\" gives you a file (.json.gz). Choose it here: it is read on this computer, and only your profile name and description, aspects, the people you share with, hashtags and blocks are sent. Your posts and the archive's private key stay with you.",
+      "file": "diaspora* export (.json.gz)",
+      "unreadable": "This does not look like a diaspora* export.",
+      "found": "Found: {{contacts}} contacts, {{aspects}} aspects, {{tags}} hashtags, {{blocks}} blocked people.",
+      "useProfile": "Use the old profile's name ({{name}}) and description here",
+      "notIncluded": "Your contacts are followed again here and put back in their aspects, a few at a time; diaspora* contacts see a new follow from your new address. Posts and photos are not imported.",
+      "start": "Import from diaspora*",
+      "done": "Done: aspects and hashtags are here, contacts and blocks are being imported above."
     }
   }
 }

@@ -66,6 +66,18 @@ export const endpoints = {
   accountImports: () => api.get<AccountImport[]>('/me/migration/imports'),
   importAccounts: (kind: AccountImportKind, text: string) =>
     api.post<AccountImport>('/me/migration/imports', { kind, text }),
+  importDiaspora: (data: {
+    displayName?: string;
+    bio?: string;
+    aspects: string[];
+    contacts: { address: string; aspects: string[] }[];
+    tags: string[];
+    blocks: string[];
+  }) =>
+    api.post<{ aspects: number; tags: number; imports: AccountImport[] }>(
+      '/me/migration/diaspora',
+      data,
+    ),
   setAliases: (accounts: string[]) =>
     api.post<{ aliases: string[] }>('/me/migration/aliases', { accounts }),
   changePassword: (body: ChangePasswordRequest) => api.post<Ok>('/me/password', body),

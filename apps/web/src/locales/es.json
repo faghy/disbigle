@@ -1506,6 +1506,17 @@
       "progress": "{{handled}} de {{total}}…",
       "finished": "{{done}} hechos, {{failed}} no encontrados",
       "notFound": "No encontrados"
+    },
+    "diaspora": {
+      "title": "¿Vienes de diaspora*?",
+      "help": "En tu pod, Ajustes → Cuenta → \"Descargar mis datos de perfil\" te da un archivo (.json.gz). Elígelo aquí: se lee en este ordenador, y solo se envían nombre y descripción del perfil, aspectos, las personas con las que compartes, etiquetas y bloqueos. Tus publicaciones y la clave privada del archivo se quedan contigo.",
+      "file": "Exportación de diaspora* (.json.gz)",
+      "unreadable": "Esto no parece una exportación de diaspora*.",
+      "found": "Encontrados: {{contacts}} contactos, {{aspects}} aspectos, {{tags}} etiquetas, {{blocks}} personas bloqueadas.",
+      "useProfile": "Usar aquí el nombre ({{name}}) y la descripción del perfil anterior",
+      "notIncluded": "Tus contactos se vuelven a seguir aquí y vuelven a sus aspectos, unos pocos cada vez; los contactos de diaspora* ven un nuevo seguimiento desde tu nueva dirección. Las publicaciones y fotos no se importan.",
+      "start": "Importar desde diaspora*",
+      "done": "Hecho: aspectos y etiquetas ya están aquí, contactos y bloqueos se están importando arriba."
     }
   }
 }

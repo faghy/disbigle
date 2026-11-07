@@ -3,6 +3,7 @@ import {
   type CoreContext,
   createAccountImport,
   DomainError,
+  importDiasporaData,
   listAccountImports,
   moveAccount,
   setAccountAliases,
@@ -47,6 +48,34 @@ export async function migrationRoutes(
         request.body,
       );
       return reply.status(201).send(await createAccountImport(ctx, session.actorId, kind, text));
+    },
+  );
+
+  /**
+   * What the web app read from a diaspora* export (in the browser: the archive and its private
+   * key never reach the server): profile, aspects, hashtags now; contacts and blocks queued.
+   */
+  const address = z.string().trim().max(320);
+  app.post(
+    '/diaspora',
+    { bodyLimit: 2 * 1024 * 1024, config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const session = requireUser(request);
+      const data = parse(
+        z.object({
+          displayName: z.string().trim().max(200).optional(),
+          bio: z.string().trim().max(10_000).optional(),
+          aspects: z.array(z.string().max(200)).max(200).default([]),
+          contacts: z
+            .array(z.object({ address, aspects: z.array(z.string().max(200)).max(50).default([]) }))
+            .max(5000)
+            .default([]),
+          tags: z.array(z.string().max(200)).max(1000).default([]),
+          blocks: z.array(address).max(5000).default([]),
+        }),
+        request.body,
+      );
+      return reply.status(201).send(await importDiasporaData(ctx, session.actorId, data));
     },
   );
 

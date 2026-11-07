@@ -104,4 +104,55 @@ describe('bringing an account here', () => {
     const list = await screen.findByRole('list', { name: 'Imports' });
     expect(within(list).getByText(/1 done, 1 not found/)).toBeInTheDocument();
   });
+
+  it('reads a diaspora* export in the browser and sends only what is needed', async () => {
+    let sent: Record<string, unknown> = {};
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /me/migration/imports': { body: [] },
+      'POST /me/migration/diaspora': (body) => {
+        sent = body as Record<string, unknown>;
+        return { status: 201, body: { aspects: 1, tags: 1, imports: [] } };
+      },
+    });
+    renderApp('/settings/move');
+    const user = userEvent.setup();
+    const archive = {
+      version: '2.0',
+      user: {
+        username: 'anna',
+        private_key: 'SECRET KEY',
+        profile: {
+          entity_type: 'profile',
+          entity_data: { first_name: 'Anna', last_name: 'Rossi', bio: 'Ciao' },
+        },
+        contact_groups: [{ name: 'Amici' }],
+        contacts: [
+          { account_id: 'bob@pod.example', following: true, contact_groups_membership: ['Amici'] },
+          { account_id: 'eve@pod.example', following: false, contact_groups_membership: [] },
+        ],
+        followed_tags: ['fotografia'],
+        blocks: ['troll@pod.example'],
+      },
+    };
+    await user.upload(
+      await screen.findByLabelText('diaspora* export (.json.gz)'),
+      new File([JSON.stringify(archive)], 'export.json', { type: 'application/json' }),
+    );
+    expect(
+      await screen.findByText('Found: 1 contacts, 1 aspects, 1 hashtags, 1 blocked people.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Import from diaspora*' }));
+    await waitFor(() => expect(sent.aspects).toEqual(['Amici']));
+    expect(sent).toEqual({
+      aspects: ['Amici'],
+      contacts: [{ address: 'bob@pod.example', aspects: ['Amici'] }],
+      tags: ['fotografia'],
+      blocks: ['troll@pod.example'],
+      displayName: 'Anna Rossi',
+      bio: 'Ciao',
+    });
+    expect(JSON.stringify(sent)).not.toContain('SECRET');
+  });
 });
