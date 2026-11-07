@@ -7,6 +7,7 @@ import {
   DomainError,
   deletePost,
   editPost,
+  getConversation,
   getStatus,
   getStatusContext,
   getVisiblePost,
@@ -16,8 +17,10 @@ import {
   listConversations,
   markConversationRead,
   pinPost,
+  presenceOf,
   publicTimeline,
   reblog,
+  recordPresence,
   serializeAccount,
   tagTimeline,
   translatePost,
@@ -490,6 +493,46 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
       accounts: c.accounts.map((a) => byId.get(a.id) ?? mapAccount(presenter.map, a)),
       last_status: statuses[i] ?? null,
     }));
+  });
+
+  /**
+   * One conversation as a chat (Disbigle extension, used by the native apps): a page of its
+   * messages (newest first, `max_id` for older ones), how far the others read it, and who of
+   * them is around (for those who share it).
+   */
+  app.get('/api/v1/conversations/:id/messages', async (request) => {
+    const user = requireUser(request, 'read:statuses');
+    const id = idParam(request);
+    const query = parseQuery(request);
+    const maxId = str(query.max_id);
+    const limit = Math.min(Math.max(Number(str(query.limit) ?? 30) || 30, 1), 60);
+    const detail = await getConversation(ctx, user.actorId, id, {
+      ...(maxId && isUuid(maxId) ? { maxId } : {}),
+      limit,
+    });
+    const presence = await presenceOf(
+      ctx,
+      detail.accounts.map((a) => a.id),
+    );
+    const presenter = new Presenter(ctx, user.actorId);
+    return {
+      id: detail.id,
+      accounts: await presenter.accounts(detail.accounts),
+      messages: await presenter.statuses(detail.messages),
+      seen: detail.seen.map((s) => ({ account_id: s.accountId, last_read_id: s.lastReadId })),
+      presence,
+    };
+  });
+
+  /**
+   * The app is open (`active`) or in the background: shown to people in your conversations if
+   * you chose to share your status (Disbigle extension; the native apps send it every 45 s).
+   */
+  app.post('/api/v1/disbigle/presence', async (request) => {
+    const user = requireUser(request, 'write:accounts');
+    const active = body(request).active;
+    await recordPresence(ctx, user.actorId, active === true || active === 'true');
+    return {};
   });
 
   app.post('/api/v1/conversations/:id/read', async (request) => {
