@@ -10,7 +10,8 @@ import { Avatar } from '../components/Avatar.tsx';
 import { Composer } from '../components/Composer.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
 import { CloseIcon, MailIcon } from '../components/icons.tsx';
-import { displayName, statusPath } from '../components/StatusCard.tsx';
+import { displayName } from '../components/StatusCard.tsx';
+import { useStream } from '../components/StreamingProvider.tsx';
 import { Alert, Button, cx, LoadingState, Spinner } from '../components/ui.tsx';
 import { relativeTime } from '../lib/time.ts';
 
@@ -35,6 +36,12 @@ export function MessagesPage() {
       lastPage.length < PAGE_SIZE ? undefined : lastPage[lastPage.length - 1]?.lastStatus.id,
   });
   const conversations = query.data?.pages.flat() ?? [];
+  const queryClient = useQueryClient();
+  // A new private message moves its conversation to the top.
+  useStream('user', (event) => {
+    if (event.event === 'update' && event.payload.visibility === 'direct')
+      void queryClient.invalidateQueries({ queryKey: conversationsKey });
+  });
 
   return (
     <div className="space-y-4">
@@ -98,7 +105,8 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
 
   return (
     <Link
-      {...statusPath(lastStatus)}
+      to="/messages/$conversationId"
+      params={{ conversationId: conversation.id }}
       className="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted focus-ring sm:px-5"
     >
       <span className="relative flex shrink-0">
@@ -113,12 +121,24 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="truncate font-semibold">{names}</span>
+          <span className={cx('truncate', conversation.unread ? 'font-bold' : 'font-semibold')}>
+            {names}
+          </span>
+          {conversation.unread && (
+            <span className="size-2.5 shrink-0 rounded-full bg-accent">
+              <span className="sr-only">{t('messages.unread')}</span>
+            </span>
+          )}
           <time dateTime={lastStatus.createdAt} className="ml-auto shrink-0 text-xs text-fg-muted">
             {relativeTime(lastStatus.createdAt, i18n.language)}
           </time>
         </span>
-        <span className="block truncate text-sm text-fg-muted">
+        <span
+          className={cx(
+            'block truncate text-sm',
+            conversation.unread ? 'font-medium text-fg' : 'text-fg-muted',
+          )}
+        >
           {fromMe ? `${t('messages.you')}: ` : ''}
           {text}
         </span>
@@ -179,7 +199,8 @@ function NewMessage({ to, onClose }: { to?: string | undefined; onClose: () => v
         onPosted={(status) => {
           void queryClient.invalidateQueries({ queryKey: conversationsKey });
           onClose();
-          void navigate(statusPath(status));
+          // A new message starts its own conversation.
+          void navigate({ to: '/messages/$conversationId', params: { conversationId: status.id } });
         }}
       />
     </section>

@@ -138,3 +138,6 @@ export function findCachedStatus(qc: QueryClient, statusId: string): Status | un
   }
   return undefined;
 }
+
+/** Number of conversations with unread messages (the Messages badge). */
+export const unreadConversationsKey = ['conversations', 'unread'] as const;

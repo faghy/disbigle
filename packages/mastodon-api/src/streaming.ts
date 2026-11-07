@@ -130,6 +130,9 @@ export class MastodonStreamEncoder {
 
   encode(message: StreamEvent): string[] {
     const out: string[] = [];
+    // Typing and read receipts of private conversations are Disbigle's own: not for these clients.
+    if (message.event === 'conversation.typing' || message.event === 'conversation.read')
+      return out;
     const targets = this.subscriptions.filter((s) => s.native === message.stream);
     let payload: string | undefined;
     const render = () => {

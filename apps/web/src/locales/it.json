@@ -39,7 +39,9 @@
     "aboutServer": "Informazioni sul server",
     "contacts": "Contatti",
     "groups": "Gruppi",
-    "backToTop": "Torna su"
+    "backToTop": "Torna su",
+    "unreadMessages_one": "{{count}} conversazione con messaggi nuovi",
+    "unreadMessages_other": "{{count}} conversazioni con messaggi nuovi"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -1137,7 +1139,16 @@
     "recipients": "Destinatari",
     "removeRecipient": "Rimuovi @{{acct}}",
     "suggestions": "Suggerimenti",
-    "noMatches": "Nessun risultato."
+    "noMatches": "Nessun risultato.",
+    "back": "Tutti i messaggi",
+    "onlyYou": "Solo tu",
+    "older": "Messaggi precedenti",
+    "seen": "Visto",
+    "seenBy": "Visto da {{names}}",
+    "typing": "{{names}} sta scrivendo…",
+    "write": "Scrivi un messaggio",
+    "send": "Invia",
+    "unread": "Messaggi nuovi"
   },
   "filters": {
     "tab": "Parole silenziate",

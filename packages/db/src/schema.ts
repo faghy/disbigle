@@ -545,6 +545,21 @@ export const hiddenPosts = pgTable(
   (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
 );
 
+/**
+ * How far each person read a private conversation (a thread of direct posts, keyed by its
+ * first post): the newest message they have seen. Unread counts and "Seen" come from here.
+ */
+export const conversationReads = pgTable(
+  'conversation_reads',
+  {
+    actorId: actorRef('actor_id'),
+    threadRootId: uuid('thread_root_id').notNull(),
+    lastReadId: uuid('last_read_id').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.actorId, t.threadRootId] })],
+);
+
 /** Hashtags someone chose not to see: from everyone, or only from one account. */
 export const tagHides = pgTable(
   'tag_hides',

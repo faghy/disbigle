@@ -189,8 +189,10 @@ describe('Mastodon API: statuses and timelines', () => {
     expect(conversations[0]).toMatchObject({
       last_status: { id: direct.id },
       accounts: [{ id: alice.account.id }],
-      unread: false,
+      unread: true,
     });
+    const read = (await bob.api.post(`/api/v1/conversations/${conversations[0].id}/read`)).json();
+    expect(read.unread).toBe(false);
   });
 });
 

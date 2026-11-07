@@ -322,7 +322,19 @@ export type StreamEvent =
   | { event: 'update'; stream: string; payload: Status }
   | { event: 'status.update'; stream: string; payload: Status }
   | { event: 'delete'; stream: string; payload: string }
-  | { event: 'notification'; stream: string; payload: Notification };
+  | { event: 'notification'; stream: string; payload: Notification }
+  /** Someone in a private conversation is writing (sent every few seconds while they type). */
+  | {
+      event: 'conversation.typing';
+      stream: string;
+      payload: { conversationId: string; account: Account };
+    }
+  /** Someone read a private conversation up to `lastReadId`. */
+  | {
+      event: 'conversation.read';
+      stream: string;
+      payload: { conversationId: string; accountId: string; lastReadId: string };
+    };
 
 /** A private conversation: a thread of direct posts. */
 export interface Conversation {
@@ -330,6 +342,24 @@ export interface Conversation {
   id: string;
   accounts: Account[];
   lastStatus: Status;
+  /** Someone else wrote after the last message you saw. */
+  unread: boolean;
+}
+
+/** Up to which message another participant has read the conversation. */
+export interface ConversationSeen {
+  accountId: string;
+  lastReadId: string;
+}
+
+/** One private conversation with a page of its messages, newest first. */
+export interface ConversationDetail {
+  id: string;
+  /** The other participants. */
+  accounts: Account[];
+  messages: Status[];
+  /** How far the other participants of this server have read (remote servers don't say). */
+  seen: ConversationSeen[];
 }
 
 /** A hashtag the user chose not to see: from everyone, or only from `account`. */

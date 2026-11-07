@@ -22,7 +22,7 @@ describe('messages', () => {
       'GET /me': { body: aliceUser },
       'GET /instance': instance(),
       'GET /timelines/conversations': {
-        body: [{ id: last.id, accounts: [bob, carol], lastStatus: last }],
+        body: [{ id: last.id, accounts: [bob, carol], lastStatus: last, unread: false }],
       },
     });
     renderApp('/messages');
@@ -30,7 +30,7 @@ describe('messages', () => {
     const row = within(list).getByRole('link');
     expect(row).toHaveTextContent('Bob, Carol');
     expect(row).toHaveTextContent('You: See you tomorrow');
-    expect(row).toHaveAttribute('href', `/@alice/${last.id}`);
+    expect(row).toHaveAttribute('href', `/messages/${last.id}`);
     expect(screen.getAllByRole('link', { name: 'Messages' })[0]).toHaveAttribute(
       'href',
       '/messages',
@@ -83,7 +83,7 @@ describe('messages', () => {
       visibility: 'direct',
       content: '@carol@diaspo.example Dinner on Friday?',
     });
-    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/@alice\//));
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/messages\/.+/));
   });
 
   it('starts a message to the person whose profile asked for it', async () => {

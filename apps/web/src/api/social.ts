@@ -7,6 +7,7 @@ import type {
   AlbumWithMedia,
   Aspect,
   Conversation,
+  ConversationDetail,
   CreatePostRequest,
   EditPostRequest,
   HiddenTag,
@@ -168,6 +169,15 @@ export const social = {
   // Private conversations (direct and limited threads)
   conversations: (page: PageParams) =>
     api.get<Conversation[]>(`/timelines/conversations${queryString({ ...page })}`),
+  conversation: (conversationId: string, page: PageParams = {}) =>
+    api.get<ConversationDetail>(
+      `/timelines/conversations/${id(conversationId)}${queryString({ ...page })}`,
+    ),
+  readConversation: (conversationId: string) =>
+    api.post<{ lastReadId: string | null }>(`/timelines/conversations/${id(conversationId)}/read`),
+  typing: (conversationId: string) =>
+    api.post<Ok>(`/timelines/conversations/${id(conversationId)}/typing`),
+  unreadConversations: () => api.get<{ count: number }>('/timelines/conversations/unread_count'),
 
   // Polls
   vote: (pollId: string, choices: number[]) =>

@@ -225,7 +225,7 @@ function singleImageSrcSet(item: MediaAttachment): string | undefined {
   return `${item.previewUrl} ${Math.round(item.width * scale)}w, ${item.url} ${item.width}w`;
 }
 
-function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: boolean }) {
+export function MediaGrid({ media, sensitive }: { media: MediaAttachment[]; sensitive: boolean }) {
   const { t } = useTranslation();
   const [revealed, setRevealed] = useState(!sensitive);
   const [viewing, setViewing] = useState<number | null>(null);

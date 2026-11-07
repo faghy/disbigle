@@ -3,6 +3,7 @@ import {
   type DomainEvent,
   type EventBus,
   getStatus,
+  serializeAccount,
   serializeNotifications,
   streamableTo,
 } from '@disbigle/core';
@@ -34,11 +35,54 @@ export function isValidStream(stream: string, signedIn: boolean): boolean {
   );
 }
 
+/**
+ * Short-lived events for some people only (typing, read receipts): not domain events, so they
+ * never reach federation queues. `recipients` are actor ids.
+ */
+export type LiveEvent =
+  | { type: 'conversation.typing'; conversationId: string; actorId: string; recipients: string[] }
+  | {
+      type: 'conversation.read';
+      conversationId: string;
+      actorId: string;
+      lastReadId: string;
+      recipients: string[];
+    };
+
 /** Routes domain events to connected clients, checking visibility per viewer. */
 export class StreamingHub {
   private readonly connections = new Set<Connection>();
+  /** How live events reach every server process; by default only this one. */
+  publishLive: (event: LiveEvent) => Promise<void> = (event) => this.deliverLive(event);
 
   constructor(private readonly ctx: CoreContext) {}
+
+  /** Sends a live event to the recipients connected to this process. */
+  async deliverLive(event: LiveEvent): Promise<void> {
+    const recipients = new Set(event.recipients);
+    const listeners = [...this.connections].filter(
+      (c) => c.actorId && recipients.has(c.actorId) && c.streams.has('user'),
+    );
+    if (listeners.length === 0) return;
+    if (event.type === 'conversation.read') {
+      const payload = {
+        conversationId: event.conversationId,
+        accountId: event.actorId,
+        lastReadId: event.lastReadId,
+      };
+      for (const c of listeners)
+        this.send(c, { event: 'conversation.read', stream: 'user', payload });
+      return;
+    }
+    const [actor] = await this.ctx.db
+      .select()
+      .from(schema.actors)
+      .where(eq(schema.actors.id, event.actorId));
+    if (!actor) return;
+    const payload = { conversationId: event.conversationId, account: serializeAccount(actor) };
+    for (const c of listeners)
+      this.send(c, { event: 'conversation.typing', stream: 'user', payload });
+  }
 
   add(socket: StreamSocket, actorId: string | null): Connection {
     const connection: Connection = { socket, actorId, streams: new Set() };
@@ -239,8 +283,25 @@ export class RedisEventBus implements EventBus {
 
 export async function subscribeHubToRedis(subscriber: Redis, hub: StreamingHub): Promise<void> {
   await subscriber.subscribe(CHANNEL);
-  subscriber.on('message', (_channel, message) => {
-    void hub.handle(JSON.parse(message) as DomainEvent);
+  subscriber.on('message', (channel, message) => {
+    if (channel === CHANNEL) void hub.handle(JSON.parse(message) as DomainEvent);
+  });
+}
+
+const LIVE_CHANNEL = 'disbigle:live';
+
+/** Live events through Redis, so every server process delivers them to its own clients. */
+export async function connectLiveEvents(
+  publisher: Redis,
+  subscriber: Redis,
+  hub: StreamingHub,
+): Promise<void> {
+  hub.publishLive = async (event) => {
+    await publisher.publish(LIVE_CHANNEL, JSON.stringify(event));
+  };
+  await subscriber.subscribe(LIVE_CHANNEL);
+  subscriber.on('message', (channel, message) => {
+    if (channel === LIVE_CHANNEL) void hub.deliverLive(JSON.parse(message) as LiveEvent);
   });
 }
 

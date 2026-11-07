@@ -25,6 +25,7 @@ import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
 import { UsersPage } from './pages/admin/Users.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
+import { ConversationPage } from './pages/Conversation.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { GroupPage } from './pages/Group.tsx';
 import { GroupsPage } from './pages/Groups.tsx';
@@ -316,6 +317,13 @@ const messagesRoute = createRoute({
   component: MessagesPage,
 });
 
+const conversationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/messages/$conversationId',
+  beforeLoad: signedInOnly,
+  component: ConversationPage,
+});
+
 const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/about',
@@ -468,6 +476,7 @@ export const routeTree = rootRoute.addChildren([
   searchRoute,
   aboutRoute,
   messagesRoute,
+  conversationRoute,
   forgotPasswordRoute,
   resetPasswordRoute,
   adminRoute.addChildren([

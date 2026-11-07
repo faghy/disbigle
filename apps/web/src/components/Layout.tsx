@@ -4,9 +4,11 @@ import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-route
 import { type ComponentType, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isModerator, summaryQueryOptions } from '../api/admin.ts';
+import { unreadConversationsKey } from '../api/cache.ts';
 import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
+import { social } from '../api/social.ts';
 import {
   useFollowedTags,
   useFollowTag,
@@ -39,6 +41,7 @@ import {
 } from './icons.tsx';
 import { Logo } from './Logo.tsx';
 import { NotificationBell } from './NotificationBell.tsx';
+import { useStream } from './StreamingProvider.tsx';
 import { buttonClass, cx } from './ui.tsx';
 
 /** Keeps the interface language in line with the signed-in user's setting. */
@@ -121,6 +124,21 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
   const { t } = useTranslation();
   const moderator = isModerator(user);
   const summary = useQuery({ ...summaryQueryOptions, enabled: moderator });
+  const queryClient = useQueryClient();
+  const unread = useQuery({
+    queryKey: unreadConversationsKey,
+    queryFn: social.unreadConversations,
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+  // New private messages, and reading them anywhere, change the count.
+  useStream(user ? 'user' : null, (event) => {
+    if (
+      (event.event === 'update' && event.payload.visibility === 'direct') ||
+      event.event === 'conversation.read'
+    )
+      void queryClient.invalidateQueries({ queryKey: unreadConversationsKey });
+  });
   const items: NavItem[] = [
     { to: '/', label: t('nav.home'), icon: HomeIcon, exact: true },
     { to: '/public/local', label: t('nav.local'), icon: LocalIcon },
@@ -130,7 +148,13 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
   // Notifications live behind the bell in the top bar.
   return [
     ...items,
-    { to: '/messages', label: t('nav.messages'), icon: MailIcon },
+    {
+      to: '/messages',
+      label: t('nav.messages'),
+      icon: MailIcon,
+      badge: unread.data?.count ?? 0,
+      badgeKey: 'nav.unreadMessages',
+    },
     { to: '/groups', label: t('nav.groups'), icon: GroupIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },
     { to: '/contacts', label: t('nav.contacts'), icon: ContactsIcon },

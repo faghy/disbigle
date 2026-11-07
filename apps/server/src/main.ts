@@ -25,7 +25,12 @@ import { Redis } from 'ioredis';
 import { buildApp } from './app.ts';
 import { RedisDailyCounters, RedisKeyValueStore } from './kv.ts';
 import { SmtpMailer } from './mailer.ts';
-import { RedisEventBus, StreamingHub, subscribeHubToRedis } from './streaming.ts';
+import {
+  connectLiveEvents,
+  RedisEventBus,
+  StreamingHub,
+  subscribeHubToRedis,
+} from './streaming.ts';
 
 const config = loadConfig();
 const { db, close } = createDatabase(config.DATABASE_URL);
@@ -73,6 +78,7 @@ ctx.events = new CompositeEventBus([
 ]);
 const hub = new StreamingHub(ctx);
 await subscribeHubToRedis(subscriber, hub);
+await connectLiveEvents(redis, subscriber, hub);
 
 const app = await buildApp({
   ctx,

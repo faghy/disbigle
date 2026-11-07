@@ -32,6 +32,7 @@ import { albumRoutes } from './routes/albums.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
 import { authorizedAppRoutes } from './routes/authorized-apps.ts';
+import { conversationRoutes } from './routes/conversations.ts';
 import { filterRoutes } from './routes/filters.ts';
 import { groupRoutes } from './routes/groups.ts';
 import { hiddenTagRoutes } from './routes/hidden-tags.ts';
@@ -228,6 +229,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });
       await api.register(statusRoutes, { ctx, prefix: '/statuses' });
       await api.register(timelineRoutes, { ctx, prefix: '/timelines' });
+      await api.register(conversationRoutes, { ctx, hub, prefix: '/timelines/conversations' });
       await api.register(accountRoutes, {
         ctx,
         ...(options.federation ? { federation: options.federation } : {}),

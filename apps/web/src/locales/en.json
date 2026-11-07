@@ -39,7 +39,9 @@
     "aboutServer": "About this server",
     "contacts": "Contacts",
     "groups": "Groups",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "unreadMessages_one": "{{count}} conversation with new messages",
+    "unreadMessages_other": "{{count}} conversations with new messages"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -1137,7 +1139,16 @@
     "recipients": "Recipients",
     "removeRecipient": "Remove @{{acct}}",
     "suggestions": "Suggestions",
-    "noMatches": "Nobody matches."
+    "noMatches": "Nobody matches.",
+    "back": "All messages",
+    "onlyYou": "Only you",
+    "older": "Older messages",
+    "seen": "Seen",
+    "seenBy": "Seen by {{names}}",
+    "typing": "{{names}} is typing…",
+    "write": "Write a message",
+    "send": "Send",
+    "unread": "New messages"
   },
   "filters": {
     "tab": "Muted words",

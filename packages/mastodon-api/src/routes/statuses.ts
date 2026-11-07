@@ -14,6 +14,7 @@ import {
   hydrateStatuses,
   like,
   listConversations,
+  markConversationRead,
   pinPost,
   publicTimeline,
   reblog,
@@ -485,7 +486,7 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
     }
     return conversations.map((c, i) => ({
       id: c.id,
-      unread: false,
+      unread: c.unread,
       accounts: c.accounts.map((a) => byId.get(a.id) ?? mapAccount(presenter.map, a)),
       last_status: statuses[i] ?? null,
     }));
@@ -494,6 +495,7 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
   app.post('/api/v1/conversations/:id/read', async (request) => {
     const user = requireUser(request, 'write:conversations');
     const id = idParam(request);
+    await markConversationRead(ctx, user.actorId, id);
     const [conversation] = (await listConversations(ctx, user.actorId, { limit: 40 })).filter(
       (c) => c.id === id,
     );
