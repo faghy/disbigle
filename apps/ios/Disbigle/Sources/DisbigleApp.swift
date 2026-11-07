@@ -165,6 +165,14 @@ struct MainView: View {
       if route != nil { tab = "notifications" }
     }
     .task(id: model.session?.token) {
+      // While the app is open: "I am around" every 45 s, shown in chats only to people you write
+      // with, and only if you share your status (Messages on the web).
+      while !Task.isCancelled {
+        try? await model.client?.presence(active: true)
+        try? await Task.sleep(for: .seconds(45))
+      }
+    }
+    .task(id: model.session?.token) {
       // While the app is open: the unread count every minute (no system notifications).
       while !Task.isCancelled {
         await model.notifier.check(client: model.client, preferences: model.preferences, announce: false)

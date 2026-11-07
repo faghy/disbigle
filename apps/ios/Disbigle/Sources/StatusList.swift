@@ -10,6 +10,8 @@ enum Route: Hashable {
   /** A post known only by id (from a system notification), loaded on arrival. */
   case statusID(String)
   case tag(String)
+  /** A private conversation, as a chat. */
+  case chat(String)
   /** A photo album, loaded on arrival. */
   case album(String)
   case settings(SettingsPage)
@@ -40,6 +42,7 @@ struct TabStack<Root: View>: View {
           case .accountID(let id): ProfileLoader(id: id)
           case .statusID(let id): StatusLoader(id: id)
           case .tag(let name): TagScreen(name: name)
+          case .chat(let id): ChatScreen(id: id)
           case .album(let id): AlbumScreen(id: id)
           case .settings(let page): page.screen
           }

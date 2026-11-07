@@ -168,6 +168,8 @@ public final class Status: Codable, Hashable, Identifiable, Sendable {
   public let inReplyToAccountId: String?
   public let reblog: Status?
   public let poll: Poll?
+  /** Preview of the first link (title, description, image stored on the server). */
+  public let card: Card?
   public let language: String?
   public let favourited: Bool?
   public let reblogged: Bool?
@@ -208,6 +210,39 @@ public struct Notification: Codable, Hashable, Identifiable, Sendable {
       let raw = try decoder.singleValueContainer().decode(String.self)
       self = Kind(rawValue: raw) ?? .unknown
     }
+  }
+}
+
+/** A link preview, as Mastodon's PreviewCard. */
+public struct Card: Codable, Hashable, Sendable {
+  public let url: String
+  public let title: String
+  public let description: String
+  public let providerName: String?
+  public let image: String?
+  public let width: Int?
+  public let height: Int?
+
+  /** The site's name, or its domain. */
+  public var site: String {
+    if let providerName, !providerName.isEmpty { return providerName }
+    let host = URL(string: url)?.host() ?? ""
+    return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+  }
+}
+
+/** One conversation as a chat (Disbigle extension): messages newest first, who saw what, who is around. */
+public struct ChatPage: Codable, Sendable {
+  public let id: String
+  public let accounts: [Account]
+  public let messages: [Status]
+  public let seen: [Seen]
+  /** Account id → `online`, `away` or `busy`, for those who share it. */
+  public let presence: [String: String]
+
+  public struct Seen: Codable, Hashable, Sendable {
+    public let accountId: String
+    public let lastReadId: String
   }
 }
 

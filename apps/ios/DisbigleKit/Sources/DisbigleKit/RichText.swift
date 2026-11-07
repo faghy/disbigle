@@ -191,3 +191,15 @@ public enum RichText {
     }
   }
 }
+
+extension RichText {
+  /** The @mentions at the start of a message only address it: the chat leaves them out. */
+  public static func withoutLeadingMentions(_ html: String) -> String {
+    let pattern =
+      #"^(\s*<p>)((?:\s*(?:<span class="h-card"[^>]*>\s*)?<a [^>]*class="[^"]*\bmention\b(?![^"]*hashtag)[^"]*"[^>]*>.*?</a>(?:\s*</span>)?)+)\s*"#
+    guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators])
+    else { return html }
+    let range = NSRange(html.startIndex..., in: html)
+    return regex.stringByReplacingMatches(in: html, range: range, withTemplate: "$1")
+  }
+}

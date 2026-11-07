@@ -212,6 +212,20 @@ extension Client {
     try await page("api/v1/conversations", query: query)
   }
 
+  /** A page of a conversation's messages, newest first (`maxId` for older ones). */
+  public func chat(_ id: String, maxId: String? = nil) async throws -> ChatPage {
+    try await get(
+      "api/v1/conversations/\(id)/messages",
+      query: maxId.map { [URLQueryItem(name: "max_id", value: $0)] } ?? [])
+  }
+
+  /** Says the app is open; shown in chats only if you share your status. */
+  public func presence(active: Bool) async throws {
+    try await perform(
+      "POST", "api/v1/disbigle/presence",
+      body: .form([URLQueryItem(name: "active", value: active ? "true" : "false")]))
+  }
+
   public func markRead(conversation id: String) async throws {
     try await perform("POST", "api/v1/conversations/\(id)/read")
   }

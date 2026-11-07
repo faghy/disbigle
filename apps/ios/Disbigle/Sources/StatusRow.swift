@@ -89,6 +89,9 @@ struct StatusRow: View {
           if !shown.mediaAttachments.isEmpty {
             MediaGrid(media: shown.mediaAttachments, sensitive: shown.sensitive)
           }
+          if let card = shown.card, shown.mediaAttachments.isEmpty, shown.poll == nil {
+            LinkCardView(card: card)
+          }
           if let poll = shown.poll {
             PollView(poll: poll) { updated in
               updatedPoll(updated)

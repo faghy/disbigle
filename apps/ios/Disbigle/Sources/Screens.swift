@@ -291,11 +291,8 @@ struct ConversationRow: View {
     }
     .contentShape(Rectangle())
     .onTapGesture {
-      guard let last = conversation.lastStatus else { return }
-      router.go(.status(last))
-      if conversation.unread {
-        Task { try? await model.client?.markRead(conversation: conversation.id) }
-      }
+      // The chat marks it read as it opens.
+      router.go(.chat(conversation.id))
     }
   }
 }

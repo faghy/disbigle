@@ -130,6 +130,22 @@
         }
       }
     },
+    "%@:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@:"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@:"
+          }
+        }
+      }
+    },
     "%lld characters left": {
       "localizations": {
         "es": {
@@ -604,6 +620,22 @@
         }
       }
     },
+    "Away": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausente"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assente"
+          }
+        }
+      }
+    },
     "Bio": {
       "localizations": {
         "es": {
@@ -680,6 +712,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Segnalibri"
+          }
+        }
+      }
+    },
+    "Busy": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocupado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Occupato"
           }
         }
       }
@@ -1980,6 +2028,22 @@
         }
       }
     },
+    "Older messages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensajes anteriores"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messaggi precedenti"
+          }
+        }
+      }
+    },
     "One account for diaspora*, Mastodon and the whole fediverse.": {
       "localizations": {
         "es": {
@@ -1996,6 +2060,22 @@
         }
       }
     },
+    "Online": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En línea"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In linea"
+          }
+        }
+      }
+    },
     "Only people mentioned": {
       "localizations": {
         "es": {
@@ -2008,6 +2088,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solo le persone menzionate"
+          }
+        }
+      }
+    },
+    "Only you": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo tú"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo tu"
           }
         }
       }
@@ -2520,6 +2616,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sicurezza e account"
+          }
+        }
+      }
+    },
+    "Seen": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto"
+          }
+        }
+      }
+    },
+    "Seen by %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto por %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto da %@"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia"
           }
         }
       }
@@ -3288,6 +3432,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scrivi @nome@server per scegliere chi riceve il messaggio"
+          }
+        }
+      }
+    },
+    "Write a message": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un mensaje"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrivi un messaggio"
           }
         }
       }
