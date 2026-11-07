@@ -13,6 +13,7 @@ import {
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { lt } from 'drizzle-orm';
+import { makeLinkPreviews } from './link-previews.ts';
 import { safeFetch } from './safe-fetch.ts';
 
 export interface Job {
@@ -77,6 +78,14 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
           }
         }
         return `cached ${cached} remote images (${pending.length} attachments checked)`;
+      },
+    },
+    {
+      name: 'link-previews',
+      every: 30 * 1000 + 1000,
+      run: async () => {
+        if (process.env.LINK_PREVIEWS === 'false') return 'disabled';
+        return `made ${await makeLinkPreviews(ctx)} link previews`;
       },
     },
     {

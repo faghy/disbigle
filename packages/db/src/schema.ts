@@ -546,6 +546,32 @@ export const hiddenPosts = pgTable(
 );
 
 /**
+ * Link previews (title, description, image of a page, from its Open Graph tags), one per
+ * address and shared by every post that links it. The image is stored here: readers never
+ * contact the linked site until they open the link.
+ */
+export const previewCards = pgTable('preview_cards', {
+  id: uuid('id').primaryKey(),
+  url: text('url').notNull().unique(),
+  title: text('title').notNull().default(''),
+  description: text('description').notNull().default(''),
+  siteName: text('site_name').notNull().default(''),
+  imagePath: text('image_path'),
+  imageWidth: integer('image_width'),
+  imageHeight: integer('image_height'),
+  fetchedAt: timestamp('fetched_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Which preview a post shows; `card_id` null: looked at, nothing to show. */
+export const postCards = pgTable('post_cards', {
+  postId: uuid('post_id')
+    .primaryKey()
+    .references(() => posts.id, { onDelete: 'cascade' }),
+  cardId: uuid('card_id').references(() => previewCards.id, { onDelete: 'set null' }),
+  createdAt: createdAt(),
+});
+
+/**
  * How far each person read a private conversation (a thread of direct posts, keyed by its
  * first post): the newest message they have seen. Unread counts and "Seen" come from here.
  */

@@ -24,7 +24,7 @@ export const ACCEPTED_MEDIA_TYPES = [
 const MAX_IMAGE_SIDE = 2560;
 const PREVIEW_SIDE = 640;
 /** Decoding bigger images (a few KB of PNG can claim gigapixels) is refused outright. */
-const MAX_INPUT_PIXELS = 25_000_000;
+export const MAX_INPUT_PIXELS = 25_000_000;
 
 const imageFormats: Record<string, 'jpeg' | 'png' | 'webp' | 'gif' | 'avif'> = {
   'image/jpeg': 'jpeg',
@@ -52,7 +52,7 @@ export interface UploadInput {
   description?: string;
 }
 
-function datedPath(id: string, extension: string, suffix = ''): string {
+export function datedPath(id: string, extension: string, suffix = ''): string {
   const now = new Date();
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');
   return `${now.getUTCFullYear()}/${month}/${id}${suffix}.${extension}`;

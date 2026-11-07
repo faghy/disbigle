@@ -164,6 +164,18 @@ export interface Translation {
   provider: string;
 }
 
+/** Preview of the page a post links to: title, description and image (stored on this server). */
+export interface PreviewCard {
+  url: string;
+  title: string;
+  description: string;
+  /** The site's name, or its domain. */
+  siteName: string;
+  image: string | null;
+  width: number | null;
+  height: number | null;
+}
+
 export interface Status {
   id: string;
   uri: string | null;
@@ -188,6 +200,8 @@ export interface Status {
   tags: { name: string }[];
   media: MediaAttachment[];
   poll: Poll | null;
+  /** Preview of the first link, when its page has one (missing on older servers' data). */
+  card?: PreviewCard | null;
   /** Viewer-specific flags; false when signed out. */
   liked: boolean;
   reblogged: boolean;

@@ -427,4 +427,27 @@ describe('card details', () => {
       within(first as HTMLElement).getByRole('link', { name: 'Replying to @alice' }),
     ).toBeInTheDocument();
   });
+
+  it('shows the preview of the linked page, opening it in a new tab', async () => {
+    const status = makeStatus({
+      account: bob,
+      content: '<p><a href="https://disbigle.com/it/2026/x">disbigle.com/it/2026/x</a></p>',
+      card: {
+        url: 'https://disbigle.com/it/2026/x',
+        title: 'Nascondi post e hashtag',
+        description: 'E altre idee di Diego',
+        siteName: 'Disbigle',
+        image: '/media/2026/11/card-1.webp',
+        width: 640,
+        height: 336,
+      },
+    });
+    const article = await renderHomeWith(status, {});
+    const card = within(article).getByRole('link', { name: /Nascondi post e hashtag/ });
+    expect(card).toHaveAttribute('href', 'https://disbigle.com/it/2026/x');
+    expect(card).toHaveAttribute('target', '_blank');
+    expect(card).toHaveTextContent('Disbigle');
+    expect(card).toHaveTextContent('E altre idee di Diego');
+    expect(card.querySelector('img')).toHaveAttribute('src', '/media/2026/11/card-1.webp');
+  });
 });

@@ -3,6 +3,7 @@ import type { MediaAttachment, Status } from '@disbigle/shared';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { serializeAccount } from '../accounts/serialize.ts';
 import type { CoreContext } from '../context.ts';
+import { loadCards } from './cards.ts';
 import { groupSummaries } from './groups.ts';
 import { baseLanguage, guessLanguage, loadLanguageDetector } from './language.ts';
 import { loadPolls } from './polls.ts';
@@ -121,7 +122,10 @@ export async function hydrateStatuses(
   ]);
 
   const actorsById = new Map(actorRows.map((a) => [a.id, serializeAccount(a)]));
-  const pollsByPost = await loadPolls(ctx, viewerActorId, postIds);
+  const [pollsByPost, cards] = await Promise.all([
+    loadPolls(ctx, viewerActorId, postIds),
+    loadCards(ctx, postIds),
+  ]);
   const groupsById = await groupSummaries(
     ctx,
     all.map((p) => p.groupId).filter((id): id is string => id !== null),
@@ -178,6 +182,7 @@ export async function hydrateStatuses(
       tags: tagRows.filter((t) => t.postId === post.id).map((t) => ({ name: t.name })),
       media: mediaRows.filter((m) => m.postId === post.id).map((m) => serializeMedia(ctx, m)),
       poll: pollsByPost.get(post.id) ?? null,
+      card: cards.get(post.id) ?? null,
       liked: liked.has(post.id),
       reblogged: reblogged.has(post.id),
       bookmarked: bookmarked.has(post.id),

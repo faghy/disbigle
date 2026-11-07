@@ -41,6 +41,7 @@ import {
   WarningIcon,
 } from './icons.tsx';
 import { Lightbox } from './Lightbox.tsx';
+import { LinkCard } from './LinkCard.tsx';
 import { PollView } from './PollView.tsx';
 import { ReportDialog } from './ReportDialog.tsx';
 import { ShareToGroupDialog } from './ShareToGroupDialog.tsx';
@@ -980,6 +981,9 @@ export function StatusCard({
               <MediaGrid media={status.media} sensitive={status.sensitive && !hasWarning} />
             )}
             {youtube && <YouTubePreview link={youtube} />}
+            {status.card && !youtube && status.media.length === 0 && !status.poll && (
+              <LinkCard card={status.card} />
+            )}
           </div>
 
           {highlighted && (

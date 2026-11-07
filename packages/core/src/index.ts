@@ -32,6 +32,7 @@ export * from './settings.ts';
 export * from './social/activity.ts';
 export * from './social/albums.ts';
 export * from './social/aspects.ts';
+export * from './social/cards.ts';
 export * from './social/content.ts';
 export * from './social/conversations.ts';
 export * from './social/filters.ts';

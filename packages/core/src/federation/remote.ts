@@ -4,6 +4,7 @@ import type { Visibility } from '@disbigle/shared';
 import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
+import { forgetPostCard } from '../social/cards.ts';
 import { sanitizeRemoteHtml } from '../social/content.ts';
 import { findGroup, groupOfActor, isGroupMember, notifyModerators } from '../social/groups.ts';
 import { createNotification } from '../social/notifications.ts';
@@ -467,6 +468,8 @@ export async function updateRemotePost(
       ),
     )
     .returning({ id: posts.id });
+  // Its link may have changed: the preview is made again.
+  for (const { id: postId } of updated) await forgetPostCard(ctx, postId);
   return updated.length > 0;
 }
 

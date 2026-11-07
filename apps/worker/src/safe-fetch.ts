@@ -6,6 +6,7 @@ export interface SafeFetchOptions {
   maxRedirects?: number;
   /** Tests only. */
   allowPrivateAddress?: boolean;
+  headers?: Record<string, string>;
 }
 
 /**
@@ -24,7 +25,7 @@ export async function safeFetch(
     const response = await fetch(current, {
       redirect: 'manual',
       signal: AbortSignal.timeout(options.timeoutMs ?? 15_000),
-      headers: { 'user-agent': 'Disbigle media cache' },
+      headers: { 'user-agent': 'Disbigle media cache', ...options.headers },
     });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');

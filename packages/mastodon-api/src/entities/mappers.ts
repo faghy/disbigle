@@ -237,7 +237,24 @@ export function mapStatus(
     in_reply_to_account_id: status.inReplyToAccountId,
     reblog: status.reblog ? mapStatus(ctx, status.reblog, options) : null,
     poll: status.poll ? mapPoll(status.poll, options.signedIn) : null,
-    card: null,
+    card: status.card
+      ? {
+          url: status.card.url,
+          title: status.card.title,
+          description: status.card.description,
+          type: 'link',
+          author_name: '',
+          author_url: '',
+          provider_name: status.card.siteName,
+          provider_url: '',
+          html: '',
+          width: status.card.width ?? 0,
+          height: status.card.height ?? 0,
+          image: status.card.image,
+          embed_url: '',
+          blurhash: null,
+        }
+      : null,
     language: status.language,
   };
   if (options.signedIn) {

@@ -524,6 +524,8 @@ export async function editPost(
       })
       .where(eq(posts.id, post.id));
     await tx.delete(postTags).where(eq(postTags.postId, post.id));
+    // Its link may have changed: the preview is made again.
+    await tx.delete(schema.postCards).where(eq(schema.postCards.postId, post.id));
     if (tagNames.length > 0) {
       await tx
         .insert(tags)

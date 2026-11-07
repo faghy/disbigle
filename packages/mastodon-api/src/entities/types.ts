@@ -135,7 +135,7 @@ export interface MStatus {
   in_reply_to_account_id: string | null;
   reblog: MStatus | null;
   poll: MPoll | null;
-  card: null;
+  card: MCard | null;
   language: string | null;
   text?: string | null;
   favourited?: boolean;
@@ -216,4 +216,22 @@ export interface MCredentialApplication extends MApplication {
   client_id: string;
   client_secret: string;
   client_secret_expires_at: number;
+}
+
+/** A link preview (Mastodon's PreviewCard). */
+export interface MCard {
+  url: string;
+  title: string;
+  description: string;
+  type: 'link';
+  author_name: string;
+  author_url: string;
+  provider_name: string;
+  provider_url: string;
+  html: string;
+  width: number;
+  height: number;
+  image: string | null;
+  embed_url: string;
+  blurhash: null;
 }
