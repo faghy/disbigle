@@ -87,4 +87,6 @@ Found a bug, have an idea or a better translation? [Open an issue](https://githu
 
 ## License
 
+Copyright (C) 2026 Serafino Christian
+
 [GNU Affero General Public License v3.0](LICENSE)
