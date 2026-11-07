@@ -273,4 +273,13 @@
   <string name="hidden_tags_footer">Posts with these hashtags don\'t appear in your timelines, from everyone or only from the person shown.</string>
   <string name="from_everyone">From everyone</string>
   <string name="from_account">From @%1$s</string>
+  <string name="only_you">Only you</string>
+  <string name="seen">Seen</string>
+  <string name="seen_by">Seen by %1$s</string>
+  <string name="older_messages">Older messages</string>
+  <string name="write_message">Write a message</string>
+  <string name="send">Send</string>
+  <string name="presence_online">Online</string>
+  <string name="presence_away">Away</string>
+  <string name="presence_busy">Busy</string>
 </resources>

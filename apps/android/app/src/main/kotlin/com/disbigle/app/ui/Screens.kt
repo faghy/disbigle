@@ -423,12 +423,9 @@ fun ConversationsScreen(nav: Nav) {
         itemsIndexed(list.items, key = { _, c -> c.id }) { index, conversation ->
           LaunchedEffect(index) { list.reached(index) }
           ConversationRow(conversation) {
-            val last = conversation.lastStatus ?: return@ConversationRow
-            nav.status(last)
-            if (conversation.unread) {
-              scope.launch { runCatching { client?.markConversationRead(conversation.id) } }
-              list.replace(conversation.copy(unread = false))
-            }
+            // The chat marks it read as it opens.
+            nav.chat(conversation.id)
+            if (conversation.unread) list.replace(conversation.copy(unread = false))
           }
           HorizontalDivider()
         }

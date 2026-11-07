@@ -277,4 +277,13 @@
   <string name="hidden_tags_footer">Las publicaciones con estos hashtags no aparecen en tus cronologías, de todos o solo de la persona indicada.</string>
   <string name="from_everyone">De todos</string>
   <string name="from_account">De @%1$s</string>
+  <string name="only_you">Solo tú</string>
+  <string name="seen">Visto</string>
+  <string name="seen_by">Visto por %1$s</string>
+  <string name="older_messages">Mensajes anteriores</string>
+  <string name="write_message">Escribe un mensaje</string>
+  <string name="send">Enviar</string>
+  <string name="presence_online">En línea</string>
+  <string name="presence_away">Ausente</string>
+  <string name="presence_busy">Ocupado</string>
 </resources>

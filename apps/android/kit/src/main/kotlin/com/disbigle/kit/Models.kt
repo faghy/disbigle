@@ -163,6 +163,8 @@ data class Status(
   val inReplyToAccountId: String? = null,
   val reblog: Status? = null,
   val poll: Poll? = null,
+  /** Preview of the first link (title, description, image stored on the server). */
+  val card: Card? = null,
   val language: String? = null,
   val favourited: Boolean? = null,
   val reblogged: Boolean? = null,
@@ -243,6 +245,32 @@ data class Notification(
 
   val type: Kind get() = Kind.of(typeRaw)
   val created: Instant get() = parseDate(createdAt) ?: Instant.EPOCH
+}
+
+/** A link preview, as Mastodon's PreviewCard. */
+@Serializable
+data class Card(
+  val url: String,
+  val title: String = "",
+  val description: String = "",
+  val providerName: String = "",
+  val image: String? = null,
+  val width: Int = 0,
+  val height: Int = 0,
+)
+
+/** One conversation as a chat (Disbigle extension): messages newest first, who saw what, who is around. */
+@Serializable
+data class ChatPage(
+  val id: String,
+  val accounts: List<Account> = emptyList(),
+  val messages: List<Status> = emptyList(),
+  val seen: List<Seen> = emptyList(),
+  /** Account id → `online`, `away` or `busy`, for those who share it. */
+  val presence: Map<String, String> = emptyMap(),
+) {
+  @Serializable
+  data class Seen(val accountId: String, val lastReadId: String)
 }
 
 @Serializable

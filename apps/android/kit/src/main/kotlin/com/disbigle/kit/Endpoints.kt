@@ -159,6 +159,23 @@ suspend fun Client.conversations(query: Query = emptyList()): Page<Conversation>
 
 suspend fun Client.markConversationRead(id: String) = perform("POST", "api/v1/conversations/$id/read")
 
+/** A page of a conversation's messages, newest first (`maxId` for older ones), with who saw them and who is around. */
+suspend fun Client.chat(id: String, maxId: String? = null): ChatPage =
+  get("api/v1/conversations/$id/messages", listOfNotNull(maxId?.let { "max_id" to it }))
+
+/** Says the app is open (`active`) or in the background; shown only if you share your status. */
+suspend fun Client.presence(active: Boolean) =
+  perform("POST", "api/v1/disbigle/presence", body = Client.Body.Form(listOf("active" to active.toString())))
+
+/** The @mentions at the start of a message only address it: the chat leaves them out. */
+fun withoutLeadingMentions(html: String): String {
+  val leading = Regex(
+    "^(\\s*<p>)((?:\\s*(?:<span class=\"h-card\"[^>]*>\\s*)?<a [^>]*class=\"[^\"]*\\bmention\\b(?![^\"]*hashtag)[^\"]*\"[^>]*>.*?</a>(?:\\s*</span>)?)+)\\s*",
+    RegexOption.DOT_MATCHES_ALL,
+  )
+  return leading.replace(html) { it.groupValues[1] }
+}
+
 // Accounts
 
 suspend fun Client.me(): Account = get("api/v1/accounts/verify_credentials")

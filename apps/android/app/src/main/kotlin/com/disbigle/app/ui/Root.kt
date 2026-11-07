@@ -40,6 +40,7 @@ import com.disbigle.app.AppModel
 import com.disbigle.app.MainActivity
 import com.disbigle.app.PendingRoute
 import com.disbigle.app.R
+import com.disbigle.kit.presence
 import com.disbigle.kit.Account
 import com.disbigle.kit.AccountList
 import com.disbigle.kit.AspectList
@@ -66,6 +67,9 @@ class Nav(val controller: NavHostController, private val model: AppModel) {
   }
 
   fun statusId(id: String) = controller.navigate("status/$id")
+
+  /** A private conversation, as a chat. */
+  fun chat(id: String) = controller.navigate("chat/$id")
 
   fun account(account: Account) {
     model.accounts[account.id] = account
@@ -127,6 +131,16 @@ fun MainScreen(model: AppModel) {
       while (true) {
         model.notifier.check(model.client, model.preferences, announce = false)
         delay(60_000)
+      }
+    }
+  }
+  // While the app is on screen: "I am around" every 45 s, shown in chats only to people you
+  // write with, and only if you share your status (Messages on the web).
+  LaunchedEffect(model.session?.token) {
+    lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+      while (true) {
+        model.client?.let { runCatching { it.presence(true) } }
+        delay(45_000)
       }
     }
   }
@@ -193,6 +207,7 @@ fun MainScreen(model: AppModel) {
         if (me != null) ProfileScreen(nav, me.id, isMe = true) else Loading()
       }
       composable("status/{id}") { StatusScreen(nav, it.arguments?.getString("id")!!) }
+      composable("chat/{id}") { ChatScreen(nav, it.arguments?.getString("id")!!) }
       composable("account/{id}") {
         val id = it.arguments?.getString("id")!!
         ProfileScreen(nav, id, isMe = id == model.me?.id)

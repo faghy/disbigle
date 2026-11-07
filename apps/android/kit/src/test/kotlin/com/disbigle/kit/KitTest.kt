@@ -221,6 +221,55 @@ class InteractionsTest {
       server.shutdown()
     }
   }
+
+  @Test fun chatPagesPresenceAndCards() = runTest {
+    val server = MockWebServer()
+    val calls = mutableListOf<String>()
+    server.dispatcher = object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        calls += "${request.method} ${request.path} ${request.body.readUtf8()}".trim()
+        return when (request.path) {
+          "/api/v1/conversations/c1/messages", "/api/v1/conversations/c1/messages?max_id=m1" -> MockResponse().setBody(
+            """{"id":"c1","accounts":[${Fixtures.account}],"messages":[${Fixtures.status}],
+              "seen":[{"account_id":"1","last_read_id":"m9"}],"presence":{"1":"online"}}""",
+          )
+          else -> MockResponse().setBody("{}")
+        }
+      }
+    }
+    server.start()
+    try {
+      val client = Client(server.url("/").toString(), "t0k")
+      val page = client.chat("c1")
+      assertEquals("faghy", page.accounts.single().acct)
+      assertEquals(1, page.messages.size)
+      assertEquals(ChatPage.Seen("1", "m9"), page.seen.single())
+      assertEquals(mapOf("1" to "online"), page.presence)
+      client.chat("c1", "m1")
+      client.presence(true)
+      assertEquals(
+        listOf(
+          "GET /api/v1/conversations/c1/messages", "GET /api/v1/conversations/c1/messages?max_id=m1",
+          "POST /api/v1/disbigle/presence active=true",
+        ),
+        calls,
+      )
+    } finally {
+      server.shutdown()
+    }
+  }
+
+  @Test fun chatBubblesDropTheAddressingMentions() {
+    val mention = """<span class="h-card" translate="no"><a href="https://x.test/@bob" class="u-url mention">@<span>bob</span></a></span>"""
+    assertEquals("<p>Ciao Bob</p>", withoutLeadingMentions("<p>$mention Ciao Bob</p>"))
+    assertEquals("<p>ciao $mention</p>", withoutLeadingMentions("<p>ciao $mention</p>"))
+    val card = Client.json.decodeFromString(
+      Card.serializer(),
+      """{"url":"https://disbigle.com/x","title":"T","description":"D","type":"link","provider_name":"Disbigle","image":"https://x.test/c.webp","width":640,"height":336,"html":"","blurhash":null}""",
+    )
+    assertEquals("Disbigle", card.providerName)
+    assertEquals(640, card.width)
+  }
 }
 
 class AlbumsAndTranslationTest {

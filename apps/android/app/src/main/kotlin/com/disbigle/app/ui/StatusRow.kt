@@ -255,6 +255,9 @@ fun StatusRow(
           )
         }
         if (shown.mediaAttachments.isNotEmpty()) MediaGrid(shown.mediaAttachments, shown.sensitive)
+        shown.card?.takeIf { shown.mediaAttachments.isEmpty() && shown.poll == null }?.let { card ->
+          LinkCard(card) { openInBrowser(context, card.url) }
+        }
         shown.poll?.let { poll ->
           PollView(poll) {
             scope.launch { model.client?.let { client -> runCatching { client.status(shown.id) }.getOrNull()?.let { updated = it } } }
@@ -692,5 +695,44 @@ fun AccountRow(
       Text(handle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     trailing()
+  }
+}
+
+/** Preview of the page a post links to; the image comes from our server, the page opens on tap. */
+@Composable
+fun LinkCard(card: com.disbigle.kit.Card, onClick: () -> Unit) {
+  val wide = card.image != null && card.width > 0 && card.height > 0 && card.width.toFloat() / card.height >= 1.3f
+  androidx.compose.material3.OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    if (wide) {
+      coil3.compose.AsyncImage(
+        model = card.image, contentDescription = null,
+        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.91f),
+      )
+      CardText(card)
+    } else {
+      Row {
+        card.image?.let {
+          coil3.compose.AsyncImage(
+            model = it, contentDescription = null,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.size(96.dp),
+          )
+        }
+        CardText(card)
+      }
+    }
+  }
+}
+
+@Composable
+private fun CardText(card: com.disbigle.kit.Card) {
+  Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    val site = card.providerName.ifEmpty { runCatching { java.net.URI(card.url).host.removePrefix("www.") }.getOrDefault("") }
+    if (site.isNotEmpty()) Text(site, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    Text(card.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    if (card.description.isNotEmpty()) {
+      Text(card.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
   }
 }
