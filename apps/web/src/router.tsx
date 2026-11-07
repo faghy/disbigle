@@ -36,6 +36,7 @@ import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
 import { isSearchType, SearchPage, type SearchType } from './pages/Search.tsx';
+import { SharePage } from './pages/Share.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
 import { AuthorizedAppsPage } from './pages/settings/AuthorizedApps.tsx';
@@ -221,6 +222,23 @@ const tagRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tags/$tag',
   component: TagTimelinePage,
+});
+
+/** `/share?text=…`: other sites' "share on Disbigle" links open the composer with their text. */
+const shareRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/share',
+  validateSearch: (search: Record<string, unknown>): { text?: string | undefined } => ({
+    text: typeof search.text === 'string' ? search.text.slice(0, 2000) : undefined,
+  }),
+  beforeLoad: async ({ context, search }) => {
+    const me = await context.queryClient.ensureQueryData(meQueryOptions);
+    if (!me) {
+      const back = `/share${search.text ? `?text=${encodeURIComponent(search.text)}` : ''}`;
+      throw redirect({ to: '/login', search: { redirect: safeRedirect(back) } });
+    }
+  },
+  component: SharePage,
 });
 
 const activityRoute = createRoute({
@@ -439,6 +457,7 @@ export const routeTree = rootRoute.addChildren([
   federatedRoute,
   tagRoute,
   activityRoute,
+  shareRoute,
   bookmarksRoute,
   notificationsRoute,
   groupsRoute,

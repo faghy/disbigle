@@ -44,6 +44,8 @@ export interface ComposerProps {
   header?: ReactNode;
   /** Writes in this group: its members (or everyone, for a public group) read the post. */
   group?: GroupSummary | Group;
+  /** Text to start with, e.g. a link shared from another site. */
+  initialText?: string;
 }
 
 /** Posts of plain members wait for a moderator in groups that approve them. */
@@ -61,6 +63,7 @@ export function Composer({
   editContentRef,
   header,
   group: groupProp,
+  initialText = '',
 }: ComposerProps) {
   const { t } = useTranslation();
   const user = useCurrentUser();
@@ -78,7 +81,7 @@ export function Composer({
   const mention =
     replyTo && replyTo.account.id !== user?.account.id ? `@${replyTo.account.acct} ` : '';
 
-  const [content, setContent] = useState(mention);
+  const [content, setContent] = useState(mention + initialText);
   useEffect(() => {
     if (editContentRef) editContentRef.current = (edit) => setContent(edit);
   }, [editContentRef]);

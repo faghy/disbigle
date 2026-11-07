@@ -1432,5 +1432,9 @@
       "reblog": "Aún no has compartido ninguna publicación.",
       "bookmark": "Aún no has guardado ninguna publicación."
     }
+  },
+  "share": {
+    "title": "Compartir en Disbigle",
+    "description": "Si quieres añade un comentario, elige quién lo lee y publica."
   }
 }

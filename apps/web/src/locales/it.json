@@ -1406,5 +1406,9 @@
       "reblog": "Non hai ancora condiviso nessun post.",
       "bookmark": "Non hai ancora salvato nessun post."
     }
+  },
+  "share": {
+    "title": "Condividi su Disbigle",
+    "description": "Se vuoi aggiungi un commento, scegli chi lo legge e pubblica."
   }
 }
