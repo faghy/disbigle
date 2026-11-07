@@ -1461,5 +1461,37 @@
   "share": {
     "title": "Compartir en Disbigle",
     "description": "Si quieres añade un comentario, elige quién lo lee y publica."
+  },
+  "move": {
+    "tab": "Mudanza",
+    "register": {
+      "title": "Trae tu cuenta",
+      "subtitle": "Múdate aquí desde Mastodon u otro servidor del fediverso: elige tu nombre nuevo en {{domain}} y quien te sigue podrá seguirte aquí.",
+      "instead": "Prefiero empezar de cero",
+      "cta": "¿Ya estás en Mastodon o en otro sitio? Trae tu cuenta",
+      "from": "Tu cuenta actual",
+      "fromHint": "La dirección completa, como nombre@mastodon.social. Allí de momento no cambia nada.",
+      "newName": "Tu nombre nuevo aquí",
+      "agreement": "He leído cómo funciona la mudanza, qué se muda y qué no, y que cualquier pérdida de datos corre de mi cuenta:",
+      "infoLink": "la página sobre la mudanza de cuenta",
+      "mustRead": "Lee antes la página sobre la mudanza"
+    },
+    "settings": {
+      "title": "Trae tu cuenta",
+      "description": "Trae contigo a quien te sigue desde Mastodon y otros servidores del fediverso.",
+      "risk": "Antes de empezar, descarga todas las exportaciones de tu servidor anterior: cualquier pérdida de datos corre de tu cuenta. Lee",
+      "step1": "1. Vincula tu cuenta anterior",
+      "step1Help": "El servidor anterior solo te muda a una cuenta que lo indique como su cuenta anterior.",
+      "linked": "Cuentas vinculadas",
+      "unlink": "Quitar",
+      "link": "Vincular",
+      "step2": "2. Inicia la mudanza en el servidor anterior",
+      "step2Help": "En tu servidor anterior, abre la página para mudarte a otra cuenta y escribe tu nueva dirección, {{address}}. Quien te sigue te seguirá aquí por sí solo.",
+      "openOld": "Abrir la página de mudanza en {{domain}}",
+      "linkFirst": "Primero vincula tu cuenta anterior.",
+      "otherSoftware": "En Mastodon la página es Cuenta → Mudarse a otra cuenta; en otros programas busca \"migración\" o \"mudanza\" en los ajustes.",
+      "step3": "3. Las personas que seguías",
+      "step3Help": "La importación de la lista de personas que sigues, bloqueadas y silenciadas, exportadas de tu servidor anterior, llegará pronto. Guarda esos archivos."
+    }
   }
 }

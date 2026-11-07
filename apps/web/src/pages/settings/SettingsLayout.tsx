@@ -42,6 +42,9 @@ export function SettingsLayout() {
           <Link to="/settings/invites" className={tabClass}>
             {t('invites.tab')}
           </Link>
+          <Link to="/settings/move" className={tabClass}>
+            {t('move.tab')}
+          </Link>
         </nav>
       </div>
       <div className="min-w-0">{user ? <Outlet /> : null}</div>

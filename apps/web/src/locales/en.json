@@ -1435,5 +1435,37 @@
   "share": {
     "title": "Share on Disbigle",
     "description": "Write something about it if you like, choose who reads it and publish."
+  },
+  "move": {
+    "tab": "Move",
+    "register": {
+      "title": "Bring your account",
+      "subtitle": "Move here from Mastodon or another server of the fediverse: pick your new name on {{domain}} and your followers can follow you here.",
+      "instead": "Start from scratch instead",
+      "cta": "Already on Mastodon or elsewhere? Bring your account",
+      "from": "Your current account",
+      "fromHint": "The full address, like name@mastodon.social. Nothing changes there yet.",
+      "newName": "Your new name here",
+      "agreement": "I have read how moving an account works, what moves and what does not, and that any loss of data is at my own risk:",
+      "infoLink": "the page about moving an account",
+      "mustRead": "Read the page about moving first"
+    },
+    "settings": {
+      "title": "Move your account here",
+      "description": "Bring your followers from Mastodon and other servers of the fediverse.",
+      "risk": "Before you start, download every export your old server offers: any loss of data is at your own risk. Read",
+      "step1": "1. Link your old account",
+      "step1Help": "The old server moves you only to an account that names it as its former one.",
+      "linked": "Linked accounts",
+      "unlink": "Remove",
+      "link": "Link",
+      "step2": "2. Start the move on the old server",
+      "step2Help": "On your old server, open the page to move to another account and enter your new address, {{address}}. Your followers will follow you here on their own.",
+      "openOld": "Open the move page on {{domain}}",
+      "linkFirst": "Link your old account first.",
+      "otherSoftware": "On Mastodon the page is Account → Move to a different account; on other software look for \"migration\" or \"move\" in its settings.",
+      "step3": "3. The people you followed",
+      "step3Help": "Importing the list of people you follow, blocked and muted accounts, exported from your old server, is coming. Keep those files."
+    }
   }
 }

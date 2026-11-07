@@ -28,6 +28,14 @@ import { useFocusFirstError } from '../lib/forms.ts';
 import { currentLanguage } from '../lib/i18n.ts';
 import { fullNavigation } from '../lib/redirect.ts';
 
+/** The page of disbigle.com that explains moving an account, in the reader's language. */
+export function moveInfoUrl(): string {
+  const language = currentLanguage();
+  if (language === 'it') return 'https://disbigle.com/it/porta-il-tuo-account';
+  if (language === 'es') return 'https://disbigle.com/es/trae-tu-cuenta';
+  return 'https://disbigle.com/bring-your-account';
+}
+
 export function RegisterPage() {
   const { t } = useTranslation();
   const instance = useInstance();
@@ -67,7 +75,7 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
   const formRef = useRef<HTMLFormElement>(null);
   const mode = instance.registrationMode;
   // Invitation links look like /register?invite=CODE.
-  const { invite, redirect } = useSearch({ from: '/register' });
+  const { invite, redirect, move } = useSearch({ from: '/register' });
   const showInvite = mode === 'invite' || Boolean(invite);
 
   const [values, setValues] = useState({
@@ -77,6 +85,8 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
     reason: '',
     inviteCode: invite ?? '',
     agreement: false,
+    moveFrom: '',
+    moveAgreement: false,
   });
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
   // Honeypot: hidden from people, filled in by form-filling robots.
@@ -111,7 +121,8 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
         fullNavigation.assign(redirect);
         return;
       }
-      await navigate({ to: '/' });
+      // Moving here: the next step is linking the old account.
+      await navigate({ to: move ? '/settings/move' : '/' });
     },
   });
 
@@ -126,10 +137,15 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
       password: values.password,
       locale: currentLanguage(),
       agreement: values.agreement,
+      ...(move
+        ? { moveFrom: values.moveFrom, moveAgreement: values.moveAgreement || undefined }
+        : {}),
       ...(mode === 'approval' && values.reason.trim() ? { reason: values.reason } : {}),
       ...(showInvite && values.inviteCode.trim() ? { inviteCode: values.inviteCode } : {}),
     });
     const found = parsed.success ? {} : issuesToFieldErrors(parsed.error.issues);
+    if (move && !values.moveFrom.trim()) found.moveFrom = t('validation.required');
+    if (move && !values.moveAgreement) found.moveAgreement = t('move.register.mustRead');
     if (mode === 'invite' && !values.inviteCode.trim()) found.inviteCode = t('validation.required');
     if (!parsed.success || Object.keys(found).length > 0) {
       register.reset();
@@ -160,9 +176,32 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
   return (
     <>
       <Card>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('register.title')}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {move ? t('move.register.title') : t('register.title')}
+        </h1>
         <p className="mt-1 text-sm text-fg-muted">
-          {t('register.subtitle', { domain: instance.domain })}
+          {move
+            ? t('move.register.subtitle', { domain: instance.domain })
+            : t('register.subtitle', { domain: instance.domain })}
+        </p>
+        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {move ? (
+            <Link
+              to="/register"
+              search={{ invite, redirect }}
+              className="font-medium text-accent hover:underline focus-ring"
+            >
+              {t('move.register.instead')}
+            </Link>
+          ) : (
+            <Link
+              to="/register"
+              search={{ invite, redirect, move: true }}
+              className="font-medium text-accent hover:underline focus-ring"
+            >
+              {t('move.register.cta')}
+            </Link>
+          )}
         </p>
         {mode === 'approval' && (
           <p className="mt-3 text-sm text-fg-muted">{t('register.approvalNotice')}</p>
@@ -183,8 +222,23 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
               />
             </label>
           </div>
+          {move && (
+            <TextField
+              label={t('move.register.from')}
+              name="moveFrom"
+              autoCapitalize="none"
+              spellCheck={false}
+              maxLength={320}
+              required
+              placeholder="nome@mastodon.example"
+              hint={t('move.register.fromHint')}
+              value={values.moveFrom}
+              onChange={(event) => set('moveFrom', event.target.value)}
+              error={errors.moveFrom}
+            />
+          )}
           <TextField
-            label={t('register.username')}
+            label={move ? t('move.register.newName') : t('register.username')}
             name="username"
             autoComplete="username"
             autoCapitalize="none"
@@ -265,6 +319,28 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
             onChange={(event) => set('agreement', event.target.checked)}
             error={errors.agreement}
           />
+          {move && (
+            <CheckboxField
+              label={
+                <>
+                  {t('move.register.agreement')}{' '}
+                  <a
+                    href={moveInfoUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-accent underline focus-ring"
+                  >
+                    {t('move.register.infoLink')}
+                  </a>
+                </>
+              }
+              name="moveAgreement"
+              required
+              checked={values.moveAgreement}
+              onChange={(event) => set('moveAgreement', event.target.checked)}
+              error={errors.moveAgreement}
+            />
+          )}
           <Button type="submit" className="w-full" loading={register.isPending}>
             {t('register.submit')}
           </Button>

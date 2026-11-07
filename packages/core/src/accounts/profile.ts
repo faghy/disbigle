@@ -9,7 +9,7 @@ import {
   updateProfileRequestSchema,
   updateSettingsRequestSchema,
 } from '@disbigle/shared';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { hashPassword, verifyPassword } from '../crypto/passwords.ts';
 import { DomainError } from '../errors.ts';
@@ -28,6 +28,22 @@ export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<
     .innerJoin(schema.actors, eq(schema.actors.id, schema.users.actorId))
     .where(eq(schema.users.id, userId));
   if (!row) throw new DomainError('not_found', 'User not found');
+  const aliasUris = row.actor.alsoKnownAs ?? [];
+  const aliasRows =
+    aliasUris.length > 0
+      ? await ctx.db
+          .select({
+            uri: schema.actors.apUri,
+            acct: schema.actors.username,
+            domain: schema.actors.domain,
+          })
+          .from(schema.actors)
+          .where(inArray(schema.actors.apUri, aliasUris))
+      : [];
+  const aliases = aliasUris.map((uri) => {
+    const known = aliasRows.find((a) => a.uri === uri);
+    return known ? `${known.acct}@${known.domain ?? ctx.config.LOCAL_DOMAIN}` : uri;
+  });
   return {
     account: await getAccountWithCounts(ctx, row.actor),
     email: row.user.email,
@@ -36,6 +52,8 @@ export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<
     totpEnabled: row.user.totpEnabledAt !== null,
     passkeyCount: row.passkeyCount,
     presence: (row.user.presence as PresenceSetting | undefined) ?? 'hidden',
+    moveFrom: row.user.moveFrom ?? null,
+    aliases,
   };
 }
 

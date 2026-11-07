@@ -144,6 +144,8 @@ export const users = pgTable(
      * default), `auto` (online or away, from their activity) or `busy`.
      */
     presence: text('presence').notNull().default('hidden'),
+    /** The account this person said they come from at sign-up, to link it later (Move). */
+    moveFrom: text('move_from'),
     approved: boolean('approved').notNull().default(true),
     registrationReason: text('registration_reason'),
     totpSecret: text('totp_secret'),

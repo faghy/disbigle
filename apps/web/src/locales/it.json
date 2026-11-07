@@ -1435,5 +1435,37 @@
   "share": {
     "title": "Condividi su Disbigle",
     "description": "Se vuoi aggiungi un commento, scegli chi lo legge e pubblica."
+  },
+  "move": {
+    "tab": "Trasloco",
+    "register": {
+      "title": "Porta qui il tuo account",
+      "subtitle": "Trasloca qui da Mastodon o da un altro server del fediverso: scegli il nuovo nome su {{domain}} e chi ti segue potrà seguirti qui.",
+      "instead": "Preferisco partire da zero",
+      "cta": "Sei già su Mastodon o altrove? Porta qui il tuo account",
+      "from": "Il tuo account attuale",
+      "fromHint": "L'indirizzo completo, come nome@mastodon.uno. Là per ora non cambia nulla.",
+      "newName": "Il tuo nuovo nome qui",
+      "agreement": "Ho letto come funziona il trasloco, cosa si sposta e cosa no, e che qualsiasi perdita di dati è a mio rischio:",
+      "infoLink": "la pagina sul trasloco dell'account",
+      "mustRead": "Leggi prima la pagina sul trasloco"
+    },
+    "settings": {
+      "title": "Porta qui il tuo account",
+      "description": "Porta con te chi ti segue da Mastodon e dagli altri server del fediverso.",
+      "risk": "Prima di iniziare scarica tutte le esportazioni del vecchio server: qualsiasi perdita di dati è a tuo rischio. Leggi",
+      "step1": "1. Collega il vecchio account",
+      "step1Help": "Il vecchio server ti sposta solo verso un account che lo indica come suo account precedente.",
+      "linked": "Account collegati",
+      "unlink": "Rimuovi",
+      "link": "Collega",
+      "step2": "2. Avvia il trasloco sul vecchio server",
+      "step2Help": "Sul vecchio server apri la pagina per spostarti su un altro account e inserisci il nuovo indirizzo, {{address}}. Chi ti segue ti seguirà qui da solo.",
+      "openOld": "Apri la pagina del trasloco su {{domain}}",
+      "linkFirst": "Prima collega il vecchio account.",
+      "otherSoftware": "Su Mastodon la pagina è Account → Sposta su un altro account; su altri software cerca \"migrazione\" o \"sposta\" nelle impostazioni.",
+      "step3": "3. Le persone che seguivi",
+      "step3Help": "L'import dell'elenco di chi segui, dei bloccati e dei silenziati, esportati dal vecchio server, è in arrivo. Conserva quei file."
+    }
   }
 }

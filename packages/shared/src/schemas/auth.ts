@@ -11,15 +11,32 @@ export const usernameSchema = z
 
 export const passwordSchema = z.string().min(10, 'At least 10 characters').max(256);
 
-export const registerRequestSchema = z.object({
-  username: usernameSchema,
-  email: z.email().trim().max(320),
-  password: passwordSchema,
-  locale: z.enum(supportedLocales).default('en'),
-  reason: z.string().trim().max(1000).optional(),
-  inviteCode: z.string().trim().max(64).optional(),
-  agreement: z.literal(true, 'You must accept the rules'),
-});
+export const registerRequestSchema = z
+  .object({
+    username: usernameSchema,
+    email: z.email().trim().max(320),
+    password: passwordSchema,
+    locale: z.enum(supportedLocales).default('en'),
+    reason: z.string().trim().max(1000).optional(),
+    inviteCode: z.string().trim().max(64).optional(),
+    agreement: z.literal(true, 'You must accept the rules'),
+    /**
+     * Coming from another server: the old address (`name@server`), to link it once the account is
+     * open (Settings → Move). Needs `moveAgreement`: the person read the page about moving.
+     */
+    moveFrom: z
+      .string()
+      .trim()
+      .max(320)
+      .regex(/^@?[^@\s]+@[^@\s]+\.[^@\s]+$/, 'Write the full address, like name@server')
+      .transform((value) => value.replace(/^@/, ''))
+      .optional(),
+    moveAgreement: z.literal(true).optional(),
+  })
+  .refine((value) => !value.moveFrom || value.moveAgreement === true, {
+    message: 'You must read how moving works',
+    path: ['moveAgreement'],
+  });
 export type RegisterRequest = z.input<typeof registerRequestSchema>;
 
 export const loginRequestSchema = z.object({

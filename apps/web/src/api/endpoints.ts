@@ -60,6 +60,9 @@ export const endpoints = {
   removeProfileImage: (kind: 'avatar' | 'header') => api.delete<CurrentUser>(`/me/${kind}`),
   deleteAccount: (password: string) => api.post<Ok>('/me/delete', { password }),
   updateSettings: (body: UpdateSettingsRequest) => api.patch<CurrentUser>('/me/settings', body),
+  /** Replaces the former accounts linked to this one (needed to move an account here). */
+  setAliases: (accounts: string[]) =>
+    api.post<{ aliases: string[] }>('/me/migration/aliases', { accounts }),
   changePassword: (body: ChangePasswordRequest) => api.post<Ok>('/me/password', body),
   totpSetup: () => api.post<TotpSetupResponse>('/me/totp/setup'),
   totpConfirm: (code: string) => api.post<RecoveryCodesResponse>('/me/totp/confirm', { code }),

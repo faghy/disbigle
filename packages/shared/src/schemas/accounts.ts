@@ -65,6 +65,10 @@ export interface CurrentUser {
   totpEnabled: boolean;
   passkeyCount: number;
   presence: PresenceSetting;
+  /** The account given at sign-up as the one this person moves from. */
+  moveFrom: string | null;
+  /** Former accounts linked to this one (`alsoKnownAs`), as addresses. */
+  aliases: string[];
 }
 
 export interface InstanceInfo {

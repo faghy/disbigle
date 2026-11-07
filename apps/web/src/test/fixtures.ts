@@ -39,6 +39,8 @@ export const aliceUser: CurrentUser = {
   totpEnabled: false,
   passkeyCount: 0,
   presence: 'hidden',
+  moveFrom: null,
+  aliases: [],
 };
 
 export function makeStatus(overrides: Partial<Status> = {}): Status {

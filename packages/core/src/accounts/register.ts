@@ -143,6 +143,7 @@ export async function registerUser(
         locale: input.locale,
         approved,
         registrationReason: input.reason ?? null,
+        moveFrom: input.moveFrom ?? null,
       });
     });
   } catch (error) {

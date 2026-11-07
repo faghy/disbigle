@@ -42,6 +42,7 @@ import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
 import { AuthorizedAppsPage } from './pages/settings/AuthorizedApps.tsx';
 import { InvitesPage } from './pages/settings/Invites.tsx';
+import { MoveSettingsPage } from './pages/settings/MoveSettings.tsx';
 import { MutedWordsPage } from './pages/settings/MutedWords.tsx';
 import { NotificationSettingsPage } from './pages/settings/NotificationSettings.tsx';
 import { ProfileSettingsPage } from './pages/settings/ProfileSettings.tsx';
@@ -121,7 +122,13 @@ const registerRoute = createRoute({
   path: '/register',
   validateSearch: (
     search: Record<string, unknown>,
-  ): { invite?: string | undefined; redirect?: string | undefined } => ({
+  ): {
+    invite?: string | undefined;
+    redirect?: string | undefined;
+    move?: boolean | undefined;
+  } => ({
+    // `?move=1`: someone bringing an account from another server ("Bring your account").
+    move: search.move === 1 || search.move === '1' || search.move === true ? true : undefined,
     invite:
       typeof search.invite === 'string' && search.invite.trim()
         ? search.invite.trim().slice(0, 64)
@@ -181,6 +188,12 @@ const settingsNotificationsRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: '/notifications',
   component: NotificationSettingsPage,
+});
+
+const settingsMoveRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/move',
+  component: MoveSettingsPage,
 });
 
 const settingsSecurityRoute = createRoute({
@@ -452,6 +465,7 @@ export const routeTree = rootRoute.addChildren([
     settingsIndexRoute,
     settingsProfileRoute,
     settingsAccountRoute,
+    settingsMoveRoute,
     settingsSecurityRoute,
     settingsNotificationsRoute,
     settingsInvitesRoute,
