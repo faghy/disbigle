@@ -147,7 +147,8 @@ export async function countUnreadConversations(
     .from(
       ctx.db
         .select({
-          root: posts.threadRootId,
+          // Named here: the raw condition below refers to these columns.
+          root: sql<string>`${posts.threadRootId}`.as('root'),
           lastOther:
             sql<string>`max(${posts.id}::text) filter (where ${posts.actorId} <> ${viewerActorId})`.as(
               'last_other',
