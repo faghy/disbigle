@@ -149,6 +149,38 @@ export async function buildApp(options: AppOptions) {
       reply.statusCode < 400,
     ).catch(() => {});
   });
+  // NodeInfo 2.0 next to Fedify's 2.1: Mastodon serves 2.0, and some crawlers (server
+  // directories such as FediDB) only look for it. Answered before Fedify sees the request.
+  app.addHook('onRequest', async (request, reply) => {
+    const path = request.url.split('?')[0];
+    if (path !== '/.well-known/nodeinfo' && path !== '/nodeinfo/2.0') return;
+    const base = new URL(ctx.config.PUBLIC_URL).origin;
+    if (path === '/.well-known/nodeinfo') {
+      return reply.type('application/json').send({
+        links: [
+          { rel: 'http://nodeinfo.diaspora.software/ns/schema/2.0', href: `${base}/nodeinfo/2.0` },
+          { rel: 'http://nodeinfo.diaspora.software/ns/schema/2.1', href: `${base}/nodeinfo/2.1` },
+        ],
+      });
+    }
+    const full = await app.inject({ method: 'GET', url: '/nodeinfo/2.1' });
+    if (full.statusCode !== 200) return reply.status(full.statusCode).send(full.body);
+    const info = full.json() as { software?: { name: string; version: string } } & Record<
+      string,
+      unknown
+    >;
+    return reply
+      .type('application/json; profile="http://nodeinfo.diaspora.software/ns/schema/2.0#"')
+      .send({
+        ...info,
+        $schema: undefined,
+        version: '2.0',
+        software: {
+          name: info.software?.name ?? 'disbigle',
+          version: info.software?.version ?? '',
+        },
+      });
+  });
   if (options.federation) {
     await app.register(fedifyPlugin, {
       federation: options.federation,

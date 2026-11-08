@@ -152,6 +152,12 @@ describe('discovery', () => {
     };
     expect(nodeinfo.software.name).toBe('disbigle');
     expect(nodeinfo.protocols).toEqual(['activitypub', 'diaspora']);
+    // Both NodeInfo 2.0 (as Mastodon, for crawlers that only know it) and 2.1.
+    expect(links.links.map((l) => l.href.replace(a.url, ''))).toEqual([
+      '/nodeinfo/2.0',
+      '/nodeinfo/2.1',
+    ]);
+    expect((nodeinfo as unknown as { version: string }).version).toBe('2.0');
   });
 });
 
