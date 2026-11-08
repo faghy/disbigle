@@ -684,6 +684,22 @@
         }
       }
     },
+    "Bold": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Negrita"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grassetto"
+          }
+        }
+      }
+    },
     "Bookmark": {
       "localizations": {
         "es": {
@@ -712,6 +728,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Segnalibri"
+          }
+        }
+      }
+    },
+    "Bulleted list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista con viñetas"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elenco puntato"
           }
         }
       }
@@ -840,6 +872,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chiuso"
+          }
+        }
+      }
+    },
+    "Code": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice"
           }
         }
       }
@@ -1372,6 +1420,22 @@
         }
       }
     },
+    "Heading": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titolo"
+          }
+        }
+      }
+    },
     "Hidden hashtags": {
       "localizations": {
         "es": {
@@ -1484,6 +1548,22 @@
         }
       }
     },
+    "Italic": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursiva"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corsivo"
+          }
+        }
+      }
+    },
     "Label": {
       "localizations": {
         "es": {
@@ -1576,6 +1656,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mi piace e ricondivisioni"
+          }
+        }
+      }
+    },
+    "Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
           }
         }
       }
@@ -1964,6 +2060,22 @@
         }
       }
     },
+    "Nothing to preview yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nada que ver."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora niente da vedere."
+          }
+        }
+      }
+    },
     "Notifications": {
       "localizations": {
         "es": {
@@ -2008,6 +2120,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Avvisami per"
+          }
+        }
+      }
+    },
+    "Numbered list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista numerada"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elenco numerato"
           }
         }
       }
@@ -2316,6 +2444,22 @@
         }
       }
     },
+    "Preview": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima"
+          }
+        }
+      }
+    },
     "Profile": {
       "localizations": {
         "es": {
@@ -2360,6 +2504,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profilo di %@"
+          }
+        }
+      }
+    },
+    "Quote": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cita"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citazione"
           }
         }
       }
@@ -2920,6 +3080,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Codice sorgente"
+          }
+        }
+      }
+    },
+    "Strikethrough": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tachado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barrato"
           }
         }
       }
@@ -3592,6 +3768,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "post"
+          }
+        }
+      }
+    },
+    "text": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "texto"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "testo"
           }
         }
       }

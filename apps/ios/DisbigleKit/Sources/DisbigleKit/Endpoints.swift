@@ -219,6 +219,15 @@ extension Client {
       query: maxId.map { [URLQueryItem(name: "max_id", value: $0)] } ?? [])
   }
 
+  /** The HTML a post's Markdown will have once published (rendered by the server). */
+  public func previewPost(_ content: String) async throws -> String {
+    struct Preview: Decodable { let html: String }
+    let preview: Preview = try await call(
+      "POST", "api/v1/disbigle/preview",
+      body: .form([URLQueryItem(name: "content", value: content)]))
+    return preview.html
+  }
+
   /** Says the app is open; shown in chats only if you share your status. */
   public func presence(active: Bool) async throws {
     try await perform(

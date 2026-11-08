@@ -9,6 +9,9 @@ struct ComposeView: View {
   let target: ComposeTarget
 
   @State private var text = ""
+  /** Where the cursor is, for the formatting buttons. */
+  @State private var selection = NSRange(location: 0, length: 0)
+  @State private var previewing = false
   @State private var visibility: DisbigleKit.Visibility = .public
   @State private var aspectIds: Set<String> = []
   @State private var aspects: [AspectList] = []
@@ -70,14 +73,24 @@ struct ComposeView: View {
           TextField("Content warning", text: $warning)
         }
         Section {
-          ZStack(alignment: .topLeading) {
-            if text.isEmpty {
-              Text(placeholder).foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
+          FormattingBar(previewing: $previewing) { format in
+            let edit = applyFormat(
+              format, to: text, selection: selection,
+              placeholder: String(localized: "text"))
+            text = edit.text
+            selection = edit.selection
+          }
+          if previewing {
+            PostPreview(text: text)
+          } else {
+            ZStack(alignment: .topLeading) {
+              if text.isEmpty {
+                Text(placeholder).foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5)
+              }
+              MarkdownEditor(text: $text, selection: $selection, focusOnAppear: true)
+                .frame(minHeight: 160)
+                .disabled(loadingSource)
             }
-            TextEditor(text: $text)
-              .frame(minHeight: 160)
-              .focused($textFocused)
-              .disabled(loadingSource)
           }
           HStack {
             Spacer()
