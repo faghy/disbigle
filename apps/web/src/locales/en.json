@@ -871,7 +871,9 @@
       "removeDescription": {
         "silence": "Its public posts will appear in public timelines again.",
         "suspend": "Federation resumes and its accounts are no longer suspended."
-      }
+      },
+      "sharedNote": "Blocks marked IFTAS DNI come from the IFTAS \"Do Not Interact\" list and follow it every day. Removing one keeps that server open even if the list still has it.",
+      "sharedHelp": "From a shared list, updated every day"
     },
     "instance": {
       "title": "Server name",
@@ -1113,6 +1115,17 @@
       "approval": "New accounts are reviewed by a moderator.",
       "invite": "Sign-up is by invitation only.",
       "closed": "Sign-up is closed at the moment."
+    },
+    "blocked": {
+      "title": "Blocked servers",
+      "intro": "This server does not talk to these servers: their posts do not arrive here and ours do not go there, also through the diaspora* bridge. Most come from the IFTAS \"Do Not Interact\" list, servers with severe, documented harm; some names are partly hidden because they are slurs.",
+      "none": "No servers are blocked.",
+      "show_one": "Show the {{count}} blocked server",
+      "show_other": "Show the {{count}} blocked servers",
+      "severity": {
+        "suspend": "suspended",
+        "silence": "limited"
+      }
     }
   },
   "invites": {

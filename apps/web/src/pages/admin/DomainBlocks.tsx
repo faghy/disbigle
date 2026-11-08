@@ -40,6 +40,7 @@ export function DomainBlocksPage() {
       ) : (
         <p className="text-sm text-fg-muted">{t('admin.domains.adminOnly')}</p>
       )}
+      <p className="text-sm text-fg-muted">{t('admin.domains.sharedNote')}</p>
       {blocks.isPending ? (
         <LoadingState label={t('common.loading')} />
       ) : blocks.isError ? (
@@ -188,6 +189,14 @@ function DomainBlockItem({ block, canEdit }: { block: DomainBlock; canEdit: bool
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-mono font-semibold break-all">{block.domain}</h3>
         <SeverityBadge severity={block.severity} />
+        {block.source && (
+          <span
+            className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-fg-muted"
+            title={t('admin.domains.sharedHelp')}
+          >
+            {block.source === 'iftas-dni' ? 'IFTAS DNI' : block.source}
+          </span>
+        )}
         <span className="text-xs text-fg-muted">
           {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(
             new Date(block.createdAt),

@@ -871,7 +871,9 @@
       "removeDescription": {
         "silence": "I suoi post pubblici torneranno nelle timeline pubbliche.",
         "suspend": "La federazione riprende e i suoi account non sono più sospesi."
-      }
+      },
+      "sharedNote": "I blocchi con l'etichetta IFTAS DNI vengono dall'elenco IFTAS «Do Not Interact» e lo seguono ogni giorno. Rimuoverne uno lascia aperto quel server anche se l'elenco lo contiene ancora.",
+      "sharedHelp": "Da un elenco condiviso, aggiornato ogni giorno"
     },
     "instance": {
       "title": "Nome del server",
@@ -1113,6 +1115,17 @@
       "approval": "I nuovi account vengono esaminati da un moderatore.",
       "invite": "Ci si iscrive solo su invito.",
       "closed": "Le iscrizioni sono chiuse al momento."
+    },
+    "blocked": {
+      "title": "Server bloccati",
+      "intro": "Questo server non dialoga con questi server: i loro post non arrivano qui e i nostri non vanno là, nemmeno tramite il ponte diaspora*. La maggior parte viene dall'elenco IFTAS «Do Not Interact», server con danni gravi e documentati; alcuni nomi sono in parte nascosti perché sono insulti.",
+      "none": "Nessun server è bloccato.",
+      "show_one": "Mostra il server bloccato",
+      "show_other": "Mostra i {{count}} server bloccati",
+      "severity": {
+        "suspend": "sospeso",
+        "silence": "limitato"
+      }
     }
   },
   "invites": {

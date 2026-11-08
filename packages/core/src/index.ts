@@ -25,6 +25,7 @@ export * from './events.ts';
 export * from './federation/bridge.ts';
 export * from './federation/follower-backfill.ts';
 export * from './federation/remote.ts';
+export * from './federation/shared-blocklist.ts';
 export * from './mail.ts';
 export * from './media/storage.ts';
 export * from './media/upload.ts';

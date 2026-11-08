@@ -6,6 +6,7 @@ import {
   findLocalActorByUsername,
   getAccountWithCounts,
   getInstanceSettings,
+  listPublicDomainBlocks,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
   translationEnabled,
@@ -18,6 +19,9 @@ import type { FastifyInstance } from 'fastify';
 export const VERSION = '0.1.0';
 
 export async function publicRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
+  /** The servers this one blocks, and why: public, for transparency (About page). */
+  app.get('/instance/domain_blocks', async () => listPublicDomainBlocks(ctx));
+
   app.get('/instance', async (): Promise<InstanceInfo> => {
     const [anyUser] = await ctx.db.select({ id: schema.users.id }).from(schema.users).limit(1);
     const settings = await getInstanceSettings(ctx);

@@ -890,7 +890,9 @@
       "removeDescription": {
         "silence": "Sus publicaciones públicas volverán a aparecer en las cronologías públicas.",
         "suspend": "Se reanuda la federación y sus cuentas dejan de estar suspendidas."
-      }
+      },
+      "sharedNote": "Los bloqueos marcados IFTAS DNI vienen de la lista IFTAS «Do Not Interact» y la siguen cada día. Quitar uno deja abierto ese servidor aunque la lista lo siga teniendo.",
+      "sharedHelp": "De una lista compartida, actualizada cada día"
     },
     "instance": {
       "title": "Nombre del servidor",
@@ -1136,6 +1138,17 @@
       "approval": "Un moderador revisa las cuentas nuevas.",
       "invite": "El registro es solo con invitación.",
       "closed": "El registro está cerrado en este momento."
+    },
+    "blocked": {
+      "title": "Servidores bloqueados",
+      "intro": "Este servidor no se comunica con estos servidores: sus publicaciones no llegan aquí y las nuestras no van allí, tampoco a través del puente de diaspora*. La mayoría vienen de la lista IFTAS «Do Not Interact», servidores con daños graves y documentados; algunos nombres están en parte ocultos porque son insultos.",
+      "none": "No hay servidores bloqueados.",
+      "show_one": "Mostrar el servidor bloqueado",
+      "show_other": "Mostrar los {{count}} servidores bloqueados",
+      "severity": {
+        "suspend": "suspendido",
+        "silence": "limitado"
+      }
     }
   },
   "invites": {

@@ -5,6 +5,7 @@ import {
   getVapidKeys,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
+  obfuscateDomain,
   translationEnabled,
   translationLanguages,
 } from '@disbigle/core';
@@ -163,7 +164,20 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
   app.get('/api/v1/instance/rules', async () => (await common()).rules);
   app.get('/api/v1/instance/peers', async () => []);
   app.get('/api/v1/instance/activity', async () => []);
-  app.get('/api/v1/instance/domain_blocks', async () => []);
+  // Public, as on Mastodon: domain (partly hidden when asked), a SHA-256 of the real one, why.
+  app.get('/api/v1/instance/domain_blocks', async () => {
+    const { createHash } = await import('node:crypto');
+    const blocks = await ctx.db
+      .select()
+      .from(schema.domainBlocks)
+      .orderBy(schema.domainBlocks.domain);
+    return blocks.map((b) => ({
+      domain: b.obfuscate ? obfuscateDomain(b.domain) : b.domain,
+      digest: createHash('sha256').update(b.domain).digest('hex'),
+      severity: b.severity,
+      comment: b.publicComment,
+    }));
+  });
   app.get('/api/v1/instance/translation_languages', async () => {
     const languages = await translationLanguages(ctx).catch(() => new Map<string, Set<string>>());
     return Object.fromEntries([...languages].map(([source, targets]) => [source, [...targets]]));

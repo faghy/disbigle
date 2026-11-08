@@ -1,5 +1,8 @@
+import type { PublicDomainBlock } from '@disbigle/shared';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { api } from '../api/client.ts';
 import { errorMessage } from '../api/errors.ts';
 import { useCurrentUser, useInstance } from '../api/queries.ts';
 import { InstanceRules } from '../components/InstanceRules.tsx';
@@ -46,6 +49,8 @@ export function AboutPage() {
         )}
       </Card>
 
+      <BlockedServers />
+
       <Card aria-labelledby="about-contact" className="space-y-3">
         <h2 id="about-contact" className="font-semibold">
           {t('about.contact')}
@@ -78,5 +83,50 @@ export function AboutPage() {
         — {t('about.software')} · {t('about.version', { version: info.version })}
       </p>
     </div>
+  );
+}
+
+/** Servers this one does not talk to, and why: public, for transparency. */
+function BlockedServers() {
+  const { t } = useTranslation();
+  const blocks = useQuery({
+    queryKey: ['instance', 'domain-blocks'],
+    queryFn: () => api.get<PublicDomainBlock[]>('/instance/domain_blocks'),
+  });
+  const list = blocks.data ?? [];
+  return (
+    <Card aria-labelledby="about-blocked">
+      <h2 id="about-blocked" className="font-semibold">
+        {t('about.blocked.title')}
+      </h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('about.blocked.intro')}</p>
+      {blocks.isPending ? (
+        <LoadingState label={t('common.loading')} />
+      ) : list.length === 0 ? (
+        <p className="mt-2 text-sm text-fg-muted">{t('about.blocked.none')}</p>
+      ) : (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            {t('about.blocked.show', { count: list.length })}
+          </summary>
+          <ul className="mt-2 divide-y divide-border text-sm">
+            {list.map((block) => (
+              <li
+                key={block.domain}
+                className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5"
+              >
+                <span className="font-mono break-all">{block.domain}</span>
+                <span className="text-xs text-fg-muted">
+                  {t(`about.blocked.severity.${block.severity}`)}
+                </span>
+                {block.comment && (
+                  <span className="w-full text-xs text-fg-muted">{block.comment}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </Card>
   );
 }

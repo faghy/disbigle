@@ -768,10 +768,20 @@ export const domainBlocks = pgTable(
     severity: domainBlockSeverityEnum('severity').notNull(),
     publicComment: text('public_comment').notNull().default(''),
     privateComment: text('private_comment').notNull().default(''),
+    /** A shared list it came from (`iftas-dni`), kept in step by the daily update; null: by hand. */
+    source: text('source'),
+    /** Shown partly hidden in the public list (as the list asks, for names that are slurs). */
+    obfuscate: boolean('obfuscate').notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('domain_blocks_domain_idx').on(t.domain)],
 );
+
+/** Servers of a shared list that the admins chose to keep open: the daily update skips them. */
+export const domainBlockExceptions = pgTable('domain_block_exceptions', {
+  domain: text('domain').primaryKey(),
+  createdAt: createdAt(),
+});
 
 /** User reports about accounts and posts. */
 export const reports = pgTable(

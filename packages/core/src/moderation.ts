@@ -14,6 +14,7 @@ const {
   follows,
   followRequests,
   domainBlocks,
+  domainBlockExceptions,
   reports,
   adminActionLogs,
   posts,
@@ -23,7 +24,8 @@ export type ReportCategory = 'spam' | 'illegal' | 'harassment' | 'violation' | '
 
 export async function logAdminAction(
   ctx: CoreContext,
-  userId: string,
+  /** Null for the server itself (the daily update of a shared blocklist). */
+  userId: string | null,
   action: string,
   target: { type: string; id: string },
   details: Record<string, unknown> = {},
@@ -230,7 +232,32 @@ export async function listDomainBlocks(ctx: CoreContext) {
     severity: b.severity,
     publicComment: b.publicComment,
     privateComment: b.privateComment,
+    source: b.source,
+    obfuscate: b.obfuscate,
     createdAt: b.createdAt.toISOString(),
+  }));
+}
+
+/** `ni*****ew.digital`: a domain with its name partly hidden (the TLD stays). */
+export function obfuscateDomain(domain: string): string {
+  const parts = domain.split('.');
+  return parts
+    .map((part, index) =>
+      index === parts.length - 1 || part.length <= 2
+        ? part
+        : `${part[0]}${'*'.repeat(part.length - 2)}${part[part.length - 1]}`,
+    )
+    .join('.');
+}
+
+/** The servers this one blocks, for everyone to see (as Mastodon's about page). */
+export async function listPublicDomainBlocks(ctx: CoreContext) {
+  const rows = await ctx.db.select().from(domainBlocks).orderBy(domainBlocks.domain);
+  return rows.map((b) => ({
+    domain: b.obfuscate ? obfuscateDomain(b.domain) : b.domain,
+    severity: b.severity,
+    comment: b.publicComment,
+    source: b.source,
   }));
 }
 
@@ -240,12 +267,15 @@ export async function listDomainBlocks(ctx: CoreContext) {
  */
 export async function blockDomain(
   ctx: CoreContext,
-  moderatorUserId: string,
+  moderatorUserId: string | null,
   input: {
     domain: string;
     severity: 'silence' | 'suspend';
     publicComment?: string;
     privateComment?: string;
+    /** Set by the update of a shared list; a block made by hand has none. */
+    source?: string | null;
+    obfuscate?: boolean;
   },
 ) {
   const domain = normalizeDomain(input.domain);
@@ -262,6 +292,8 @@ export async function blockDomain(
       severity: input.severity,
       publicComment: input.publicComment ?? '',
       privateComment: input.privateComment ?? '',
+      source: input.source ?? null,
+      obfuscate: input.obfuscate ?? false,
     })
     .onConflictDoUpdate({
       target: domainBlocks.domain,
@@ -269,8 +301,13 @@ export async function blockDomain(
         severity: input.severity,
         publicComment: input.publicComment ?? '',
         privateComment: input.privateComment ?? '',
+        source: input.source ?? null,
+        obfuscate: input.obfuscate ?? false,
       },
     });
+  // Blocked by hand again: no longer an exception to a shared list.
+  if (!input.source)
+    await ctx.db.delete(domainBlockExceptions).where(eq(domainBlockExceptions.domain, domain));
   if (input.severity === 'suspend') {
     const remote = ctx.db
       .select({ id: actors.id })
@@ -303,13 +340,21 @@ export async function blockDomain(
   );
 }
 
-export async function unblockDomain(ctx: CoreContext, moderatorUserId: string, domain: string) {
+export async function unblockDomain(
+  ctx: CoreContext,
+  moderatorUserId: string | null,
+  domain: string,
+  options: { keepException?: boolean } = {},
+) {
   const normalized = normalizeDomain(domain);
   const [removed] = await ctx.db
     .delete(domainBlocks)
     .where(eq(domainBlocks.domain, normalized))
     .returning();
   if (!removed) throw new DomainError('not_found', 'Domain block not found');
+  // An admin opening a server of a shared list: the daily update must not block it again.
+  if (removed.source && moderatorUserId && options.keepException !== false)
+    await ctx.db.insert(domainBlockExceptions).values({ domain: normalized }).onConflictDoNothing();
   if (removed.severity === 'suspend') {
     await ctx.db
       .update(actors)

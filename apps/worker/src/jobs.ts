@@ -2,14 +2,17 @@ import {
   type CoreContext,
   cleanupUnattachedMedia,
   DELETION_GRACE_MS,
+  IFTAS_DNI,
   listUncachedRemoteMedia,
   listUncachedRemoteProfileImages,
   MAX_IMAGE_BYTES,
   type MediaStorage,
   notifyEndedPolls,
+  parseBlocklistCsv,
   purgeDeletedAccounts,
   storeCachedProfileImage,
   storeCachedRemoteImage,
+  syncSharedBlocklist,
 } from '@disbigle/core';
 import { schema } from '@disbigle/db';
 import { lt } from 'drizzle-orm';
@@ -78,6 +81,23 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
           }
         }
         return `cached ${cached} remote images (${pending.length} attachments checked)`;
+      },
+    },
+    {
+      // The IFTAS "Do Not Interact" list, kept in step every day (SHARED_BLOCKLIST=false: off).
+      name: 'shared-blocklist',
+      every: 24 * HOUR,
+      run: async () => {
+        if (process.env.SHARED_BLOCKLIST === 'false') return 'disabled';
+        const { data } = await safeFetch(IFTAS_DNI.url, {
+          maxBytes: 2 * 1024 * 1024,
+          headers: { 'user-agent': 'Disbigle (+https://disbigle.com)' },
+        });
+        const entries = parseBlocklistCsv(data.toString('utf8'));
+        // A broken download must not lift every block of the list.
+        if (entries.length < 10) return `ignored: only ${entries.length} entries`;
+        const { added, removed } = await syncSharedBlocklist(ctx, IFTAS_DNI.source, entries);
+        return `IFTAS DNI: ${entries.length} listed, ${added.length} added, ${removed.length} removed`;
       },
     },
     {

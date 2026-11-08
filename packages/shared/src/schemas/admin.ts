@@ -32,7 +32,19 @@ export interface DomainBlock {
   severity: 'silence' | 'suspend';
   publicComment: string;
   privateComment: string;
+  /** Shared list it comes from (`iftas-dni`), updated every day; null: blocked by hand. */
+  source: string | null;
+  obfuscate: boolean;
   createdAt: string;
+}
+
+/** A blocked server as everyone sees it (About page). */
+export interface PublicDomainBlock {
+  /** Partly hidden (`ni*****ew.digital`) when the list asks. */
+  domain: string;
+  severity: 'silence' | 'suspend';
+  comment: string;
+  source: string | null;
 }
 
 export interface PendingUser {
