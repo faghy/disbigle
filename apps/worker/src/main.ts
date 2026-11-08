@@ -17,6 +17,7 @@ import {
   DiasporaBridge,
   DiasporaPublisher,
   RedisJobQueue,
+  refreshBridgedProfiles,
   startDiasporaQueue,
 } from '@disbigle/diaspora-bridge';
 import { MastodonPushPublisher } from '@disbigle/mastodon-api';
@@ -75,7 +76,15 @@ console.log('worker: federation queue started');
 void startDiasporaQueue(diaspora, { signal: abort.signal, concurrency: 8 });
 console.log('worker: diaspora queue started');
 
-const jobs = scheduledJobs({ ...ctx, storage: new LocalMediaStorage(config.MEDIA_DIR) });
+const jobs = [
+  ...scheduledJobs({ ...ctx, storage: new LocalMediaStorage(config.MEDIA_DIR) }),
+  {
+    // Pods that know a bridged person only as `user_at_server@…` get their real name and address.
+    name: 'bridged-profiles',
+    every: 60 * 60 * 1000,
+    run: async () => `sent ${await refreshBridgedProfiles(diaspora)} bridged profiles`,
+  },
+];
 const timers = jobs.map((job) =>
   setInterval(
     async () => {

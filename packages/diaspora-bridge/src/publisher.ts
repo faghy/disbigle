@@ -24,7 +24,7 @@ import {
   signAccountMigration,
   signRelayable,
 } from '@disbigle/diaspora';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import {
   type ActorRow,
   actorById,
@@ -386,38 +386,12 @@ export class DiasporaPublisher implements EventBus {
     return `${bridge.username}@${this.ctx.config.LOCAL_DOMAIN}`.toLowerCase();
   }
 
-  /**
-   * Sends (at most once a week) the profile of a bridge identity to the people of a thread: the
-   * real address in the name, and a description pointing to the real account, so diaspora*
-   * readers know who is behind `user_at_server@…`.
-   */
-  private async sendBridgedProfile(
+  private sendBridgedProfile(
     bridge: Awaited<ReturnType<typeof ensureBridgeIdentity>>,
     author: ActorRow,
     recipients: Awaited<ReturnType<typeof recipientsFor>>,
   ) {
-    const ctx = this.ctx;
-    const key = `bridge-profile:${bridge.id}`;
-    if (await ctx.kv.get(key)) return;
-    await ctx.kv.set(key, '1', 7 * 24 * 60 * 60);
-    const picture = author.avatarUrl ?? author.avatarRemoteUrl;
-    const avatar = picture ? new URL(picture, ctx.config.PUBLIC_URL).href : null;
-    const origin = bridgedOrigin(author);
-    const profile: Profile = {
-      type: 'Profile',
-      author: this.bridgeId(bridge),
-      ...bridgedNames(author),
-      ...(avatar ? { imageUrl: avatar, imageUrlMedium: avatar, imageUrlSmall: avatar } : {}),
-      bio: `${origin} — fediverse account brought to diaspora* by the Disbigle bridge (${ctx.config.LOCAL_DOMAIN}). Real profile: ${author.apUrl ?? author.apUri ?? origin}`,
-      searchable: false,
-      public: true,
-    };
-    await sendToRecipients(
-      this.bridge,
-      serializeEntity(profile),
-      { diasporaId: this.bridgeId(bridge), privateKey: bridge.privateKeyPem },
-      recipients,
-    );
+    return sendBridgedProfile(this.bridge, bridge, author, recipients);
   }
 
   /**
@@ -789,4 +763,79 @@ export class DiasporaPublisher implements EventBus {
     );
     await sendToRecipients(this.bridge, serializeEntity(profile), signer, recipients);
   }
+}
+
+/**
+ * Sends (at most once a week) the profile of a bridge identity to the people of a thread: the
+ * real address in the name, and a description pointing to the real account, so diaspora*
+ * readers know who is behind `user_at_server@…`.
+ */
+export async function sendBridgedProfile(
+  diaspora: DiasporaBridge,
+  bridge: Awaited<ReturnType<typeof ensureBridgeIdentity>>,
+  author: ActorRow,
+  recipients: Awaited<ReturnType<typeof recipientsFor>>,
+): Promise<boolean> {
+  const ctx = diaspora.ctx;
+  const key = `bridge-profile:v2:${bridge.id}`;
+  if (await ctx.kv.get(key)) return false;
+  await ctx.kv.set(key, '1', 7 * 24 * 60 * 60);
+  const bridgeId = `${bridge.username}@${ctx.config.LOCAL_DOMAIN}`.toLowerCase();
+  const picture = author.avatarUrl ?? author.avatarRemoteUrl;
+  const avatar = picture ? new URL(picture, ctx.config.PUBLIC_URL).href : null;
+  const origin = bridgedOrigin(author);
+  const profile: Profile = {
+    type: 'Profile',
+    author: bridgeId,
+    ...bridgedNames(author),
+    ...(avatar ? { imageUrl: avatar, imageUrlMedium: avatar, imageUrlSmall: avatar } : {}),
+    bio: `${origin} — fediverse account brought to diaspora* by the Disbigle bridge (${ctx.config.LOCAL_DOMAIN}). Real profile: ${author.apUrl ?? author.apUri ?? origin}`,
+    searchable: false,
+    public: true,
+  };
+  await sendToRecipients(
+    diaspora,
+    serializeEntity(profile),
+    { diasporaId: bridgeId, privateKey: bridge.privateKeyPem },
+    recipients,
+  );
+  return true;
+}
+
+/**
+ * Sends the profile of the bridge identities that already commented or liked through the
+ * bridge to the people of their latest thread, so pods that know them only by
+ * `user_at_server@…` learn who they are without waiting for their next comment.
+ * Returns how many profiles were sent.
+ */
+export async function refreshBridgedProfiles(
+  diaspora: DiasporaBridge,
+  limit = 50,
+): Promise<number> {
+  const ctx = diaspora.ctx;
+  const identities = await ctx.db
+    .select({ bridge: schema.bridgeIdentities, actor: schema.actors })
+    .from(schema.bridgeIdentities)
+    .innerJoin(schema.actors, eq(schema.actors.id, schema.bridgeIdentities.actorId));
+  let sent = 0;
+  for (const { bridge, actor } of identities) {
+    if (sent >= limit) break;
+    if (actor.suspendedAt) continue;
+    const bridgeId = `${bridge.username}@${ctx.config.LOCAL_DOMAIN}`.toLowerCase();
+    const [latest] = await ctx.db
+      .select({ parentGuid: schema.diasporaRelayables.parentGuid })
+      .from(schema.diasporaRelayables)
+      .where(eq(schema.diasporaRelayables.author, bridgeId))
+      .orderBy(desc(schema.diasporaRelayables.createdAt))
+      .limit(1);
+    if (!latest) continue;
+    const [root] = await ctx.db
+      .select()
+      .from(schema.posts)
+      .where(eq(schema.posts.diasporaGuid, latest.parentGuid));
+    if (!root?.local) continue;
+    if (await sendBridgedProfile(diaspora, bridge, actor, await recipientsFor(ctx, root)))
+      sent += 1;
+  }
+  return sent;
 }
