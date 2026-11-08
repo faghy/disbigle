@@ -182,6 +182,7 @@ const statusByCode: Record<ErrorCode, number> = {
   registrations_closed: 403,
   invalid_invite: 422,
   account_pending_approval: 403,
+  email_not_verified: 403,
   account_disabled: 403,
   bot_check_failed: 400,
   translation_unavailable: 422,

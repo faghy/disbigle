@@ -147,6 +147,8 @@ export const users = pgTable(
     /** The account this person said they come from at sign-up, to link it later (Move). */
     moveFrom: text('move_from'),
     approved: boolean('approved').notNull().default(true),
+    /** When the person confirmed the email address (null: not yet; then they cannot sign in). */
+    emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
     registrationReason: text('registration_reason'),
     totpSecret: text('totp_secret'),
     totpEnabledAt: timestamp('totp_enabled_at', { withTimezone: true }),

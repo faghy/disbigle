@@ -1,3 +1,4 @@
+import { emailVerificationRequired } from '@disbigle/config';
 import { schema, uuidv7 } from '@disbigle/db';
 import { type RegisterRequest, registerRequestSchema } from '@disbigle/shared';
 import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
@@ -8,6 +9,7 @@ import { diasporaGuid } from '../crypto/tokens.ts';
 import { DomainError } from '../errors.ts';
 import { getInstanceSettings } from '../settings.ts';
 import { createDefaultAspects } from '../social/aspects.ts';
+import { isDisposableEmail } from './disposable.ts';
 import { localActorUrls } from './urls.ts';
 import { welcomeNewAccount } from './welcome.ts';
 
@@ -50,6 +52,8 @@ export interface RegisteredUser {
   userId: string;
   actorId: string;
   approved: boolean;
+  /** False: the person must open the link emailed to them before signing in. */
+  verified: boolean;
 }
 
 export async function registerUser(
@@ -58,6 +62,10 @@ export async function registerUser(
 ): Promise<RegisteredUser> {
   const input = registerRequestSchema.parse(request);
   const { db, config } = ctx;
+  if (isDisposableEmail(input.email)) {
+    const message = 'Disposable email addresses are not accepted: use one you keep';
+    throw new DomainError('validation_failed', message, [{ path: 'email', message }]);
+  }
   const username = input.username;
 
   const [{ count: userCount } = { count: 0 }] = await db
@@ -97,6 +105,8 @@ export async function registerUser(
   const actorId = uuidv7();
   const userId = uuidv7();
   const approved = isFirstUser || mode !== 'approval';
+  // The first account (the admin) needs no confirmation: there may be no mail yet.
+  const verified = isFirstUser || !emailVerificationRequired(config);
 
   try {
     await db.transaction(async (tx) => {
@@ -142,6 +152,7 @@ export async function registerUser(
         role: isFirstUser ? 'admin' : 'user',
         locale: input.locale,
         approved,
+        emailVerifiedAt: verified ? new Date() : null,
         registrationReason: input.reason ?? null,
         moveFrom: input.moveFrom ?? null,
       });
@@ -152,7 +163,7 @@ export async function registerUser(
   await createDefaultAspects(ctx, actorId, input.locale);
   if (approved && !isFirstUser) await welcomeNewAccount(ctx, actorId);
 
-  return { userId, actorId, approved };
+  return { userId, actorId, approved, verified };
 }
 
 /** Turns a unique-constraint race into the same error the pre-checks would have raised. */

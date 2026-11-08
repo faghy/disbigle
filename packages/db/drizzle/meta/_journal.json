@@ -218,6 +218,13 @@
       "when": 1794093391212,
       "tag": "0030_account_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794125160074,
+      "tag": "0031_email_verification",
+      "breakpoints": true
     }
   ]
 }

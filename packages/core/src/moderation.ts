@@ -49,6 +49,8 @@ export async function listPendingUsers(ctx: CoreContext) {
   return rows.map(({ user, actor }) => ({
     userId: user.id,
     email: user.email,
+    emailVerified: user.emailVerifiedAt !== null,
+    moveFrom: user.moveFrom ?? null,
     reason: user.registrationReason ?? '',
     createdAt: user.createdAt.toISOString(),
     account: serializeAccount(actor),

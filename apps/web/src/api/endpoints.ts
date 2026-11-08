@@ -24,7 +24,10 @@ import { api } from './client.ts';
 
 type Ok = { status: 'ok' };
 
-export type RegisterResponse = { status: 'ok'; user: CurrentUser } | { status: 'pending_approval' };
+export type RegisterResponse =
+  | { status: 'ok'; user: CurrentUser }
+  | { status: 'pending_approval' }
+  | { status: 'pending_verification'; approval: boolean };
 
 export interface PasskeyAuthOptions {
   challengeId: string;
@@ -46,6 +49,10 @@ export const endpoints = {
   mfa: (code: string) => api.post<Ok>('/auth/mfa', { code }),
   logout: () => api.post<Ok>('/auth/logout'),
   forgotPassword: (email: string) => api.post<Ok>('/auth/password/forgot', { email }),
+  verifyEmail: (token: string) =>
+    api.post<{ status: 'ok' | 'pending_approval' }>('/auth/email/verify', { token }),
+  resendVerification: (login: string) =>
+    api.post<{ status: 'ok' }>('/auth/email/resend', { login }),
   resetPassword: (token: string, password: string) =>
     api.post<Ok>('/auth/password/reset', { token, password }),
   passkeyAuthOptions: () => api.post<PasskeyAuthOptions>('/auth/passkey/options'),

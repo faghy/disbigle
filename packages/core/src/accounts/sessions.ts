@@ -78,10 +78,33 @@ export async function createSession(
 }
 
 /** Password login. Returns an active session, or a pending one when a second factor is required. */
+/** Wrong passwords allowed on one account before it slows down. */
+const FREE_FAILURES = 5;
+const FAILURE_WINDOW_S = 24 * 60 * 60;
+const MAX_LOCK_MS = 30 * 60_000;
+
+/**
+ * Counts a wrong password. From the 5th in a day, each one locks password sign-in for a while
+ * (1, 2, 4… minutes, at most 30); the owner is told once, at the 5th.
+ */
+async function recordFailedLogin(
+  ctx: CoreContext,
+  userId: string,
+  onLockout?: (userId: string) => Promise<void>,
+): Promise<void> {
+  const failures = Number((await ctx.kv.get(`login-fails:${userId}`)) ?? 0) + 1;
+  await ctx.kv.set(`login-fails:${userId}`, String(failures), FAILURE_WINDOW_S);
+  if (failures < FREE_FAILURES) return;
+  const lockMs = Math.min(60_000 * 2 ** (failures - FREE_FAILURES), MAX_LOCK_MS);
+  await ctx.kv.set(`login-lock:${userId}`, String(Date.now() + lockMs), Math.ceil(lockMs / 1000));
+  if (failures === FREE_FAILURES && onLockout) await onLockout(userId).catch(() => {});
+}
+
 export async function login(
   ctx: CoreContext,
   credentials: { login: string; password: string },
   client: ClientInfo = {},
+  options: { onLockout?: (userId: string) => Promise<void> } = {},
 ): Promise<LoginResult> {
   const row = await findUserByLogin(ctx, credentials.login);
   if (!row) {
@@ -89,9 +112,21 @@ export async function login(
     throw new DomainError('invalid_credentials', 'Invalid login or password');
   }
   const { user, actor } = row;
+  // Wrong passwords on one account slow it down, whatever addresses they come from.
+  const lockKey = `login-lock:${user.id}`;
+  const lockedUntil = Number((await ctx.kv.get(lockKey)) ?? 0);
+  if (lockedUntil > Date.now()) {
+    const minutes = Math.max(1, Math.ceil((lockedUntil - Date.now()) / 60_000));
+    throw new DomainError(
+      'too_many_attempts',
+      `Too many wrong passwords for this account: try again in ${minutes} min, or sign in with a passkey`,
+    );
+  }
   if (!(await verifyPassword(user.passwordHash, credentials.password))) {
+    await recordFailedLogin(ctx, user.id, options.onLockout);
     throw new DomainError('invalid_credentials', 'Invalid login or password');
   }
+  await ctx.kv.del(`login-fails:${user.id}`);
   if (passwordNeedsRehash(user.passwordHash)) {
     // Imported (e.g. diaspora bcrypt) hashes are upgraded to Argon2id on first sign-in.
     await ctx.db
@@ -119,11 +154,22 @@ export async function login(
 }
 
 export function assertCanSignIn(
-  user: { disabledAt: Date | null; approved: boolean; deletionRequestedAt: Date | null },
+  user: {
+    disabledAt: Date | null;
+    approved: boolean;
+    deletionRequestedAt: Date | null;
+    emailVerifiedAt?: Date | null | undefined;
+  },
   actor: { suspendedAt: Date | null },
 ): void {
   if (user.disabledAt || user.deletionRequestedAt || actor.suspendedAt) {
     throw new DomainError('account_disabled', 'This account has been disabled');
+  }
+  if (user.emailVerifiedAt === null) {
+    throw new DomainError(
+      'email_not_verified',
+      'Confirm your email address first: open the link we sent you',
+    );
   }
   if (!user.approved) {
     throw new DomainError('account_pending_approval', 'This account is waiting for approval');

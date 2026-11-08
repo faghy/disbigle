@@ -83,8 +83,16 @@ function PendingItem({ item, onDone }: { item: PendingUser; onDone: (message: st
         </time>
       </div>
       <p className="px-2 text-sm text-fg-muted">
-        {t('admin.pending.email')}: <span className="text-fg">{item.email}</span>
+        {t('admin.pending.email')}: <span className="text-fg">{item.email}</span>{' '}
+        <span className={item.emailVerified ? 'text-success' : 'text-danger'}>
+          ({item.emailVerified ? t('admin.pending.verified') : t('admin.pending.notVerified')})
+        </span>
       </p>
+      {item.moveFrom && (
+        <p className="px-2 text-sm text-fg-muted">
+          {t('admin.pending.moveFrom')}: <span className="text-fg">{item.moveFrom}</span>
+        </p>
+      )}
       <figure className="mx-2 rounded-xl border border-border bg-surface-muted px-4 py-3">
         <figcaption className="text-xs font-semibold tracking-wide text-fg-muted uppercase">
           {t('admin.pending.reason')}

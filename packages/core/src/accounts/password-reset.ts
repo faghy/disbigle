@@ -69,3 +69,36 @@ export async function confirmPasswordReset(
   await revokeOtherSessions(ctx, userId);
   return userId;
 }
+
+const warningTexts = {
+  en: {
+    subject: 'Someone is trying your password',
+    body: (domain: string, link: string) =>
+      `Several wrong passwords were just tried on your account on ${domain}, so signing in with a password is paused for a few minutes.\n\nIf it was you, wait a little and try again. If not, your account is safe as long as your password is strong; you can change it, and turn on two-step sign-in or a passkey, here:\n${link}`,
+  },
+  it: {
+    subject: 'Qualcuno sta provando la tua password',
+    body: (domain: string, link: string) =>
+      `Sul tuo account di ${domain} sono state appena provate diverse password sbagliate, quindi l'accesso con password è sospeso per qualche minuto.\n\nSe eri tu, aspetta un po' e riprova. Se no, l'account è al sicuro finché la password è robusta; puoi cambiarla, e attivare l'accesso in due passaggi o una passkey, qui:\n${link}`,
+  },
+  es: {
+    subject: 'Alguien está probando tu contraseña',
+    body: (domain: string, link: string) =>
+      `Se acaban de probar varias contraseñas incorrectas en tu cuenta de ${domain}, así que el inicio de sesión con contraseña queda en pausa unos minutos.\n\nSi has sido tú, espera un poco y vuelve a intentarlo. Si no, tu cuenta está a salvo mientras tu contraseña sea robusta; puedes cambiarla y activar el inicio en dos pasos o una passkey aquí:\n${link}`,
+  },
+} as const;
+
+/** Tells the owner that wrong passwords paused password sign-in on their account. */
+export async function sendLoginWarning(
+  ctx: CoreContext & { mailer: Mailer },
+  userId: string,
+): Promise<void> {
+  const [user] = await ctx.db.select().from(schema.users).where(eq(schema.users.id, userId));
+  if (!user) return;
+  const t = warningTexts[user.locale as keyof typeof warningTexts] ?? warningTexts.en;
+  await ctx.mailer.send({
+    to: user.email,
+    subject: t.subject,
+    text: t.body(ctx.config.LOCAL_DOMAIN, `${ctx.config.PUBLIC_URL}/settings/security`),
+  });
+}

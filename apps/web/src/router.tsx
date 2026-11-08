@@ -55,6 +55,7 @@ import {
   LocalTimelinePage,
   TagTimelinePage,
 } from './pages/Timelines.tsx';
+import { VerifyEmailPage } from './pages/VerifyEmail.tsx';
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -448,6 +449,15 @@ const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify-email',
+  validateSearch: (search: Record<string, unknown>): { token?: string | undefined } => ({
+    token: typeof search.token === 'string' ? search.token.slice(0, 200) : undefined,
+  }),
+  component: VerifyEmailPage,
+});
+
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/reset-password',
@@ -492,6 +502,7 @@ export const routeTree = rootRoute.addChildren([
   messagesRoute,
   conversationRoute,
   forgotPasswordRoute,
+  verifyEmailRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
     adminIndexRoute,

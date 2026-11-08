@@ -8,7 +8,7 @@ import { z } from 'zod';
  * back with the registration. A hidden "website" field catches form-filling robots, and a
  * challenge answered too fast (or twice, or too late) is refused.
  */
-export const POW_BITS = 16;
+export const POW_BITS = 18;
 const MIN_AGE_MS = 3_000;
 const MAX_AGE_MS = 2 * 60 * 60 * 1000;
 

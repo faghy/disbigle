@@ -38,6 +38,10 @@ export interface DomainBlock {
 export interface PendingUser {
   userId: string;
   email: string;
+  /** The person opened the confirmation link (always true where it is not required). */
+  emailVerified: boolean;
+  /** The account they said they move from, if any. */
+  moveFrom: string | null;
   reason: string;
   createdAt: string;
   account: Account;

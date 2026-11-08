@@ -17,6 +17,7 @@ export const errorCodes = [
   'registrations_closed',
   'invalid_invite',
   'account_pending_approval',
+  'email_not_verified',
   'account_disabled',
   'bot_check_failed',
   'translation_unavailable',

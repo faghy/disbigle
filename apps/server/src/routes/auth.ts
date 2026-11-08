@@ -2,6 +2,7 @@ import {
   type AuthenticationResponseJSON,
   beginPasskeyAuthentication,
   type CoreContext,
+  confirmEmail,
   confirmPasswordReset,
   finishPasskeyAuthentication,
   getCurrentUser,
@@ -9,7 +10,10 @@ import {
   type Mailer,
   registerUser,
   requestPasswordReset,
+  resendEmailVerification,
   revokeSession,
+  sendEmailVerification,
+  sendLoginWarning,
   verifySecondFactor,
 } from '@disbigle/core';
 import {
@@ -67,6 +71,10 @@ export async function authRoutes(
       : null;
     const result = await registerUser(ctx, input);
     await consumeChallenge?.();
+    if (!result.verified) {
+      await sendEmailVerification({ ...ctx, mailer }, result.userId);
+      return reply.status(202).send({ status: 'pending_verification', approval: !result.approved });
+    }
     if (!result.approved) return reply.status(202).send({ status: 'pending_approval' });
     const signedIn = await login(
       ctx,
@@ -79,10 +87,31 @@ export async function authRoutes(
 
   app.post('/login', strict, async (request, reply) => {
     const input = parse(loginRequestSchema, request.body);
-    const result = await login(ctx, input, clientInfo(request));
+    const result = await login(ctx, input, clientInfo(request), {
+      onLockout: (userId) => sendLoginWarning({ ...ctx, mailer }, userId),
+    });
     setSessionCookie(reply, ctx, result.token, result.expiresAt);
     return { status: result.status, methods: result.methods };
   });
+
+  // The link emailed at sign-up, and sending it again.
+  app.post('/email/verify', strict, async (request) => {
+    const { token } = parse(z.object({ token: z.string().min(20).max(200) }), request.body);
+    const { pendingApproval } = await confirmEmail(ctx, token);
+    return { status: pendingApproval ? 'pending_approval' : 'ok' };
+  });
+  app.post(
+    '/email/resend',
+    { config: { rateLimit: { max: 3, timeWindow: '15 minutes' } } },
+    async (request) => {
+      const { login: who } = parse(
+        z.object({ login: z.string().trim().min(1).max(320) }),
+        request.body,
+      );
+      await resendEmailVerification({ ...ctx, mailer }, who);
+      return { status: 'ok' };
+    },
+  );
 
   app.post('/mfa', strict, async (request) => {
     const { code } = parse(mfaCodeRequestSchema, request.body);

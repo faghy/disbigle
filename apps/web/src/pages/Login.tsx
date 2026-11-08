@@ -110,6 +110,7 @@ function CredentialsStep({
     },
   });
   const passkey = useMutation({ mutationFn: passkeySignIn, onSuccess: onDone });
+  const resend = useMutation({ mutationFn: () => endpoints.resendVerification(login) });
 
   const errors = { ...fieldErrorsFrom(signIn.error), ...clientErrors };
   useFocusFirstError(formRef, clientErrors);
@@ -138,6 +139,21 @@ function CredentialsStep({
       <div className="mt-6 space-y-4">
         <Alert tone="info">{notice}</Alert>
         <Alert>{generalError}</Alert>
+        {error instanceof ApiError && error.code === 'email_not_verified' && (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            {resend.isSuccess ? (
+              <span className="text-fg-muted">{t('login.verificationSent')}</span>
+            ) : (
+              <Button
+                variant="secondary"
+                loading={resend.isPending}
+                onClick={() => resend.mutate()}
+              >
+                {t('login.resendVerification')}
+              </Button>
+            )}
+          </div>
+        )}
         <form ref={formRef} onSubmit={onSubmit} noValidate className="space-y-4">
           <TextField
             label={t('login.login')}

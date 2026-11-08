@@ -75,7 +75,9 @@
     "codeInvalid": "Inserisci il codice mostrato dall'app (almeno 6 caratteri).",
     "mfaExpired": "L'accesso è scaduto. Inserisci di nuovo la password.",
     "back": "Torna all'accesso",
-    "forgot": "Password dimenticata?"
+    "forgot": "Password dimenticata?",
+    "resendVerification": "Invia di nuovo il link",
+    "verificationSent": "Se l'account aspetta la conferma, il link sta arrivando."
   },
   "register": {
     "title": "Crea il tuo account",
@@ -98,7 +100,10 @@
     "closedTitle": "Le iscrizioni sono chiuse",
     "closedBody": "Al momento {{domain}} non accetta nuovi account.",
     "rulesTitle": "Regole di {{domain}}",
-    "agreementRules": "Accetto le regole qui sopra e l'informativa sulla privacy di {{domain}}"
+    "agreementRules": "Accetto le regole qui sopra e l'informativa sulla privacy di {{domain}}",
+    "verifyTitle": "Controlla la tua email",
+    "verifyBody": "Abbiamo mandato un link a {{email}}: aprilo entro tre giorni per attivare l'account.",
+    "verifyApproval": "Dopo, un moderatore lo approverà."
   },
   "profile": {
     "bot": "Bot",
@@ -774,7 +779,10 @@
       "rejectTitle": "Rifiutare @{{acct}}?",
       "rejectDescription": "L'iscrizione verrà eliminata. Potrà iscriversi di nuovo in seguito.",
       "approved": "@{{acct}} è stato approvato e ora può accedere.",
-      "rejected": "L'iscrizione di @{{acct}} è stata rifiutata."
+      "rejected": "L'iscrizione di @{{acct}} è stata rifiutata.",
+      "verified": "confermata",
+      "notVerified": "non ancora confermata",
+      "moveFrom": "Arriva da"
     },
     "reports": {
       "filter": "Mostra segnalazioni",
@@ -1492,5 +1500,14 @@
       "start": "Importa da diaspora*",
       "done": "Fatto: aspetti e hashtag sono qui, contatti e bloccati si stanno importando qui sopra."
     }
+  },
+  "verifyEmail": {
+    "checking": "Conferma dell'email…",
+    "doneTitle": "Email confermata",
+    "done": "Il tuo account è attivo: accedi.",
+    "donePending": "Grazie! Ora un moderatore approverà il tuo account; riceverai un'email.",
+    "brokenTitle": "Questo link non funziona",
+    "broken": "Forse è scaduto o è già stato usato. Accedi per riceverne uno nuovo.",
+    "signIn": "Accedi"
   }
 }

@@ -21,9 +21,22 @@ const configSchema = z.object({
   /** SMTP connection URL, e.g. smtps://user:pass@mail.example.org:465. Without it, emails are logged. */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Disbigle <noreply@localhost>'),
+  /**
+   * New accounts confirm their email address before signing in. Default: on in production
+   * (where mail is sent), off in development and tests.
+   */
+  REQUIRE_EMAIL_VERIFICATION: z.enum(['true', 'false']).optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
+
+/** Whether new accounts must confirm their email address (see REQUIRE_EMAIL_VERIFICATION). */
+export function emailVerificationRequired(
+  config: Pick<Config, 'NODE_ENV'> & { REQUIRE_EMAIL_VERIFICATION?: 'true' | 'false' | undefined },
+): boolean {
+  if (config.REQUIRE_EMAIL_VERIFICATION) return config.REQUIRE_EMAIL_VERIFICATION === 'true';
+  return config.NODE_ENV === 'production';
+}
 
 /** Parses and validates configuration from environment variables. Throws on invalid input. */
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {

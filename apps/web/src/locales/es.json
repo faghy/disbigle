@@ -77,7 +77,9 @@
     "codeInvalid": "Introduce el código que muestra tu aplicación (al menos 6 caracteres).",
     "mfaExpired": "Tu inicio de sesión ha caducado. Vuelve a introducir tu contraseña.",
     "back": "Volver a iniciar sesión",
-    "forgot": "¿Has olvidado tu contraseña?"
+    "forgot": "¿Has olvidado tu contraseña?",
+    "resendVerification": "Enviar de nuevo el enlace",
+    "verificationSent": "Si la cuenta espera la confirmación, el enlace ya va en camino."
   },
   "register": {
     "title": "Crea tu cuenta",
@@ -100,7 +102,10 @@
     "closedTitle": "El registro está cerrado",
     "closedBody": "{{domain}} no acepta cuentas nuevas en este momento.",
     "rulesTitle": "Normas de {{domain}}",
-    "agreementRules": "Acepto las normas anteriores y la política de privacidad de {{domain}}"
+    "agreementRules": "Acepto las normas anteriores y la política de privacidad de {{domain}}",
+    "verifyTitle": "Revisa tu correo",
+    "verifyBody": "Hemos enviado un enlace a {{email}}: ábrelo antes de tres días para activar tu cuenta.",
+    "verifyApproval": "Después, un moderador la aprobará."
   },
   "profile": {
     "bot": "Bot",
@@ -792,7 +797,10 @@
       "rejectTitle": "¿Rechazar a @{{acct}}?",
       "rejectDescription": "Se eliminará el registro. Podrá volver a registrarse más adelante.",
       "approved": "@{{acct}} ha sido aprobado y ya puede iniciar sesión.",
-      "rejected": "Se ha rechazado el registro de @{{acct}}."
+      "rejected": "Se ha rechazado el registro de @{{acct}}.",
+      "verified": "confirmado",
+      "notVerified": "aún sin confirmar",
+      "moveFrom": "Viene de"
     },
     "reports": {
       "filter": "Mostrar denuncias",
@@ -1518,5 +1526,14 @@
       "start": "Importar desde diaspora*",
       "done": "Hecho: aspectos y etiquetas ya están aquí, contactos y bloqueos se están importando arriba."
     }
+  },
+  "verifyEmail": {
+    "checking": "Confirmando tu correo…",
+    "doneTitle": "Correo confirmado",
+    "done": "Tu cuenta está activa: inicia sesión.",
+    "donePending": "¡Gracias! Ahora un moderador aprobará tu cuenta; recibirás un correo.",
+    "brokenTitle": "Este enlace no funciona",
+    "broken": "Puede que haya caducado o ya se haya usado. Inicia sesión para recibir uno nuevo.",
+    "signIn": "Iniciar sesión"
   }
 }

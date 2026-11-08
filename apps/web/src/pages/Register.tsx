@@ -156,6 +156,23 @@ function RegisterForm({ instance }: { instance: InstanceInfo }) {
     register.mutate(parsed.data);
   };
 
+  if (register.data?.status === 'pending_verification') {
+    return (
+      <Card>
+        <div role="status">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('register.verifyTitle')}</h1>
+          <p className="mt-2 text-fg-muted">
+            {t('register.verifyBody', { email: values.email })}
+            {register.data.approval ? ` ${t('register.verifyApproval')}` : ''}
+          </p>
+        </div>
+        <Link to="/" className={buttonClass('secondary', 'mt-6')}>
+          {t('notFound.home')}
+        </Link>
+      </Card>
+    );
+  }
+
   if (register.data?.status === 'pending_approval') {
     return (
       <Card>

@@ -75,7 +75,9 @@
     "codeInvalid": "Enter the code shown by your app (at least 6 characters).",
     "mfaExpired": "Your sign-in expired. Please enter your password again.",
     "back": "Back to sign in",
-    "forgot": "Forgot your password?"
+    "forgot": "Forgot your password?",
+    "resendVerification": "Send the link again",
+    "verificationSent": "If the account is waiting for confirmation, the link is on its way."
   },
   "register": {
     "title": "Create your account",
@@ -98,7 +100,10 @@
     "closedTitle": "Registrations are closed",
     "closedBody": "{{domain}} is not accepting new accounts at the moment.",
     "rulesTitle": "Rules of {{domain}}",
-    "agreementRules": "I agree to the rules above and the privacy policy of {{domain}}"
+    "agreementRules": "I agree to the rules above and the privacy policy of {{domain}}",
+    "verifyTitle": "Check your email",
+    "verifyBody": "We sent a link to {{email}}: open it within three days to activate your account.",
+    "verifyApproval": "After that, a moderator will approve it."
   },
   "profile": {
     "bot": "Bot",
@@ -774,7 +779,10 @@
       "rejectTitle": "Reject @{{acct}}?",
       "rejectDescription": "The registration will be deleted. They can sign up again later.",
       "approved": "@{{acct}} has been approved and can now sign in.",
-      "rejected": "The registration of @{{acct}} has been rejected."
+      "rejected": "The registration of @{{acct}} has been rejected.",
+      "verified": "confirmed",
+      "notVerified": "not confirmed yet",
+      "moveFrom": "Moving from"
     },
     "reports": {
       "filter": "Show reports",
@@ -1492,5 +1500,14 @@
       "start": "Import from diaspora*",
       "done": "Done: aspects and hashtags are here, contacts and blocks are being imported above."
     }
+  },
+  "verifyEmail": {
+    "checking": "Confirming your email…",
+    "doneTitle": "Email confirmed",
+    "done": "Your account is active: sign in.",
+    "donePending": "Thanks! A moderator will now approve your account; you will get an email.",
+    "brokenTitle": "This link does not work",
+    "broken": "It may have expired or been used already. Sign in to get a new one.",
+    "signIn": "Sign in"
   }
 }
