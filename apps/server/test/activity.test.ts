@@ -36,8 +36,17 @@ describe('my activity', () => {
     ]);
     expect(all.next).toBeNull();
 
-    const liked = (await alice.client.get('/api/v1/timelines/activity?type=like')).json();
-    expect(liked.items.map((i: Item) => i.type)).toEqual(['like']);
+    // Each tab on its own (every kind alone used to fail but "like").
+    for (const [type, id] of [
+      ['like', first.id],
+      ['reply', reply.id],
+      ['reblog', second.id],
+      ['bookmark', first.id],
+    ]) {
+      const one = await alice.client.get(`/api/v1/timelines/activity?type=${type}`);
+      expect(one.statusCode).toBe(200);
+      expect(one.json().items.map((i: Item) => [i.type, i.status.id])).toEqual([[type, id]]);
+    }
 
     // Page by page with the cursor.
     const one = (await alice.client.get('/api/v1/timelines/activity?limit=2')).json();

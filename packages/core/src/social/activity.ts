@@ -50,13 +50,13 @@ export async function listActivity(
   const parts: Record<ActivityKind, SQL> = {
     like: sql`select 'like' as type, ${likes.postId} as post_id, ${likes.createdAt} as at
       from ${likes} where ${likes.actorId} = ${actorId}`,
-    reply: sql`select 'reply', ${posts.id}, ${posts.createdAt}
+    reply: sql`select 'reply' as type, ${posts.id} as post_id, ${posts.createdAt} as at
       from ${posts} where ${posts.actorId} = ${actorId}
         and ${posts.inReplyToId} is not null and ${posts.reblogOfId} is null`,
-    reblog: sql`select 'reblog', ${posts.reblogOfId}, ${posts.createdAt}
+    reblog: sql`select 'reblog' as type, ${posts.reblogOfId} as post_id, ${posts.createdAt} as at
       from ${posts} where ${posts.actorId} = ${actorId}
         and ${posts.reblogOfId} is not null and ${posts.groupId} is null`,
-    bookmark: sql`select 'bookmark', ${bookmarks.postId}, ${bookmarks.createdAt}
+    bookmark: sql`select 'bookmark' as type, ${bookmarks.postId} as post_id, ${bookmarks.createdAt} as at
       from ${bookmarks} where ${bookmarks.actorId} = ${actorId}`,
   };
   const chosen = query.type ? [parts[query.type]] : Object.values(parts);
