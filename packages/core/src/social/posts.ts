@@ -13,6 +13,7 @@ import {
 import { and, eq, inArray, isNull, notInArray, or, sql } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
+import { attachKnownCard } from './cards.ts';
 import { extractMentions, extractTags, renderMarkdown } from './content.ts';
 import { notFilteredFor } from './filters.ts';
 import {
@@ -273,6 +274,8 @@ export async function createPost(
     return status;
   }
 
+  // A link whose preview was just shown while writing gets it at once.
+  await attachKnownCard(ctx, id);
   await notifyPostRecipients(ctx, id);
   await emit(ctx, { type: 'post.created', postId: id, actorId: authorActorId });
 
@@ -591,6 +594,7 @@ export async function editPost(
       }
     }
   });
+  await attachKnownCard(ctx, post.id);
   await emit(ctx, { type: 'post.updated', postId: post.id, actorId });
   return getStatus(ctx, actorId, post.id);
 }

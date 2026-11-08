@@ -89,11 +89,15 @@ export function parsePageInfo(html: string, pageUrl: string): PageInfo | null {
     return value.length > max ? `${value.slice(0, max - 1)}…` : value;
   };
   const title = clean(
-    meta.get('og:title') ?? meta.get('twitter:title') ?? (titleTag ? decodeEntities(titleTag) : ''),
+    // Empty tags fall through to the next one (diaspora* profiles have an empty og:title).
+    meta.get('og:title') ||
+      meta.get('twitter:title') ||
+      (titleTag ? decodeEntities(titleTag) : '') ||
+      meta.get('og:site_name'),
     MAX_TITLE,
   );
   if (!title) return null;
-  const imageRaw = meta.get('og:image') ?? meta.get('og:image:url') ?? meta.get('twitter:image');
+  const imageRaw = meta.get('og:image') || meta.get('og:image:url') || meta.get('twitter:image');
   let image: string | null = null;
   if (imageRaw) {
     try {
@@ -106,7 +110,7 @@ export function parsePageInfo(html: string, pageUrl: string): PageInfo | null {
   return {
     title,
     description: clean(
-      meta.get('og:description') ?? meta.get('twitter:description') ?? meta.get('description'),
+      meta.get('og:description') || meta.get('twitter:description') || meta.get('description'),
       MAX_DESCRIPTION,
     ),
     siteName: clean(meta.get('og:site_name'), 100),
@@ -158,6 +162,17 @@ export async function savePostCard(
   info: PageInfo,
   image: Buffer | null,
 ): Promise<void> {
+  const card = await savePreviewCard(ctx, url, info, image);
+  await linkCard(ctx, postId, card.id);
+}
+
+/** Stores a preview of an address (shared by every post that links it). */
+export async function savePreviewCard(
+  ctx: CoreContext & { storage: MediaStorage },
+  url: string,
+  info: PageInfo,
+  image: Buffer | null,
+): Promise<typeof previewCards.$inferSelect> {
   let stored: { path: string; width: number; height: number } | null = null;
   const id = uuidv7();
   if (image) {
@@ -187,8 +202,89 @@ export async function savePostCard(
     .insert(previewCards)
     .values({ id, url, ...values })
     .onConflictDoUpdate({ target: previewCards.url, set: values })
-    .returning({ id: previewCards.id });
-  await linkCard(ctx, postId, card?.id ?? null);
+    .returning();
+  if (!card) throw new Error('Preview card insert failed');
+  return card;
+}
+
+/** A stored preview as readers see it. */
+export function serializeCard(
+  ctx: CoreContext,
+  card: typeof previewCards.$inferSelect,
+): PreviewCard {
+  return {
+    url: card.url,
+    title: card.title,
+    description: card.description,
+    siteName: card.siteName || new URL(card.url).hostname.replace(/^www\./, ''),
+    image: card.imagePath ? mediaUrl(ctx, card.imagePath) : null,
+    width: card.imageWidth,
+    height: card.imageHeight,
+  };
+}
+
+/**
+ * Gives a new or edited post the preview of its link at once when that page was read recently
+ * (shown while writing, or linked by another post). Otherwise the worker reads it soon after.
+ */
+export async function attachKnownCard(ctx: CoreContext, postId: string): Promise<void> {
+  const [post] = await ctx.db
+    .select({ contentHtml: posts.contentHtml })
+    .from(posts)
+    .where(eq(posts.id, postId));
+  const url = post ? cardLinkOf(post.contentHtml) : null;
+  if (!url) return;
+  const card = await freshCard(ctx, url);
+  if (card) await linkCard(ctx, postId, card.id);
+}
+
+/** Fetches a URL for previews: `text` of a page, or the bytes of an image. */
+export type PreviewFetcher = (
+  url: string,
+  options: { maxBytes: number; accept: string },
+) => Promise<{ data: Buffer; type: string }>;
+
+const PAGE_BYTES = 1024 * 1024;
+const IMAGE_BYTES = 3 * 1024 * 1024;
+
+/** The text of a page in its own encoding (UTF-8 when it does not say). */
+export function decodePage(data: Buffer, type: string): string {
+  const charset = /charset=["']?([\w-]+)/i.exec(type)?.[1] ?? 'utf-8';
+  try {
+    return new TextDecoder(charset).decode(data);
+  } catch {
+    return new TextDecoder('utf-8').decode(data);
+  }
+}
+
+/**
+ * The preview of an address: the stored one when recent, else the page is read now (with its
+ * image, kept on this server). Null when the page has nothing to show.
+ */
+export async function previewForUrl(
+  ctx: CoreContext & { storage: MediaStorage },
+  url: string,
+  fetcher: PreviewFetcher,
+): Promise<PreviewCard | null> {
+  const known = await freshCard(ctx, url);
+  if (known) return serializeCard(ctx, known);
+  const page = await fetcher(url, {
+    maxBytes: PAGE_BYTES,
+    accept: 'text/html,application/xhtml+xml',
+  });
+  if (!/html/i.test(page.type)) return null;
+  const info = parsePageInfo(decodePage(page.data, page.type), url);
+  if (!info) return null;
+  let image: Buffer | null = null;
+  if (info.image) {
+    try {
+      const picture = await fetcher(info.image, { maxBytes: IMAGE_BYTES, accept: 'image/*' });
+      if (picture.type.startsWith('image/')) image = picture.data;
+    } catch {
+      image = null;
+    }
+  }
+  return serializeCard(ctx, await savePreviewCard(ctx, url, info, image));
 }
 
 /** Shows an existing preview on a post. */
@@ -215,18 +311,5 @@ export async function loadCards(
     .from(postCards)
     .innerJoin(previewCards, eq(previewCards.id, postCards.cardId))
     .where(inArray(postCards.postId, postIds));
-  return new Map(
-    rows.map(({ postId, card }) => [
-      postId,
-      {
-        url: card.url,
-        title: card.title,
-        description: card.description,
-        siteName: card.siteName || new URL(card.url).hostname.replace(/^www\./, ''),
-        image: card.imagePath ? mediaUrl(ctx, card.imagePath) : null,
-        width: card.imageWidth,
-        height: card.imageHeight,
-      },
-    ]),
-  );
+  return new Map(rows.map(({ postId, card }) => [postId, serializeCard(ctx, card)]));
 }

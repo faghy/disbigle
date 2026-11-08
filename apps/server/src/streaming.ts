@@ -107,7 +107,11 @@ export class StreamingHub {
     try {
       if (event.type === 'post.created' || event.type === 'post.approved')
         await this.onPostCreated(event.postId, 'update');
-      else if (event.type === 'post.updated' || event.type === 'poll.voted')
+      else if (
+        event.type === 'post.updated' ||
+        event.type === 'poll.voted' ||
+        event.type === 'post.card'
+      )
         await this.onPostCreated(event.postId, 'status.update');
       else if (event.type === 'post.deleted') {
         await this.onPostDeleted(event);

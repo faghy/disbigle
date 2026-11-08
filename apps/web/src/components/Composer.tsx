@@ -17,6 +17,7 @@ import { useAspects } from '../api/socialQueries.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
+import { ComposerLinkPreview } from './ComposerLinkPreview.tsx';
 import { EmojiButton } from './EmojiPicker.tsx';
 import { GroupIcon, PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
@@ -285,6 +286,7 @@ export function Composer({
           </div>
 
           <MediaList items={mediaItems} error={allErrors.media} />
+          {media.length === 0 && !poll && <ComposerLinkPreview text={content} />}
 
           {poll && (
             <PollEditor

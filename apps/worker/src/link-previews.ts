@@ -1,6 +1,7 @@
 import {
   type CoreContext,
   cardLinkOf,
+  emit,
   freshCard,
   linkCard,
   listPostsWithoutCard,
@@ -48,6 +49,7 @@ export async function makeLinkPreviews(
     const known = await freshCard(ctx, url);
     if (known) {
       await linkCard(ctx, post.id, known.id);
+      await emit(ctx, { type: 'post.card', postId: post.id });
       made += 1;
       continue;
     }
@@ -82,6 +84,7 @@ export async function makeLinkPreviews(
         }
       }
       await savePostCard(ctx, post.id, url, info, image);
+      await emit(ctx, { type: 'post.card', postId: post.id });
       made += 1;
     } catch {
       // Unreachable, too large or not public: no preview for this post.

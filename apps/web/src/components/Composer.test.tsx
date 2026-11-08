@@ -187,4 +187,40 @@ describe('composer', () => {
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Emoji' })).not.toBeInTheDocument();
   });
+
+  it('shows the preview of a pasted link while writing', async () => {
+    const asked: string[] = [];
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/home': { body: [] },
+      'GET /link_preview': (_body, url) => {
+        asked.push(url.searchParams.get('url') ?? '');
+        return {
+          body: {
+            card: {
+              url: 'https://disbigle.com/it/2026/x',
+              title: 'Una notizia',
+              description: 'Descrizione',
+              siteName: 'Disbigle',
+              image: null,
+              width: null,
+              height: null,
+            },
+          },
+        };
+      },
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    await user.type(
+      await screen.findByRole('textbox', { name: 'New post' }),
+      'Leggete https://disbigle.com/it/2026/x ',
+    );
+    expect(await screen.findByRole('link', { name: /Una notizia/ })).toHaveAttribute(
+      'href',
+      'https://disbigle.com/it/2026/x',
+    );
+    expect(asked).toEqual(['https://disbigle.com/it/2026/x']);
+  });
 });

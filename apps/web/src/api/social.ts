@@ -14,6 +14,7 @@ import type {
   MediaAttachment,
   Notification,
   PresenceState,
+  PreviewCard,
   ProfileMedia,
   Relationship,
   Status,
@@ -182,6 +183,8 @@ export const social = {
     api.get<Record<string, PresenceState>>(
       `/timelines/conversations/${id(conversationId)}/presence`,
     ),
+  linkPreview: (url: string) =>
+    api.get<{ card: PreviewCard | null }>(`/link_preview${queryString({ url })}`),
   presence: (active: boolean) => api.post<Ok>('/me/presence', { active }),
   unreadConversations: () => api.get<{ count: number }>('/timelines/conversations/unread_count'),
 

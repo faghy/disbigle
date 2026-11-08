@@ -38,6 +38,7 @@ import { groupRoutes } from './routes/groups.ts';
 import { hiddenTagRoutes } from './routes/hidden-tags.ts';
 import { inviteRoutes } from './routes/invites.ts';
 import { legacyDiasporaRoutes } from './routes/legacy.ts';
+import { linkPreviewRoutes } from './routes/link-preview.ts';
 import { meRoutes } from './routes/me.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { migrationRoutes } from './routes/migration.ts';
@@ -249,6 +250,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(hiddenTagRoutes, { ctx, prefix: '/hidden_tags' });
       await api.register(adminRoutes, { ctx, redis, prefix: '/admin' });
       await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
+      await api.register(linkPreviewRoutes, { ctx: mediaCtx, prefix: '/link_preview' });
       await api.register(groupRoutes, { ctx, mediaCtx, prefix: '/groups' });
       if (options.federation) {
         await api.register(searchRoutes, {

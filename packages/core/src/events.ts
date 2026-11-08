@@ -52,7 +52,9 @@ export type DomainEvent =
   /** A member from another server who asked to join was let in. */
   | { type: 'group.member_accepted'; groupId: string; actorId: string; apUri: string | null }
   /** A post (or comment) waiting in a group was approved: it goes out now. */
-  | { type: 'post.approved'; postId: string; actorId: string };
+  | { type: 'post.approved'; postId: string; actorId: string }
+  /** A post got its link preview (made in the background): readers' screens update it. */
+  | { type: 'post.card'; postId: string };
 
 export interface EventBus {
   publish(event: DomainEvent): Promise<void>;

@@ -14,6 +14,7 @@ import {
   listPostsWithoutCard,
   markNoCard,
   parsePageInfo,
+  previewForUrl,
   registerUser,
   savePostCard,
 } from '../src/index.ts';
@@ -116,5 +117,28 @@ describe('link previews: on posts', () => {
     await editPost(base(), actorId, post.id, { content: 'Cambiato https://example.org/altro' });
     expect((await getStatus(base(), actorId, post.id)).card).toBeNull();
     expect((await listPostsWithoutCard(base(), 50)).map((p) => p.id)).toContain(post.id);
+  });
+
+  it('reads a page while writing, and gives the post its preview at once', async () => {
+    const { actorId } = await registerUser(base(), uniqueUser());
+    const page =
+      '<head><meta property="og:title" content=""><meta property="og:site_name" content="Societas"></head>';
+    const fetched: string[] = [];
+    const card = await previewForUrl(ctx(), 'https://pod.example/u/anna', async (url) => {
+      fetched.push(url);
+      return { data: Buffer.from(page), type: 'text/html; charset=utf-8' };
+    });
+    // An empty og:title falls back to the site name.
+    expect(card).toMatchObject({ title: 'Societas', url: 'https://pod.example/u/anna' });
+    // Asked again: the stored preview, no new fetch.
+    await previewForUrl(ctx(), 'https://pod.example/u/anna', async () => {
+      throw new Error('should not fetch');
+    });
+    expect(fetched).toEqual(['https://pod.example/u/anna']);
+
+    const post = await createPost(base(), actorId, {
+      content: 'Guarda https://pod.example/u/anna',
+    });
+    expect(post.card).toMatchObject({ title: 'Societas' });
   });
 });
