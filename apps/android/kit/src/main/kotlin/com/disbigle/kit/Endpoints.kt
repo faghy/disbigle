@@ -163,6 +163,13 @@ suspend fun Client.markConversationRead(id: String) = perform("POST", "api/v1/co
 suspend fun Client.chat(id: String, maxId: String? = null): ChatPage =
   get("api/v1/conversations/$id/messages", listOfNotNull(maxId?.let { "max_id" to it }))
 
+@kotlinx.serialization.Serializable
+private data class Preview(val html: String)
+
+/** The HTML a post's Markdown will have once published (rendered by the server). */
+suspend fun Client.previewPost(content: String): String =
+  call<Preview>("POST", "api/v1/disbigle/preview", body = Client.Body.Form(listOf("content" to content))).html
+
 /** Says the app is open (`active`) or in the background; shown only if you share your status. */
 suspend fun Client.presence(active: Boolean) =
   perform("POST", "api/v1/disbigle/presence", body = Client.Body.Form(listOf("active" to active.toString())))

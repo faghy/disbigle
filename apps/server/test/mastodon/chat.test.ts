@@ -44,4 +44,16 @@ describe('Mastodon API: conversations as a chat (Disbigle extension)', () => {
     ).json();
     expect(older.messages.map((m: { id: string }) => m.id)).toEqual([first.id]);
   });
+
+  it('previews the Markdown of a post for the apps', async () => {
+    const alice = await mastodonUser(app);
+    const preview = await alice.api.post(
+      '/api/v1/disbigle/preview',
+      form({ content: '## Titolo\n\n**forte** e #tag' }),
+    );
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json().html).toContain('<h2>Titolo</h2>');
+    expect(preview.json().html).toContain('<strong>forte</strong>');
+    expect(preview.json().html).toContain('class="mention hashtag"');
+  });
 });

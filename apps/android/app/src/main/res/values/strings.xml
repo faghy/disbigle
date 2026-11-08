@@ -282,4 +282,16 @@
   <string name="presence_online">Online</string>
   <string name="presence_away">Away</string>
   <string name="presence_busy">Busy</string>
+  <string name="format_bold">Bold</string>
+  <string name="format_italic">Italic</string>
+  <string name="format_strike">Strikethrough</string>
+  <string name="format_heading">Heading</string>
+  <string name="format_quote">Quote</string>
+  <string name="format_list">Bulleted list</string>
+  <string name="format_numbered">Numbered list</string>
+  <string name="format_code">Code</string>
+  <string name="format_link">Link</string>
+  <string name="format_preview">Preview</string>
+  <string name="format_placeholder">text</string>
+  <string name="format_empty">Nothing to preview yet.</string>
 </resources>

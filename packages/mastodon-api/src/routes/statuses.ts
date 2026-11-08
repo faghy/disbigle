@@ -18,6 +18,7 @@ import {
   markConversationRead,
   pinPost,
   presenceOf,
+  previewPostContent,
   publicTimeline,
   reblog,
   recordPresence,
@@ -528,6 +529,14 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
    * The app is open (`active`) or in the background: shown to people in your conversations if
    * you chose to share your status (Disbigle extension; the native apps send it every 45 s).
    */
+  /** The HTML a post's Markdown will have once published (Disbigle extension, for the apps' preview). */
+  app.post('/api/v1/disbigle/preview', async (request) => {
+    requireUser(request, 'write:statuses');
+    const content = str(body(request).content) ?? '';
+    if (content.length > 20_000) throw new MastodonError(422, 'Validation failed: text too long');
+    return { html: await previewPostContent(ctx, content) };
+  });
+
   app.post('/api/v1/disbigle/presence', async (request) => {
     const user = requireUser(request, 'write:accounts');
     const active = body(request).active;

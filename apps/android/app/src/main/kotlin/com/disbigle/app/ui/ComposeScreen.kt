@@ -11,6 +11,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.disbigle.app.ComposeTarget
 import com.disbigle.app.R
+import com.disbigle.kit.previewPost
 import com.disbigle.kit.AspectList
 import com.disbigle.kit.Client
 import com.disbigle.kit.MediaAttachment
@@ -117,6 +124,9 @@ fun ComposeScreen(target: ComposeTarget, onClose: () -> Unit) {
   val maxMedia = model.instance?.maxMediaAttachments ?: 4
 
   var text by remember { mutableStateOf("") }
+  // The cursor and selection in the text, for the formatting buttons.
+  var selection by remember { mutableStateOf(androidx.compose.ui.text.TextRange(0)) }
+  var previewing by remember { mutableStateOf(false) }
   var visibility by remember { mutableStateOf(Visibility.PUBLIC) }
   var aspectIds by remember { mutableStateOf(setOf<String>()) }
   var aspects by remember { mutableStateOf<List<AspectList>>(emptyList()) }
@@ -259,9 +269,19 @@ fun ComposeScreen(target: ComposeTarget, onClose: () -> Unit) {
         if (warningOn) {
           OutlinedTextField(warning, { warning = it }, label = { Text(stringResource(R.string.content_warning)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
-        OutlinedTextField(
-          value = text,
-          onValueChange = { text = it },
+        FormattingBar(
+          previewing = previewing,
+          onPreview = { previewing = it },
+          onFormat = { format ->
+            val edit = com.disbigle.kit.applyFormat(text, selection.start, selection.end, format, context.getString(R.string.format_placeholder))
+            text = edit.text
+            selection = androidx.compose.ui.text.TextRange(edit.start, edit.end)
+          },
+        )
+        if (previewing) PostPreview(text)
+        if (!previewing) OutlinedTextField(
+          value = androidx.compose.ui.text.input.TextFieldValue(text, selection.coerceIn(0, text.length)),
+          onValueChange = { text = it.text; selection = it.selection },
           enabled = !loadingSource,
           placeholder = { Text(stringResource(if (visibility == Visibility.DIRECT) R.string.direct_placeholder else R.string.compose_placeholder)) },
           supportingText = {
@@ -426,4 +446,67 @@ fun readImage(context: Context, uri: Uri): Pair<Bitmap, ByteArray> {
   val out = ByteArrayOutputStream()
   bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
   return bitmap to out.toByteArray()
+}
+
+/** Buttons that write Markdown (as diaspora* reads it), and the switch to a preview of the post. */
+@Composable
+private fun FormattingBar(previewing: Boolean, onPreview: (Boolean) -> Unit, onFormat: (com.disbigle.kit.Format) -> Unit) {
+  val buttons = listOf(
+    com.disbigle.kit.Format.BOLD to ("B" to R.string.format_bold),
+    com.disbigle.kit.Format.ITALIC to ("I" to R.string.format_italic),
+    com.disbigle.kit.Format.STRIKE to ("S" to R.string.format_strike),
+    com.disbigle.kit.Format.HEADING to ("H" to R.string.format_heading),
+    com.disbigle.kit.Format.QUOTE to ("❝" to R.string.format_quote),
+    com.disbigle.kit.Format.LIST to ("•" to R.string.format_list),
+    com.disbigle.kit.Format.NUMBERED to ("1." to R.string.format_numbered),
+    com.disbigle.kit.Format.CODE to ("</>" to R.string.format_code),
+    com.disbigle.kit.Format.LINK to ("🔗" to R.string.format_link),
+  )
+  Row(
+    Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    for ((format, look) in buttons) {
+      val (glyph, label) = look
+      val description = stringResource(label)
+      androidx.compose.material3.TextButton(
+        onClick = { onFormat(format) },
+        enabled = !previewing,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
+        modifier = Modifier.semantics { contentDescription = description },
+      ) {
+        Text(
+          glyph,
+          fontWeight = if (format == com.disbigle.kit.Format.BOLD) FontWeight.Bold else null,
+          fontStyle = if (format == com.disbigle.kit.Format.ITALIC) androidx.compose.ui.text.font.FontStyle.Italic else null,
+          textDecoration = if (format == com.disbigle.kit.Format.STRIKE) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+        )
+      }
+    }
+    Spacer(Modifier.weight(1f))
+    androidx.compose.material3.FilterChip(
+      selected = previewing,
+      onClick = { onPreview(!previewing) },
+      label = { Text(stringResource(R.string.format_preview)) },
+    )
+  }
+}
+
+/** The text as it will look once published (rendered by the server). */
+@Composable
+private fun PostPreview(text: String) {
+  val model = LocalApp.current
+  val linkColor = MaterialTheme.colorScheme.primary
+  var html by remember(text) { mutableStateOf<String?>(null) }
+  LaunchedEffect(text) {
+    html = if (text.isBlank()) "" else runCatching { model.client?.previewPost(text) }.getOrNull() ?: ""
+  }
+  val shown = html
+  Box(Modifier.fillMaxWidth().heightIn(min = 160.dp).padding(vertical = 8.dp)) {
+    when {
+      shown == null -> CircularProgressIndicator(Modifier.size(24.dp))
+      shown.isEmpty() -> Text(stringResource(R.string.format_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+      else -> Text(richText(shown, linkColor) {}, style = MaterialTheme.typography.bodyLarge)
+    }
+  }
 }

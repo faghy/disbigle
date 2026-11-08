@@ -286,4 +286,16 @@
   <string name="presence_online">In linea</string>
   <string name="presence_away">Assente</string>
   <string name="presence_busy">Occupato</string>
+  <string name="format_bold">Grassetto</string>
+  <string name="format_italic">Corsivo</string>
+  <string name="format_strike">Barrato</string>
+  <string name="format_heading">Titolo</string>
+  <string name="format_quote">Citazione</string>
+  <string name="format_list">Elenco puntato</string>
+  <string name="format_numbered">Elenco numerato</string>
+  <string name="format_code">Codice</string>
+  <string name="format_link">Link</string>
+  <string name="format_preview">Anteprima</string>
+  <string name="format_placeholder">testo</string>
+  <string name="format_empty">Ancora niente da vedere.</string>
 </resources>
