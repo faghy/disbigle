@@ -453,7 +453,23 @@
     "inGroup": "Only members of {{name}} will see this",
     "inPublicGroup": "Posting in {{name}}: anyone can read it",
     "needsApproval": "A moderator approves posts before the group sees them.",
-    "mentionAll": "All your mutual contacts"
+    "mentionAll": "All your mutual contacts",
+    "format": {
+      "label": "Formatting",
+      "bold": "Bold (Ctrl+B)",
+      "italic": "Italic (Ctrl+I)",
+      "strike": "Strikethrough",
+      "heading": "Heading",
+      "quote": "Quote",
+      "list": "Bulleted list",
+      "numbered": "Numbered list",
+      "code": "Code (Ctrl+E)",
+      "link": "Link (Ctrl+K)",
+      "write": "Write",
+      "preview": "Preview",
+      "placeholder": "text",
+      "empty": "Nothing to preview yet."
+    }
   },
   "status": {
     "reshared": "{{name}} reshared",

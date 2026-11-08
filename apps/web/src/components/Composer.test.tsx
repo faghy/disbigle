@@ -223,4 +223,30 @@ describe('composer', () => {
     );
     expect(asked).toEqual(['https://disbigle.com/it/2026/x']);
   });
+
+  it('formats with the toolbar and shortcuts, and previews the post', async () => {
+    let previewed: unknown;
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/home': { body: [] },
+      'POST /statuses/preview': (body) => {
+        previewed = body;
+        return { body: { html: '<p><strong>Ciao</strong> a tutti</p>' } };
+      },
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    const box = (await screen.findByRole('textbox', { name: 'New post' })) as HTMLTextAreaElement;
+    await user.type(box, 'Ciao a tutti');
+    box.setSelectionRange(0, 4);
+    await user.click(screen.getByRole('button', { name: 'Bold (Ctrl+B)' }));
+    expect(box).toHaveValue('**Ciao** a tutti');
+
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(await screen.findByText('Ciao', { selector: 'strong' })).toBeInTheDocument();
+    expect(previewed).toEqual({ content: '**Ciao** a tutti' });
+    await user.click(screen.getByRole('button', { name: 'Write' }));
+    expect(screen.getByRole('textbox', { name: 'New post' })).toBeVisible();
+  });
 });

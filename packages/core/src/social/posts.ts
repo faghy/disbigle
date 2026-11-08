@@ -296,6 +296,22 @@ export async function createPost(
   return status;
 }
 
+/**
+ * The HTML a post's text will have, for the preview while writing: same markdown, mentions
+ * and hashtags as when publishing (people not known yet appear as plain text).
+ */
+export async function previewPostContent(ctx: CoreContext, source: string): Promise<string> {
+  const text = source.slice(0, 20_000);
+  const mentioned = await resolveMentions(ctx, text);
+  const base = ctx.config.PUBLIC_URL;
+  return renderMarkdown(text, {
+    resolveMention: (username, domain) =>
+      mentioned.get(`${username.toLowerCase()}@${domain ?? ''}`)?.apUrl ?? null,
+    tagUrl: (tag) => `${base}/tags/${encodeURIComponent(tag)}`,
+    localOrigin: new URL(base).origin,
+  });
+}
+
 /** `@all` on its own (not an address such as `@all@example.com`). */
 function mentionsAll(source: string): boolean {
   return /(^|[^\w@/])@all(?![\w@.-])/i.test(source);

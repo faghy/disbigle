@@ -12,6 +12,7 @@ import {
   listLikedBy,
   listResharedBy,
   pinPost,
+  previewPostContent,
   reblog,
   rejectGroupPost,
   serializeAccount,
@@ -70,6 +71,17 @@ export async function statusRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
       id,
     );
   });
+
+  // What the text being written will look like once published.
+  app.post(
+    '/preview',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (request) => {
+      requireUser(request);
+      const { content } = parse(z.object({ content: z.string().max(20_000) }), request.body);
+      return { html: await previewPostContent(ctx, content) };
+    },
+  );
 
   app.post('/:id/hide', async (request) => {
     const { id } = parse(idParams, request.params);

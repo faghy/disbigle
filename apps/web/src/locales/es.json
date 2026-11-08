@@ -460,7 +460,23 @@
     "inGroup": "Solo lo verán los miembros de {{name}}",
     "inPublicGroup": "Estás escribiendo en {{name}}: cualquiera puede leerlo",
     "needsApproval": "Un moderador aprueba las publicaciones antes de que el grupo las vea.",
-    "mentionAll": "Todos tus contactos mutuos"
+    "mentionAll": "Todos tus contactos mutuos",
+    "format": {
+      "label": "Formato",
+      "bold": "Negrita (Ctrl+B)",
+      "italic": "Cursiva (Ctrl+I)",
+      "strike": "Tachado",
+      "heading": "Título",
+      "quote": "Cita",
+      "list": "Lista con viñetas",
+      "numbered": "Lista numerada",
+      "code": "Código (Ctrl+E)",
+      "link": "Enlace (Ctrl+K)",
+      "write": "Escribir",
+      "preview": "Vista previa",
+      "placeholder": "texto",
+      "empty": "Aún no hay nada que ver."
+    }
   },
   "status": {
     "reshared": "{{name}} ha compartido",

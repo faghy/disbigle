@@ -453,7 +453,23 @@
     "inGroup": "Lo vedranno solo i membri di {{name}}",
     "inPublicGroup": "Stai scrivendo in {{name}}: chiunque può leggerlo",
     "needsApproval": "Un moderatore approva i post prima che il gruppo li veda.",
-    "mentionAll": "Tutti i tuoi contatti reciproci"
+    "mentionAll": "Tutti i tuoi contatti reciproci",
+    "format": {
+      "label": "Formattazione",
+      "bold": "Grassetto (Ctrl+B)",
+      "italic": "Corsivo (Ctrl+I)",
+      "strike": "Barrato",
+      "heading": "Titolo",
+      "quote": "Citazione",
+      "list": "Elenco puntato",
+      "numbered": "Elenco numerato",
+      "code": "Codice (Ctrl+E)",
+      "link": "Link (Ctrl+K)",
+      "write": "Scrivi",
+      "preview": "Anteprima",
+      "placeholder": "testo",
+      "empty": "Ancora niente da vedere."
+    }
   },
   "status": {
     "reshared": "{{name}} ha ricondiviso",

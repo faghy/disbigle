@@ -14,11 +14,13 @@ import { errorMessage, fieldErrorsFrom, isFieldError } from '../api/errors.ts';
 import { useCreateStatus } from '../api/mutations.ts';
 import { useCurrentUser, useLimits } from '../api/queries.ts';
 import { useAspects } from '../api/socialQueries.ts';
+import { applyFormat, type Format, shortcutFormat } from '../lib/markdownFormat.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
 import { ComposerLinkPreview } from './ComposerLinkPreview.tsx';
 import { EmojiButton } from './EmojiPicker.tsx';
+import { FormattingToolbar, PostPreview } from './FormattingToolbar.tsx';
 import { GroupIcon, PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { useMentionSuggestions } from './MentionSuggestions.tsx';
@@ -109,6 +111,8 @@ export function Composer({
     element.setSelectionRange(element.value.length, element.value.length);
   }, [autoFocus, textarea]);
 
+  const [previewing, setPreviewing] = useState(false);
+
   if (!user) return null;
 
   const length = content.length;
@@ -117,6 +121,7 @@ export function Composer({
   const allErrors = { ...serverErrors, ...errors };
 
   const reset = () => {
+    setPreviewing(false);
     mediaItems.reset();
     setContent('');
     setSummary('');
@@ -190,8 +195,28 @@ export function Composer({
     void submit();
   };
 
+  const format = (kind: Format) => {
+    const element = textarea.current;
+    if (!element) return;
+    const edit = applyFormat(content, element.selectionStart, element.selectionEnd, kind, {
+      text: t('composer.format.placeholder'),
+      link: 'https://',
+    });
+    setContent(edit.text);
+    requestAnimationFrame(() => {
+      element.focus();
+      element.setSelectionRange(edit.start, edit.end);
+    });
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (mentions.onKeyDown(event)) return;
+    const shortcut = shortcutFormat(event);
+    if (shortcut) {
+      event.preventDefault();
+      format(shortcut);
+      return;
+    }
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       void submit();
@@ -257,7 +282,13 @@ export function Composer({
             </div>
           )}
 
-          <div className="relative">
+          <FormattingToolbar
+            onFormat={format}
+            previewing={previewing}
+            onPreviewChange={setPreviewing}
+          />
+          {previewing && <PostPreview content={content} />}
+          <div className={cx('relative', previewing && 'hidden')}>
             <label htmlFor={ids.text} className="sr-only">
               {replyTo ? t('composer.replyLabel') : t('composer.label')}
             </label>

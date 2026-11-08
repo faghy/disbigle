@@ -183,6 +183,7 @@ export const social = {
     api.get<Record<string, PresenceState>>(
       `/timelines/conversations/${id(conversationId)}/presence`,
     ),
+  previewPost: (content: string) => api.post<{ html: string }>('/statuses/preview', { content }),
   linkPreview: (url: string) =>
     api.get<{ card: PreviewCard | null }>(`/link_preview${queryString({ url })}`),
   presence: (active: boolean) => api.post<Ok>('/me/presence', { active }),
