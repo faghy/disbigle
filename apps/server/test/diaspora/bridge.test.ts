@@ -186,7 +186,13 @@ describe('bridge identities', () => {
         `^${paul.account.username}_at_127\\.0\\.0\\.1_\\d+@${hub.domain.replace(/\./g, '\\.')}$`,
       ),
     );
-    expect(bridgedToPod.account.displayName).toBe(paul.account.username);
+    // diaspora* readers see the real address, and a description pointing to the real account.
+    expect(bridgedToPod.account.displayName).toContain(paul.account.username);
+    expect(bridgedToPod.account.displayName).toContain(`(@${paul.account.username}@`);
+    await eventually(async () => {
+      const account = (await dora.client.get(`/api/v1/accounts/${bridgedToPod.account.id}`)).json();
+      return account.note?.includes('Disbigle bridge') ? account : undefined;
+    });
 
     // dora (diaspora*) answers: paul sees it, from dora's bridge identity on the hub.
     const doraReply = (

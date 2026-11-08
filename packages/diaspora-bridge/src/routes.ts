@@ -32,6 +32,7 @@ import {
 } from './actors.ts';
 import { DiasporaBridge } from './bridge.ts';
 import {
+  bridgedNames,
   commentFor,
   localActorByGuid,
   reshareFor,
@@ -117,16 +118,14 @@ export async function diasporaRoutes(app: FastifyInstance, options: DiasporaRout
         const bridged = await bridgedAccountByGuid(ctx, request.params.guid);
         if (!bridged) return reply.status(404).send();
         const { bridge: b, actor: remote } = bridged;
-        const name = remote.displayName || remote.username;
+        const names = bridgedNames(remote);
         const picture = remote.avatarUrl ?? remote.avatarRemoteUrl;
         const avatar = picture ? new URL(picture, base).href : defaultAvatarUrl(ctx);
         return reply.type('text/html; charset=utf-8').send(
           buildHCard({
             guid: b.diasporaGuid,
             nickname: b.username,
-            fullName: name.slice(0, 70).replace(/;/g, ','),
-            firstName: name.slice(0, 32).replace(/;/g, ','),
-            lastName: '',
+            ...names,
             publicKey: b.publicKeyPem,
             photoLargeUrl: avatar,
             photoMediumUrl: avatar,

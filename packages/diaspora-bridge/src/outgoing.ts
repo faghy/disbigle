@@ -388,3 +388,22 @@ export async function localActorByGuid(ctx: CoreContext, guid: string): Promise<
   if (actor.isGroup && !(await publicGroupOf(ctx, actor))) return null;
   return actor;
 }
+
+/** `@user@server`: the real address of a remote account shown on diaspora* through the bridge. */
+export function bridgedOrigin(actor: Pick<ActorRow, 'username' | 'domain'>): string {
+  return `@${actor.username}@${actor.domain ?? ''}`;
+}
+
+/**
+ * The names diaspora* shows for a bridge identity: the person's name, and their real address
+ * as surname (or in the full name when it is too long), so readers see where they come from.
+ */
+export function bridgedNames(actor: Pick<ActorRow, 'username' | 'domain' | 'displayName'>) {
+  const name = (actor.displayName || actor.username).replace(/;/g, ',');
+  const origin = bridgedOrigin(actor);
+  return {
+    firstName: name.slice(0, 32),
+    lastName: origin.length <= 32 ? origin : '',
+    fullName: `${name} (${origin})`.slice(0, 70),
+  };
+}

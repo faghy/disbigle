@@ -40,6 +40,8 @@ import {
 import type { DiasporaBridge } from './bridge.ts';
 import { relayStored } from './incoming.ts';
 import {
+  bridgedNames,
+  bridgedOrigin,
   commentFor,
   diasporaText,
   emptyRecipients,
@@ -385,6 +387,40 @@ export class DiasporaPublisher implements EventBus {
   }
 
   /**
+   * Sends (at most once a week) the profile of a bridge identity to the people of a thread: the
+   * real address in the name, and a description pointing to the real account, so diaspora*
+   * readers know who is behind `user_at_server@…`.
+   */
+  private async sendBridgedProfile(
+    bridge: Awaited<ReturnType<typeof ensureBridgeIdentity>>,
+    author: ActorRow,
+    recipients: Awaited<ReturnType<typeof recipientsFor>>,
+  ) {
+    const ctx = this.ctx;
+    const key = `bridge-profile:${bridge.id}`;
+    if (await ctx.kv.get(key)) return;
+    await ctx.kv.set(key, '1', 7 * 24 * 60 * 60);
+    const picture = author.avatarUrl ?? author.avatarRemoteUrl;
+    const avatar = picture ? new URL(picture, ctx.config.PUBLIC_URL).href : null;
+    const origin = bridgedOrigin(author);
+    const profile: Profile = {
+      type: 'Profile',
+      author: this.bridgeId(bridge),
+      ...bridgedNames(author),
+      ...(avatar ? { imageUrl: avatar, imageUrlMedium: avatar, imageUrlSmall: avatar } : {}),
+      bio: `${origin} — fediverse account brought to diaspora* by the Disbigle bridge (${ctx.config.LOCAL_DOMAIN}). Real profile: ${author.apUrl ?? author.apUri ?? origin}`,
+      searchable: false,
+      public: true,
+    };
+    await sendToRecipients(
+      this.bridge,
+      serializeEntity(profile),
+      { diasporaId: this.bridgeId(bridge), privateKey: bridge.privateKeyPem },
+      recipients,
+    );
+  }
+
+  /**
    * A reply from someone diaspora* can't reach (an ActivityPub account) on a thread started
    * here. diaspora* needs comments signed by their author, so it goes out from the
    * author's bridge identity, signed with its key, relayed by the thread's author like any comment.
@@ -415,6 +451,8 @@ export class DiasporaPublisher implements EventBus {
       createdAt: post.createdAt,
     };
     const xml = serializeEntity(signRelayable(comment, bridge.privateKeyPem));
+    const recipients = await recipientsFor(ctx, root);
+    await this.sendBridgedProfile(bridge, author, recipients);
     // Kept like a received comment, so `/fetch` and late relaying serve the same signed copy.
     await this.bridge.relayables.save({
       guid,
@@ -424,7 +462,7 @@ export class DiasporaPublisher implements EventBus {
       xml,
       postId: post.id,
     });
-    await sendToRecipients(this.bridge, xml, rootSigner, await recipientsFor(ctx, root));
+    await sendToRecipients(this.bridge, xml, rootSigner, recipients);
   }
 
   private async postDeleted(event: Extract<DomainEvent, { type: 'post.deleted' }>) {
