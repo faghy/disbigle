@@ -540,7 +540,9 @@ export function createDisbigleFederation(options: FederationOptions): Federation
         localPosts: localPosts?.n ?? 0,
         localComments: 0,
       },
-      openRegistrations: settings.registrationMode === 'open',
+      // As Mastodon: sign-ups with approval count as open (directories show them as joinable).
+      openRegistrations:
+        settings.registrationMode === 'open' || settings.registrationMode === 'approval',
       metadata: {
         nodeName: settings.title,
         nodeDescription: settings.description,
