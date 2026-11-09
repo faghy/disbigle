@@ -320,3 +320,10 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Links in your own chat bubbles (accent background): the text colour, underlined. */
+.status-content.chat-mine a,
+.status-content.chat-mine a.mention {
+  color: inherit;
+  text-decoration: underline;
+}

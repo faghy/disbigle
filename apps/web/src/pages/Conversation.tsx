@@ -312,7 +312,7 @@ function Bubble({
         <StatusContent
           html={html}
           mentions={status.mentions}
-          className={cx('chat-bubble', mine && '[&_a]:text-accent-fg [&_a]:underline')}
+          className={cx('chat-bubble', mine && 'chat-mine')}
         />
         {status.media.length > 0 && (
           <div className="mt-2 min-w-48">
@@ -350,6 +350,25 @@ function ChatInput({
   const create = useCreateStatus();
   const inputId = useId();
   const [text, setText] = useState('');
+  const field = useRef<HTMLTextAreaElement>(null);
+  // A height the person chose by dragging the corner: the box never shrinks below it.
+  const chosenHeight = useRef(0);
+  const autoHeight = useRef(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: grows with the text
+  useLayoutEffect(() => {
+    const element = field.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    const wanted = Math.min(element.scrollHeight + 2, window.innerHeight * 0.5);
+    const height = Math.max(wanted, chosenHeight.current);
+    element.style.height = `${height}px`;
+    autoHeight.current = height;
+  }, [text]);
+  const rememberResize = () => {
+    const element = field.current;
+    if (element && Math.abs(element.offsetHeight - autoHeight.current) > 2)
+      chosenHeight.current = element.offsetHeight;
+  };
   const lastTyping = useRef(0);
 
   const send = (event?: FormEvent) => {
@@ -400,12 +419,14 @@ function ChatInput({
         </label>
         <textarea
           id={inputId}
-          rows={1}
+          ref={field}
+          rows={2}
           value={text}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
+          onPointerUp={rememberResize}
           placeholder={t('messages.write')}
-          className="max-h-40 min-h-10 flex-1 resize-none rounded-2xl border border-border bg-surface px-3.5 py-2 text-base focus-ring"
+          className="max-h-[80vh] min-h-12 flex-1 resize-y rounded-2xl border border-border bg-surface px-3.5 py-2 text-base focus-ring"
         />
         <Button type="submit" loading={create.isPending} disabled={!text.trim()}>
           {t('messages.send')}
