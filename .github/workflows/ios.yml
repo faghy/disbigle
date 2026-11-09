@@ -232,9 +232,11 @@ jobs:
             -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             archive | xcbeautify --renderer github-actions
-      - name: Upload to TestFlight
+      - name: Export the signed app
         run: |
           set -o pipefail
+          # Same options, but write the .ipa here: the upload below gives Apple's own error messages.
+          /usr/libexec/PlistBuddy -c "Set :destination export" ExportOptions.plist
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Disbigle.xcarchive" \
             -exportOptionsPlist ExportOptions.plist -exportPath "$RUNNER_TEMP/export" \
             -allowProvisioningUpdates \
@@ -242,6 +244,18 @@ jobs:
             -authenticationKeyID "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" \
             -authenticationKeyIssuerID "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}" \
             | xcbeautify --renderer github-actions
+          ls -la "$RUNNER_TEMP/export"
+      - name: Upload to TestFlight
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          # altool looks for the key as ~/private_keys/AuthKey_<id>.p8.
+          mkdir -p ~/private_keys
+          cp "$RUNNER_TEMP/keys/AuthKey.p8" ~/private_keys/AuthKey_$KEY_ID.p8
+          xcrun altool --upload-app --type ios --file "$(ls "$RUNNER_TEMP"/export/*.ipa)" \
+            --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID" --output-format normal
+          rm -f ~/private_keys/AuthKey_$KEY_ID.p8
       - name: Remove the key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"
