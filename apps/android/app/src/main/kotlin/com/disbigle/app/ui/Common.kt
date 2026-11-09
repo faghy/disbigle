@@ -65,21 +65,54 @@ val Brand = Color(0xFFCF3200)
 
 val LocalApp = staticCompositionLocalOf<AppModel> { error("no AppModel") }
 
+/** An accent colour: light-mode primary and container, dark-mode primary and container. */
+data class AccentColors(val light: Color, val lightContainer: Color, val dark: Color, val darkContainer: Color)
+
+val Accents: Map<String, AccentColors> = linkedMapOf(
+  "orange" to AccentColors(Brand, Color(0xFFFFDBCF), Color(0xFFFF8A5C), Color(0xFF5C1A00)),
+  "red" to AccentColors(Color(0xFFC62828), Color(0xFFFFDAD6), Color(0xFFFF8A80), Color(0xFF5F1412)),
+  "pink" to AccentColors(Color(0xFFC2185B), Color(0xFFFFD9E2), Color(0xFFFF8FB1), Color(0xFF5E1133)),
+  "purple" to AccentColors(Color(0xFF7B3FC4), Color(0xFFEEDCFF), Color(0xFFC9A7FF), Color(0xFF3F1F6E)),
+  "blue" to AccentColors(Color(0xFF1F5FD1), Color(0xFFD9E2FF), Color(0xFF9DB7FF), Color(0xFF12306B)),
+  "teal" to AccentColors(Color(0xFF00809A), Color(0xFFC6EEF7), Color(0xFF7CD4E8), Color(0xFF00414E)),
+  "green" to AccentColors(Color(0xFF2E7D32), Color(0xFFC8F0C9), Color(0xFF8BD88F), Color(0xFF13401A)),
+  "grey" to AccentColors(Color(0xFF5B6470), Color(0xFFE1E5EA), Color(0xFFB7BFC9), Color(0xFF343A42)),
+)
+
+/** Light, dark or black (OLED) as chosen in Settings → Appearance, else the system's; and the accent. */
 @Composable
-fun DisbigleTheme(content: @Composable () -> Unit) {
-  val colors = if (isSystemInDarkTheme()) {
+fun DisbigleTheme(mode: String = "system", accent: String = "orange", content: @Composable () -> Unit) {
+  val a = Accents[accent] ?: Accents.getValue("orange")
+  val dark = when (mode) {
+    "light" -> false
+    "dark", "black" -> true
+    else -> isSystemInDarkTheme()
+  }
+  // Disbigle's own orange keeps its warm dark greys; other colours get neutral ones.
+  val warm = accent == "orange"
+  val colors = if (dark) {
+    val black = mode == "black"
+    val background = when {
+      black -> Color.Black
+      warm -> Color(0xFF1A1110)
+      else -> Color(0xFF15171A)
+    }
     darkColorScheme(
-      primary = Color(0xFFFF8A5C), onPrimary = Color(0xFF3A0A00), primaryContainer = Color(0xFF5C1A00),
-      onPrimaryContainer = Color(0xFFFFDBCF), background = Color(0xFF1A1110), surface = Color(0xFF1A1110),
-      surfaceContainer = Color(0xFF271D1B), surfaceVariant = Color(0xFF3A2E2B),
-      secondaryContainer = Color(0xFF5C1A00), onSecondaryContainer = Color(0xFFFFDBCF),
+      primary = a.dark, onPrimary = Color(0xFF1A1110), primaryContainer = a.darkContainer,
+      onPrimaryContainer = Color(0xFFF2ECEA), background = background, surface = background,
+      surfaceContainer = if (black) Color(0xFF0E0E0E) else if (warm) Color(0xFF271D1B) else Color(0xFF1F2226),
+      surfaceVariant = if (black) Color(0xFF1C1C1C) else if (warm) Color(0xFF3A2E2B) else Color(0xFF30343A),
+      secondaryContainer = a.darkContainer, onSecondaryContainer = Color(0xFFF2ECEA),
     )
   } else {
     lightColorScheme(
-      primary = Brand, onPrimary = Color.White, primaryContainer = Color(0xFFFFDBCF),
-      onPrimaryContainer = Color(0xFF3A0A00), background = Color(0xFFFFFBF8), surface = Color(0xFFFFFBF8),
-      surfaceContainer = Color(0xFFFFF1E8), surfaceVariant = Color(0xFFF5E6DF),
-      secondaryContainer = Color(0xFFFFDBCF), onSecondaryContainer = Color(0xFF3A0A00),
+      primary = a.light, onPrimary = Color.White, primaryContainer = a.lightContainer,
+      onPrimaryContainer = Color(0xFF1F1A19),
+      background = if (warm) Color(0xFFFFFBF8) else Color(0xFFFBFBFC),
+      surface = if (warm) Color(0xFFFFFBF8) else Color(0xFFFBFBFC),
+      surfaceContainer = if (warm) Color(0xFFFFF1E8) else Color(0xFFF1F3F5),
+      surfaceVariant = if (warm) Color(0xFFF5E6DF) else Color(0xFFE6E9ED),
+      secondaryContainer = a.lightContainer, onSecondaryContainer = Color(0xFF1F1A19),
     )
   }
   MaterialTheme(colorScheme = colors, content = content)

@@ -294,4 +294,20 @@
   <string name="format_preview">Preview</string>
   <string name="format_placeholder">text</string>
   <string name="format_empty">Nothing to preview yet.</string>
+  <string name="appearance">Appearance</string>
+  <string name="theme_mode">Mode</string>
+  <string name="theme_system">Same as the phone</string>
+  <string name="theme_light">Light</string>
+  <string name="theme_dark">Dark</string>
+  <string name="theme_black">Black (OLED)</string>
+  <string name="theme_black_help">Black (OLED) uses pure black: on OLED screens those pixels switch off, saving battery.</string>
+  <string name="theme_color">Colour</string>
+  <string name="color_orange">Disbigle</string>
+  <string name="color_red">Red</string>
+  <string name="color_pink">Pink</string>
+  <string name="color_purple">Purple</string>
+  <string name="color_blue">Blue</string>
+  <string name="color_teal">Teal</string>
+  <string name="color_green">Green</string>
+  <string name="color_grey">Grey</string>
 </resources>

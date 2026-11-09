@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SettingsApplications
@@ -150,6 +153,7 @@ fun SettingsScreen(nav: Nav) {
       SectionTitle(stringResource(R.string.this_device))
       Row(stringResource(R.string.notifications), Icons.Outlined.Notifications) { nav.settings("notifications") }
       Row(stringResource(R.string.posting), Icons.Outlined.Edit) { nav.settings("posting") }
+      Row(stringResource(R.string.appearance), Icons.Outlined.Palette) { nav.settings("appearance") }
       Row(stringResource(R.string.android_settings), Icons.Outlined.SettingsApplications) {
         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${context.packageName}")))
       }
@@ -624,6 +628,62 @@ fun AspectMembersScreen(nav: Nav, aspect: AspectList) {
         HorizontalDivider()
       }
       if (!loading && members.isEmpty()) item { Hint(stringResource(R.string.aspect_empty)) }
+    }
+  }
+}
+
+/** Light, dark, black (OLED) or the system's choice, and the accent colour; kept on this phone. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun AppearanceScreen(nav: Nav) {
+  val prefs = LocalApp.current.preferences
+  val modes = listOf(
+    "system" to R.string.theme_system, "light" to R.string.theme_light,
+    "dark" to R.string.theme_dark, "black" to R.string.theme_black,
+  )
+  val colorNames = mapOf(
+    "orange" to R.string.color_orange, "red" to R.string.color_red, "pink" to R.string.color_pink,
+    "purple" to R.string.color_purple, "blue" to R.string.color_blue, "teal" to R.string.color_teal,
+    "green" to R.string.color_green, "grey" to R.string.color_grey,
+  )
+  Screen(stringResource(R.string.appearance), nav) { modifier ->
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+      SectionTitle(stringResource(R.string.theme_mode))
+      for ((value, label) in modes) {
+        ListItem(
+          headlineContent = { Text(stringResource(label)) },
+          leadingContent = { androidx.compose.material3.RadioButton(selected = prefs.themeMode == value, onClick = null) },
+          modifier = Modifier.clickable { prefs.themeMode = value },
+        )
+      }
+      Text(
+        stringResource(R.string.theme_black_help), style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp),
+      )
+      SectionTitle(stringResource(R.string.theme_color))
+      androidx.compose.foundation.layout.FlowRow(
+        Modifier.padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        for ((value, colors) in Accents) {
+          val selected = prefs.accent == value
+          Column(
+            Modifier.clip(RoundedCornerShape(12.dp)).clickable { prefs.accent = value }.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+          ) {
+            androidx.compose.foundation.layout.Box(
+              Modifier.size(40.dp).clip(androidx.compose.foundation.shape.CircleShape).background(colors.light)
+                .then(
+                  if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, androidx.compose.foundation.shape.CircleShape)
+                  else Modifier,
+                ),
+            )
+            Text(stringResource(colorNames.getValue(value)), style = MaterialTheme.typography.labelSmall)
+          }
+        }
+      }
     }
   }
 }

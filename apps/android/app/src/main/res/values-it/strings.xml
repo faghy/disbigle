@@ -298,4 +298,20 @@
   <string name="format_preview">Anteprima</string>
   <string name="format_placeholder">testo</string>
   <string name="format_empty">Ancora niente da vedere.</string>
+  <string name="appearance">Aspetto</string>
+  <string name="theme_mode">Modalità</string>
+  <string name="theme_system">Come il telefono</string>
+  <string name="theme_light">Chiaro</string>
+  <string name="theme_dark">Scuro</string>
+  <string name="theme_black">Nero (OLED)</string>
+  <string name="theme_black_help">Nero (OLED) usa il nero puro: sugli schermi OLED quei pixel si spengono e la batteria dura di più.</string>
+  <string name="theme_color">Colore</string>
+  <string name="color_orange">Disbigle</string>
+  <string name="color_red">Rosso</string>
+  <string name="color_pink">Rosa</string>
+  <string name="color_purple">Viola</string>
+  <string name="color_blue">Blu</string>
+  <string name="color_teal">Azzurro</string>
+  <string name="color_green">Verde</string>
+  <string name="color_grey">Grigio</string>
 </resources>

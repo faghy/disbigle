@@ -50,7 +50,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun DisbigleRoot(model: AppModel, activity: MainActivity) {
-  DisbigleTheme {
+  DisbigleTheme(model.preferences.themeMode, model.preferences.accent) {
     CompositionLocalProvider(LocalApp provides model) {
       val session = model.session
       LaunchedEffect(session?.token) { model.refresh() }
@@ -229,6 +229,7 @@ fun MainScreen(model: AppModel) {
       composable("settings/profile") { EditProfileScreen(nav) }
       composable("settings/notifications") { NotificationSettingsScreen(nav) }
       composable("settings/posting") { PostingSettingsScreen(nav) }
+      composable("settings/appearance") { AppearanceScreen(nav) }
       composable("settings/blocks") { AccountListScreen(nav, AccountList.BLOCKS) }
       composable("settings/mutes") { AccountListScreen(nav, AccountList.MUTES) }
       composable("settings/requests") { AccountListScreen(nav, AccountList.FOLLOW_REQUESTS) }

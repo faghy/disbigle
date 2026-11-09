@@ -58,6 +58,25 @@ class Preferences(context: Context) {
       notificationsState.value = value
       prefs.edit().putBoolean("notificationsOn", value).apply()
     }
+  private val themeModeState = mutableStateOf(prefs.getString("themeMode", "system")!!)
+  private val accentState = mutableStateOf(prefs.getString("accent", "orange")!!)
+
+  /** `system`, `light`, `dark` or `black` (pure black for OLED screens). */
+  var themeMode: String
+    get() = themeModeState.value
+    set(value) {
+      themeModeState.value = value
+      prefs.edit().putString("themeMode", value).apply()
+    }
+
+  /** Accent colour: `orange` (Disbigle), `red`, `pink`, `purple`, `blue`, `teal`, `green`, `grey`. */
+  var accent: String
+    get() = accentState.value
+    set(value) {
+      accentState.value = value
+      prefs.edit().putString("accent", value).apply()
+    }
+
   var alertKinds by mutableStateOf(
     prefs.getStringSet("alertKinds", null)?.map(Notification.Kind::of)?.toSet() ?: Alerts.defaultKinds,
   )
