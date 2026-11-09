@@ -11,6 +11,10 @@ on:
         description: Sign and upload a build to TestFlight
         type: boolean
         default: false
+      appstore:
+        description: Upload the App Store listing (texts in apps/ios/fastlane/metadata and the screenshots)
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -33,7 +37,7 @@ jobs:
             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build \
             | xcbeautify --renderer github-actions
 
-  # The app against a seeded development server, in Italian: screenshots of the main screens.
+  # The app against a seeded development server: screenshots of the main screens for the App Store.
   screenshots:
     needs: build
     runs-on: macos-15
@@ -85,27 +89,41 @@ jobs:
             CODE_SIGNING_ALLOWED=NO build | xcbeautify --renderer github-actions
       - name: Screenshots
         run: |
-          device=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r in d.values() for x in r if x['name'].startswith('iPhone 16')))")
-          xcrun simctl boot "$device"
-          xcrun simctl bootstatus "$device" -b
-          xcrun simctl status_bar "$device" override --time 9:41 --batteryState charged --batteryLevel 100
-          xcrun simctl install "$device" "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/Disbigle.app"
-          mkdir -p shots
-          shoot() {
-            xcrun simctl terminate "$device" com.disbigle.app 2>/dev/null || true
-            xcrun simctl launch "$device" com.disbigle.app -AppleLanguages '(it)' -AppleLocale it_IT "$@"
-            sleep 10
-            xcrun simctl io "$device" screenshot "shots/$name.png"
+          # App Store sizes: iPhone 6.9" (1320x2868) and iPad 13" (2064x2752), in the listing's
+          # languages, laid out as fastlane deliver reads them (fastlane/screenshots/<locale>/).
+          udid() {
+            xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r in d.values() for x in r if x['name'].startswith(sys.argv[1])))" "$1"
           }
-          name=signin shoot
-          for screen in home notifications messages search profile compose settings settings-notifications settings-profile; do
-            name=$screen shoot -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen
+          shots=apps/ios/fastlane/screenshots
+          for model in 'iPhone 16 Pro Max' 'iPad Pro 13-inch'; do
+            device=$(udid "$model")
+            tag=$(echo "$model" | cut -d' ' -f1)
+            xcrun simctl boot "$device"
+            xcrun simctl bootstatus "$device" -b
+            xcrun simctl status_bar "$device" override --time 9:41 --batteryState charged --batteryLevel 100
+            xcrun simctl install "$device" "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/Disbigle.app"
+            for locale in it en-US es-ES; do
+              lang=${locale%%-*}
+              case $lang in it) region=it_IT ;; en) region=en_US ;; es) region=es_ES ;; esac
+              mkdir -p "$shots/$locale"
+              n=1
+              for screen in home messages compose profile notifications search settings; do
+                xcrun simctl terminate "$device" com.disbigle.app 2>/dev/null || true
+                xcrun simctl launch "$device" com.disbigle.app -AppleLanguages "($lang)" -AppleLocale "$region" \
+                  -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen
+                sleep 10
+                xcrun simctl io "$device" screenshot "$shots/$locale/$n-$tag-$screen.png"
+                n=$((n + 1))
+              done
+            done
+            xcrun simctl shutdown "$device"
           done
+          sips -g pixelWidth -g pixelHeight "$shots"/it/1-*.png
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: screenshots
-          path: shots
+          path: apps/ios/fastlane/screenshots
       - name: Server log
         if: failure()
         run: tail -50 "$RUNNER_TEMP/server.log"
@@ -263,6 +281,42 @@ jobs:
           xcrun altool --upload-app --type ios --file "$(ls "$RUNNER_TEMP"/export/*.ipa)" \
             --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID" --output-format normal
           rm -f ~/private_keys/AuthKey_$KEY_ID.p8
+      - name: Remove the key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
+
+  # The App Store listing: texts from apps/ios/fastlane/metadata and the screenshots above, sent
+  # with fastlane deliver to the version in project.yml (created when missing). No build is sent
+  # and nothing is submitted for review: that stays a choice made in App Store Connect.
+  appstore:
+    if: github.event_name == 'workflow_dispatch' && inputs.appstore
+    needs: screenshots
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: screenshots
+          path: apps/ios/fastlane/screenshots
+      - name: App Store Connect key
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          python3 -c "import json,os; print(json.dumps({'key_id': os.environ['KEY_ID'], 'issuer_id': os.environ['ISSUER_ID'], 'key': os.environ['KEY'], 'in_house': False}))" > "$RUNNER_TEMP/keys/api.json"
+      - name: Upload the listing
+        run: |
+          version=$(grep -m1 'MARKETING_VERSION' project.yml | sed -E 's/.*: *"?([^"]+)"?/\1/')
+          echo "Version $version"
+          fastlane deliver --api_key_path "$RUNNER_TEMP/keys/api.json" \
+            --app_identifier com.disbigle.app --platform ios --app_version "$version" \
+            --skip_binary_upload true --overwrite_screenshots true --submit_for_review false \
+            --run_precheck_before_submit false --force true
       - name: Remove the key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"

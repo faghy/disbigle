@@ -1,0 +1,28 @@
+Disbigle is a free, open source social network that connects you to the whole fediverse from a single timeline: follow and talk with people on Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey and many more, and even Bluesky through the Bridgy Fed bridge.
+
+NO ADS, NO ALGORITHM
+Your timeline shows the posts of the people you follow, newest first. Nobody decides what you see, and nobody sells your attention.
+
+YOUR PRIVACY, YOUR RULES
+• Aspects: group people (Family, Friends, Work…) and choose who sees each post, as on diaspora*.
+• Public, followers-only or private posts.
+• Content warnings and blurred sensitive media.
+• No tracking: the app only talks to your own server.
+
+EVERYTHING YOU NEED
+• Posts with photos, polls, mentions and hashtags, with buttons for bold, headings and lists, and a preview before publishing.
+• Private messages as a chat, with "Seen" and the status of the people you write with, if they share it.
+• Photo albums and a Media tab on every profile.
+• Post translation on the server, without sending texts to Google and the like.
+• Link previews without tracking.
+• Notifications, bookmarks, liked posts, "My activity".
+• Hide posts and hashtags, mute or block people, report content to the moderators.
+• Light and dark themes and eight colours to choose from.
+
+BRING YOUR ACCOUNT
+Coming from Mastodon or diaspora*? Move here from the website: your followers find you on their own.
+
+TRULY OPEN
+Disbigle is free software (AGPL-3.0 licence): the code is public on GitHub and anyone can run their own server. The app works with app.disbigle.com and other Disbigle servers.
+
+Sign-ups on app.disbigle.com are approved by a moderator, to keep spam and fake accounts away.

@@ -1,0 +1,1 @@
+fediverse,mastodon,diaspora,social,no ads,privacy,federated,friendica,pixelfed,chat

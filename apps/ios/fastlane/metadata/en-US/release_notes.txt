@@ -1,0 +1,1 @@
+First App Store version: chat in messages, themes and colours, post formatting, link previews, reports to the moderators.
