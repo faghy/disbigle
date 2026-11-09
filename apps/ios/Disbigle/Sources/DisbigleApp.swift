@@ -7,11 +7,10 @@ struct DisbigleApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
   @Environment(\.scenePhase) private var scenePhase
   @State private var model = AppModel()
-
-  var body: some Scene {
   @AppStorage(Appearance.modeKey) private var mode = "system"
   @AppStorage(Appearance.accentKey) private var accent = "orange"
 
+  var body: some Scene {
     WindowGroup {
       Group {
         if model.session != nil {
