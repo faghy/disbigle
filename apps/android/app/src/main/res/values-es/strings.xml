@@ -314,4 +314,16 @@
   <string name="color_teal">Turquesa</string>
   <string name="color_green">Verde</string>
   <string name="color_grey">Gris</string>
+  <string name="report">Denunciar</string>
+  <string name="report_post">Denunciar la publicación</string>
+  <string name="report_account">Denunciar a %1$s</string>
+  <string name="report_post_of">Denunciar esta publicación de %1$s</string>
+  <string name="report_spam">Spam</string>
+  <string name="report_legal">Contenido ilegal</string>
+  <string name="report_violation">Incumple las normas del servidor</string>
+  <string name="report_other">Otra cosa</string>
+  <string name="report_comment">¿Algo que añadir? (opcional)</string>
+  <string name="report_help">Las denuncias llegan a los moderadores, que actúan en 24 horas. También puedes bloquear o silenciar a esta persona.</string>
+  <string name="report_send">Enviar la denuncia</string>
+  <string name="report_sent">Gracias: los moderadores la revisarán.</string>
 </resources>

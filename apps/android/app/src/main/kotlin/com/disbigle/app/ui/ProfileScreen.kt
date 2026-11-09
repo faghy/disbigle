@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.VolumeOff
@@ -101,6 +102,7 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
   var aspects by remember { mutableStateOf<List<AspectList>>(emptyList()) }
   var memberOf by remember { mutableStateOf<Set<String>>(emptySet()) }
   var menu by remember { mutableStateOf(false) }
+  var reporting by remember { mutableStateOf(false) }
   var busy by remember { mutableStateOf(false) }
   val list = store.list<Status>("profile:$id", { it.id }) { q -> client!!.statuses(id, q) }
   val mediaList = store.list<Status>("profile-media:$id", { it.id }) { q -> client!!.mediaStatuses(id, q) }
@@ -154,6 +156,7 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
     status.mediaAttachments.filter { it.isVisual }.map { GalleryItem(it, status.id, status.sensitive, status.createdAt) }
   }
   val shown = account
+  if (reporting) shown?.let { ReportDialog(it, null) { reporting = false } }
   Screen(
     shown?.name ?: "", nav, back = !isMe,
     actions = {
@@ -193,6 +196,11 @@ fun ProfileScreen(nav: Nav, id: String, isMe: Boolean) {
               text = { Text(stringResource(if (blocking) R.string.unblock else R.string.block), color = if (blocking) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error) },
               leadingIcon = { Icon(Icons.Outlined.Block, null) },
               onClick = { menu = false; act(if (blocking) AccountAction.UNBLOCK else AccountAction.BLOCK) },
+            )
+            DropdownMenuItem(
+              text = { Text(stringResource(R.string.report), color = MaterialTheme.colorScheme.error) },
+              leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
+              onClick = { menu = false; reporting = true },
             )
           }
         }

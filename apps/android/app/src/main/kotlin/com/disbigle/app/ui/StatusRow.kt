@@ -102,6 +102,7 @@ import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.VisibilityOff
 import com.disbigle.kit.hide
 import com.disbigle.kit.hideTag
@@ -136,6 +137,7 @@ fun StatusRow(
   var actionError by remember { mutableStateOf<String?>(null) }
   var interactions by remember { mutableStateOf<InteractionTab?>(null) }
   var hidden by remember(status.id) { mutableStateOf<HiddenNote?>(null) }
+  var reporting by remember { mutableStateOf(false) }
   val linkColor = MaterialTheme.colorScheme.primary
   // Translation: offered for other people's posts in another language the server can translate.
   val appLocale = LocalConfiguration.current.locales[0]
@@ -296,6 +298,7 @@ fun StatusRow(
               val client = model.client ?: return@MoreMenu
               hiding { client.hide(shown.id); hidden = HiddenNote.Post }
             },
+            onReport = { reporting = true },
             onHideTag = { tag ->
               val client = model.client ?: return@MoreMenu
               hiding { hidden = HiddenNote.Tag(client.hideTag(tag, shown.account.id).id, tag, shown.account.name) }
@@ -306,6 +309,7 @@ fun StatusRow(
     }
   }
 
+  if (reporting) ReportDialog(shown.account, shown) { reporting = false }
   interactions?.let { tab ->
     InteractionsSheet(shown, tab, nav, onDismiss = { interactions = null })
   }
@@ -393,6 +397,7 @@ private fun languageName(code: String, locale: Locale): String =
 private fun MoreMenu(
   status: Status, isMine: Boolean, canHide: Boolean,
   onEdit: () -> Unit, onDelete: () -> Unit, onHide: () -> Unit, onHideTag: (String) -> Unit,
+  onReport: () -> Unit = {},
 ) {
   val context = LocalContext.current
   var open by remember { mutableStateOf(false) }
@@ -434,6 +439,13 @@ private fun MoreMenu(
             onClick = { open = false; onHideTag(tag) },
           )
         }
+      }
+      if (!isMine && LocalApp.current.me != null) {
+        DropdownMenuItem(
+          text = { Text(stringResource(R.string.report_post), color = MaterialTheme.colorScheme.error) },
+          leadingIcon = { Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.error) },
+          onClick = { open = false; onReport() },
+        )
       }
       if (isMine) {
         DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, leadingIcon = { Icon(Icons.Outlined.Edit, null) }, onClick = { open = false; onEdit() })

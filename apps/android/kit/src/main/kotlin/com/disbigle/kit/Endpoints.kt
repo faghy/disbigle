@@ -136,6 +136,19 @@ suspend fun Client.describeMedia(id: String, description: String) =
 
 // Hiding (Disbigle extension)
 
+/** Why a post or account is reported (Mastodon's categories). */
+enum class ReportCategory(val raw: String) { SPAM("spam"), LEGAL("legal"), VIOLATION("violation"), OTHER("other") }
+
+/** Reports an account (and some of its posts) to the moderators. */
+suspend fun Client.report(accountId: String, statusIds: List<String>, category: ReportCategory, comment: String) =
+  perform(
+    "POST", "api/v1/reports",
+    body = Client.Body.Form(
+      listOf("account_id" to accountId, "category" to category.raw, "comment" to comment) +
+        statusIds.map { "status_ids[]" to it },
+    ),
+  )
+
 /** Hides someone else's post from your timelines, without unfollowing them. */
 suspend fun Client.hide(id: String) = perform("POST", "api/v1/statuses/$id/hide")
 

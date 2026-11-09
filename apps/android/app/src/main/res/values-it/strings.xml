@@ -314,4 +314,16 @@
   <string name="color_teal">Azzurro</string>
   <string name="color_green">Verde</string>
   <string name="color_grey">Grigio</string>
+  <string name="report">Segnala</string>
+  <string name="report_post">Segnala il post</string>
+  <string name="report_account">Segnala %1$s</string>
+  <string name="report_post_of">Segnala questo post di %1$s</string>
+  <string name="report_spam">Spam</string>
+  <string name="report_legal">Contenuto illegale</string>
+  <string name="report_violation">Viola le regole del server</string>
+  <string name="report_other">Altro</string>
+  <string name="report_comment">Vuoi aggiungere qualcosa? (facoltativo)</string>
+  <string name="report_help">Le segnalazioni arrivano ai moderatori, che intervengono entro 24 ore. Puoi anche bloccare o silenziare questa persona.</string>
+  <string name="report_send">Invia la segnalazione</string>
+  <string name="report_sent">Grazie: i moderatori la esamineranno.</string>
 </resources>

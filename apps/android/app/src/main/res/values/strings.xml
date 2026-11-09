@@ -310,4 +310,16 @@
   <string name="color_teal">Teal</string>
   <string name="color_green">Green</string>
   <string name="color_grey">Grey</string>
+  <string name="report">Report</string>
+  <string name="report_post">Report post</string>
+  <string name="report_account">Report %1$s</string>
+  <string name="report_post_of">Report this post by %1$s</string>
+  <string name="report_spam">Spam</string>
+  <string name="report_legal">Illegal content</string>
+  <string name="report_violation">Breaks the server rules</string>
+  <string name="report_other">Something else</string>
+  <string name="report_comment">Anything to add? (optional)</string>
+  <string name="report_help">Reports go to the moderators, who act within 24 hours. You can also block or mute this person.</string>
+  <string name="report_send">Send report</string>
+  <string name="report_sent">Thank you: the moderators will look at it.</string>
 </resources>
