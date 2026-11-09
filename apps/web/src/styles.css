@@ -9,6 +9,9 @@
  * request (`data-theme` on <html>, see lib/theme.ts).
  */
 :root {
+  /* The accent colour (see the palettes below): hue and a chroma factor (0 for grey). */
+  --accent-h: 36;
+  --accent-c: 1;
   --bg: oklch(98.9% 0.003 80);
   --surface: oklch(100% 0 0);
   --surface-muted: oklch(97.2% 0.005 80);
@@ -16,9 +19,9 @@
   --fg-muted: oklch(51% 0.014 55);
   --border: oklch(93% 0.006 75);
   --border-strong: oklch(86.5% 0.01 70);
-  --accent: oklch(56% 0.19 36);
-  --accent-hover: oklch(50% 0.18 34);
-  --accent-soft: oklch(96.8% 0.018 40);
+  --accent: oklch(56% calc(0.19 * var(--accent-c)) var(--accent-h));
+  --accent-hover: oklch(50% calc(0.18 * var(--accent-c)) var(--accent-h));
+  --accent-soft: oklch(96.8% calc(0.018 * var(--accent-c)) var(--accent-h));
   --accent-fg: oklch(99.5% 0.003 85);
   --sun: oklch(94.5% 0.05 90);
   --mint: oklch(94.5% 0.035 170);
@@ -36,6 +39,30 @@
   color-scheme: light;
 }
 
+/* Accent palettes (`data-accent` on <html>, see lib/theme.ts); Disbigle orange by default. */
+:root[data-accent="red"] {
+  --accent-h: 22;
+}
+:root[data-accent="pink"] {
+  --accent-h: 350;
+}
+:root[data-accent="purple"] {
+  --accent-h: 300;
+}
+:root[data-accent="blue"] {
+  --accent-h: 255;
+}
+:root[data-accent="teal"] {
+  --accent-h: 200;
+}
+:root[data-accent="green"] {
+  --accent-h: 150;
+}
+:root[data-accent="grey"] {
+  --accent-h: 260;
+  --accent-c: 0;
+}
+
 :root[data-theme="dark"] {
   --bg: oklch(17% 0.006 60);
   --surface: oklch(20.5% 0.007 60);
@@ -44,10 +71,38 @@
   --fg-muted: oklch(72% 0.012 70);
   --border: oklch(28% 0.008 60);
   --border-strong: oklch(37% 0.01 60);
-  --accent: oklch(72% 0.15 38);
-  --accent-hover: oklch(78% 0.13 40);
-  --accent-soft: oklch(27% 0.04 38);
-  --accent-fg: oklch(19% 0.02 40);
+  --accent: oklch(72% calc(0.15 * var(--accent-c)) var(--accent-h));
+  --accent-hover: oklch(78% calc(0.13 * var(--accent-c)) var(--accent-h));
+  --accent-soft: oklch(27% calc(0.04 * var(--accent-c)) var(--accent-h));
+  --accent-fg: oklch(19% calc(0.02 * var(--accent-c)) var(--accent-h));
+  --sun: oklch(32% 0.04 90);
+  --mint: oklch(32% 0.035 170);
+  --sky: oklch(32% 0.03 235);
+  --lilac: oklch(32% 0.03 305);
+  --peach: oklch(32% 0.035 45);
+  --ink: oklch(88% 0.012 70);
+  --danger: oklch(72% 0.15 15);
+  --danger-soft: oklch(27% 0.05 15);
+  --success: oklch(76% 0.12 160);
+  --success-soft: oklch(26% 0.04 160);
+  --elevation: 0 1px 2px oklch(0% 0 0 / 0.3);
+  --elevation-raised: 0 12px 32px -12px oklch(0% 0 0 / 0.6), 0 2px 6px oklch(0% 0 0 / 0.3);
+  color-scheme: dark;
+}
+
+/* Black (OLED): pure black background, so OLED screens switch those pixels off. */
+:root[data-theme="black"] {
+  --bg: oklch(0% 0 0);
+  --surface: oklch(0% 0 0);
+  --surface-muted: oklch(17% 0 0);
+  --fg: oklch(94% 0 0);
+  --fg-muted: oklch(70% 0 0);
+  --border: oklch(24% 0 0);
+  --border-strong: oklch(33% 0 0);
+  --accent: oklch(72% calc(0.15 * var(--accent-c)) var(--accent-h));
+  --accent-hover: oklch(78% calc(0.13 * var(--accent-c)) var(--accent-h));
+  --accent-soft: oklch(27% calc(0.04 * var(--accent-c)) var(--accent-h));
+  --accent-fg: oklch(19% calc(0.02 * var(--accent-c)) var(--accent-h));
   --sun: oklch(32% 0.04 90);
   --mint: oklch(32% 0.035 170);
   --sky: oklch(32% 0.03 235);
@@ -73,10 +128,10 @@
     --fg-muted: oklch(72% 0.012 70);
     --border: oklch(28% 0.008 60);
     --border-strong: oklch(37% 0.01 60);
-    --accent: oklch(72% 0.15 38);
-    --accent-hover: oklch(78% 0.13 40);
-    --accent-soft: oklch(27% 0.04 38);
-    --accent-fg: oklch(19% 0.02 40);
+    --accent: oklch(72% calc(0.15 * var(--accent-c)) var(--accent-h));
+    --accent-hover: oklch(78% calc(0.13 * var(--accent-c)) var(--accent-h));
+    --accent-soft: oklch(27% calc(0.04 * var(--accent-c)) var(--accent-h));
+    --accent-fg: oklch(19% calc(0.02 * var(--accent-c)) var(--accent-h));
     --sun: oklch(32% 0.04 90);
     --mint: oklch(32% 0.035 170);
     --sky: oklch(32% 0.03 235);

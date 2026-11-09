@@ -27,6 +27,9 @@ export function SettingsLayout() {
           <Link to="/settings/account" className={tabClass}>
             {t('settings.account.tab')}
           </Link>
+          <Link to="/settings/appearance" className={tabClass}>
+            {t('appearance.tab')}
+          </Link>
           <Link to="/settings/security" className={tabClass}>
             {t('settings.security.tab')}
           </Link>

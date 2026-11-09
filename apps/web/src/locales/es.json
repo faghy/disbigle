@@ -1290,7 +1290,8 @@
     "label": "Tema",
     "light": "Claro",
     "dark": "Oscuro",
-    "system": "Sistema"
+    "system": "Sistema",
+    "black": "Negro (OLED)"
   },
   "contacts": {
     "title": "Contactos",
@@ -1564,5 +1565,24 @@
     "brokenTitle": "Este enlace no funciona",
     "broken": "Puede que haya caducado o ya se haya usado. Inicia sesión para recibir uno nuevo.",
     "signIn": "Iniciar sesión"
+  },
+  "appearance": {
+    "tab": "Apariencia",
+    "title": "Apariencia",
+    "description": "Cómo se ve Disbigle en este dispositivo.",
+    "mode": "Modo",
+    "color": "Color",
+    "more": "Más colores…",
+    "blackHelp": "Negro (OLED) usa el negro puro: en las pantallas OLED de móviles y portátiles esos píxeles se apagan y la batería dura más.",
+    "colors": {
+      "orange": "Disbigle",
+      "red": "Rojo",
+      "pink": "Rosa",
+      "purple": "Morado",
+      "blue": "Azul",
+      "teal": "Turquesa",
+      "green": "Verde",
+      "grey": "Gris"
+    }
   }
 }

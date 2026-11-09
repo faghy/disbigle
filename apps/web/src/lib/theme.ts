@@ -1,45 +1,94 @@
 import { useSyncExternalStore } from 'react';
 
-export const themes = ['light', 'dark', 'system'] as const;
+/** Light, dark, black (pure black for OLED screens) or the system's choice. */
+export const themes = ['light', 'dark', 'black', 'system'] as const;
 export type Theme = (typeof themes)[number];
 
+/** Accent colours (styles.css, `data-accent`); `orange` is Disbigle's own. */
+export const accents = [
+  'orange',
+  'red',
+  'pink',
+  'purple',
+  'blue',
+  'teal',
+  'green',
+  'grey',
+] as const;
+export type Accent = (typeof accents)[number];
+
 const STORAGE_KEY = 'disbigle-theme';
-const THEME_COLORS = { light: '#cf3200', dark: '#170e0b' };
+const ACCENT_KEY = 'disbigle-accent';
+const THEME_COLORS = { light: '#cf3200', dark: '#170e0b', black: '#000000' };
 const listeners = new Set<() => void>();
 
 const isTheme = (value: unknown): value is Theme => themes.includes(value as Theme);
+const isAccent = (value: unknown): value is Accent => accents.includes(value as Accent);
+
+function read(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function write(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Private mode: the choice lasts for this page only.
+  }
+}
 
 /** The chosen theme; light unless the user picked another one on this device. */
 export function getTheme(): Theme {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return isTheme(stored) ? stored : 'light';
-  } catch {
-    return 'light';
-  }
+  const stored = read(STORAGE_KEY);
+  return isTheme(stored) ? stored : 'light';
+}
+
+/** The chosen accent colour; Disbigle orange unless the user picked another one. */
+export function getAccent(): Accent {
+  const stored = read(ACCENT_KEY);
+  return isAccent(stored) ? stored : 'orange';
 }
 
 const systemDark = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
 
-/** Applies a theme to the page: `data-theme` on <html> (see styles.css) and the browser bar colour. */
-export function applyTheme(theme: Theme = getTheme()): void {
+/**
+ * Applies theme and accent to the page: `data-theme` and `data-accent` on <html> (see
+ * styles.css) and the browser bar colour.
+ */
+export function applyTheme(theme: Theme = getTheme(), accent: Accent = getAccent()): void {
   const root = document.documentElement;
   root.dataset.theme = theme;
-  const dark = theme === 'dark' || (theme === 'system' && systemDark());
+  if (accent === 'orange') delete root.dataset.accent;
+  else root.dataset.accent = accent;
+  const color =
+    theme === 'black'
+      ? THEME_COLORS.black
+      : theme === 'dark' || (theme === 'system' && systemDark())
+        ? THEME_COLORS.dark
+        : THEME_COLORS.light;
   for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
-    meta.content = dark ? THEME_COLORS.dark : THEME_COLORS.light;
+    meta.content = color;
   }
 }
 
-export function setTheme(theme: Theme): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, theme);
-  } catch {
-    // Private mode: the choice lasts for this page only.
-  }
-  applyTheme(theme);
+const changed = () => {
+  applyTheme();
   for (const listener of listeners) listener();
+};
+
+export function setTheme(theme: Theme): void {
+  write(STORAGE_KEY, theme);
+  changed();
+}
+
+export function setAccent(accent: Accent): void {
+  write(ACCENT_KEY, accent);
+  changed();
 }
 
 function subscribe(listener: () => void) {
@@ -49,4 +98,8 @@ function subscribe(listener: () => void) {
 
 export function useTheme(): Theme {
   return useSyncExternalStore(subscribe, getTheme, () => 'light');
+}
+
+export function useAccent(): Accent {
+  return useSyncExternalStore(subscribe, getAccent, () => 'orange');
 }

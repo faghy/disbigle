@@ -747,7 +747,7 @@ function UserMenu({ user }: { user: CurrentUser }) {
   );
 }
 
-/** Light (the default), dark, or the system's choice; kept on this device. */
+/** Light (the default), dark, black (OLED) or the system's choice; kept on this device. */
 function ThemeChoice() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -755,7 +755,7 @@ function ThemeChoice() {
   return (
     <fieldset className="px-3 py-2">
       <legend className="float-left mb-1.5 text-xs text-fg-muted">{t('theme.label')}</legend>
-      <div className="clear-left grid grid-cols-3 gap-1 rounded-lg bg-surface-muted p-1">
+      <div className="clear-left grid grid-cols-2 gap-1 rounded-lg bg-surface-muted p-1">
         {themes.map((value) => (
           <label
             key={value}
@@ -776,6 +776,12 @@ function ThemeChoice() {
           </label>
         ))}
       </div>
+      <Link
+        to="/settings/appearance"
+        className="mt-1.5 block text-xs font-medium text-accent hover:underline focus-ring"
+      >
+        {t('appearance.more')}
+      </Link>
     </fieldset>
   );
 }

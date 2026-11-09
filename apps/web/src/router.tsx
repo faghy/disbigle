@@ -40,6 +40,7 @@ import { isSearchType, SearchPage, type SearchType } from './pages/Search.tsx';
 import { SharePage } from './pages/Share.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
 import { AccountSettingsPage } from './pages/settings/AccountSettings.tsx';
+import { AppearanceSettingsPage } from './pages/settings/AppearanceSettings.tsx';
 import { AuthorizedAppsPage } from './pages/settings/AuthorizedApps.tsx';
 import { InvitesPage } from './pages/settings/Invites.tsx';
 import { MoveSettingsPage } from './pages/settings/MoveSettings.tsx';
@@ -189,6 +190,12 @@ const settingsNotificationsRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: '/notifications',
   component: NotificationSettingsPage,
+});
+
+const settingsAppearanceRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/appearance',
+  component: AppearanceSettingsPage,
 });
 
 const settingsMoveRoute = createRoute({
@@ -475,6 +482,7 @@ export const routeTree = rootRoute.addChildren([
     settingsIndexRoute,
     settingsProfileRoute,
     settingsAccountRoute,
+    settingsAppearanceRoute,
     settingsMoveRoute,
     settingsSecurityRoute,
     settingsNotificationsRoute,

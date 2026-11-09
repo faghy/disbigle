@@ -1264,7 +1264,8 @@
     "label": "Theme",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "black": "Black (OLED)"
   },
   "contacts": {
     "title": "Contacts",
@@ -1538,5 +1539,24 @@
     "brokenTitle": "This link does not work",
     "broken": "It may have expired or been used already. Sign in to get a new one.",
     "signIn": "Sign in"
+  },
+  "appearance": {
+    "tab": "Appearance",
+    "title": "Appearance",
+    "description": "How Disbigle looks on this device.",
+    "mode": "Mode",
+    "color": "Colour",
+    "more": "More colours…",
+    "blackHelp": "Black (OLED) uses pure black: on OLED phone and laptop screens those pixels switch off, saving battery.",
+    "colors": {
+      "orange": "Disbigle",
+      "red": "Red",
+      "pink": "Pink",
+      "purple": "Purple",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "grey": "Grey"
+    }
   }
 }
