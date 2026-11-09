@@ -21,6 +21,7 @@ struct StatusRow: View {
   @State private var reactions: Client.Reaction?
   /** What was just hidden in place of the post, to say so and offer to undo it. */
   @State private var hidden: HiddenNote?
+  @State private var reporting: ReportTarget?
 
   private enum HiddenNote: Equatable {
     case post
@@ -112,6 +113,7 @@ struct StatusRow: View {
     .confirmationDialog("Delete this post?", isPresented: $confirmDelete, titleVisibility: .visible) {
       Button("Delete", role: .destructive) { Task { await delete() } }
     }
+    .sheet(item: $reporting) { ReportSheet(target: $0) }
     .sheet(item: $reactions) { reaction in
       ReactionsSheet(status: shown, reaction: reaction) { account in
         reactions = nil
@@ -255,6 +257,13 @@ struct StatusRow: View {
             } label: {
               Label("Hide #\(tag) from \(shown.account.name)", systemImage: "number")
             }
+          }
+        }
+        if !isMine && model.me != nil {
+          Button(role: .destructive) {
+            reporting = ReportTarget(account: shown.account, status: shown)
+          } label: {
+            Label("Report post", systemImage: "flag")
           }
         }
         if isMine {

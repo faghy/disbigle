@@ -524,6 +524,22 @@
         }
       }
     },
+    "Anything to add? (optional)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Algo que añadir? (opcional)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuoi aggiungere qualcosa? (facoltativo)"
+          }
+        }
+      }
+    },
     "Appearance": {
       "localizations": {
         "es": {
@@ -760,6 +776,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Segnalibri"
+          }
+        }
+      }
+    },
+    "Breaks the server rules": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incumple las normas del servidor"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viola le regole del server"
           }
         }
       }
@@ -1608,6 +1640,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Home"
+          }
+        }
+      }
+    },
+    "Illegal content": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido ilegal"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenuto illegale"
           }
         }
       }
@@ -2828,6 +2876,86 @@
         }
       }
     },
+    "Report": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala"
+          }
+        }
+      }
+    },
+    "Report %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar a %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala %@"
+          }
+        }
+      }
+    },
+    "Report post": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar la publicación"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala il post"
+          }
+        }
+      }
+    },
+    "Report this post by %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar esta publicación de %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala questo post di %@"
+          }
+        }
+      }
+    },
+    "Reports go to the moderators, who act within 24 hours. You can also block or mute this person.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las denuncias llegan a los moderadores, que actúan en 24 horas. También puedes bloquear o silenciar a esta persona."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le segnalazioni arrivano ai moderatori, che intervengono entro 24 ore. Puoi anche bloccare o silenziare questa persona."
+          }
+        }
+      }
+    },
     "Requested": {
       "localizations": {
         "es": {
@@ -3032,6 +3160,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invia"
+          }
+        }
+      }
+    },
+    "Send report": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar la denuncia"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia la segnalazione"
           }
         }
       }
@@ -3260,6 +3404,22 @@
         }
       }
     },
+    "Something else": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra cosa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altro"
+          }
+        }
+      }
+    },
     "Something went wrong": {
       "localizations": {
         "es": {
@@ -3288,6 +3448,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Codice sorgente"
+          }
+        }
+      }
+    },
+    "Spam": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
           }
         }
       }
@@ -3336,6 +3512,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Azzurro"
+          }
+        }
+      }
+    },
+    "Thank you: the moderators will look at it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gracias: los moderadores la revisarán."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grazie: i moderatori la esamineranno."
           }
         }
       }
@@ -3820,6 +4012,22 @@
         }
       }
     },
+    "Why?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Por qué?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perché?"
+          }
+        }
+      }
+    },
     "Write @name@server to choose who gets the message": {
       "localizations": {
         "es": {
@@ -3848,6 +4056,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scrivi un messaggio"
+          }
+        }
+      }
+    },
+    "Write it here": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escríbelo aquí"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrivilo qui"
           }
         }
       }

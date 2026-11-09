@@ -7,6 +7,7 @@ struct ProfileScreen: View {
   let account: Account
   var isMe = false
   @State private var relationship: Relationship?
+  @State private var reporting: ReportTarget?
   @State private var list: PagedList<Status>?
   @State private var aspects: [AspectList] = []
   @State private var memberOf: Set<String> = []
@@ -70,6 +71,7 @@ struct ProfileScreen: View {
       }
     }
     .navigationTitle(account.name)
+    .sheet(item: $reporting) { ReportSheet(target: $0) }
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
@@ -112,6 +114,11 @@ struct ProfileScreen: View {
               Label(
                 relationship?.blocking == true ? LocalizedStringKey("Unblock") : "Block",
                 systemImage: "hand.raised")
+            }
+            Button(role: .destructive) {
+              reporting = ReportTarget(account: account)
+            } label: {
+              Label("Report", systemImage: "flag")
             }
           } label: {
             Label("More actions", systemImage: "ellipsis.circle")

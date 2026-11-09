@@ -235,6 +235,25 @@ extension Client {
       body: .form([URLQueryItem(name: "active", value: active ? "true" : "false")]))
   }
 
+  /** Why a post or account is reported (Mastodon's categories). */
+  public enum ReportCategory: String, CaseIterable, Identifiable, Sendable {
+    case spam, legal, violation, other
+    public var id: String { rawValue }
+  }
+
+  /** Reports an account (and some of its posts) to the moderators of its server and of ours. */
+  public func report(
+    account accountId: String, statusIds: [String] = [], category: ReportCategory, comment: String
+  ) async throws {
+    var form = [
+      URLQueryItem(name: "account_id", value: accountId),
+      URLQueryItem(name: "category", value: category.rawValue),
+      URLQueryItem(name: "comment", value: comment),
+    ]
+    form += statusIds.map { URLQueryItem(name: "status_ids[]", value: $0) }
+    try await perform("POST", "api/v1/reports", body: .form(form))
+  }
+
   public func markRead(conversation id: String) async throws {
     try await perform("POST", "api/v1/conversations/\(id)/read")
   }
