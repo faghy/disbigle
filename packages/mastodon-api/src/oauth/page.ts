@@ -87,21 +87,26 @@ function layout(lang: Lang, title: string, content: string): string {
 <meta name="referrer" content="same-origin">
 <title>${escapeHtml(title)}</title>
 <style>
-  body { font-family: system-ui, sans-serif; background: #f4f4f7; color: #1d1d24; margin: 0; }
-  main { max-width: 26rem; margin: 3rem auto; background: #fff; border-radius: 12px; padding: 1.5rem 1.75rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  /* Disbigle's colours; every text colour is explicit, so no browser default (white on white). */
+  body { font-family: system-ui, -apple-system, sans-serif; background: #fbf8f6; color: #2d1912; margin: 0; }
+  main { max-width: 26rem; margin: 3rem auto; background: #fff; border-radius: 16px; padding: 1.5rem 1.75rem; box-shadow: 0 12px 32px -12px rgba(45,25,18,.25); }
   h1 { font-size: 1.25rem; margin: 0 0 .75rem; }
   ul { padding-left: 1.2rem; }
-  .muted { color: #6b6b78; font-size: .9rem; }
+  a { color: #cf3200; }
+  .muted { color: #6f5d55; font-size: .9rem; }
   .actions { display: flex; gap: .75rem; margin-top: 1.25rem; }
-  button { flex: 1; font: inherit; padding: .65rem 1rem; border-radius: 8px; border: 1px solid #c9c9d3; background: #fff; cursor: pointer; }
-  button.primary { background: #5b4bd6; border-color: #5b4bd6; color: #fff; }
-  code { display: block; padding: .75rem; background: #f0f0f5; border-radius: 8px; word-break: break-all; font-size: 1rem; user-select: all; }
+  button { -webkit-appearance: none; appearance: none; flex: 1; font: inherit; font-weight: 600; padding: .75rem 1rem; border-radius: 10px; border: 1.5px solid #cf3200; background: #fff; color: #cf3200; cursor: pointer; }
+  button.primary { background: #cf3200; border-color: #cf3200; color: #fff; }
+  button:focus-visible { outline: 3px solid #f08a24; outline-offset: 2px; }
+  code { display: block; padding: .75rem; background: #f5ece6; color: #2d1912; border-radius: 8px; word-break: break-all; font-size: 1rem; user-select: all; }
   @media (prefers-color-scheme: dark) {
-    body { background: #16161c; color: #ececf1; }
-    main { background: #22222b; box-shadow: none; }
-    button { background: #2c2c36; color: #ececf1; border-color: #3a3a46; }
-    code { background: #2c2c36; }
-    .muted { color: #a0a0ad; }
+    body { background: #120c0a; color: #f3e9e4; }
+    main { background: #1f1714; box-shadow: none; }
+    a { color: #ff8a5c; }
+    button { background: transparent; color: #ff8a5c; border-color: #ff8a5c; }
+    button.primary { background: #ff8a5c; border-color: #ff8a5c; color: #1a0f0b; }
+    code { background: #2c211d; color: #f3e9e4; }
+    .muted { color: #b8a59c; }
   }
 </style>
 </head>
