@@ -9,6 +9,9 @@ struct DisbigleApp: App {
   @State private var model = AppModel()
 
   var body: some Scene {
+  @AppStorage(Appearance.modeKey) private var mode = "system"
+  @AppStorage(Appearance.accentKey) private var accent = "orange"
+
     WindowGroup {
       Group {
         if model.session != nil {
@@ -18,7 +21,10 @@ struct DisbigleApp: App {
         }
       }
       .environment(model)
-      .tint(.brand)
+      .tint(Appearance.color(accent))
+      .preferredColorScheme(Appearance.scheme(mode))
+      // Colours are read when views are built: a new accent rebuilds them.
+      .id(accent)
       .task(id: model.session?.token) { await model.refresh() }
       .onAppear {
         delegate.onOpen = { statusId, accountId in model.open(statusId: statusId, accountId: accountId) }
@@ -48,8 +54,37 @@ enum BackgroundRefresh {
 }
 
 extension Color {
-  /** Disbigle tomato. */
-  static let brand = Color(red: 207 / 255, green: 50 / 255, blue: 0)
+  /** The accent colour chosen in Settings → Appearance (Disbigle tomato by default). */
+  static var brand: Color { Appearance.color(UserDefaults.standard.string(forKey: Appearance.accentKey)) }
+}
+
+/** Light, dark (pure black on iPhone) or the system's choice, and the accent colour. */
+enum Appearance {
+  static let modeKey = "appearance.mode"
+  static let accentKey = "appearance.accent"
+  static let modes = ["system", "light", "dark"]
+  static let accents = ["orange", "red", "pink", "purple", "blue", "teal", "green", "grey"]
+
+  static func color(_ accent: String?) -> Color {
+    switch accent {
+    case "red": Color(red: 0.776, green: 0.157, blue: 0.157)
+    case "pink": Color(red: 0.761, green: 0.094, blue: 0.357)
+    case "purple": Color(red: 0.482, green: 0.247, blue: 0.769)
+    case "blue": Color(red: 0.122, green: 0.373, blue: 0.820)
+    case "teal": Color(red: 0, green: 0.502, blue: 0.604)
+    case "green": Color(red: 0.180, green: 0.490, blue: 0.196)
+    case "grey": Color(red: 0.357, green: 0.392, blue: 0.439)
+    default: Color(red: 207 / 255, green: 50 / 255, blue: 0)
+    }
+  }
+
+  static func scheme(_ mode: String) -> ColorScheme? {
+    switch mode {
+    case "light": .light
+    case "dark": .dark
+    default: nil
+    }
+  }
 }
 
 struct SignInView: View {

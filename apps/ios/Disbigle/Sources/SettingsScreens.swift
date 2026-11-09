@@ -6,7 +6,7 @@ import UserNotifications
 
 /** The pages of the settings, as navigation routes. */
 enum SettingsPage: Hashable {
-  case root, profile, notifications, posting, followRequests, blocks, mutes, bookmarks, favourites
+  case root, profile, notifications, posting, appearance, followRequests, blocks, mutes, bookmarks, favourites
   case aspects, hiddenTags
   case aspect(AspectList)
 }
@@ -18,6 +18,7 @@ extension SettingsPage {
     case .profile: EditProfileScreen()
     case .notifications: NotificationSettingsScreen()
     case .posting: PostingSettingsScreen()
+    case .appearance: AppearanceScreen()
     case .followRequests: AccountListScreen(list: .followRequests)
     case .blocks: AccountListScreen(list: .blocks)
     case .mutes: AccountListScreen(list: .mutes)
@@ -64,6 +65,7 @@ struct SettingsScreen: View {
       Section("This iPhone") {
         link("Notifications", systemImage: "bell.badge", page: .notifications)
         link("Posting", systemImage: "square.and.pencil", page: .posting)
+        link("Appearance", systemImage: "paintpalette", page: .appearance)
         Button {
           if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
         } label: {
@@ -727,5 +729,69 @@ struct AspectMembersScreen: View {
       members = (try? await model.client?.members(of: aspect.id)) ?? []
       loading = false
     }
+  }
+}
+
+/** Light, dark or the system's choice, and the accent colour; kept on this iPhone. */
+struct AppearanceScreen: View {
+  @AppStorage(Appearance.modeKey) private var mode = "system"
+  @AppStorage(Appearance.accentKey) private var accent = "orange"
+
+  private func modeName(_ value: String) -> LocalizedStringKey {
+    switch value {
+    case "light": "Light"
+    case "dark": "Dark"
+    default: "Same as the iPhone"
+    }
+  }
+
+  private func colorName(_ value: String) -> LocalizedStringKey {
+    switch value {
+    case "red": "Red"
+    case "pink": "Pink"
+    case "purple": "Purple"
+    case "blue": "Blue"
+    case "teal": "Teal"
+    case "green": "Green"
+    case "grey": "Grey"
+    default: "Disbigle"
+    }
+  }
+
+  var body: some View {
+    Form {
+      Section {
+        Picker("Mode", selection: $mode) {
+          ForEach(Appearance.modes, id: \.self) { Text(modeName($0)).tag($0) }
+        }
+        .pickerStyle(.inline)
+        .labelsHidden()
+      } header: {
+        Text("Mode")
+      } footer: {
+        Text("On iPhone, Dark uses pure black: on OLED screens those pixels switch off, saving battery.")
+      }
+      Section("Colour") {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 64))], spacing: 12) {
+          ForEach(Appearance.accents, id: \.self) { value in
+            Button {
+              accent = value
+            } label: {
+              VStack(spacing: 4) {
+                Circle()
+                  .fill(Appearance.color(value))
+                  .frame(width: 40, height: 40)
+                  .overlay(Circle().stroke(Color.primary, lineWidth: accent == value ? 3 : 0).padding(-4))
+                Text(colorName(value)).font(.caption2).foregroundStyle(.primary)
+              }
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(accent == value ? .isSelected : [])
+          }
+        }
+        .padding(.vertical, 6)
+      }
+    }
+    .navigationTitle("Appearance")
   }
 }

@@ -524,6 +524,22 @@
         }
       }
     },
+    "Appearance": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apariencia"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspetto"
+          }
+        }
+      }
+    },
     "Approve new followers": {
       "localizations": {
         "es": {
@@ -680,6 +696,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bloccati"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azul"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blu"
           }
         }
       }
@@ -892,6 +924,22 @@
         }
       }
     },
+    "Colour": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colore"
+          }
+        }
+      }
+    },
     "Content (a link is fine)": {
       "localizations": {
         "es": {
@@ -952,6 +1000,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crea un account"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscuro"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scuro"
           }
         }
       }
@@ -1404,6 +1468,38 @@
         }
       }
     },
+    "Green": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verde"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verde"
+          }
+        }
+      }
+    },
+    "Grey": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gris"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grigio"
+          }
+        }
+      }
+    },
     "Hashtags": {
       "localizations": {
         "es": {
@@ -1596,6 +1692,22 @@
         }
       }
     },
+    "Light": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiaro"
+          }
+        }
+      }
+    },
     "Like": {
       "localizations": {
         "es": {
@@ -1704,6 +1816,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Messaggi"
+          }
+        }
+      }
+    },
+    "Mode": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modalità"
           }
         }
       }
@@ -2172,6 +2300,22 @@
         }
       }
     },
+    "On iPhone, Dark uses pure black: on OLED screens those pixels switch off, saving battery.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En iPhone, Oscuro usa el negro puro: en las pantallas OLED esos píxeles se apagan y la batería dura más."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su iPhone, Scuro usa il nero puro: sugli schermi OLED quei pixel si spengono e la batteria dura di più."
+          }
+        }
+      }
+    },
     "One account for diaspora*, Mastodon and the whole fediverse.": {
       "localizations": {
         "es": {
@@ -2348,6 +2492,22 @@
         }
       }
     },
+    "Pink": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa"
+          }
+        }
+      }
+    },
     "Poll": {
       "localizations": {
         "es": {
@@ -2508,6 +2668,22 @@
         }
       }
     },
+    "Purple": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viola"
+          }
+        }
+      }
+    },
     "Quote": {
       "localizations": {
         "es": {
@@ -2520,6 +2696,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Citazione"
+          }
+        }
+      }
+    },
+    "Red": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rojo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosso"
           }
         }
       }
@@ -2680,6 +2872,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ricondivisioni"
+          }
+        }
+      }
+    },
+    "Same as the iPhone": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como el iPhone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come l'iPhone"
           }
         }
       }
@@ -3112,6 +3320,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggerisci il mio profilo agli altri"
+          }
+        }
+      }
+    },
+    "Teal": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turquesa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azzurro"
           }
         }
       }
