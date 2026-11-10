@@ -372,8 +372,31 @@ for (const world of worlds) {
   await follow(ctx, a, b);
   await follow(ctx, b, c);
 
-  // Oldest first: the timeline shows them newest first.
   const language = locale;
+  // Private conversations first: the home timeline shows them too, below the public posts.
+  const handle = (p: Person) => `@${p.username}`;
+  await post(club, `${handle(world.me)} ${text.chat3}`, { language, visibility: 'direct' });
+  let reply = await post(b, `${handle(world.me)} ${text.chat2[0]}`, {
+    language,
+    visibility: 'direct',
+  });
+  await post(me, `${handle(world.friends[1])} ${text.chat2[1]}`, {
+    language,
+    visibility: 'direct',
+    inReplyToId: reply.id,
+  });
+  reply = await post(a, `${handle(world.me)} ${text.chat1[0]}`, { language, visibility: 'direct' });
+  for (const [index, line] of text.chat1.slice(1).entries()) {
+    const from = index % 2 === 0 ? me : a;
+    const to = index % 2 === 0 ? world.friends[0] : world.me;
+    reply = await post(from, `${handle(to)} ${line}`, {
+      language,
+      visibility: 'direct',
+      inReplyToId: reply.id,
+    });
+  }
+
+  // Oldest first: the timeline shows them newest first.
   const city = await post(me, text.cityPost, {
     language,
     mediaIds: [await photo(me, 'city', text.cityAlt)],
@@ -428,29 +451,6 @@ for (const world of worlds) {
     await votePoll(ctx, b, pollId, [0]);
     await votePoll(ctx, c, pollId, [1]);
     await votePoll(ctx, club, pollId, [0]);
-  }
-
-  // Private conversations, the newest last.
-  const handle = (p: Person) => `@${p.username}`;
-  await post(club, `${handle(world.me)} ${text.chat3}`, { language, visibility: 'direct' });
-  let reply = await post(b, `${handle(world.me)} ${text.chat2[0]}`, {
-    language,
-    visibility: 'direct',
-  });
-  await post(me, `${handle(world.friends[1])} ${text.chat2[1]}`, {
-    language,
-    visibility: 'direct',
-    inReplyToId: reply.id,
-  });
-  reply = await post(a, `${handle(world.me)} ${text.chat1[0]}`, { language, visibility: 'direct' });
-  for (const [index, line] of text.chat1.slice(1).entries()) {
-    const from = index % 2 === 0 ? me : a;
-    const to = index % 2 === 0 ? world.friends[0] : world.me;
-    reply = await post(from, `${handle(to)} ${line}`, {
-      language,
-      visibility: 'direct',
-      inReplyToId: reply.id,
-    });
   }
 }
 
