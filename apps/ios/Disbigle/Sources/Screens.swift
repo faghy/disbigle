@@ -304,6 +304,9 @@ struct SearchScreen: View {
   @State private var results: SearchResults?
   @State private var searching = false
   @State private var error: String?
+  /** The field is always shown and gets the keyboard when the tab opens (not when coming back). */
+  @State private var searchActive = false
+  @State private var opened = false
 
   var body: some View {
     List {
@@ -346,7 +349,15 @@ struct SearchScreen: View {
     }
     .listStyle(.plain)
     .navigationTitle("Search")
-    .searchable(text: $query, prompt: Text("People, #hashtags, posts"))
+    .searchable(
+      text: $query, isPresented: $searchActive,
+      placement: .navigationBarDrawer(displayMode: .always),
+      prompt: Text("People, #hashtags, posts"))
+    .onAppear {
+      guard !opened else { return }
+      opened = true
+      if query.isEmpty { searchActive = true }
+    }
     .onSubmit(of: .search) { Task { await search() } }
     .onChange(of: query) { _, text in
       if text.isEmpty { results = nil }
