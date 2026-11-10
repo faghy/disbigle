@@ -9,12 +9,12 @@ import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
 import { social } from '../api/social.ts';
-import { useUnreadCount } from '../api/socialQueries.ts';
 import {
   useFollowedTags,
   useFollowTag,
   useHiddenTags,
   useUnhideTag,
+  useUnreadCount,
 } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
