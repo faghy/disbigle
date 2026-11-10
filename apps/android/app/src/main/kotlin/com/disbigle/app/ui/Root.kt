@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -192,7 +193,14 @@ fun MainScreen(model: AppModel) {
                 Icon(icon, null)
               }
             },
-            label = { Text(stringResource(tab.label)) },
+            // One line: on narrow phones "Notifications" would otherwise wrap.
+            label = {
+              Text(
+                stringResource(tab.label), maxLines = 1, softWrap = false,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelSmall,
+              )
+            },
           )
         }
       }

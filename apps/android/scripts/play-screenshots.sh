@@ -13,7 +13,8 @@ demo() { adb shell am broadcast -a com.android.systemui.demo -e command "$@" >/d
 demo enter
 demo clock -e hhmm 0941
 demo battery -e level 100 -e plugged false
-demo network -e wifi show -e level 4 -e mobile show -e datatype none -e level 4
+demo network -e wifi show -e level 4 -e fully true
+demo network -e mobile show -e datatype none -e level 4 -e fully true
 demo notifications -e visible false
 
 for locale in it-IT en-US es-ES; do
