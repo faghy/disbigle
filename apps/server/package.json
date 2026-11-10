@@ -11,7 +11,8 @@
     "start": "tsx --env-file-if-exists=../../.env src/main.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "seed": "tsx --env-file-if-exists=../../.env src/seed.ts"
+    "seed": "tsx --env-file-if-exists=../../.env src/seed.ts",
+    "create-account": "tsx --env-file-if-exists=../../.env src/create-account.ts"
   },
   "dependencies": {
     "@disbigle/activitypub": "workspace:*",
