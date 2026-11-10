@@ -313,10 +313,16 @@ jobs:
         run: |
           version=$(grep -m1 'MARKETING_VERSION' project.yml | sed -E 's/.*: *"?([^"]+)"?/\1/')
           echo "Version $version"
-          fastlane deliver --api_key_path "$RUNNER_TEMP/keys/api.json" \
-            --app_identifier com.disbigle.app --platform ios --app_version "$version" \
-            --skip_binary_upload true --overwrite_screenshots true --submit_for_review false \
-            --run_precheck_before_submit false --force true
+          deliver() {
+            fastlane deliver --api_key_path "$RUNNER_TEMP/keys/api.json" \
+              --app_identifier com.disbigle.app --platform ios --app_version "$version" \
+              --skip_binary_upload true --submit_for_review false \
+              --run_precheck_before_submit false --force true "$@"
+          }
+          # Screenshots on their own first: the texts step ends by reading the review details,
+          # which App Store Connect may not return yet for a first version ("No data").
+          deliver --skip_metadata true --overwrite_screenshots true
+          deliver --skip_screenshots true
       - name: Remove the key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"
