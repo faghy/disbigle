@@ -9,6 +9,7 @@ import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
 import { social } from '../api/social.ts';
+import { useUnreadCount } from '../api/socialQueries.ts';
 import {
   useFollowedTags,
   useFollowTag,
@@ -26,6 +27,7 @@ import { useFocusTrap } from './Dialog.tsx';
 import {
   ActivityIcon,
   AspectsIcon,
+  BellIcon,
   BookmarkIcon,
   CloseIcon,
   ContactsIcon,
@@ -108,6 +110,7 @@ interface NavItem {
     | '/public/local'
     | '/public'
     | '/messages'
+    | '/notifications'
     | '/groups'
     | '/aspects'
     | '/contacts'
@@ -141,6 +144,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     )
       void queryClient.invalidateQueries({ queryKey: unreadConversationsKey });
   });
+  const unreadNotifications = useUnreadCount().data ?? 0;
   const items: NavItem[] = [
     { to: '/', label: t('nav.home'), icon: HomeIcon, exact: true },
     { to: '/public/local', label: t('nav.local'), icon: LocalIcon },
@@ -156,6 +160,13 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
       icon: MailIcon,
       badge: unread.data?.count ?? 0,
       badgeKey: 'nav.unreadMessages',
+    },
+    // Also in the side menu (issue #18); on phones the bell at the top is enough.
+    {
+      to: '/notifications',
+      label: t('nav.notifications'),
+      icon: BellIcon,
+      badge: unreadNotifications,
     },
     { to: '/groups', label: t('nav.groups'), icon: GroupIcon },
     { to: '/aspects', label: t('nav.aspects'), icon: AspectsIcon },

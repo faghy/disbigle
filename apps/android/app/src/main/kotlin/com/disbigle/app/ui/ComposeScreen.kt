@@ -127,6 +127,9 @@ fun ComposeScreen(target: ComposeTarget, onClose: () -> Unit) {
   var text by remember { mutableStateOf("") }
   // The cursor and selection in the text, for the formatting buttons.
   var selection by remember { mutableStateOf(androidx.compose.ui.text.TextRange(0)) }
+  // The word the keyboard is still composing: dropping it breaks keyboards that compose whole
+  // words, such as SwiftKey (issue #17).
+  var composition by remember { mutableStateOf<androidx.compose.ui.text.TextRange?>(null) }
   var previewing by remember { mutableStateOf(false) }
   var visibility by remember { mutableStateOf(Visibility.PUBLIC) }
   var aspectIds by remember { mutableStateOf(setOf<String>()) }
@@ -277,12 +280,15 @@ fun ComposeScreen(target: ComposeTarget, onClose: () -> Unit) {
             val edit = com.disbigle.kit.applyFormat(text, selection.start, selection.end, format, context.getString(R.string.format_placeholder))
             text = edit.text
             selection = androidx.compose.ui.text.TextRange(edit.start, edit.end)
+            composition = null
           },
         )
         if (previewing) PostPreview(text)
         if (!previewing) OutlinedTextField(
-          value = androidx.compose.ui.text.input.TextFieldValue(text, selection.coerceIn(0, text.length)),
-          onValueChange = { text = it.text; selection = it.selection },
+          value = androidx.compose.ui.text.input.TextFieldValue(
+            text, selection.coerceIn(0, text.length), composition?.takeIf { it.max <= text.length },
+          ),
+          onValueChange = { text = it.text; selection = it.selection; composition = it.composition },
           enabled = !loadingSource,
           placeholder = { Text(stringResource(if (visibility == Visibility.DIRECT) R.string.direct_placeholder else R.string.compose_placeholder)) },
           supportingText = {
