@@ -15,9 +15,46 @@ on:
         description: Upload the App Store listing (texts in apps/ios/fastlane/metadata and the screenshots)
         type: boolean
         default: false
+      status:
+        description: Only show the App Store review status and the latest builds
+        type: boolean
+        default: false
 
 jobs:
+  # The state of the App Store versions, review submissions and latest builds (read only).
+  status:
+    if: github.event_name == 'workflow_dispatch' && inputs.status
+    runs-on: ubuntu-latest
+    steps:
+      - name: App Store Connect status
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          pip install --quiet pyjwt cryptography requests
+          python3 - <<'PY'
+          import os, time, jwt, requests
+          token = jwt.encode(
+              {'iss': os.environ['ISSUER_ID'], 'iat': int(time.time()), 'exp': int(time.time()) + 600, 'aud': 'appstoreconnect-v1'},
+              os.environ['KEY'], algorithm='ES256', headers={'kid': os.environ['KEY_ID']})
+          api = 'https://api.appstoreconnect.apple.com/v1'
+          get = lambda path, **params: requests.get(api + path, params=params, headers={'Authorization': f'Bearer {token}'}).json()
+          app = get('/apps', **{'filter[bundleId]': 'com.disbigle.app'})['data'][0]
+          print('App', app['id'], app['attributes']['name'])
+          for v in get(f"/apps/{app['id']}/appStoreVersions", limit=5)['data']:
+              a = v['attributes']
+              print('Version', a['versionString'], a.get('appStoreState'), a.get('appVersionState'), a.get('createdDate'))
+          for r in get('/reviewSubmissions', **{'filter[app]': app['id'], 'limit': 5}).get('data', []):
+              a = r['attributes']
+              print('Review submission', a.get('state'), a.get('submittedDate'))
+          for b in get('/builds', **{'filter[app]': app['id'], 'sort': '-uploadedDate', 'limit': 5})['data']:
+              a = b['attributes']
+              print('Build', a['version'], a.get('processingState'), a.get('uploadedDate'), 'expired' if a.get('expired') else '')
+          PY
+
   build:
+    if: "!(github.event_name == 'workflow_dispatch' && inputs.status)"
     runs-on: macos-15
     defaults:
       run:
