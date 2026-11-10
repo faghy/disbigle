@@ -24,7 +24,7 @@ describe('Digital Services Act: notices and statements of reasons', () => {
       email: 'notifier@example.org',
       locale: 'en',
     };
-    expect((await anyone.post('/api/v1/notices', notice)).statusCode).toBe(400);
+    expect((await anyone.post('/api/v1/notices', notice)).statusCode).toBe(422);
     const missing = await anyone.post('/api/v1/notices', {
       ...notice,
       url: 'https://disbigle.test/@nobody-here',
