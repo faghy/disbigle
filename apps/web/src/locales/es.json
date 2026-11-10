@@ -93,7 +93,7 @@
     "inviteCode": "Código de invitación",
     "reason": "¿Por qué quieres unirte?",
     "reasonHint": "Esto ayuda a los moderadores a revisar tu solicitud.",
-    "agreement": "Acepto las normas y la política de privacidad de {{domain}}",
+    "agreement": "Tengo al menos 16 años y acepto las normas, las condiciones de uso y la política de privacidad de {{domain}}",
     "submit": "Crear cuenta",
     "haveAccount": "¿Ya tienes una cuenta?",
     "signIn": "Iniciar sesión",
@@ -102,7 +102,7 @@
     "closedTitle": "El registro está cerrado",
     "closedBody": "{{domain}} no acepta cuentas nuevas en este momento.",
     "rulesTitle": "Normas de {{domain}}",
-    "agreementRules": "Acepto las normas anteriores y la política de privacidad de {{domain}}",
+    "agreementRules": "Tengo al menos 16 años y acepto las normas de arriba, las condiciones de uso y la política de privacidad de {{domain}}",
     "verifyTitle": "Revisa tu correo",
     "verifyBody": "Hemos enviado un enlace a {{email}}: ábrelo antes de tres días para activar tu cuenta.",
     "verifyApproval": "Después, un moderador la aprobará."
@@ -836,7 +836,11 @@
       "resolve": "Marcar como resuelta",
       "suspendTarget": "Suspender cuenta",
       "suspendAndResolve": "Suspender y resolver",
-      "resolvedAt": "Resuelta el {{date}}"
+      "resolvedAt": "Resuelta el {{date}}",
+      "publicNotice": "Formulario público",
+      "remoteServer": "otro servidor",
+      "contentUrl": "Dirección denunciada",
+      "decision": "Decisión"
     },
     "suspend": {
       "title": "¿Suspender a @{{acct}}?",
@@ -1072,6 +1076,28 @@
       "posts": "Publicaciones",
       "lastPost": "Última publicación",
       "never": "Nunca"
+    },
+    "moderation": {
+      "ground": "Motivo",
+      "grounds": {
+        "rules": "Contrario a las normas del servidor",
+        "illegal": "Contenido ilegal"
+      },
+      "reason": "Explicación",
+      "reasonHint": "Llega por correo a la persona afectada, con el motivo y cómo impugnar la decisión.",
+      "decisionHint": "Si quien denunció tiene cuenta aquí o dejó su correo, recibe el resultado con esta explicación.",
+      "decideTitle": "Cerrar la denuncia",
+      "decideDescription": "Indica qué has decidido: queda en el registro de moderación.",
+      "decideConfirm": "Cerrar con esta decisión",
+      "decisions": {
+        "no_violation": "Ninguna infracción",
+        "removed": "Contenido retirado",
+        "suspended": "Cuenta suspendida"
+      },
+      "removePost": "Retirar la publicación",
+      "removeTitle": "¿Retirar la publicación?",
+      "removeDescription": "La publicación se elimina en todas partes. La autora o el autor recibe por correo el motivo y cómo impugnarlo.",
+      "removeConfirm": "Retirar"
     }
   },
   "poll": {
@@ -1584,5 +1610,22 @@
       "green": "Verde",
       "grey": "Gris"
     }
+  },
+  "notice": {
+    "title": "Denunciar contenido ilegal",
+    "description": "Para cualquiera, con o sin cuenta: avisa a la moderación de una publicación o un perfil de este servidor que creas ilegal. Solemos responder en 24-48 horas.",
+    "url": "Dirección del contenido",
+    "urlHint": "El enlace a la publicación o al perfil, por ejemplo https://app.disbigle.com/@nombre/…",
+    "explanation": "Por qué es ilegal o contrario a las normas",
+    "explanationHint": "Explica con precisión qué contiene y qué ley o norma incumple (al menos 10 caracteres).",
+    "name": "Tu nombre (opcional)",
+    "email": "Tu correo (opcional)",
+    "contactHint": "Si dejas tu correo te confirmamos la recepción y te escribimos el resultado. Nombre y correo no son necesarios para denuncias de abuso sexual infantil.",
+    "goodFaith": "Declaro de buena fe que la información de esta denuncia es correcta y completa.",
+    "submit": "Enviar la denuncia",
+    "childAbuse": "Para material de abuso sexual infantil denuncia también a la policía (en Italia: www.commissariatodips.it).",
+    "doneTitle": "Denuncia recibida",
+    "done": "Gracias: la moderación la revisará lo antes posible.",
+    "doneEmail": "Gracias: la moderación la revisará lo antes posible. Te hemos enviado una confirmación y te escribiremos el resultado."
   }
 }

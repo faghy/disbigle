@@ -44,7 +44,7 @@ describe('about and rules', () => {
     expect(within(rules).getByText('No spam')).toBeInTheDocument();
     expect(
       screen.getByRole('checkbox', {
-        name: 'I agree to the rules above and the privacy policy of disbigle.test',
+        name: 'I am at least 16 and accept the rules above, the terms of service and the privacy policy of disbigle.test',
       }),
     ).toBeInTheDocument();
   });

@@ -3,12 +3,14 @@ import {
   acceptFollowRequest,
   applyRemoteMove,
   block,
+  createRemoteReport,
   bridgedAccountByUsername,
   type CoreContext,
   deleteRemoteActor,
   deleteRemotePost,
   domainBlockSeverity,
   findActorByApUri,
+  findContentByUrl,
   findLocalActorByUsername,
   findPostByUri,
   follow,
@@ -47,6 +49,7 @@ import {
   Create,
   Delete,
   Endpoints,
+  Flag,
   Follow,
   isActor,
   Like,
@@ -837,6 +840,33 @@ export function createDisbigleFederation(options: FederationOptions): Federation
       const target = await localActorByIdentifier(ctx.data, parsed.identifier);
       const sender = await storeActor(ctx, await activity.getActor(ctx));
       if (target && sender) await block(ctx.data, sender.id, target.id).catch(() => undefined);
+    })
+    // Another server reports accounts or posts of ours (Mastodon sends it from its instance
+    // actor): kept for the moderators like any report, so they know about it.
+    .on(Flag, async (ctx, activity) => {
+      const sender = await storeActor(ctx, await activity.getActor(ctx));
+      if (!sender) return;
+      let targetActorId: string | null = null;
+      const postIds: string[] = [];
+      for (const id of activity.objectIds) {
+        const found = await findContentByUrl(ctx.data, id.href).catch(() => null);
+        if (!found) continue;
+        // Only content of this server: remote accounts are their own server's business.
+        const [author] = await ctx.data.db
+          .select({ domain: schema.actors.domain })
+          .from(schema.actors)
+          .where(eq(schema.actors.id, found.actorId));
+        if (!author || author.domain !== null) continue;
+        targetActorId ??= found.actorId;
+        if (found.postId && found.actorId === targetActorId) postIds.push(found.postId);
+      }
+      if (!targetActorId) return;
+      await createRemoteReport(ctx.data, {
+        reporterActorId: sender.id,
+        targetActorId,
+        postIds,
+        comment: activity.content?.toString() ?? '',
+      });
     });
 
   return federation;

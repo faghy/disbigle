@@ -91,7 +91,7 @@
     "inviteCode": "Invitation code",
     "reason": "Why do you want to join?",
     "reasonHint": "This helps the moderators review your request.",
-    "agreement": "I accept the rules and the privacy policy of {{domain}}",
+    "agreement": "I am at least 16 and accept the rules, the terms of service and the privacy policy of {{domain}}",
     "submit": "Create account",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
@@ -100,7 +100,7 @@
     "closedTitle": "Registrations are closed",
     "closedBody": "{{domain}} is not accepting new accounts at the moment.",
     "rulesTitle": "Rules of {{domain}}",
-    "agreementRules": "I agree to the rules above and the privacy policy of {{domain}}",
+    "agreementRules": "I am at least 16 and accept the rules above, the terms of service and the privacy policy of {{domain}}",
     "verifyTitle": "Check your email",
     "verifyBody": "We sent a link to {{email}}: open it within three days to activate your account.",
     "verifyApproval": "After that, a moderator will approve it."
@@ -817,7 +817,11 @@
       "resolve": "Mark as resolved",
       "suspendTarget": "Suspend account",
       "suspendAndResolve": "Suspend and resolve",
-      "resolvedAt": "Resolved {{date}}"
+      "resolvedAt": "Resolved {{date}}",
+      "publicNotice": "Public form",
+      "remoteServer": "another server",
+      "contentUrl": "Reported address",
+      "decision": "Decision"
     },
     "suspend": {
       "title": "Suspend @{{acct}}?",
@@ -1051,6 +1055,28 @@
       "posts": "Posts",
       "lastPost": "Last post",
       "never": "Never"
+    },
+    "moderation": {
+      "ground": "Ground",
+      "grounds": {
+        "rules": "Against the server rules",
+        "illegal": "Illegal content"
+      },
+      "reason": "Explanation",
+      "reasonHint": "Sent by email to the person concerned, with the ground and how to contest the decision.",
+      "decisionHint": "If the reporter has an account here or left an email, they receive the outcome with this explanation.",
+      "decideTitle": "Close the report",
+      "decideDescription": "Say what you decided: it stays in the moderation log.",
+      "decideConfirm": "Close with this decision",
+      "decisions": {
+        "no_violation": "No violation",
+        "removed": "Content removed",
+        "suspended": "Account suspended"
+      },
+      "removePost": "Remove the post",
+      "removeTitle": "Remove the post?",
+      "removeDescription": "The post is deleted everywhere. The author receives the ground and how to contest by email.",
+      "removeConfirm": "Remove"
     }
   },
   "poll": {
@@ -1558,5 +1584,22 @@
       "green": "Green",
       "grey": "Grey"
     }
+  },
+  "notice": {
+    "title": "Report illegal content",
+    "description": "For anyone, with or without an account: tell the moderators about a post or profile on this server that you believe is illegal. We usually answer within 24-48 hours.",
+    "url": "Address of the content",
+    "urlHint": "The link to the post or profile, for example https://app.disbigle.com/@name/…",
+    "explanation": "Why it is illegal or against the rules",
+    "explanationHint": "Explain precisely what it contains and which law or rule it breaks (at least 10 characters).",
+    "name": "Your name (optional)",
+    "email": "Your email (optional)",
+    "contactHint": "If you leave your email we confirm we received it and write to you with the outcome. Name and email are not needed for reports of child sexual abuse.",
+    "goodFaith": "I state in good faith that the information in this report is accurate and complete.",
+    "submit": "Send the report",
+    "childAbuse": "For child sexual abuse material also report to the police (in Italy: www.commissariatodips.it).",
+    "doneTitle": "Report received",
+    "done": "Thank you: the moderators will look at it as soon as they can.",
+    "doneEmail": "Thank you: the moderators will look at it as soon as they can. We sent you a confirmation and will write to you with the outcome."
   }
 }

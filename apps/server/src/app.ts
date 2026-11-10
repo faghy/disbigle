@@ -27,7 +27,7 @@ import { errorHandler } from './http.ts';
 import { authPlugin } from './plugins/auth.ts';
 import { findRemoteAccount } from './resolve.ts';
 import { accountRoutes, followRequestRoutes } from './routes/accounts.ts';
-import { adminRoutes, reportRoutes } from './routes/admin.ts';
+import { adminRoutes, noticeRoutes, reportRoutes } from './routes/admin.ts';
 import { albumRoutes } from './routes/albums.ts';
 import { aspectRoutes } from './routes/aspects.ts';
 import { authRoutes } from './routes/auth.ts';
@@ -280,7 +280,17 @@ export async function buildApp(options: AppOptions) {
       await api.register(inviteRoutes, { ctx, prefix: '/invites' });
       await api.register(filterRoutes, { ctx, prefix: '/filters' });
       await api.register(hiddenTagRoutes, { ctx, prefix: '/hidden_tags' });
-      await api.register(adminRoutes, { ctx, redis, prefix: '/admin' });
+      await api.register(adminRoutes, {
+        ctx,
+        redis,
+        mailer: options.mailer ?? new MemoryMailer(true),
+        prefix: '/admin',
+      });
+      await api.register(noticeRoutes, {
+        ctx,
+        mailer: options.mailer ?? new MemoryMailer(true),
+        prefix: '/notices',
+      });
       await api.register(youtubeRoutes, { ctx, prefix: '/youtube' });
       await api.register(linkPreviewRoutes, { ctx: mediaCtx, prefix: '/link_preview' });
       await api.register(groupRoutes, { ctx, mediaCtx, prefix: '/groups' });

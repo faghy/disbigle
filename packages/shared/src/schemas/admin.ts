@@ -80,6 +80,13 @@ export interface Report {
   statuses: Status[];
   createdAt: string;
   resolvedAt: string | null;
+  /** `user` (Report button), `public` (form for anyone) or `remote` (another server). */
+  source: 'user' | 'public' | 'remote';
+  notifierName: string | null;
+  notifierEmail: string | null;
+  contentUrl: string | null;
+  decision: 'removed' | 'suspended' | 'no_violation' | null;
+  decisionReason: string;
   reporter: Account | null;
   target: Account | null;
 }

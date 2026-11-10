@@ -157,6 +157,8 @@ export async function suspendAccount(
   moderatorUserId: string,
   actorId: string,
   reason = '',
+  /** Against the law or against the server rules: recorded with the decision. */
+  ground: 'illegal' | 'rules' = 'rules',
 ): Promise<void> {
   const [actor] = await ctx.db.select().from(actors).where(eq(actors.id, actorId));
   if (!actor) throw new DomainError('not_found', 'Account not found');
@@ -182,7 +184,7 @@ export async function suspendAccount(
     moderatorUserId,
     'suspend_account',
     { type: 'actor', id: actorId },
-    { reason },
+    { reason, ground },
   );
 }
 
@@ -416,7 +418,11 @@ export async function listReports(ctx: CoreContext, options: { resolved?: boolea
     .where(options.resolved ? isNotNull(reports.resolvedAt) : isNull(reports.resolvedAt))
     .orderBy(desc(reports.id))
     .limit(100);
-  const actorIds = [...new Set(rows.flatMap((r) => [r.reporterActorId, r.targetActorId]))];
+  const actorIds = [
+    ...new Set(
+      rows.flatMap((r) => [r.reporterActorId, r.targetActorId]).filter((id): id is string => !!id),
+    ),
+  ];
   const actorRows =
     actorIds.length > 0
       ? await ctx.db.select().from(reporter).where(inArray(reporter.id, actorIds))
@@ -437,7 +443,13 @@ export async function listReports(ctx: CoreContext, options: { resolved?: boolea
     statusIds: r.postIds,
     createdAt: r.createdAt.toISOString(),
     resolvedAt: r.resolvedAt?.toISOString() ?? null,
-    reporter: byId.get(r.reporterActorId) ?? null,
+    source: r.source as 'user' | 'public' | 'remote',
+    notifierName: r.notifierName,
+    notifierEmail: r.notifierEmail,
+    contentUrl: r.contentUrl,
+    decision: r.decision as 'removed' | 'suspended' | 'no_violation' | null,
+    decisionReason: r.decisionReason,
+    reporter: r.reporterActorId ? (byId.get(r.reporterActorId) ?? null) : null,
     target: byId.get(r.targetActorId) ?? null,
     // Moderators see the reported posts whatever their visibility.
     statuses: r.postIds.map((id) => statusesById.get(id)).filter((s) => s !== undefined),

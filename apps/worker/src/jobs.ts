@@ -10,6 +10,7 @@ import {
   notifyEndedPolls,
   parseBlocklistCsv,
   purgeDeletedAccounts,
+  purgeOldModerationRecords,
   storeCachedProfileImage,
   storeCachedRemoteImage,
   syncSharedBlocklist,
@@ -99,6 +100,12 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
         const { added, removed } = await syncSharedBlocklist(ctx, IFTAS_DNI.source, entries);
         return `IFTAS DNI: ${entries.length} listed, ${added.length} added, ${removed.length} removed`;
       },
+    },
+    {
+      // Reports and moderation decisions are kept two years (privacy policy).
+      name: 'moderation-retention',
+      every: 24 * HOUR,
+      run: async () => `deleted ${await purgeOldModerationRecords(ctx)} old moderation records`,
     },
     {
       name: 'link-previews',

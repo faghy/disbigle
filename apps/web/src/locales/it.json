@@ -91,7 +91,7 @@
     "inviteCode": "Codice di invito",
     "reason": "Perché vuoi iscriverti?",
     "reasonHint": "Aiuta i moderatori a valutare la tua richiesta.",
-    "agreement": "Accetto le regole e l'informativa sulla privacy di {{domain}}",
+    "agreement": "Ho almeno 16 anni e accetto le regole, le condizioni d'uso e l'informativa sulla privacy di {{domain}}",
     "submit": "Crea l'account",
     "haveAccount": "Hai già un account?",
     "signIn": "Accedi",
@@ -100,7 +100,7 @@
     "closedTitle": "Le iscrizioni sono chiuse",
     "closedBody": "Al momento {{domain}} non accetta nuovi account.",
     "rulesTitle": "Regole di {{domain}}",
-    "agreementRules": "Accetto le regole qui sopra e l'informativa sulla privacy di {{domain}}",
+    "agreementRules": "Ho almeno 16 anni e accetto le regole qui sopra, le condizioni d'uso e l'informativa sulla privacy di {{domain}}",
     "verifyTitle": "Controlla la tua email",
     "verifyBody": "Abbiamo mandato un link a {{email}}: aprilo entro tre giorni per attivare l'account.",
     "verifyApproval": "Dopo, un moderatore lo approverà."
@@ -817,7 +817,11 @@
       "resolve": "Segna come risolta",
       "suspendTarget": "Sospendi l'account",
       "suspendAndResolve": "Sospendi e risolvi",
-      "resolvedAt": "Risolta il {{date}}"
+      "resolvedAt": "Risolta il {{date}}",
+      "publicNotice": "Modulo pubblico",
+      "remoteServer": "altro server",
+      "contentUrl": "Indirizzo segnalato",
+      "decision": "Decisione"
     },
     "suspend": {
       "title": "Sospendere @{{acct}}?",
@@ -1051,6 +1055,28 @@
       "posts": "Post",
       "lastPost": "Ultimo post",
       "never": "Mai"
+    },
+    "moderation": {
+      "ground": "Motivo",
+      "grounds": {
+        "rules": "Contrario alle regole del server",
+        "illegal": "Contenuto illegale"
+      },
+      "reason": "Spiegazione",
+      "reasonHint": "Arriva via email alla persona interessata, insieme al motivo e a come contestare la decisione.",
+      "decisionHint": "Se chi ha segnalato ha un account qui o ha lasciato l'email, riceve l'esito con questa spiegazione.",
+      "decideTitle": "Chiudi la segnalazione",
+      "decideDescription": "Indica cosa hai deciso: resta nel registro di moderazione.",
+      "decideConfirm": "Chiudi con questa decisione",
+      "decisions": {
+        "no_violation": "Nessuna violazione",
+        "removed": "Contenuto rimosso",
+        "suspended": "Account sospeso"
+      },
+      "removePost": "Rimuovi il post",
+      "removeTitle": "Rimuovere il post?",
+      "removeDescription": "Il post viene eliminato ovunque. L'autore riceve via email il motivo e come contestare.",
+      "removeConfirm": "Rimuovi"
     }
   },
   "poll": {
@@ -1558,5 +1584,22 @@
       "green": "Verde",
       "grey": "Grigio"
     }
+  },
+  "notice": {
+    "title": "Segnala un contenuto illegale",
+    "description": "Per chiunque, anche senza account: segnala alla moderazione un post o un profilo su questo server che ritieni illegale. Rispondiamo di solito entro 24-48 ore.",
+    "url": "Indirizzo del contenuto",
+    "urlHint": "Il link al post o al profilo, per esempio https://app.disbigle.com/@nome/…",
+    "explanation": "Perché è illegale o contrario alle regole",
+    "explanationHint": "Spiega in modo preciso cosa contiene e quale legge o regola viola (almeno 10 caratteri).",
+    "name": "Il tuo nome (facoltativo)",
+    "email": "La tua email (facoltativa)",
+    "contactHint": "Se lasci l'email ti confermiamo la ricezione e ti scriviamo l'esito. Nome ed email non sono obbligatori per le segnalazioni di abusi su minori.",
+    "goodFaith": "Dichiaro in buona fede che le informazioni di questa segnalazione sono corrette e complete.",
+    "submit": "Invia la segnalazione",
+    "childAbuse": "Per contenuti di abuso su minori segnala anche alla Polizia Postale: www.commissariatodips.it",
+    "doneTitle": "Segnalazione ricevuta",
+    "done": "Grazie: la moderazione la esaminerà il prima possibile.",
+    "doneEmail": "Grazie: la moderazione la esaminerà il prima possibile. Ti abbiamo mandato una conferma e ti scriveremo l'esito."
   }
 }

@@ -28,6 +28,9 @@ export interface AdminAccountFilter {
 // Shapes come from the shared package; they are re-exported for the admin pages.
 export type { AdminAccount, DomainBlock, InstanceSettings, KnownInstance, PendingUser, Report };
 export type DomainBlockSeverity = DomainBlock['severity'];
+/** Against the law, or against the server rules. */
+export type ModerationGround = 'illegal' | 'rules';
+export type ReportDecision = NonNullable<Report['decision']>;
 
 export interface DomainBlockRequest {
   domain: string;
@@ -148,14 +151,19 @@ export const admin = {
   reject: (userId: string) => api.post<Ok>(`/admin/pending/${id(userId)}/reject`),
   accounts: (filter: AdminAccountFilter) =>
     api.get<AdminAccount[]>(`/admin/accounts${queryString({ ...filter })}`),
-  suspend: (actorId: string, reason: string) =>
-    api.post<Ok>(`/admin/accounts/${id(actorId)}/suspend`, { reason }),
+  suspend: (actorId: string, reason: string, ground: ModerationGround = 'rules') =>
+    api.post<Ok>(`/admin/accounts/${id(actorId)}/suspend`, { reason, ground }),
+  removePost: (
+    statusId: string,
+    input: { ground: ModerationGround; reason: string; reportId?: string | undefined },
+  ) => api.post<Ok>(`/admin/statuses/${id(statusId)}/remove`, input),
   unsuspend: (actorId: string) => api.post<Ok>(`/admin/accounts/${id(actorId)}/unsuspend`),
   setRole: (userId: string, role: Role) =>
     api.post<Ok>(`/admin/users/${id(userId)}/role`, { role }),
   reports: (resolved: boolean) =>
     api.get<Report[]>(`/admin/reports${queryString({ resolved: resolved ? 'true' : 'false' })}`),
-  resolveReport: (reportId: string) => api.post<Ok>(`/admin/reports/${id(reportId)}/resolve`),
+  resolveReport: (reportId: string, input?: { decision: ReportDecision; reason: string }) =>
+    api.post<Ok>(`/admin/reports/${id(reportId)}/resolve`, input ?? {}),
   instances: (q?: string) =>
     api.get<KnownInstance[]>(`/admin/instances${queryString({ q: q || undefined })}`),
   settings: () => api.get<InstanceSettings>('/admin/settings'),

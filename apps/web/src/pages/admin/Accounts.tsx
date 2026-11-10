@@ -7,6 +7,7 @@ import {
   admin,
   adminKeys,
   isAdmin,
+  type ModerationGround,
   type Role,
 } from '../../api/admin.ts';
 import { errorMessage } from '../../api/errors.ts';
@@ -151,7 +152,8 @@ function AccountItem({ item }: { item: AdminAccount }) {
   };
 
   const suspend = useMutation({
-    mutationFn: (reason: string) => admin.suspend(account.id, reason),
+    mutationFn: ({ reason, ground }: { reason: string; ground: ModerationGround }) =>
+      admin.suspend(account.id, reason, ground),
     onSuccess: () => {
       setSuspending(false);
       refresh();
@@ -234,7 +236,7 @@ function AccountItem({ item }: { item: AdminAccount }) {
           account={account}
           pending={suspend.isPending}
           error={suspend.error}
-          onConfirm={(reason) => suspend.mutate(reason)}
+          onConfirm={(reason, ground) => suspend.mutate({ reason, ground })}
           onClose={() => {
             setSuspending(false);
             suspend.reset();

@@ -30,6 +30,7 @@ export * from './mail.ts';
 export * from './media/storage.ts';
 export * from './media/upload.ts';
 export * from './moderation.ts';
+export * from './moderation-notices.ts';
 export * from './net.ts';
 export * from './push.ts';
 export * from './settings.ts';

@@ -232,6 +232,13 @@
       "when": 1794140941171,
       "tag": "0032_shared_blocklists",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794324898689,
+      "tag": "0033_dsa_notices",
+      "breakpoints": true
     }
   ]
 }

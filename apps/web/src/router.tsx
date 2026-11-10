@@ -36,6 +36,7 @@ import { NotificationsPage } from './pages/Notifications.tsx';
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx';
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
+import { ReportContentPage } from './pages/ReportContent.tsx';
 import { isSearchType, SearchPage, type SearchType } from './pages/Search.tsx';
 import { SharePage } from './pages/Share.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
@@ -456,6 +457,16 @@ const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
+/** Notice of illegal content, open to anyone (DSA art. 16); `?url=` fills in the address. */
+const reportContentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/report-content',
+  validateSearch: (search: Record<string, unknown>): { url?: string | undefined } => ({
+    url: typeof search.url === 'string' ? search.url.slice(0, 2000) : undefined,
+  }),
+  component: ReportContentPage,
+});
+
 const verifyEmailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/verify-email',
@@ -511,6 +522,7 @@ export const routeTree = rootRoute.addChildren([
   conversationRoute,
   forgotPasswordRoute,
   verifyEmailRoute,
+  reportContentRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
     adminIndexRoute,

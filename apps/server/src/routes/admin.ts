@@ -4,7 +4,9 @@ import {
   blockDomain,
   type CoreContext,
   countOpenModerationItems,
+  createPublicNotice,
   createReport,
+  decideReport,
   federationTraffic,
   getInstanceSettings,
   instanceSettingsPatchSchema,
@@ -15,10 +17,12 @@ import {
   listPendingUsers,
   listReports,
   listUsersForAdmin,
+  type Mailer,
   rejectUser,
+  removePostAsModerator,
   resolveReport,
   setUserRole,
-  suspendAccount,
+  suspendAccountWithReasons,
   unblockDomain,
   unsuspendAccount,
   updateInstanceSettings,
@@ -32,6 +36,7 @@ import { serverHealth } from '../server-health.ts';
 
 const idParams = z.object({ id: z.uuid() });
 const reportCategories = ['spam', 'illegal', 'harassment', 'violation', 'other'] as const;
+const grounds = ['illegal', 'rules'] as const;
 
 /** `POST /api/v1/reports`: any signed-in user can report an account and some of its posts. */
 export async function reportRoutes(app: FastifyInstance, { ctx }: { ctx: CoreContext }) {
@@ -54,11 +59,50 @@ export async function reportRoutes(app: FastifyInstance, { ctx }: { ctx: CoreCon
   );
 }
 
+/**
+ * `POST /api/v1/notices`: a notice of illegal content from anyone, signed in or not (DSA art. 16).
+ * The address must point to a post or account on this server.
+ */
+export async function noticeRoutes(
+  app: FastifyInstance,
+  { ctx, mailer }: { ctx: CoreContext; mailer?: Mailer | undefined },
+) {
+  app.post(
+    '/',
+    { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const input = parse(
+        z.object({
+          url: z.url().max(2000),
+          category: z.enum(reportCategories).default('illegal'),
+          explanation: z.string().trim().min(10).max(4000),
+          name: z.string().trim().max(200).optional(),
+          email: z
+            .email()
+            .max(320)
+            .optional()
+            .or(z.literal('').transform(() => undefined)),
+          locale: z.string().max(10).optional(),
+          goodFaith: z.literal(true),
+        }),
+        request.body,
+      );
+      return reply.status(201).send(await createPublicNotice({ ...ctx, mailer }, input));
+    },
+  );
+}
+
 /** Moderation API under `/api/v1/admin`. */
 export async function adminRoutes(
   app: FastifyInstance,
-  { ctx, redis }: { ctx: CoreContext; redis?: Redis | undefined },
+  {
+    ctx: baseCtx,
+    redis,
+    mailer,
+  }: { ctx: CoreContext; redis?: Redis | undefined; mailer?: Mailer | undefined },
 ) {
+  // Moderation decisions are told to the people concerned by email (DSA art. 16-17).
+  const ctx = { ...baseCtx, mailer };
   // The dashboard shows email addresses and server internals: administrators only.
   app.get('/dashboard', async (request) => {
     requireAdmin(request);
@@ -120,12 +164,18 @@ export async function adminRoutes(
     return listAccountsForAdmin(ctx, { ...query, ...(query.q ? { query: query.q } : {}) });
   });
   app.post('/accounts/:id/suspend', async (request) => {
-    const { reason } = parse(z.object({ reason: z.string().max(1000).default('') }), request.body);
-    await suspendAccount(
+    const { reason, ground } = parse(
+      z.object({
+        reason: z.string().max(1000).default(''),
+        ground: z.enum(grounds).default('rules'),
+      }),
+      request.body,
+    );
+    await suspendAccountWithReasons(
       ctx,
       requireModerator(request).userId,
       parse(idParams, request.params).id,
-      reason,
+      { reason, ground },
     );
     return { status: 'ok' };
   });
@@ -206,7 +256,38 @@ export async function adminRoutes(
     return listReports(ctx, { resolved });
   });
   app.post('/reports/:id/resolve', async (request) => {
-    await resolveReport(ctx, requireModerator(request).userId, parse(idParams, request.params).id);
+    const moderator = requireModerator(request).userId;
+    const { id } = parse(idParams, request.params);
+    const body = parse(
+      z
+        .object({
+          decision: z.enum(['removed', 'suspended', 'no_violation']).optional(),
+          reason: z.string().trim().max(2000).default(''),
+        })
+        .default({ reason: '' }),
+      request.body ?? {},
+    );
+    if (body.decision) await decideReport(ctx, moderator, id, { ...body, decision: body.decision });
+    else await resolveReport(ctx, moderator, id);
+    return { status: 'ok' };
+  });
+
+  /** Removes a post, with the ground and reason sent to its author (DSA art. 17). */
+  app.post('/statuses/:id/remove', async (request) => {
+    const input = parse(
+      z.object({
+        ground: z.enum(grounds),
+        reason: z.string().trim().max(2000).default(''),
+        reportId: z.uuid().optional(),
+      }),
+      request.body,
+    );
+    await removePostAsModerator(
+      ctx,
+      requireModerator(request).userId,
+      parse(idParams, request.params).id,
+      input,
+    );
     return { status: 'ok' };
   });
 }

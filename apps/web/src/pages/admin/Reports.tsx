@@ -1,16 +1,23 @@
 import type { Status } from '@disbigle/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { admin, adminKeys, type Report } from '../../api/admin.ts';
+import {
+  admin,
+  adminKeys,
+  type ModerationGround,
+  type Report,
+  type ReportDecision,
+} from '../../api/admin.ts';
 import { ApiError } from '../../api/client.ts';
 import { errorMessage } from '../../api/errors.ts';
 import { statusQueryOptions } from '../../api/socialQueries.ts';
+import { Modal } from '../../components/Dialog.tsx';
 import { AccountLink, displayName, statusPath } from '../../components/StatusCard.tsx';
 import { Alert, Button, Card, cx, LoadingState } from '../../components/ui.tsx';
 import { fullDateTime, relativeTime } from '../../lib/time.ts';
-import { SuspendDialog } from './SuspendDialog.tsx';
+import { GroundField, SuspendDialog } from './SuspendDialog.tsx';
 
 export function ReportsPage() {
   const { t } = useTranslation();
@@ -69,10 +76,28 @@ export function ReportsPage() {
  * A reported post. Reports carry the posts (also private ones) for moderators; only when one
  * is missing is it fetched, with the usual visibility rules.
  */
-function ReportedPost({ id, included }: { id: string; included?: Status | undefined }) {
+function ReportedPost({
+  id,
+  included,
+  onRemove,
+}: {
+  id: string;
+  included?: Status | undefined;
+  onRemove?: (() => void) | undefined;
+}) {
   const { t } = useTranslation();
   const status = useQuery({ ...statusQueryOptions(id), retry: false, enabled: !included });
-  if (included) return <PostExcerpt post={included} />;
+  if (included)
+    return (
+      <div className="space-y-1.5">
+        <PostExcerpt post={included} />
+        {onRemove && (
+          <Button variant="secondary" onClick={onRemove}>
+            {t('admin.moderation.removePost')}
+          </Button>
+        )}
+      </div>
+    );
   if (status.isPending) return <span className="text-sm text-fg-muted">{t('common.loading')}</span>;
   if (status.isError) {
     const gone = status.error instanceof ApiError && status.error.status === 404;
@@ -107,15 +132,37 @@ function ReportItem({ report }: { report: Report }) {
     void queryClient.invalidateQueries({ queryKey: ['admin', 'reports'] });
     void queryClient.invalidateQueries({ queryKey: adminKeys.summary });
   };
+  const [deciding, setDeciding] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
   const resolve = useMutation({
-    mutationFn: () => admin.resolveReport(report.id),
-    onSuccess: refresh,
+    mutationFn: (input: { decision: ReportDecision; reason: string }) =>
+      admin.resolveReport(report.id, input),
+    onSuccess: () => {
+      setDeciding(false);
+      refresh();
+    },
+  });
+  // Removing a post also closes the report, with the same reason (the reporter is told).
+  const remove = useMutation({
+    mutationFn: async (input: { statusId: string; ground: ModerationGround; reason: string }) => {
+      await admin.removePost(input.statusId, {
+        ground: input.ground,
+        reason: input.reason,
+        reportId: report.id,
+      });
+      if (!report.resolvedAt)
+        await admin.resolveReport(report.id, { decision: 'removed', reason: input.reason });
+    },
+    onSuccess: () => {
+      setRemoving(null);
+      refresh();
+    },
   });
   const suspend = useMutation({
-    mutationFn: async (reason: string) => {
+    mutationFn: async ({ reason, ground }: { reason: string; ground: ModerationGround }) => {
       if (!report.target) return;
-      await admin.suspend(report.target.id, reason);
-      await admin.resolveReport(report.id);
+      await admin.suspend(report.target.id, reason, ground);
+      await admin.resolveReport(report.id, { decision: 'suspended', reason });
     },
     onSuccess: () => {
       setSuspending(false);
@@ -159,14 +206,53 @@ function ReportItem({ report }: { report: Report }) {
         </dd>
         <dt className="text-fg-muted">{t('admin.reports.reporter')}</dt>
         <dd>
-          {report.reporter ? (
+          {report.source === 'public' ? (
+            <span>
+              {t('admin.reports.publicNotice')}
+              {report.notifierName && ` · ${report.notifierName}`}
+              {report.notifierEmail && (
+                <>
+                  {' · '}
+                  <a href={`mailto:${report.notifierEmail}`} className="underline">
+                    {report.notifierEmail}
+                  </a>
+                </>
+              )}
+            </span>
+          ) : report.reporter ? (
             <AccountLink account={report.reporter} className="hover:underline">
               @{report.reporter.acct}
+              {report.source === 'remote' && ` (${t('admin.reports.remoteServer')})`}
             </AccountLink>
           ) : (
             t('admin.reports.unknownAccount')
           )}
         </dd>
+        {report.contentUrl && (
+          <>
+            <dt className="text-fg-muted">{t('admin.reports.contentUrl')}</dt>
+            <dd className="break-all">
+              <a href={report.contentUrl} className="underline" rel="noreferrer" target="_blank">
+                {report.contentUrl}
+              </a>
+            </dd>
+          </>
+        )}
+        {report.decision && (
+          <>
+            <dt className="text-fg-muted">{t('admin.reports.decision')}</dt>
+            <dd>
+              <span className="font-medium">
+                {t(`admin.moderation.decisions.${report.decision}`)}
+              </span>
+              {report.decisionReason && (
+                <span className="block whitespace-pre-wrap text-fg-muted">
+                  {report.decisionReason}
+                </span>
+              )}
+            </dd>
+          </>
+        )}
         <dt className="text-fg-muted">{t('admin.reports.comment')}</dt>
         <dd className="whitespace-pre-wrap break-words">
           {report.comment || (
@@ -182,16 +268,19 @@ function ReportItem({ report }: { report: Report }) {
           <ul className="space-y-2">
             {report.statusIds.map((id) => (
               <li key={id}>
-                <ReportedPost id={id} included={report.statuses?.find((s) => s.id === id)} />
+                <ReportedPost
+                  id={id}
+                  included={report.statuses?.find((s) => s.id === id)}
+                  onRemove={() => setRemoving(id)}
+                />
               </li>
             ))}
           </ul>
         </div>
       )}
-      <Alert>{resolve.error ? errorMessage(resolve.error) : null}</Alert>
       {!report.resolvedAt && (
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" loading={resolve.isPending} onClick={() => resolve.mutate()}>
+          <Button variant="secondary" onClick={() => setDeciding(true)}>
             {t('admin.reports.resolve')}
           </Button>
           {report.target && (
@@ -207,13 +296,166 @@ function ReportItem({ report }: { report: Report }) {
           confirmLabel={t('admin.reports.suspendAndResolve')}
           pending={suspend.isPending}
           error={suspend.error}
-          onConfirm={(reason) => suspend.mutate(reason)}
+          onConfirm={(reason, ground) => suspend.mutate({ reason, ground })}
           onClose={() => {
             setSuspending(false);
             suspend.reset();
           }}
         />
       )}
+      {deciding && (
+        <DecisionDialog
+          pending={resolve.isPending}
+          error={resolve.error}
+          onConfirm={(input) => resolve.mutate(input)}
+          onClose={() => {
+            setDeciding(false);
+            resolve.reset();
+          }}
+        />
+      )}
+      {removing && (
+        <RemovePostDialog
+          pending={remove.isPending}
+          error={remove.error}
+          onConfirm={(input) => remove.mutate({ statusId: removing, ...input })}
+          onClose={() => {
+            setRemoving(null);
+            remove.reset();
+          }}
+        />
+      )}
     </Card>
+  );
+}
+
+/** Closes a report with its decision and reason; whoever reported is told (DSA art. 16). */
+function DecisionDialog({
+  pending,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  pending: boolean;
+  error: unknown;
+  onConfirm: (input: { decision: ReportDecision; reason: string }) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const [decision, setDecision] = useState<ReportDecision>('no_violation');
+  const [reason, setReason] = useState('');
+  return (
+    <Modal
+      title={t('admin.moderation.decideTitle')}
+      description={t('admin.moderation.decideDescription')}
+      onClose={onClose}
+      initialFocus="textarea"
+    >
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm({ decision, reason: reason.trim() });
+        }}
+      >
+        <fieldset className="space-y-1.5">
+          <legend className="text-sm font-medium">{t('admin.reports.decision')}</legend>
+          {(['no_violation', 'removed', 'suspended'] as const).map((value) => (
+            <label key={value} className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="decision"
+                checked={decision === value}
+                onChange={() => setDecision(value)}
+              />
+              {t(`admin.moderation.decisions.${value}`)}
+            </label>
+          ))}
+        </fieldset>
+        <div className="space-y-1.5">
+          <label htmlFor={id} className="block text-sm font-medium">
+            {t('admin.moderation.reason')}
+          </label>
+          <textarea
+            id={id}
+            rows={3}
+            maxLength={2000}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            className="input-base"
+          />
+          <p className="text-xs text-fg-muted">{t('admin.moderation.decisionHint')}</p>
+        </div>
+        <Alert>{error ? errorMessage(error) : null}</Alert>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={onClose} disabled={pending}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" loading={pending}>
+            {t('admin.moderation.decideConfirm')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/** Removes a reported post; its author gets the ground and reason by email (DSA art. 17). */
+function RemovePostDialog({
+  pending,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  pending: boolean;
+  error: unknown;
+  onConfirm: (input: { ground: ModerationGround; reason: string }) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const [ground, setGround] = useState<ModerationGround>('rules');
+  const [reason, setReason] = useState('');
+  return (
+    <Modal
+      title={t('admin.moderation.removeTitle')}
+      description={t('admin.moderation.removeDescription')}
+      onClose={onClose}
+      initialFocus="textarea"
+    >
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm({ ground, reason: reason.trim() });
+        }}
+      >
+        <GroundField value={ground} onChange={setGround} />
+        <div className="space-y-1.5">
+          <label htmlFor={id} className="block text-sm font-medium">
+            {t('admin.moderation.reason')}
+          </label>
+          <textarea
+            id={id}
+            rows={3}
+            maxLength={2000}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            className="input-base"
+          />
+          <p className="text-xs text-fg-muted">{t('admin.moderation.reasonHint')}</p>
+        </div>
+        <Alert>{error ? errorMessage(error) : null}</Alert>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={onClose} disabled={pending}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" variant="danger" loading={pending}>
+            {t('admin.moderation.removeConfirm')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -788,15 +788,26 @@ export const reports = pgTable(
   'reports',
   {
     id: uuid('id').primaryKey(),
-    reporterActorId: actorRef('reporter_actor_id'),
+    /** Null for a notice sent through the public form by someone without an account here. */
+    reporterActorId: uuid('reporter_actor_id').references(() => actors.id, { onDelete: 'cascade' }),
     targetActorId: actorRef('target_actor_id'),
     postIds: uuid('post_ids').array().notNull().default(sql`'{}'`),
     category: reportCategoryEnum('category').notNull().default('other'),
     comment: text('comment').notNull().default(''),
+    /** `user` (Report button), `public` (form for anyone, DSA art. 16) or `remote` (another server's Flag). */
+    source: text('source').notNull().default('user'),
+    /** Public notices: who sent it (optional) and the address of the content. */
+    notifierName: text('notifier_name'),
+    notifierEmail: text('notifier_email'),
+    notifierLocale: text('notifier_locale'),
+    contentUrl: text('content_url'),
     /** Whether a copy was sent to the target's server. */
     forwarded: boolean('forwarded').notNull().default(false),
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     resolvedById: uuid('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    /** What the moderators decided (`removed`, `suspended`, `no_violation`) and why. */
+    decision: text('decision'),
+    decisionReason: text('decision_reason').notNull().default(''),
     createdAt: createdAt(),
   },
   (t) => [
