@@ -1,0 +1,28 @@
+Disbigle es una red social libre y de código abierto que te conecta con todo el fediverso desde un solo muro: sigue y habla con quien está en Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey y muchas más.
+
+SIN PUBLICIDAD, SIN ALGORITMO
+Tu muro muestra las publicaciones de las personas que sigues, en orden cronológico. Nadie decide por ti qué ver, y nadie vende tu atención.
+
+TU PRIVACIDAD, TUS REGLAS
+• Aspectos: agrupa a las personas (Familia, Amigos, Trabajo…) y elige quién ve cada publicación, como en diaspora*.
+• Publicaciones públicas, solo para seguidores o privadas.
+• Avisos de contenido y multimedia sensible difuminada.
+• Sin rastreo: la app solo habla con tu servidor.
+
+TODO LO QUE NECESITAS
+• Publicaciones con fotos, encuestas, menciones y etiquetas, con botones para negrita, títulos y listas, y vista previa antes de publicar.
+• Mensajes privados como un chat, con «Visto» y el estado de quien te escribe, si lo comparte.
+• Álbumes de fotos y pestaña Multimedia en cada perfil.
+• Traducción de publicaciones en el servidor, sin enviar los textos a servicios externos.
+• Vistas previas de enlaces sin rastreo.
+• Notificaciones, marcadores, publicaciones que te gustan, «Mi actividad».
+• Oculta publicaciones y etiquetas, silencia o bloquea personas, denuncia contenidos a los moderadores.
+• Tema claro y oscuro y ocho colores para elegir.
+
+TRAE TU CUENTA
+¿Vienes de Mastodon o de diaspora*? Desde la web puedes mudarte: quien te sigue te encuentra solo.
+
+ABIERTA DE VERDAD
+Disbigle es software libre (licencia AGPL-3.0): el código es público en GitHub y cualquiera puede instalar su propio servidor. La app funciona con app.disbigle.com y con otros servidores Disbigle.
+
+Los registros en app.disbigle.com los aprueba un moderador: así mantenemos lejos el spam y las cuentas falsas.

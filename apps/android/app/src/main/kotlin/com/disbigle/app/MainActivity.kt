@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
     if (BuildConfig.DEBUG) {
       val server = intent.getStringExtra("server")
       val token = intent.getStringExtra("token")
-      if (server != null && token != null) model.debugSignIn(server, token, intent.getStringExtra("screen"))
+      if (server != null && token != null) model.debugSignIn(server, token, intent.getStringExtra("screen"), intent.getStringExtra("search"))
       // `--ez check true`: run the background check now (it otherwise runs about every 15 minutes).
       if (intent.getBooleanExtra("check", false)) {
         androidx.work.WorkManager.getInstance(this).enqueue(androidx.work.OneTimeWorkRequest.from(CheckWorker::class.java))

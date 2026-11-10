@@ -170,6 +170,7 @@
   <string name="security">Password, passkey e accesso in due passaggi</string>
   <string name="apps_with_access">App con accesso</string>
   <string name="account_actions">Esporta, sposta o elimina l\'account</string>
+  <string name="delete_account">Elimina account</string>
   <string name="security_footer">Si aprono sulla pagina del tuo server, dove confermi con la password.</string>
   <string name="about">Informazioni</string>
   <string name="version">Versione</string>

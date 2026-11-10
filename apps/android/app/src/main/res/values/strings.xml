@@ -169,6 +169,7 @@
   <string name="security">Password, passkeys and two-step sign-in</string>
   <string name="apps_with_access">Apps with access</string>
   <string name="account_actions">Export, move or delete the account</string>
+  <string name="delete_account">Delete account</string>
   <string name="security_footer">These open your server\'s page, where you confirm with your password.</string>
   <string name="about">About</string>
   <string name="version">Version</string>

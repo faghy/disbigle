@@ -77,9 +77,14 @@ class AppModel(application: Application) : AndroidViewModel(application) {
   var debugScreen: String? = null
     private set
 
-  fun debugSignIn(server: String, token: String, screen: String?) {
+  /** Debug builds, for screenshots: a search to show in the Search tab. */
+  var debugSearch: String? = null
+    private set
+
+  fun debugSignIn(server: String, token: String, screen: String?, search: String? = null) {
     session = StoredSession(server, token, "", "").also { SessionStore.save(getApplication(), it) }
     debugScreen = screen
+    debugSearch = search
   }
 
   /** Loads the account and the server limits; signs out if the token was revoked. */

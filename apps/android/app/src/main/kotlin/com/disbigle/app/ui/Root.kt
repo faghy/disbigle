@@ -163,6 +163,7 @@ fun MainScreen(model: AppModel) {
     when (val screen = model.debugScreen) {
       null, "home" -> {}
       "compose" -> model.composing = com.disbigle.app.ComposeTarget.New
+      "chat" -> select("messages")
       "settings" -> { select("me"); nav.settings() }
       "settings-notifications" -> { select("me"); nav.settings(); nav.settings("notifications") }
       "settings-profile" -> { select("me"); nav.settings(); nav.settings("profile") }

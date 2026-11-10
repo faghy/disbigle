@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -170,6 +171,7 @@ fun SettingsScreen(nav: Nav) {
       Row(stringResource(R.string.security), Icons.Outlined.Security, external = true) { openInBrowser(context, "$server/settings/security") }
       Row(stringResource(R.string.apps_with_access), Icons.Outlined.Apps, external = true) { openInBrowser(context, "$server/settings/apps") }
       Row(stringResource(R.string.account_actions), Icons.Outlined.ManageAccounts, external = true) { openInBrowser(context, "$server/settings/account") }
+      Row(stringResource(R.string.delete_account), Icons.Outlined.DeleteForever, external = true) { openInBrowser(context, "$server/settings/account") }
       Text(stringResource(R.string.security_footer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp))
       SectionTitle(stringResource(R.string.about))
       ListItem(headlineContent = { Text(stringResource(R.string.version)) }, trailingContent = { Text("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})") })

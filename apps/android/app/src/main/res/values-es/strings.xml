@@ -170,6 +170,7 @@
   <string name="security">Contraseña, llaves de acceso e inicio de sesión en dos pasos</string>
   <string name="apps_with_access">Apps con acceso</string>
   <string name="account_actions">Exportar, mover o eliminar la cuenta</string>
+  <string name="delete_account">Eliminar la cuenta</string>
   <string name="security_footer">Se abren en la página de tu servidor, donde confirmas con tu contraseña.</string>
   <string name="about">Información</string>
   <string name="version">Versión</string>

@@ -7,15 +7,15 @@ plugins {
 
 android {
   namespace = "com.disbigle.app"
-  compileSdk = 35
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.disbigle.app"
     minSdk = 28
-    targetSdk = 35
+    targetSdk = 36
     // CI passes the run number, so every build installs as an update.
     versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
-    versionName = "0.1.0"
+    versionName = "0.4.2"
   }
 
   signingConfigs {

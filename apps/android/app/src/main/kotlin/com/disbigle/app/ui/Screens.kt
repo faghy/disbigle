@@ -412,6 +412,15 @@ fun ConversationsScreen(nav: Nav) {
   val scope = rememberCoroutineScope()
   val list = store.list<Conversation>("conversations", { it.id }) { q -> client!!.conversations(q) }
   LaunchedEffect(list) { if (!list.loaded) list.refresh() }
+  // Screenshots (`--es screen chat`): the newest conversation, open.
+  var openedDebugChat by rememberSaveable { mutableStateOf(false) }
+  LaunchedEffect(list.items.firstOrNull()?.id) {
+    val first = list.items.firstOrNull() ?: return@LaunchedEffect
+    if (model.debugScreen == "chat" && !openedDebugChat) {
+      openedDebugChat = true
+      nav.chat(first.id)
+    }
+  }
   Screen(
     stringResource(R.string.tab_messages), nav, back = false,
     floating = {
@@ -491,6 +500,15 @@ fun SearchScreen(nav: Nav) {
       } finally {
         searching = false
       }
+    }
+  }
+
+  // Screenshots (`--es search <text>`): the results of a search.
+  LaunchedEffect(Unit) {
+    val text = model.debugSearch
+    if (text != null && results == null) {
+      query = text
+      search()
     }
   }
 
