@@ -110,7 +110,8 @@ jobs:
               for screen in home messages compose profile notifications search settings; do
                 xcrun simctl terminate "$device" com.disbigle.app 2>/dev/null || true
                 xcrun simctl launch "$device" com.disbigle.app -AppleLanguages "($lang)" -AppleLocale "$region" \
-                  -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen
+                  -DisbigleServer http://localhost:3300 -DisbigleToken "$TOKEN" -DisbigleScreen $screen \
+                  -DisbigleSearch disbigle
                 sleep 10
                 xcrun simctl io "$device" screenshot "$shots/$locale/$n-$tag-$screen.png"
                 n=$((n + 1))

@@ -356,6 +356,14 @@ struct SearchScreen: View {
     .onAppear {
       guard !opened else { return }
       opened = true
+      #if DEBUG
+        // Screenshots: `-DisbigleSearch <text>` shows the results of a search.
+        if let text = UserDefaults.standard.string(forKey: "DisbigleSearch") {
+          query = text
+          Task { await search() }
+          return
+        }
+      #endif
       if query.isEmpty { searchActive = true }
     }
     .onSubmit(of: .search) { Task { await search() } }
