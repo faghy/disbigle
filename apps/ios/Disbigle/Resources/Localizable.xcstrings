@@ -1100,6 +1100,22 @@
         }
       }
     },
+    "Delete account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la cuenta"
+          }
+        }
+      }
+    },
     "Delete this album?": {
       "localizations": {
         "es": {

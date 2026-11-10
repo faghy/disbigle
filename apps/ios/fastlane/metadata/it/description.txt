@@ -1,4 +1,4 @@
-Disbigle è un social network libero e open source che ti collega a tutto il fediverso da una sola bacheca: segui e parla con chi è su Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey e tanti altri, e perfino con Bluesky tramite il ponte Bridgy Fed.
+Disbigle è un social network libero e open source che ti collega a tutto il fediverso da una sola bacheca: segui e parla con chi è su Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey e tanti altri.
 
 NIENTE PUBBLICITÀ, NIENTE ALGORITMO
 La tua bacheca mostra i post delle persone che segui, in ordine cronologico. Nessuno decide per te cosa vedere, e nessuno vende la tua attenzione.
@@ -13,7 +13,7 @@ TUTTO QUELLO CHE TI SERVE
 • Post con foto, sondaggi, menzioni e hashtag, con i pulsanti per grassetto, titoli ed elenchi e l'anteprima prima di pubblicare.
 • Messaggi privati come una chat, con «Visto» e lo stato di chi ti scrive, se lo condivide.
 • Album di foto e scheda Media su ogni profilo.
-• Traduzione dei post sul server, senza inviare testi a Google o simili.
+• Traduzione dei post sul server, senza inviare i testi a servizi esterni.
 • Anteprime dei link senza tracciamento.
 • Notifiche, segnalibri, post salvati, «La mia attività».
 • Nascondi post e hashtag, silenzia o blocca persone, segnala contenuti ai moderatori.

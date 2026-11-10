@@ -1,4 +1,4 @@
-Disbigle es una red social libre y de código abierto que te conecta con todo el fediverso desde un solo muro: sigue y habla con quien está en Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey y muchas más, e incluso con Bluesky gracias al puente Bridgy Fed.
+Disbigle es una red social libre y de código abierto que te conecta con todo el fediverso desde un solo muro: sigue y habla con quien está en Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey y muchas más.
 
 SIN PUBLICIDAD, SIN ALGORITMO
 Tu muro muestra las publicaciones de las personas que sigues, en orden cronológico. Nadie decide por ti qué ver, y nadie vende tu atención.
@@ -13,7 +13,7 @@ TODO LO QUE NECESITAS
 • Publicaciones con fotos, encuestas, menciones y etiquetas, con botones para negrita, títulos y listas, y vista previa antes de publicar.
 • Mensajes privados como un chat, con «Visto» y el estado de quien te escribe, si lo comparte.
 • Álbumes de fotos y pestaña Multimedia en cada perfil.
-• Traducción de publicaciones en el servidor, sin enviar textos a Google ni similares.
+• Traducción de publicaciones en el servidor, sin enviar los textos a servicios externos.
 • Vistas previas de enlaces sin rastreo.
 • Notificaciones, marcadores, publicaciones que te gustan, «Mi actividad».
 • Oculta publicaciones y etiquetas, silencia o bloquea personas, denuncia contenidos a los moderadores.

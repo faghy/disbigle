@@ -216,7 +216,9 @@ struct NotificationRow: View {
 
 struct ConversationsScreen: View {
   @Environment(AppModel.self) private var model
+  @Environment(Router.self) private var router
   @State private var list: PagedList<Conversation>?
+  @State private var openedDebugChat = false
 
   var body: some View {
     Group {
@@ -251,6 +253,12 @@ struct ConversationsScreen: View {
     .onAppear {
       guard list == nil, let client = model.client else { return }
       list = PagedList { try await client.conversations(query: $0) }
+    }
+    .onChange(of: list?.items.first?.id) { _, id in
+      // Screenshots (`-DisbigleScreen chat`): the newest conversation, open.
+      guard model.debugScreen == "chat", !openedDebugChat, let id else { return }
+      openedDebugChat = true
+      router.go(.chat(id))
     }
   }
 }

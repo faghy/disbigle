@@ -1,1 +1,1 @@
-fediverso,mastodon,diaspora,red social,sin publicidad,privacidad,federada,friendica,chat
+fediverso,red social,sin publicidad,privacidad,federada,descentralizada,código abierto,chat,fotos

@@ -90,6 +90,8 @@ struct SettingsScreen: View {
         webLink("Password, passkeys and two-step sign-in", systemImage: "lock.shield", path: "settings/security")
         webLink("Apps with access", systemImage: "app.badge.checkmark", path: "settings/apps")
         webLink("Export, move or delete the account", systemImage: "person.crop.circle.badge.exclamationmark", path: "settings/account")
+        webLink("Delete account", systemImage: "trash", path: "settings/account")
+          .foregroundStyle(.red)
       } header: {
         Text("Security and account")
       } footer: {

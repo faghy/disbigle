@@ -1,1 +1,1 @@
-fediverso,mastodon,diaspora,social,senza pubblicità,privacy,federato,friendica,pixelfed,chat
+fediverso,social,senza pubblicità,privacy,federato,decentralizzato,open source,chat,foto,comunità

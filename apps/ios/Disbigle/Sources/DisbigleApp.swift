@@ -220,6 +220,8 @@ struct MainView: View {
         model.composing = .new
       } else if screen.hasPrefix("settings") {
         tab = "profile"
+      } else if screen == "chat" {
+        tab = "messages"
       } else {
         tab = screen
       }

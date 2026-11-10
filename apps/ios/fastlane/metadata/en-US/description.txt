@@ -1,4 +1,4 @@
-Disbigle is a free, open source social network that connects you to the whole fediverse from a single timeline: follow and talk with people on Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey and many more, and even Bluesky through the Bridgy Fed bridge.
+Disbigle is a free, open source social network that connects you to the whole fediverse from a single timeline: follow and talk with people on Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey and many more.
 
 NO ADS, NO ALGORITHM
 Your timeline shows the posts of the people you follow, newest first. Nobody decides what you see, and nobody sells your attention.
@@ -13,7 +13,7 @@ EVERYTHING YOU NEED
 • Posts with photos, polls, mentions and hashtags, with buttons for bold, headings and lists, and a preview before publishing.
 • Private messages as a chat, with "Seen" and the status of the people you write with, if they share it.
 • Photo albums and a Media tab on every profile.
-• Post translation on the server, without sending texts to Google and the like.
+• Post translation on the server, without sending texts to outside services.
 • Link previews without tracking.
 • Notifications, bookmarks, liked posts, "My activity".
 • Hide posts and hashtags, mute or block people, report content to the moderators.
