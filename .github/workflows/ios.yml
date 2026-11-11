@@ -285,6 +285,15 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/keys"
           printf '%s' "$KEY" > "$RUNNER_TEMP/keys/AuthKey.p8"
+      - name: Revoke the development certificates of earlier runs
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography requests
+          "$RUNNER_TEMP/venv/bin/python" scripts/revoke-ci-certificates.py
       - name: Generate the Xcode project
         run: brew install xcodegen && xcodegen generate
       - name: Archive
@@ -322,6 +331,15 @@ jobs:
           xcrun altool --upload-app --type ios --file "$(ls "$RUNNER_TEMP"/export/*.ipa)" \
             --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID" --output-format normal
           rm -f ~/private_keys/AuthKey_$KEY_ID.p8
+      - name: Revoke the development certificate of this run
+        if: always()
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          [ -x "$RUNNER_TEMP/venv/bin/python" ] || exit 0
+          "$RUNNER_TEMP/venv/bin/python" scripts/revoke-ci-certificates.py
       - name: Remove the key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"
