@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom } from '../api/errors.ts';
 import { useEditStatus } from '../api/mutations.ts';
 import { useLimits } from '../api/queries.ts';
+import { useAutoGrow } from '../lib/autoGrow.ts';
 import { EmojiButton } from './EmojiPicker.tsx';
 import { PollIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
@@ -27,6 +28,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
   const ids = { text: useId(), counter: useId(), warning: useId(), error: useId() };
   const [content, setContent] = useState(status.source ?? htmlToText(status.content));
   const textarea = useRef<HTMLTextAreaElement>(null);
+  useAutoGrow(textarea, content);
   const [summary, setSummary] = useState(status.summary);
   const [warningOpen, setWarningOpen] = useState(status.summary.length > 0);
   const [sensitive, setSensitive] = useState(status.sensitive);
@@ -135,7 +137,7 @@ export function EditStatusForm({ status, onDone }: { status: Status; onDone: () 
           }}
           aria-invalid={contentError ? true : undefined}
           aria-describedby={cx(ids.counter, contentError && ids.error) || undefined}
-          className="input-base resize-y"
+          className="input-base resize-none"
         />
         {contentError && (
           <p id={ids.error} className="mt-1 text-sm text-danger">

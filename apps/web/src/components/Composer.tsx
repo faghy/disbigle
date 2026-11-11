@@ -14,6 +14,7 @@ import { errorMessage, fieldErrorsFrom, isFieldError } from '../api/errors.ts';
 import { useCreateStatus } from '../api/mutations.ts';
 import { useCurrentUser, useLimits } from '../api/queries.ts';
 import { useAspects } from '../api/socialQueries.ts';
+import { useAutoGrow } from '../lib/autoGrow.ts';
 import { applyFormat, type Format, shortcutFormat } from '../lib/markdownFormat.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
@@ -102,6 +103,7 @@ export function Composer({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [preparing, setPreparing] = useState(false);
   const mentions = useMentionSuggestions({ textarea, content, setContent });
+  useAutoGrow(textarea, content);
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -306,7 +308,7 @@ export function Composer({
               placeholder={replyTo ? t('composer.replyPlaceholder') : t('composer.placeholder')}
               aria-invalid={allErrors.content ? true : undefined}
               aria-describedby={cx(ids.counter, allErrors.content && ids.error) || undefined}
-              className="block w-full resize-y border-0 bg-transparent p-0 text-base placeholder:text-fg-muted focus:ring-0 focus-visible:outline-none"
+              className="block w-full resize-none border-0 bg-transparent p-0 text-base placeholder:text-fg-muted focus:ring-0 focus-visible:outline-none"
             />
             {mentions.list}
             {allErrors.content && (
