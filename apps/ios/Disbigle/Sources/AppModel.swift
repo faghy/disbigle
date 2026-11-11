@@ -87,6 +87,10 @@ final class AppModel {
       }
     } catch APIError.unauthorized {
       forget()
+    } catch APIError.server(status: 403, message: _) {
+      // "Your login is currently disabled": deleted, suspended or not yet approved. Nothing works
+      // with this login, so back to the sign-in screen rather than screens that never load.
+      forget()
     } catch {
       // Offline or server down: keep the session, the lists show the error.
     }
