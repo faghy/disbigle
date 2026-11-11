@@ -20,6 +20,7 @@ struct ComposeView: View {
   @State private var sensitive = false
   @State private var media: [Attachment] = []
   @State private var picked: [PhotosPickerItem] = []
+  @State private var choosingPhotos = false
   @State private var poll: PostDraft.PollDraft?
   @State private var sending = false
   @State private var loadingSource = false
@@ -92,7 +93,8 @@ struct ComposeView: View {
                 .disabled(loadingSource)
             }
           }
-          HStack {
+          HStack(spacing: 20) {
+            attachmentButtons
             Spacer()
             Text("\(maxCharacters - text.count)")
               .font(.footnote.monospacedDigit())
@@ -125,24 +127,12 @@ struct ComposeView: View {
               .disabled(!canSend)
           }
         }
-        ToolbarItemGroup(placement: .keyboard) {
-          PhotosPicker(
-            selection: $picked, maxSelectionCount: max(0, maxMedia - media.count), matching: .images
-          ) {
-            Image(systemName: "photo")
-          }
-          .disabled(media.count >= maxMedia || poll != nil)
-          .accessibilityLabel(Text("Add photos"))
-          Button {
-            poll = poll == nil ? .init(options: ["", ""], expiresIn: 86_400, multiple: false) : nil
-          } label: {
-            Image(systemName: "chart.bar")
-          }
-          .disabled(!media.isEmpty)
-          .accessibilityLabel(Text(poll == nil ? LocalizedStringKey("Add a poll") : "Remove the poll"))
-          Spacer()
-        }
       }
+      // Presented from the form, not from a button inside a row or the keyboard bar: those go
+      // away while the picker is open and close it.
+      .photosPicker(
+        isPresented: $choosingPhotos, selection: $picked,
+        maxSelectionCount: max(1, maxMedia - media.count), matching: .images)
       .onChange(of: picked) { _, items in
         guard !items.isEmpty else { return }
         picked = []
@@ -151,6 +141,31 @@ struct ComposeView: View {
       .task { await prepare() }
       .interactiveDismissDisabled(!text.isEmpty || !media.isEmpty)
     }
+  }
+
+  /** Photos and poll, always visible under the text (the editor is a UIKit view, so a SwiftUI
+   * keyboard toolbar never shows up). */
+  private var attachmentButtons: some View {
+    HStack(spacing: 20) {
+      Button {
+        textFocused = false
+        choosingPhotos = true
+      } label: {
+        Image(systemName: "photo")
+      }
+      .disabled(media.count >= maxMedia || poll != nil)
+      .accessibilityLabel(Text("Add photos"))
+      Button {
+        poll = poll == nil ? .init(options: ["", ""], expiresIn: 86_400, multiple: false) : nil
+      } label: {
+        Image(systemName: poll == nil ? "chart.bar" : "chart.bar.fill")
+      }
+      .disabled(!media.isEmpty)
+      .accessibilityLabel(Text(poll == nil ? LocalizedStringKey("Add a poll") : "Remove the poll"))
+    }
+    // Inside a Form row every button would fire on a tap anywhere in the row.
+    .buttonStyle(.borderless)
+    .font(.title3)
   }
 
   private var title: LocalizedStringKey {
