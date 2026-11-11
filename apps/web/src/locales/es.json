@@ -1654,5 +1654,37 @@
     ],
     "partialTitle": "Borrar solo algunos datos",
     "partial": "No hace falta eliminar la cuenta para quitar datos: puedes borrar publicaciones, comentarios, fotos y mensajes desde su menú, quitar fotos de los álbumes y cambiar o quitar nombre, biografía, avatar y portada en los ajustes del perfil."
+  },
+  "childSafety": {
+    "title": "Normas de seguridad infantil",
+    "lead": "Disbigle (app.disbigle.com y las apps Disbigle para Android e iPhone), gestionado por Serafino Christian Varazze, tiene tolerancia cero con el abuso y la explotación sexual infantil (CSAE) y con el material de abuso sexual infantil (CSAM).",
+    "bannedTitle": "Qué está prohibido",
+    "banned": [
+      "Cualquier material que muestre o sexualice a menores, también dibujado, generado por ordenador o con inteligencia artificial.",
+      "Grooming, pedir a menores imágenes o encuentros, sextorsión y trata.",
+      "Enlaces, intercambios o indicaciones para encontrar ese material en otro lugar.",
+      "El uso del servicio por menores de 16 años."
+    ],
+    "reportTitle": "Cómo denunciar",
+    "report": [
+      "En la app y en la web: menú «…» de una publicación o un perfil → Denunciar → «Contenido ilegal».",
+      "Sin cuenta: el formulario público de abajo, o un correo al contacto al final de esta página.",
+      "En Italia también puedes denunciar a la Policía Postal: www.commissariatodips.it."
+    ],
+    "actionTitle": "Qué hacemos",
+    "action": [
+      "Revisamos de inmediato las denuncias de abuso infantil, antes que cualquier otra.",
+      "Retiramos el contenido y suspendemos la cuenta; si viene de otro servidor, lo bloqueamos y avisamos a su administrador.",
+      "Conservamos los datos necesarios para la investigación y comunicamos el caso a las autoridades competentes (en Italia el Centro nacional contra la pornografía infantil en línea de la Policía Postal), como exige la ley.",
+      "Colaboramos con las fuerzas del orden y cumplimos las órdenes de las autoridades."
+    ],
+    "preventionTitle": "Prevención",
+    "prevention": [
+      "Los registros en app.disbigle.com los aprueba un moderador y exigen tener al menos 16 años.",
+      "Los usuarios pueden bloquear, silenciar y denunciar a cualquiera; el contenido sensible se oculta tras un aviso.",
+      "Bloqueamos los servidores conocidos por contenido ilegal, también con la lista compartida IFTAS DNI."
+    ],
+    "contactTitle": "Contacto",
+    "contact": "Punto de contacto para la seguridad infantil y para las autoridades:"
   }
 }

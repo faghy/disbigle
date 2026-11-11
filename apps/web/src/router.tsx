@@ -24,6 +24,7 @@ import { InstanceSettingsPage } from './pages/admin/InstanceSettings.tsx';
 import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
 import { UsersPage } from './pages/admin/Users.tsx';
+import { ChildSafetyPage } from './pages/ChildSafety.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
 import { ConversationPage } from './pages/Conversation.tsx';
 import { DeleteAccountInfoPage } from './pages/DeleteAccountInfo.tsx';
@@ -458,6 +459,13 @@ const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
+/** Published child safety standards (CSAE), for the app stores. */
+const childSafetyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/child-safety',
+  component: ChildSafetyPage,
+});
+
 /** How to delete the account, readable without signing in (linked from the app stores). */
 const deleteAccountInfoRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -532,6 +540,7 @@ export const routeTree = rootRoute.addChildren([
   verifyEmailRoute,
   reportContentRoute,
   deleteAccountInfoRoute,
+  childSafetyRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
     adminIndexRoute,

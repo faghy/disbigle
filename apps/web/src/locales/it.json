@@ -1628,5 +1628,37 @@
     ],
     "partialTitle": "Cancellare solo alcuni dati",
     "partial": "Non serve eliminare l'account per togliere dei dati: puoi cancellare singoli post, commenti, foto e messaggi dal loro menu, togliere foto dagli album e cambiare o togliere nome, biografia, avatar e copertina nelle impostazioni del profilo."
+  },
+  "childSafety": {
+    "title": "Standard di sicurezza dei minori",
+    "lead": "Disbigle (app.disbigle.com e le app Disbigle per Android e iPhone), gestito da Serafino Christian Varazze, ha tolleranza zero per l'abuso e lo sfruttamento sessuale dei minori (CSAE) e per il materiale pedopornografico (CSAM).",
+    "bannedTitle": "Cosa è vietato",
+    "banned": [
+      "Qualsiasi materiale che mostri o sessualizzi minori, anche disegnato, generato al computer o con l'intelligenza artificiale.",
+      "Adescamento (grooming), richieste di immagini o di incontri a minori, sextortion e tratta.",
+      "Link, scambi o indicazioni per trovare questo materiale altrove.",
+      "L'uso del servizio da parte di chi ha meno di 16 anni."
+    ],
+    "reportTitle": "Come segnalare",
+    "report": [
+      "Nell'app e sul sito: menu «…» di un post o di un profilo → Segnala → «Contenuto illegale».",
+      "Senza account: il modulo pubblico qui sotto, oppure email al contatto in fondo alla pagina.",
+      "In Italia puoi segnalare anche alla Polizia Postale: www.commissariatodips.it."
+    ],
+    "actionTitle": "Cosa facciamo",
+    "action": [
+      "Esaminiamo subito le segnalazioni di abuso sui minori, con priorità su tutte le altre.",
+      "Rimuoviamo il contenuto e sospendiamo l'account; se arriva da un altro server, lo blocchiamo e avvisiamo il suo amministratore.",
+      "Conserviamo i dati necessari alle indagini e segnaliamo il caso alle autorità competenti (in Italia il Centro nazionale per il contrasto della pedopornografia online della Polizia Postale), come richiesto dalla legge.",
+      "Collaboriamo con le forze dell'ordine e rispondiamo agli ordini delle autorità."
+    ],
+    "preventionTitle": "Prevenzione",
+    "prevention": [
+      "Le iscrizioni su app.disbigle.com sono approvate da un moderatore e richiedono di avere almeno 16 anni.",
+      "Gli utenti possono bloccare, silenziare e segnalare chiunque; i media sensibili sono nascosti dietro un avviso.",
+      "Blocchiamo i server noti per contenuti illegali, anche con l'elenco condiviso IFTAS DNI."
+    ],
+    "contactTitle": "Contatto",
+    "contact": "Referente per la sicurezza dei minori e per le autorità:"
   }
 }

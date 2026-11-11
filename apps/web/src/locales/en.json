@@ -1628,5 +1628,37 @@
     ],
     "partialTitle": "Delete only some data",
     "partial": "You do not have to delete the account to remove data: you can delete single posts, comments, photos and messages from their menu, remove photos from albums, and change or remove your name, bio, avatar and header in the profile settings."
+  },
+  "childSafety": {
+    "title": "Child safety standards",
+    "lead": "Disbigle (app.disbigle.com and the Disbigle apps for Android and iPhone), run by Serafino Christian Varazze, has zero tolerance for child sexual abuse and exploitation (CSAE) and child sexual abuse material (CSAM).",
+    "bannedTitle": "What is banned",
+    "banned": [
+      "Any material that shows or sexualises minors, also drawn, computer-generated or made with artificial intelligence.",
+      "Grooming, asking minors for images or meetings, sextortion and trafficking.",
+      "Links, exchanges or directions to find such material elsewhere.",
+      "Use of the service by anyone under 16."
+    ],
+    "reportTitle": "How to report",
+    "report": [
+      "In the app and on the website: the \"…\" menu of a post or profile → Report → \"Illegal content\".",
+      "Without an account: the public form below, or email the contact at the bottom of this page.",
+      "In Italy you can also report to the Postal Police: www.commissariatodips.it."
+    ],
+    "actionTitle": "What we do",
+    "action": [
+      "We look at reports of child abuse at once, ahead of all others.",
+      "We remove the content and suspend the account; if it comes from another server, we block it and tell its administrator.",
+      "We keep the data needed for investigations and report the case to the competent authorities (in Italy the National Centre against online child sexual abuse of the Postal Police), as the law requires.",
+      "We cooperate with law enforcement and act on orders from the authorities."
+    ],
+    "preventionTitle": "Prevention",
+    "prevention": [
+      "Sign-ups on app.disbigle.com are approved by a moderator and require being at least 16.",
+      "Users can block, mute and report anyone; sensitive media are hidden behind a warning.",
+      "We block servers known for illegal content, also with the shared IFTAS DNI list."
+    ],
+    "contactTitle": "Contact",
+    "contact": "Point of contact for child safety and for the authorities:"
   }
 }
