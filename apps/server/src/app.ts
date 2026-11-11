@@ -330,10 +330,12 @@ export async function buildApp(options: AppOptions) {
   });
   await app.register(authorizedAppRoutes, { store: oauthStore, prefix: '/api/v1/me/apps' });
   // Signing in again elsewhere is required after a password change or reset: revoke app tokens too.
+  // After an account deletion as well: the apps then get 401 and go back to their sign-in screen,
+  // instead of a day of 403 "login disabled" until the account is purged.
   app.addHook('onResponse', async (request, reply) => {
     if (reply.statusCode !== 200 || request.method !== 'POST') return;
     const path = request.url.split('?')[0];
-    if (path === '/api/v1/me/password' && request.session) {
+    if ((path === '/api/v1/me/password' || path === '/api/v1/me/delete') && request.session) {
       await oauthStore.revokeUserTokens(request.session.userId);
     } else if (path === '/api/v1/auth/password/reset' && request.passwordResetUserId) {
       await oauthStore.revokeUserTokens(request.passwordResetUserId);
