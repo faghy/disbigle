@@ -1601,5 +1601,32 @@
     "doneTitle": "Report received",
     "done": "Thank you: the moderators will look at it as soon as they can.",
     "doneEmail": "Thank you: the moderators will look at it as soon as they can. We sent you a confirmation and will write to you with the outcome."
+  },
+  "deleteInfo": {
+    "title": "Delete your Disbigle account",
+    "lead": "You can delete your account on app.disbigle.com, and the data linked to it, at any time, from the Disbigle app for Android and iPhone or from the website.",
+    "appTitle": "From the app",
+    "appSteps": [
+      "Tap Profile in the bar at the bottom, then the settings icon.",
+      "In \"Security and account\", tap \"Delete account\": the page of your server opens.",
+      "Enter your password and confirm: the account is closed at once."
+    ],
+    "webTitle": "From the website",
+    "web": "Sign in and open the account page, choose \"Delete account\", enter your password and confirm. From the same page you can first export your data:",
+    "noAccessTitle": "If you can't sign in",
+    "noAccess": "Write from the email address of your account, saying your username: we delete the account for you within 30 days.",
+    "deletedTitle": "What is deleted",
+    "deleted": [
+      "Right away: the account is closed, hidden and signed out everywhere, and the other servers are asked to delete your profile and posts.",
+      "Within about 24 hours: profile, posts, comments, private messages, photos and other media, follows, aspects, settings and email address are erased from the server.",
+      "Backups are overwritten within 14 days."
+    ],
+    "keptTitle": "What may remain",
+    "kept": [
+      "Copies on other servers of the fediverse: we ask them to delete them, but they are run by third parties and we cannot guarantee it.",
+      "Reports and moderation decisions about the account, kept for 2 years to meet legal obligations (Digital Services Act), then deleted."
+    ],
+    "partialTitle": "Delete only some data",
+    "partial": "You do not have to delete the account to remove data: you can delete single posts, comments, photos and messages from their menu, remove photos from albums, and change or remove your name, bio, avatar and header in the profile settings."
   }
 }

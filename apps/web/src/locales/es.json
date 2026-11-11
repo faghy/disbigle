@@ -1627,5 +1627,32 @@
     "doneTitle": "Denuncia recibida",
     "done": "Gracias: la moderación la revisará lo antes posible.",
     "doneEmail": "Gracias: la moderación la revisará lo antes posible. Te hemos enviado una confirmación y te escribiremos el resultado."
+  },
+  "deleteInfo": {
+    "title": "Eliminar tu cuenta de Disbigle",
+    "lead": "Puedes eliminar en cualquier momento tu cuenta de app.disbigle.com y los datos vinculados, desde la app Disbigle para Android y iPhone o desde la web.",
+    "appTitle": "Desde la app",
+    "appSteps": [
+      "Toca Perfil en la barra de abajo y luego el icono de ajustes.",
+      "En «Seguridad y cuenta» toca «Eliminar la cuenta»: se abre la página de tu servidor.",
+      "Escribe tu contraseña y confirma: la cuenta se cierra al momento."
+    ],
+    "webTitle": "Desde la web",
+    "web": "Inicia sesión y abre la página de la cuenta, elige «Eliminar la cuenta», escribe tu contraseña y confirma. Desde la misma página puedes antes exportar tus datos:",
+    "noAccessTitle": "Si no puedes iniciar sesión",
+    "noAccess": "Escribe desde el correo de tu cuenta, indicando tu nombre de usuario: eliminamos la cuenta por ti en un plazo de 30 días.",
+    "deletedTitle": "Qué se borra",
+    "deleted": [
+      "Al momento: la cuenta se cierra, se oculta y se cierran todas las sesiones, y se pide a los demás servidores que borren tu perfil y tus publicaciones.",
+      "En unas 24 horas: perfil, publicaciones, comentarios, mensajes privados, fotos y otros archivos, seguidos, aspectos, ajustes y correo se borran del servidor.",
+      "Las copias de seguridad se sobrescriben en 14 días."
+    ],
+    "keptTitle": "Qué puede quedar",
+    "kept": [
+      "Copias en otros servidores del fediverso: pedimos que las borren, pero los gestionan terceros y no podemos garantizarlo.",
+      "Denuncias y decisiones de moderación sobre la cuenta, conservadas 2 años por obligaciones legales (Digital Services Act), y luego borradas."
+    ],
+    "partialTitle": "Borrar solo algunos datos",
+    "partial": "No hace falta eliminar la cuenta para quitar datos: puedes borrar publicaciones, comentarios, fotos y mensajes desde su menú, quitar fotos de los álbumes y cambiar o quitar nombre, biografía, avatar y portada en los ajustes del perfil."
   }
 }

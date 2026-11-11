@@ -1601,5 +1601,32 @@
     "doneTitle": "Segnalazione ricevuta",
     "done": "Grazie: la moderazione la esaminerà il prima possibile.",
     "doneEmail": "Grazie: la moderazione la esaminerà il prima possibile. Ti abbiamo mandato una conferma e ti scriveremo l'esito."
+  },
+  "deleteInfo": {
+    "title": "Eliminare l'account Disbigle",
+    "lead": "Puoi eliminare in qualsiasi momento il tuo account su app.disbigle.com e i dati collegati, dall'app Disbigle per Android e iPhone o dal sito.",
+    "appTitle": "Dall'app",
+    "appSteps": [
+      "Tocca Profilo nella barra in basso, poi l'icona delle impostazioni.",
+      "In «Sicurezza e account» tocca «Elimina account»: si apre la pagina del tuo server.",
+      "Inserisci la password e conferma: l'account viene chiuso subito."
+    ],
+    "webTitle": "Dal sito",
+    "web": "Accedi e apri la pagina dell'account, scegli «Elimina account», inserisci la password e conferma. Dalla stessa pagina puoi prima esportare i tuoi dati:",
+    "noAccessTitle": "Se non riesci ad accedere",
+    "noAccess": "Scrivi dall'indirizzo email del tuo account, indicando il nome utente: eliminiamo noi l'account entro 30 giorni.",
+    "deletedTitle": "Cosa viene cancellato",
+    "deleted": [
+      "Subito: l'account viene chiuso, nascosto e disconnesso ovunque, e agli altri server viene chiesto di cancellare profilo e post.",
+      "Entro circa 24 ore: profilo, post, commenti, messaggi privati, foto e altri media, seguiti, aspetti, impostazioni e indirizzo email vengono cancellati dal server.",
+      "I backup vengono sovrascritti entro 14 giorni."
+    ],
+    "keptTitle": "Cosa può restare",
+    "kept": [
+      "Copie su altri server del fediverso: chiediamo di cancellarle, ma sono gestiti da terzi e non possiamo garantirlo.",
+      "Segnalazioni e decisioni di moderazione che riguardano l'account, conservate per 2 anni per obblighi di legge (Digital Services Act), poi cancellate."
+    ],
+    "partialTitle": "Cancellare solo alcuni dati",
+    "partial": "Non serve eliminare l'account per togliere dei dati: puoi cancellare singoli post, commenti, foto e messaggi dal loro menu, togliere foto dagli album e cambiare o togliere nome, biografia, avatar e copertina nelle impostazioni del profilo."
   }
 }

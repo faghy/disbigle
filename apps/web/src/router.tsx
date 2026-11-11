@@ -26,6 +26,7 @@ import { ReportsPage } from './pages/admin/Reports.tsx';
 import { UsersPage } from './pages/admin/Users.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
 import { ConversationPage } from './pages/Conversation.tsx';
+import { DeleteAccountInfoPage } from './pages/DeleteAccountInfo.tsx';
 import { ErrorPage, NotFoundPage } from './pages/ErrorPages.tsx';
 import { GroupPage } from './pages/Group.tsx';
 import { GroupsPage } from './pages/Groups.tsx';
@@ -457,6 +458,13 @@ const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
+/** How to delete the account, readable without signing in (linked from the app stores). */
+const deleteAccountInfoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/delete-account',
+  component: DeleteAccountInfoPage,
+});
+
 /** Notice of illegal content, open to anyone (DSA art. 16); `?url=` fills in the address. */
 const reportContentRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -523,6 +531,7 @@ export const routeTree = rootRoute.addChildren([
   forgotPasswordRoute,
   verifyEmailRoute,
   reportContentRoute,
+  deleteAccountInfoRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
     adminIndexRoute,
