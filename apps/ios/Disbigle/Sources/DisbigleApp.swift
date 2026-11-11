@@ -31,6 +31,9 @@ struct DisbigleApp: App {
     }
     .onChange(of: scenePhase) { _, phase in
       if phase == .background && model.preferences.notificationsOn { model.notifier.schedule() }
+      // Back in the app: a token revoked meanwhile (account deleted or signed out on the web)
+      // returns to the sign-in screen instead of leaving every screen failing.
+      if phase == .active { Task { await model.refresh() } }
     }
     .backgroundTask(.appRefresh(Notifier.refreshTask)) {
       await BackgroundRefresh.run()

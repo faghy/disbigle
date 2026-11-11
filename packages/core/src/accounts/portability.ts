@@ -1,5 +1,5 @@
 import { schema } from '@disbigle/db';
-import { and, asc, eq, inArray, isNotNull, lt } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, lt } from 'drizzle-orm';
 import { type CoreContext, emit } from '../context.ts';
 import { verifyPassword } from '../crypto/passwords.ts';
 import { DomainError } from '../errors.ts';
@@ -8,6 +8,7 @@ import { mediaUrl } from '../social/statuses.ts';
 const {
   users,
   actors,
+  oauthAccessTokens,
   posts,
   follows,
   aspects,
@@ -225,6 +226,12 @@ export async function requestAccountDeletion(
       .where(eq(users.id, userId));
     await tx.update(actors).set({ suspendedAt: now }).where(eq(actors.id, user.actorId));
     await tx.delete(sessions).where(eq(sessions.userId, userId));
+    // The apps' tokens too: they then get 401 and go back to the sign-in screen, instead of
+    // being told for a day that the login is disabled.
+    await tx
+      .update(oauthAccessTokens)
+      .set({ revokedAt: now })
+      .where(and(eq(oauthAccessTokens.userId, userId), isNull(oauthAccessTokens.revokedAt)));
   });
   await emit(ctx, { type: 'account.deleted', actorId: user.actorId });
 }

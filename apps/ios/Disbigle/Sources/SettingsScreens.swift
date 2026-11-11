@@ -119,7 +119,9 @@ struct SettingsScreen: View {
     .confirmationDialog("Sign out of Disbigle?", isPresented: $confirmSignOut, titleVisibility: .visible) {
       Button("Sign out", role: .destructive) { Task { await model.signOut() } }
     }
-    .sheet(item: $web) { url in
+    // Back from the account pages: if the account was deleted there, the token no longer works
+    // and the refresh returns to the sign-in screen.
+    .sheet(item: $web, onDismiss: { Task { await model.refresh() } }) { url in
       SafariView(url: url).ignoresSafeArea()
     }
     .task {

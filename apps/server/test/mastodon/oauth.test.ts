@@ -389,4 +389,16 @@ describe('authorized apps', () => {
     });
     expect((await user.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(401);
   });
+
+  it('signs the apps out when the account is deleted', async () => {
+    await signUp(app); // the last administrator cannot delete their account
+    const user = await mastodonUser(app);
+    expect((await user.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(200);
+    const deleted = await user.client.post('/api/v1/me/delete', {
+      password: 'correct horse battery staple',
+    });
+    expect(deleted.statusCode).toBe(200);
+    // 401, not 403 "login disabled": the apps then go back to their sign-in screen.
+    expect((await user.api.get('/api/v1/accounts/verify_credentials')).statusCode).toBe(401);
+  });
 });
