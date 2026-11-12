@@ -678,6 +678,24 @@ export class ActivityPubPublisher implements EventBus {
    * followers-only posts; the explicit recipients (and, for public replies, the parent's author)
    * besides. Limited posts go to each recipient on its own, addressed to that recipient only.
    */
+  /**
+   * Whether a reply belongs to a thread started by someone reachable only through diaspora*. Its
+   * parent can't be fetched over ActivityPub, so on Mastodon and the like the reply would show up
+   * alone, out of its conversation: it then stays on diaspora* (and with the people it names).
+   */
+  private async inDiasporaOnlyThread(post: PostRow): Promise<boolean> {
+    if (!post.inReplyToId) return false;
+    const [root] = await this.core.db
+      .select({ local: schema.posts.local, actorId: schema.posts.actorId })
+      .from(schema.posts)
+      .where(eq(schema.posts.id, post.threadRootId ?? post.inReplyToId));
+    if (!root || root.local) return false;
+    const [rootAuthor] = (await this.actors([root.actorId])).values();
+    return (
+      !!rootAuthor && rootAuthor.domain !== null && !rootAuthor.protocols.includes('activitypub')
+    );
+  }
+
   private async deliver(
     ctx: Context<CoreContext>,
     post: PostRow,
@@ -696,9 +714,10 @@ export class ActivityPubPublisher implements EventBus {
     }
     const activity = build(await postToNote(ctx, post, author));
     if (
-      post.visibility === 'public' ||
-      post.visibility === 'unlisted' ||
-      post.visibility === 'followers'
+      (post.visibility === 'public' ||
+        post.visibility === 'unlisted' ||
+        post.visibility === 'followers') &&
+      !(await this.inDiasporaOnlyThread(post))
     ) {
       await ctx.sendActivity(sender, 'followers', activity, { preferSharedInbox: true });
     }

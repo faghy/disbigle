@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:net';
 import {
   ActivityPubPublisher,
@@ -6,6 +7,7 @@ import {
 } from '@disbigle/activitypub';
 import type { Config } from '@disbigle/config';
 import { type CoreContext, MemoryKeyValueStore } from '@disbigle/core';
+import { schema, uuidv7 } from '@disbigle/db';
 import { createTestDatabase } from '@disbigle/db/testing';
 import { MemoryKvStore } from '@fedify/fedify';
 import type { FastifyInstance } from 'fastify';
@@ -26,6 +28,7 @@ async function freePort(): Promise<number> {
 
 interface Instance {
   app: FastifyInstance;
+  ctx: CoreContext;
   domain: string;
   url: string;
   drop: () => Promise<void>;
@@ -60,7 +63,7 @@ async function startInstance(): Promise<Instance> {
     disableRegistrationGuard: true,
   });
   await app.listen({ host: '127.0.0.1', port });
-  return { app, domain, url, drop: testDb.drop };
+  return { app, ctx, domain, url, drop: testDb.drop };
 }
 
 async function eventually<T>(
@@ -244,6 +247,60 @@ describe('federation between two instances', () => {
     await eventually(
       async () => (await alice.client.get(`/api/v1/statuses/${received.id}`)).statusCode === 404,
     );
+  });
+
+  it('keeps replies in diaspora*-only threads off ActivityPub followers', async () => {
+    const alice = await signUp(a);
+    const bob = await signUp(b);
+    const remoteAlice = (
+      await bob.client.post('/api/v1/search/resolve', {
+        q: `${a.url}/users/${alice.account.username}`,
+      })
+    ).json();
+    await bob.client.post(`/api/v1/accounts/${remoteAlice.id}/follow`);
+    await eventually(async () => {
+      const rel = (
+        await bob.client.get(`/api/v1/accounts/relationships?id[]=${remoteAlice.id}`)
+      ).json();
+      return rel[0]?.following;
+    });
+
+    // Someone reachable only through diaspora*, and a post of theirs, as Alice's server knows them.
+    const diasporaActorId = uuidv7();
+    await a.ctx.db.insert(schema.actors).values({
+      id: diasporaActorId,
+      username: `dave${Date.now()}`,
+      domain: 'pod.example',
+      publicKeyPem: 'unused',
+      protocols: ['diaspora'],
+    });
+    const diasporaPostId = uuidv7();
+    await a.ctx.db.insert(schema.posts).values({
+      id: diasporaPostId,
+      actorId: diasporaActorId,
+      local: false,
+      visibility: 'public',
+      contentHtml: '<p>dal pod diaspora</p>',
+      threadRootId: diasporaPostId,
+      diasporaGuid: randomBytes(16).toString('hex'),
+    });
+
+    const reply = await alice.client.post('/api/v1/statuses', {
+      content: 'risposta solo per diaspora',
+      inReplyToId: diasporaPostId,
+    });
+    expect(reply.statusCode).toBe(201);
+    // A normal post afterwards: once it arrives, the reply would have arrived too.
+    await alice.client.post('/api/v1/statuses', { content: 'post normale dopo la risposta' });
+    const home = await eventually(async () => {
+      const list = (await bob.client.get('/api/v1/timelines/home')).json();
+      return list.some((s: { content: string }) => s.content.includes('post normale'))
+        ? list
+        : null;
+    });
+    expect(
+      home.some((s: { content: string }) => s.content.includes('risposta solo per diaspora')),
+    ).toBe(false);
   });
 
   it('delivers aspect-limited posts only to the chosen remote people', async () => {
