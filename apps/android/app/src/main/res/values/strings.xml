@@ -328,4 +328,5 @@
   <string name="reshare_unlisted">It will appear to the people who follow you and on your profile. The post is unlisted, so it stays out of the public timelines.</string>
   <string name="reshare_unavailable">This post can\'t be reshared</string>
   <string name="reshare_unavailable_text">Its author shared it only with some people (followers, an aspect or a direct message), so it stays with them: only public posts can be reshared.</string>
+  <string name="play_video">Play the video</string>
 </resources>

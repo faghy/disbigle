@@ -332,4 +332,5 @@
   <string name="reshare_unlisted">Comparirà a chi ti segue e sul tuo profilo. Il post non è in elenco, quindi resta fuori dalle bacheche pubbliche.</string>
   <string name="reshare_unavailable">Questo post non si può ricondividere</string>
   <string name="reshare_unavailable_text">L\'autore l\'ha condiviso solo con alcune persone (chi lo segue, un aspetto o un messaggio diretto), quindi resta tra loro: si possono ricondividere solo i post pubblici.</string>
+  <string name="play_video">Guarda il video</string>
 </resources>

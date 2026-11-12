@@ -10,6 +10,7 @@ import { albumRoutes } from './routes/albums.ts';
 import { filterRoutes } from './routes/filters.ts';
 import { hidingRoutes } from './routes/hiding.ts';
 import { instanceRoutes } from './routes/instance.ts';
+import { linkPreviewRoutes } from './routes/link-preview.ts';
 import { listRoutes } from './routes/lists.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { notificationRoutes } from './routes/notifications.ts';
@@ -111,6 +112,7 @@ export async function mastodonApi(app: FastifyInstance, opts: MastodonApiOptions
   await instanceRoutes(app, deps);
   await filterRoutes(app, deps);
   await hidingRoutes(app, deps);
+  await linkPreviewRoutes(app, deps);
   await pushRoutes(app, deps);
   if (opts.hub) await streamingRoutes(app, { ...deps, hub: opts.hub });
 }

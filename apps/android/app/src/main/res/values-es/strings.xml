@@ -332,4 +332,5 @@
   <string name="reshare_unlisted">Aparecerá a quienes te siguen y en tu perfil. La publicación no está listada, así que no sale en las cronologías públicas.</string>
   <string name="reshare_unavailable">Esta publicación no se puede compartir</string>
   <string name="reshare_unavailable_text">Su autor la compartió solo con algunas personas (seguidores, un aspecto o un mensaje directo), así que se queda entre ellas: solo se pueden compartir las publicaciones públicas.</string>
+  <string name="play_video">Ver el vídeo</string>
 </resources>

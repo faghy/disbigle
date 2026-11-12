@@ -291,3 +291,15 @@ suspend fun Client.notificationsReadMarker(): String? =
 
 suspend fun Client.markNotificationsRead(upTo: String) =
   perform("POST", "api/v1/markers", body = json("notifications" to JsonObject(mapOf("last_read_id" to JsonPrimitive(upTo)))))
+
+// Link previews (Disbigle extension)
+
+@Serializable
+internal data class LinkPreview(val card: Card? = null)
+
+/** The preview of a link while writing a post: the server reads the page, never the phone. */
+suspend fun Client.linkPreview(url: String): Card? =
+  get<LinkPreview>("api/v1/link_preview", listOf("url" to url)).card
+
+/** The thumbnail of a YouTube video, through the server (YouTube never sees who looks at it). */
+fun Client.youtubeThumbnail(videoId: String): String = url("api/v1/youtube/$videoId/thumbnail").toString()

@@ -20,6 +20,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -87,6 +95,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.disbigle.app.ComposeTarget
 import com.disbigle.app.R
+import com.disbigle.kit.youtubeThumbnail
 import com.disbigle.kit.MediaAttachment
 import com.disbigle.kit.Poll
 import com.disbigle.kit.Status
@@ -259,8 +268,14 @@ fun StatusRow(
           )
         }
         if (shown.mediaAttachments.isNotEmpty()) MediaGrid(shown.mediaAttachments, shown.sensitive)
-        shown.card?.takeIf { shown.mediaAttachments.isEmpty() && shown.poll == null }?.let { card ->
-          LinkCard(card) { openInBrowser(context, card.url) }
+        if (shown.mediaAttachments.isEmpty() && shown.poll == null) {
+          // YouTube links get no server card (the web plays them in place): a thumbnail with ▶︎.
+          val youtube = remember(shown.content) { com.disbigle.kit.firstYouTubeLink(shown.content) }
+          val card = shown.card
+          when {
+            card != null -> LinkCard(card) { openInBrowser(context, card.url) }
+            youtube != null -> YouTubeCard(youtube) { openInBrowser(context, youtube.url) }
+          }
         }
         shown.poll?.let { poll ->
           PollView(poll) {
@@ -625,7 +640,7 @@ fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit, a
           if (item.isVideo && item.type != "gifv") {
             Button(onClick = { openInBrowser(context, item.url) }) { Text(stringResource(R.string.open)) }
           } else {
-            AsyncImage(model = item.url, contentDescription = item.description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            ZoomableImage(item.url, item.description)
           }
         }
       }
@@ -643,6 +658,64 @@ fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit, a
         }
       }
     }
+  }
+}
+
+/**
+ * A picture that zooms with two fingers (up to 5×) and with a double tap; zoomed in, one finger
+ * moves it around. At normal size, swipes still go to the pager (next or previous picture).
+ */
+@Composable
+private fun ZoomableImage(url: String, description: String?) {
+  var scale by remember(url) { mutableStateOf(1f) }
+  var offset by remember(url) { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+  BoxWithConstraints(Modifier.fillMaxSize()) {
+    val width = constraints.maxWidth.toFloat()
+    val height = constraints.maxHeight.toFloat()
+    fun clamp(value: androidx.compose.ui.geometry.Offset, zoom: Float) = androidx.compose.ui.geometry.Offset(
+      value.x.coerceIn(-width * (zoom - 1) / 2, width * (zoom - 1) / 2),
+      value.y.coerceIn(-height * (zoom - 1) / 2, height * (zoom - 1) / 2),
+    )
+    AsyncImage(
+      model = url, contentDescription = description, contentScale = ContentScale.Fit,
+      modifier = Modifier.fillMaxSize()
+        .pointerInput(url) {
+          detectTapGestures(onDoubleTap = { tap ->
+            if (scale > 1f) {
+              scale = 1f
+              offset = androidx.compose.ui.geometry.Offset.Zero
+            } else {
+              scale = 2.5f
+              val center = androidx.compose.ui.geometry.Offset(width / 2, height / 2)
+              offset = clamp((center - tap) * (scale - 1), scale)
+            }
+          })
+        }
+        .pointerInput(url) {
+          awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            do {
+              val event = awaitPointerEvent()
+              val zoom = event.calculateZoom()
+              val pan = event.calculatePan()
+              val pinching = event.changes.count { it.pressed } > 1
+              // Only take the gesture when pinching or already zoomed: else the pager swipes.
+              if (pinching || scale > 1f) {
+                val newScale = (scale * zoom).coerceIn(1f, 5f)
+                offset = if (newScale == 1f) androidx.compose.ui.geometry.Offset.Zero else clamp(offset + pan, newScale)
+                scale = newScale
+                event.changes.forEach { if (it.positionChanged()) it.consume() }
+              }
+            } while (event.changes.any { it.pressed })
+          }
+        }
+        .graphicsLayer {
+          scaleX = scale
+          scaleY = scale
+          translationX = offset.x
+          translationY = offset.y
+        },
+    )
   }
 }
 
@@ -768,6 +841,25 @@ fun LinkCard(card: com.disbigle.kit.Card, onClick: () -> Unit) {
         CardText(card)
       }
     }
+  }
+}
+
+/** A YouTube video: its thumbnail (through the server) with a play symbol, opening the video. */
+@Composable
+fun YouTubeCard(link: com.disbigle.kit.YouTubeLink, onClick: () -> Unit) {
+  val client = LocalApp.current.client ?: return
+  androidx.compose.material3.OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black), contentAlignment = Alignment.Center) {
+      coil3.compose.AsyncImage(
+        model = client.youtubeThumbnail(link.videoId), contentDescription = null,
+        contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = Modifier.fillMaxSize(),
+      )
+      Icon(Icons.Filled.PlayCircle, stringResource(R.string.play_video), Modifier.size(56.dp), tint = Color.White)
+    }
+    Text(
+      "YouTube", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+    )
   }
 }
 

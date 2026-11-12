@@ -148,3 +148,25 @@ describe('Mastodon API: filters', () => {
     expect((await alice.api.get('/api/v1/filters')).json()).toEqual([]);
   });
 });
+
+describe('Mastodon API: link preview while writing (Disbigle extension)', () => {
+  it('needs a token and only reads web addresses', async () => {
+    const alice = await mastodonUser(app);
+    const anonymous = await app().inject({
+      method: 'GET',
+      url: '/api/v1/link_preview?url=https://example.com/',
+      headers: { authorization: 'Bearer nope' },
+    });
+    expect(anonymous.statusCode).toBe(401);
+    const ftp = await alice.api.get(
+      `/api/v1/link_preview?url=${encodeURIComponent('ftp://example.com/file')}`,
+    );
+    expect(ftp.statusCode).toBe(200);
+    expect(ftp.json()).toEqual({ card: null });
+    // Private addresses are never read: no preview, no error.
+    const local = await alice.api.get(
+      `/api/v1/link_preview?url=${encodeURIComponent('http://127.0.0.1:1/')}`,
+    );
+    expect(local.json()).toEqual({ card: null });
+  });
+});

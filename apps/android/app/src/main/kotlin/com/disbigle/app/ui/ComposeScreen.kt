@@ -91,6 +91,7 @@ import com.disbigle.kit.describeMedia
 import com.disbigle.kit.edit
 import com.disbigle.kit.publish
 import com.disbigle.kit.source
+import com.disbigle.kit.linkPreview
 import com.disbigle.kit.upload
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -300,6 +301,8 @@ fun ComposeScreen(target: ComposeTarget, onClose: () -> Unit) {
           },
           modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp).focusRequester(focus),
         )
+        // How the first link will look once posted, as on the web: read by the server.
+        if (media.isEmpty() && poll == null) LinkPreviewWhileWriting(text)
         for (item in media) {
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(72.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
@@ -515,5 +518,25 @@ private fun PostPreview(text: String) {
       shown.isEmpty() -> Text(stringResource(R.string.format_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
       else -> Text(richText(shown, linkColor) {}, style = MaterialTheme.typography.bodyLarge)
     }
+  }
+}
+
+/** The preview of the first link in the text, fetched a moment after typing stops. */
+@Composable
+private fun LinkPreviewWhileWriting(text: String) {
+  val model = LocalApp.current
+  val context = LocalContext.current
+  val url = remember(text) { com.disbigle.kit.firstUrl(text) }
+  val youtube = remember(url) { url?.let { address -> com.disbigle.kit.youtubeVideoId(address)?.let { com.disbigle.kit.YouTubeLink(address, it) } } }
+  var card by remember { mutableStateOf<com.disbigle.kit.Card?>(null) }
+  LaunchedEffect(url) {
+    card = null
+    if (url == null || youtube != null) return@LaunchedEffect
+    kotlinx.coroutines.delay(800)
+    card = runCatching { model.client?.linkPreview(url) }.getOrNull()
+  }
+  when {
+    youtube != null -> YouTubeCard(youtube) { openInBrowser(context, youtube.url) }
+    card != null -> card?.let { LinkCard(it) { openInBrowser(context, it.url) } }
   }
 }
