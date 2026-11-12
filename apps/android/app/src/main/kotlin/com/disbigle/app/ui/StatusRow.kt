@@ -134,6 +134,8 @@ fun StatusRow(
   val isMine = model.me?.id == shown.account.id
   var revealed by remember { mutableStateOf(false) }
   var confirmDelete by remember { mutableStateOf(false) }
+  var confirmReshare by remember { mutableStateOf(false) }
+  var reshareBlocked by remember { mutableStateOf(false) }
   var actionError by remember { mutableStateOf<String?>(null) }
   var interactions by remember { mutableStateOf<InteractionTab?>(null) }
   var hidden by remember(status.id) { mutableStateOf<HiddenNote?>(null) }
@@ -275,12 +277,21 @@ fun StatusRow(
             model.composing = ComposeTarget.Reply(shown)
           }
           // On your own posts the counts open who liked and reshared them.
+          // Only public and unlisted posts can be reshared (the server refuses the others): the
+          // button says so, and asks before resharing, telling who will see it.
+          val reshareable = shown.visibility == Visibility.PUBLIC || shown.visibility == Visibility.UNLISTED
           ActionButton(
             Icons.Outlined.Repeat, shown.reblogsCount, shown.reblogged == true, stringResource(R.string.reshare),
-            enabled = shown.visibility != Visibility.PRIVATE && shown.visibility != Visibility.DIRECT,
+            dimmed = !reshareable && shown.reblogged != true,
             countLabel = pluralStringResource(R.plurals.reshares_count, shown.reblogsCount, shown.reblogsCount),
             onCountClick = if (isMine) ({ interactions = InteractionTab.RESHARES }) else null,
-          ) { act(if (shown.reblogged == true) StatusAction.UNREBLOG else StatusAction.REBLOG) }
+          ) {
+            when {
+              shown.reblogged == true -> act(StatusAction.UNREBLOG)
+              reshareable -> confirmReshare = true
+              else -> reshareBlocked = true
+            }
+          }
           ActionButton(
             if (shown.favourited == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, shown.favouritesCount,
             shown.favourited == true, stringResource(R.string.like),
@@ -309,6 +320,27 @@ fun StatusRow(
     }
   }
 
+  if (confirmReshare) {
+    AlertDialog(
+      onDismissRequest = { confirmReshare = false },
+      title = { Text(stringResource(R.string.reshare_question)) },
+      text = {
+        Text(stringResource(if (shown.visibility == Visibility.PUBLIC) R.string.reshare_public else R.string.reshare_unlisted))
+      },
+      confirmButton = {
+        TextButton(onClick = { confirmReshare = false; act(StatusAction.REBLOG) }) { Text(stringResource(R.string.reshare)) }
+      },
+      dismissButton = { TextButton(onClick = { confirmReshare = false }) { Text(stringResource(R.string.cancel)) } },
+    )
+  }
+  if (reshareBlocked) {
+    AlertDialog(
+      onDismissRequest = { reshareBlocked = false },
+      title = { Text(stringResource(R.string.reshare_unavailable)) },
+      text = { Text(stringResource(R.string.reshare_unavailable_text)) },
+      confirmButton = { TextButton(onClick = { reshareBlocked = false }) { Text(stringResource(R.string.ok)) } },
+    )
+  }
   if (reporting) ReportDialog(shown.account, shown) { reporting = false }
   interactions?.let { tab ->
     InteractionsSheet(shown, tab, nav, onDismiss = { interactions = null })
@@ -470,12 +502,14 @@ fun ActionButton(
   active: Boolean,
   label: String,
   enabled: Boolean = true,
+  /** Looks unavailable but still answers a tap (to explain why). */
+  dimmed: Boolean = false,
   countLabel: String? = null,
   onCountClick: (() -> Unit)? = null,
   onClick: () -> Unit,
 ) {
   val color = when {
-    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+    !enabled || dimmed -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
     active -> MaterialTheme.colorScheme.primary
     else -> MaterialTheme.colorScheme.onSurfaceVariant
   }

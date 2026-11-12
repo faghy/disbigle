@@ -327,4 +327,9 @@
   <string name="report_help">Le segnalazioni arrivano ai moderatori, che intervengono entro 24 ore. Puoi anche bloccare o silenziare questa persona.</string>
   <string name="report_send">Invia la segnalazione</string>
   <string name="report_sent">Grazie: i moderatori la esamineranno.</string>
+  <string name="reshare_question">Ricondividere questo post?</string>
+  <string name="reshare_public">Comparirà a chi ti segue e sul tuo profilo. Il post è pubblico, quindi può vederlo chiunque.</string>
+  <string name="reshare_unlisted">Comparirà a chi ti segue e sul tuo profilo. Il post non è in elenco, quindi resta fuori dalle bacheche pubbliche.</string>
+  <string name="reshare_unavailable">Questo post non si può ricondividere</string>
+  <string name="reshare_unavailable_text">L\'autore l\'ha condiviso solo con alcune persone (chi lo segue, un aspetto o un messaggio diretto), quindi resta tra loro: si possono ricondividere solo i post pubblici.</string>
 </resources>

@@ -14,6 +14,8 @@ struct StatusRow: View {
   @State private var updated: Status?
   @State private var revealed = false
   @State private var confirmDelete = false
+  @State private var confirmReshare = false
+  @State private var reshareBlocked = false
   @State private var actionError: String?
   @State private var translating = false
   @State private var translationFailed = false
@@ -113,6 +115,19 @@ struct StatusRow: View {
     .confirmationDialog("Delete this post?", isPresented: $confirmDelete, titleVisibility: .visible) {
       Button("Delete", role: .destructive) { Task { await delete() } }
     }
+    .confirmationDialog("Reshare this post?", isPresented: $confirmReshare, titleVisibility: .visible) {
+      Button("Reshare") { Task { await act(.reblog) } }
+    } message: {
+      Text(
+        shown.visibility == .public
+          ? "It will appear to the people who follow you and on your profile. The post is public, so anyone can see it."
+          : "It will appear to the people who follow you and on your profile. The post is unlisted, so it stays out of the public timelines.")
+    }
+    .alert("This post can't be reshared", isPresented: $reshareBlocked) {
+      Button("OK") {}
+    } message: {
+      Text("Its author shared it only with some people (followers, an aspect or a direct message), so it stays with them: only public posts can be reshared.")
+    }
     .sheet(item: $reporting) { ReportSheet(target: $0) }
     .sheet(item: $reactions) { reaction in
       ReactionsSheet(status: shown, reaction: reaction) { account in
@@ -208,6 +223,8 @@ struct StatusRow: View {
     .foregroundStyle(.secondary)
   }
 
+  private var reshareable: Bool { shown.visibility == .public || shown.visibility == .unlisted }
+
   private var actions: some View {
     HStack {
       ActionButton(
@@ -215,13 +232,23 @@ struct StatusRow: View {
         label: "Reply"
       ) { model.composing = .reply(shown) }
       Spacer()
+      // Only public and unlisted posts can be reshared (the server refuses the others): the
+      // button says so, and asks before resharing, telling who will see it.
       ActionButton(
         systemImage: "arrow.2.squarepath", count: shown.reblogsCount,
         active: shown.reblogged == true, label: "Reshare",
-        disabled: shown.visibility == .private || shown.visibility == .direct,
+        dimmed: !reshareable && shown.reblogged != true,
         countLabel: "Reshares",
         showCount: isMine ? { reactions = .reshares } : nil
-      ) { await act(shown.reblogged == true ? .unreblog : .reblog) }
+      ) {
+        if shown.reblogged == true {
+          await act(.unreblog)
+        } else if reshareable {
+          confirmReshare = true
+        } else {
+          reshareBlocked = true
+        }
+      }
       Spacer()
       ActionButton(
         systemImage: shown.favourited == true ? "heart.fill" : "heart", count: shown.favouritesCount,
@@ -389,6 +416,8 @@ struct ActionButton: View {
   let active: Bool
   let label: LocalizedStringKey
   var disabled = false
+  /** Looks unavailable but still answers a tap (to explain why). */
+  var dimmed = false
   /** What the count is, for VoiceOver when it is a button of its own. */
   var countLabel: LocalizedStringKey = ""
   /** Set on your own posts: the count becomes a button showing who liked or reshared. */
@@ -410,7 +439,7 @@ struct ActionButton: View {
           Image(systemName: systemImage)
           if showCount == nil, let shownCount { Text(shownCount, format: .number.notation(.compactName)) }
         }
-        .foregroundStyle(active ? Color.brand : .secondary)
+        .foregroundStyle(active ? Color.brand : dimmed ? Color.secondary.opacity(0.4) : .secondary)
         .frame(minWidth: 32, minHeight: 28)
         .contentShape(Rectangle())
       }

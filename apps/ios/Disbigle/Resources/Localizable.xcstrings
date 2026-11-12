@@ -4283,6 +4283,86 @@
           }
         }
       }
+    },
+    "It will appear to the people who follow you and on your profile. The post is public, so anyone can see it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparecerá a quienes te siguen y en tu perfil. La publicación es pública, así que cualquiera puede verla."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparirà a chi ti segue e sul tuo profilo. Il post è pubblico, quindi può vederlo chiunque."
+          }
+        }
+      }
+    },
+    "It will appear to the people who follow you and on your profile. The post is unlisted, so it stays out of the public timelines.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparecerá a quienes te siguen y en tu perfil. La publicación no está listada, así que no sale en las cronologías públicas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparirà a chi ti segue e sul tuo profilo. Il post non è in elenco, quindi resta fuori dalle bacheche pubbliche."
+          }
+        }
+      }
+    },
+    "Its author shared it only with some people (followers, an aspect or a direct message), so it stays with them: only public posts can be reshared.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su autor la compartió solo con algunas personas (seguidores, un aspecto o un mensaje directo), así que se queda entre ellas: solo se pueden compartir las publicaciones públicas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'autore l'ha condiviso solo con alcune persone (chi lo segue, un aspetto o un messaggio diretto), quindi resta tra loro: si possono ricondividere solo i post pubblici."
+          }
+        }
+      }
+    },
+    "Reshare this post?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Compartir esta publicación?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricondividere questo post?"
+          }
+        }
+      }
+    },
+    "This post can't be reshared": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta publicación no se puede compartir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo post non si può ricondividere"
+          }
+        }
+      }
     }
   }
 }

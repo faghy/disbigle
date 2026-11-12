@@ -327,4 +327,9 @@
   <string name="report_help">Las denuncias llegan a los moderadores, que actúan en 24 horas. También puedes bloquear o silenciar a esta persona.</string>
   <string name="report_send">Enviar la denuncia</string>
   <string name="report_sent">Gracias: los moderadores la revisarán.</string>
+  <string name="reshare_question">¿Compartir esta publicación?</string>
+  <string name="reshare_public">Aparecerá a quienes te siguen y en tu perfil. La publicación es pública, así que cualquiera puede verla.</string>
+  <string name="reshare_unlisted">Aparecerá a quienes te siguen y en tu perfil. La publicación no está listada, así que no sale en las cronologías públicas.</string>
+  <string name="reshare_unavailable">Esta publicación no se puede compartir</string>
+  <string name="reshare_unavailable_text">Su autor la compartió solo con algunas personas (seguidores, un aspecto o un mensaje directo), así que se queda entre ellas: solo se pueden compartir las publicaciones públicas.</string>
 </resources>
