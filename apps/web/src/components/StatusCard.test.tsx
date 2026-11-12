@@ -38,6 +38,32 @@ describe('status card', () => {
     open.mockRestore();
   });
 
+  it('opens the post with its replies from a click on the text, not on its links', async () => {
+    const status = makeStatus({
+      content: '<p>Testo del post con <a href="https://example.com/page">un link</a></p>',
+    });
+    mockApi({
+      'GET /me': { body: aliceUser },
+      'GET /instance': instance(),
+      'GET /timelines/home': { body: [status] },
+      [`GET /statuses/${status.id}`]: { body: status },
+      [`GET /statuses/${status.id}/context`]: { body: { ancestors: [], descendants: [] } },
+    });
+    const { router } = renderApp('/');
+    const article = await screen.findByRole('article');
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const user = userEvent.setup();
+
+    await user.click(within(article).getByRole('link', { name: 'un link' }));
+    expect(router.state.location.pathname).toBe('/');
+
+    await user.click(within(article).getByText(/Testo del post/));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/@${status.account.acct}/${status.id}`),
+    );
+    open.mockRestore();
+  });
+
   it('shows who liked and reshared your own post', async () => {
     const status = makeStatus({ account: aliceUser.account, likesCount: 1, reblogsCount: 0 });
     const article = await renderHomeWith(status, {

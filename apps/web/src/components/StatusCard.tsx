@@ -1,8 +1,9 @@
 import type { Account, MediaAttachment, Mention, Status } from '@disbigle/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link, useNavigate, useRouter } from '@tanstack/react-router';
 import {
   createContext,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useCallback,
   useContext,
@@ -859,6 +860,21 @@ export function StatusCard({
   );
 
   const act = (kind: ToggleKind, value: boolean) => toggle.mutate({ status, kind, value });
+  const navigate = useNavigate();
+  const router = useRouter();
+  const openFromText = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('a, button, input, textarea, select, summary, label, [role="button"]'))
+      return;
+    if (window.getSelection()?.toString()) return;
+    const path = statusPath(status);
+    if (event.metaKey || event.ctrlKey) {
+      const href = router.buildLocation(path).href;
+      window.open(href, '_blank', 'noopener');
+      return;
+    }
+    void navigate(path);
+  };
   // Bumped on each new like: the heart pops then, not for posts already liked on load.
   const [likePops, setLikePops] = useState(0);
   const [hidden, setHidden] = useState<HiddenNote | null>(null);
@@ -969,11 +985,21 @@ export function StatusCard({
           {editing && <EditStatusForm status={status} onDone={() => setEditing(false)} />}
           <div id={contentId} hidden={editing || (hasWarning && !expanded)}>
             {status.content && (
-              <StatusContent
-                html={shown?.content ?? status.content}
-                mentions={status.mentions}
-                className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
-              />
+              // A click on the text opens the post with its replies, as on Mastodon and
+              // diaspora*; links, mentions, buttons and selecting text keep working. Keyboard
+              // users reach the same page through the time link above.
+              // biome-ignore lint/a11y/noStaticElementInteractions: mouse shortcut, the time link is the accessible one
+              // biome-ignore lint/a11y/useKeyWithClickEvents: same
+              <div
+                className={highlighted ? undefined : 'cursor-pointer'}
+                onClick={highlighted ? undefined : openFromText}
+              >
+                <StatusContent
+                  html={shown?.content ?? status.content}
+                  mentions={status.mentions}
+                  className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
+                />
+              </div>
             )}
             {translation.offered && <TranslationControl translation={translation} />}
             {status.poll && <PollView status={status} poll={status.poll} />}
