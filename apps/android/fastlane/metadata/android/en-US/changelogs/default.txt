@@ -1,1 +1,4 @@
-First version on Google Play: chat in messages, themes and colours, post formatting, link previews, reports to the moderators.
+• Pinch and double-tap to zoom photos
+• Link preview while you write, and YouTube thumbnails with ▶
+• Reshare asks first and tells who will see the post
+• Typing with the SwiftKey keyboard fixed

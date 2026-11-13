@@ -15,7 +15,7 @@ android {
     targetSdk = 36
     // CI passes the run number, so every build installs as an update.
     versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
-    versionName = "0.4.2"
+    versionName = "0.4.3"
   }
 
   signingConfigs {

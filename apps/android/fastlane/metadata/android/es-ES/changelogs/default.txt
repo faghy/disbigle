@@ -1,1 +1,4 @@
-Primera versión en Google Play: chat en los mensajes, temas y colores, formato de publicaciones, vistas previas de enlaces, denuncias a los moderadores.
+• Zoom de las fotos con dos dedos y doble toque
+• Vista previa de los enlaces mientras escribes y miniaturas de YouTube con ▶
+• Compartir pide confirmación y dice quién verá la publicación
+• Corregida la escritura con el teclado SwiftKey
