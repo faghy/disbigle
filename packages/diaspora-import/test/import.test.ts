@@ -180,7 +180,7 @@ describe('people', () => {
     expect(aliceUser?.role).toBe('admin');
     expect(bobUser?.role).toBe('user');
     expect(aliceUser?.locale).toBe('it');
-    expect(bobUser?.locale).toBe('en');
+    expect(bobUser?.locale).toBe('de'); // German is one of Disbigle's languages now
     expect(aliceUser?.ed25519PrivateKeyPem).toBeNull();
   });
 
