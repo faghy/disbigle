@@ -1,4 +1,3 @@
 • Zoom delle foto con due dita e doppio tocco
 • Anteprima dei link mentre scrivi e miniature dei video YouTube con ▶
 • Ricondividi chiede conferma e dice chi vedrà il post
-• Corretta la scrittura con la tastiera SwiftKey
