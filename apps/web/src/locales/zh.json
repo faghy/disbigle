@@ -1,0 +1,1630 @@
+{
+  "common": {
+    "loading": "加载中…",
+    "or": "或",
+    "cancel": "取消",
+    "back": "返回",
+    "close": "关闭",
+    "done": "完成"
+  },
+  "languages": {
+    "en": "English",
+    "it": "Italiano",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "zh": "简体中文"
+  },
+  "nav": {
+    "skipToContent": "跳到主要内容",
+    "main": "主导航",
+    "home": "首页",
+    "settings": "设置",
+    "signIn": "登录",
+    "register": "注册账号",
+    "accountMenu": "账号菜单",
+    "viewProfile": "查看个人资料",
+    "signOut": "退出登录",
+    "local": "本站",
+    "federated": "联邦",
+    "notifications": "通知",
+    "aspects": "分组",
+    "activity": "我的动态",
+    "bookmarks": "书签",
+    "unread_other": "{{count}} 条未读通知",
+    "moderation": "管理",
+    "moderationPending_other": "{{count}} 项待审核员处理",
+    "messages": "私信",
+    "more": "更多",
+    "sidePanel": "关于本服务器和你的话题标签",
+    "aboutServer": "关于本服务器",
+    "contacts": "联系人",
+    "groups": "群组",
+    "backToTop": "回到顶部",
+    "unreadMessages_other": "{{count}} 个对话有新消息"
+  },
+  "footer": {
+    "tagline": "Disbigle · 联邦式社交网络",
+    "language": "语言",
+    "about": "关于"
+  },
+  "landing": {
+    "tagline": "联邦宇宙的城镇广场：聊天、交友，再加一点小调皮，连接 Mastodon、diaspora* 等更多平台。",
+    "register": "注册账号",
+    "signIn": "登录",
+    "explore": "逛逛本站时间线"
+  },
+  "login": {
+    "title": "登录",
+    "subtitle": "欢迎回到 Disbigle。",
+    "login": "邮箱或用户名",
+    "password": "密码",
+    "submit": "登录",
+    "passkey": "使用通行密钥登录",
+    "noAccount": "第一次来？",
+    "createAccount": "注册账号",
+    "mfaTitle": "两步验证",
+    "mfaTotpHelp": "请输入身份验证器应用中的 6 位验证码。",
+    "mfaRecoveryHelp": "请输入你开启两步验证时保存的某个恢复码。",
+    "totpCode": "验证码",
+    "recoveryCode": "恢复码",
+    "verify": "验证",
+    "useRecoveryCode": "改用恢复码",
+    "useTotp": "改用身份验证器应用",
+    "mfaPasskey": "使用通行密钥",
+    "codeInvalid": "请输入应用中显示的验证码（至少 6 个字符）。",
+    "mfaExpired": "登录已过期，请重新输入密码。",
+    "back": "返回登录",
+    "forgot": "忘记密码？",
+    "resendVerification": "重新发送链接",
+    "verificationSent": "如果该账号正在等待确认，链接已发出。"
+  },
+  "register": {
+    "title": "注册你的账号",
+    "subtitle": "加入 {{domain}}，与整个联邦宇宙互联。",
+    "approvalNotice": "本服务器的新账号需经审核员审核后才能使用。",
+    "username": "用户名",
+    "usernameHint": "可使用字母、数字和下划线。你的地址将是 @用户名@{{domain}}。",
+    "email": "邮箱",
+    "password": "密码",
+    "passwordHint": "至少 10 个字符。",
+    "inviteCode": "邀请码",
+    "reason": "你为什么想加入？",
+    "reasonHint": "这有助于审核员审核你的申请。",
+    "agreement": "我已年满 16 周岁，并接受 {{domain}} 的规则、服务条款和隐私政策",
+    "submit": "注册账号",
+    "haveAccount": "已经有账号了？",
+    "signIn": "登录",
+    "pendingTitle": "马上就好",
+    "pendingBody": "我们已收到你的申请。审核员批准你的账号后，你就可以登录了。",
+    "closedTitle": "注册已关闭",
+    "closedBody": "{{domain}} 目前不接受新账号注册。",
+    "rulesTitle": "{{domain}} 的规则",
+    "agreementRules": "我已年满 16 周岁，并接受以上规则以及 {{domain}} 的服务条款和隐私政策",
+    "verifyTitle": "请查收邮件",
+    "verifyBody": "我们已向 {{email}} 发送了一个链接：请在三天内打开它以激活账号。",
+    "verifyApproval": "之后，审核员会审核批准。"
+  },
+  "profile": {
+    "bot": "机器人",
+    "locked": "需审核关注者",
+    "joined": "{{date}} 加入",
+    "edit": "编辑个人资料",
+    "notFound": "这里没有名为 @{{username}} 的账号。",
+    "follow": "关注",
+    "followBack": "回关",
+    "unfollow": "取消关注",
+    "requested": "已申请",
+    "cancelRequest": "撤回关注申请",
+    "lockedHint": "此账号会手动审核关注者。",
+    "followsYou": "关注了你",
+    "muted": "已隐藏",
+    "blockedBy": "此账号已屏蔽你。",
+    "moreActions": "更多操作",
+    "mute": "隐藏 {{name}}",
+    "unmute": "取消隐藏 {{name}}",
+    "block": "屏蔽 {{name}}",
+    "unblock": "取消屏蔽",
+    "blockTitle": "要屏蔽 {{name}} 吗？",
+    "blockDescription": "对方将无法关注你或查看你的帖子，并会被移出你的分组。",
+    "blockConfirm": "屏蔽",
+    "aspects": {
+      "add": "添加到分组",
+      "inMany_other": "在 {{count}} 个分组中",
+      "legend": "{{name}} 所在的分组",
+      "manage": "管理分组"
+    },
+    "tabs": {
+      "label": "个人资料栏目",
+      "posts": "帖子",
+      "replies": "帖子和回复",
+      "media": "媒体",
+      "albums": "相册",
+      "followers": "关注者",
+      "following": "正在关注"
+    },
+    "noPosts": "还没有帖子。",
+    "noFollowers": "还没有关注者。",
+    "noFollowing": "还没有关注任何人。",
+    "openOriginal": "在原服务器上打开",
+    "report": "举报 {{name}}",
+    "cancelRequestFor": "撤回对 {{name}} 的关注申请",
+    "counts": {
+      "posts_other": "<strong>{{formatted}}</strong> 条帖子",
+      "followers_other": "<strong>{{formatted}}</strong> 位关注者",
+      "following_other": "正在关注 <strong>{{formatted}}</strong> 人"
+    },
+    "pinned": "置顶帖子",
+    "remoteNotice": "你在这里只能看到 {{name}} 的公开帖子。仅关注者可见的帖子要在你关注后才会送达，而且只有新的帖子：这由 {{name}} 所在的服务器决定。",
+    "message": "私信",
+    "messageLabel": "给 {{name}} 发私信"
+  },
+  "settings": {
+    "title": "设置",
+    "nav": "设置栏目",
+    "save": "保存更改",
+    "saved": "你的更改已保存。",
+    "profile": {
+      "tab": "个人资料",
+      "title": "个人资料",
+      "description": "别人在这里以及整个联邦宇宙中看到的你。",
+      "displayName": "昵称",
+      "bio": "简介",
+      "bioHint": "纯文本，会保留换行。",
+      "fields": "附加信息",
+      "fieldsHint": "最多 {{max}} 项，显示在你的个人资料上，比如网站或你的代词。",
+      "noFields": "还没有附加信息。",
+      "fieldName": "标签 {{number}}",
+      "fieldValue": "内容 {{number}}",
+      "addField": "添加一项",
+      "removeField": "移除",
+      "removeFieldLabel": "移除第 {{number}} 项",
+      "options": "选项",
+      "locked": "手动审核关注者",
+      "lockedHint": "由你决定谁可以关注你。",
+      "discoverable": "在目录和推荐中显示我的个人资料",
+      "discoverableHint": "让其他人更容易找到你。",
+      "bot": "这是一个自动化账号",
+      "botHint": "将此账号标记为可能无人照看的机器人。"
+    },
+    "account": {
+      "tab": "账号",
+      "title": "账号",
+      "description": "语言和密码。",
+      "language": "界面语言",
+      "languageLabel": "语言",
+      "password": "修改密码",
+      "passwordHint": "你在这里会保持登录；其他所有会话都会退出登录。",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认新密码",
+      "changePassword": "修改密码",
+      "passwordChanged": "你的密码已修改。",
+      "export": {
+        "title": "你的数据",
+        "description": "以 JSON 文件下载你的个人资料、帖子、分组和联系人。",
+        "download": "下载你的数据"
+      },
+      "delete": {
+        "title": "注销账号",
+        "posts": "你的个人资料、帖子和媒体将从本服务器上删除。",
+        "federation": "我们也会通知认识你的其他服务器删除你的帖子；有些服务器可能会保留副本。",
+        "username": "你的用户名将无法再被注册。",
+        "final": "此操作无法撤销。",
+        "exportFirst": "你可能需要先下载你的数据。",
+        "button": "注销我的账号",
+        "confirmTitle": "要注销你的账号吗？",
+        "confirmDescription": "请输入密码确认。你将立即退出登录。",
+        "confirm": "永久注销账号",
+        "lastAdmin": "你是最后一位管理员。注销账号前，请先让其他人成为管理员。"
+      }
+    },
+    "security": {
+      "tab": "安全",
+      "title": "安全",
+      "description": "两步验证和通行密钥可以保护你的账号安全。",
+      "password": "当前密码",
+      "totp": {
+        "title": "两步验证",
+        "description": "输入密码后，再要求输入身份验证器应用中的验证码。",
+        "on": "已开启",
+        "off": "已关闭",
+        "enable": "设置两步验证",
+        "step1": "用身份验证器应用扫描二维码，或手动输入密钥。",
+        "step2": "输入应用中显示的 6 位验证码以完成设置。",
+        "qrAlt": "用于将 Disbigle 添加到身份验证器应用的二维码",
+        "manual": "无法扫描？请使用此密钥：",
+        "code": "应用中的验证码",
+        "confirm": "开启",
+        "disableTitle": "关闭两步验证",
+        "disableDescription": "你的账号将只受密码保护。",
+        "disable": "关闭"
+      },
+      "recovery": {
+        "title": "恢复码",
+        "description": "生成一组新的恢复码，旧的将失效。",
+        "regenerate": "生成新的恢复码",
+        "saveTitle": "保存你的恢复码",
+        "saveDescription": "如果你无法使用身份验证器应用，每个恢复码可以使用一次。它们不会再次显示。",
+        "copy": "复制",
+        "copied": "已复制",
+        "download": "下载",
+        "done": "我已保存"
+      },
+      "passkeys": {
+        "title": "通行密钥",
+        "description": "用指纹、面容、屏幕锁或安全密钥代替密码登录。",
+        "empty": "你还没有通行密钥。",
+        "created": "{{date}} 添加",
+        "lastUsed": "上次使用：{{date}}",
+        "neverUsed": "从未使用",
+        "delete": "移除",
+        "deleteLabel": "移除通行密钥 {{name}}",
+        "confirmDelete": "确认移除",
+        "confirmDeleteLabel": "确认移除通行密钥 {{name}}",
+        "name": "通行密钥名称",
+        "nameHint": "例如“笔记本电脑”或“手机”。",
+        "add": "添加通行密钥",
+        "added": "通行密钥已添加。"
+      }
+    },
+    "images": {
+      "title": "头像和封面图",
+      "hint": "支持 JPEG、PNG、WebP、GIF 或 AVIF。服务器会自动裁剪。",
+      "avatar": "头像",
+      "header": "封面图",
+      "avatarSize": "以 400 × 400 的正方形显示。",
+      "headerSize": "以 1500 × 500 显示。",
+      "upload": {
+        "avatar": "上传头像",
+        "header": "上传封面图"
+      },
+      "change": {
+        "avatar": "更换头像",
+        "header": "更换封面图"
+      },
+      "remove": {
+        "avatar": "移除头像",
+        "header": "移除封面图"
+      },
+      "headerPreview": "你的封面图",
+      "unsupported": "{{name}} 不是支持的图片格式。"
+    },
+    "notifications": {
+      "tab": "通知",
+      "title": "通知",
+      "description": "选择 Disbigle 关闭时你要接收哪些通知。",
+      "pushTitle": "本设备的推送通知",
+      "pushHint": "每个浏览器或手机都有单独的设置。",
+      "enable": "开启通知",
+      "disable": "在本设备上关闭",
+      "offHint": "即使 Disbigle 已关闭，也能收到提及、回复、新关注者等通知。浏览器会请求你的许可。",
+      "on": "本设备的通知已开启。",
+      "typesLegend": "通知我以下内容",
+      "types": {
+        "mention": "提及",
+        "reply": "对我帖子的回复",
+        "follow": "新关注者",
+        "follow_request": "关注申请",
+        "reblog": "我的帖子被转发",
+        "like": "赞",
+        "poll": "已结束的投票"
+      },
+      "unsupported": "此浏览器无法接收推送通知。请试试新版的 Firefox、Chrome、Edge 或 Safari。",
+      "denied": "此网站的通知已被阻止。请在浏览器的网站设置中允许通知，然后刷新本页。",
+      "notAllowed": "通知未获允许。你可以随时再试一次。",
+      "subscribeFailed": "浏览器无法连接到推送服务。请检查网络连接后重试。",
+      "iosIntro": "在 iPhone 和 iPad 上，需要把 Disbigle 添加到主屏幕后才能接收通知：",
+      "iosStep1": "在 Safari 中轻点“共享”按钮。",
+      "iosStep2": "选择“添加到主屏幕”。",
+      "iosStep3": "从主屏幕打开 Disbigle，再回到此页面。"
+    }
+  },
+  "validation": {
+    "required": "此项为必填项。",
+    "passwordMismatch": "两次输入的密码不一致。",
+    "fields": {
+      "username": "请使用 1 到 30 个字母、数字或下划线。",
+      "email": "请输入有效的邮箱地址。",
+      "password": "请至少使用 10 个字符。",
+      "newPassword": "请至少使用 10 个字符。",
+      "agreement": "你必须接受规则才能继续。",
+      "inviteCode": "请输入有效的邀请码。",
+      "displayName": "最多 100 个字符。",
+      "note": "最多 5000 个字符。",
+      "locale": "请选择支持的语言。"
+    }
+  },
+  "errors": {
+    "bad_request": "无法处理该请求。",
+    "validation_failed": "部分字段无效。",
+    "unauthorized": "请登录后继续。",
+    "forbidden": "你无权执行此操作。",
+    "not_found": "未找到。",
+    "conflict": "与当前状态冲突。请刷新后重试。",
+    "rate_limited": "尝试次数过多。请等几分钟后再试。",
+    "invalid_credentials": "账号或密码错误。",
+    "mfa_required": "需要进行第二步验证。",
+    "invalid_mfa_code": "验证码无效。",
+    "username_taken": "该用户名已被占用。",
+    "email_taken": "该邮箱地址已被注册。",
+    "registrations_closed": "本服务器已关闭注册。",
+    "bot_check_failed": "人机验证失败。请刷新页面后重试。",
+    "translation_unavailable": "这条帖子目前无法翻译。",
+    "invalid_invite": "邀请码无效或已过期。",
+    "account_pending_approval": "你的账号正在等待审核员审核。",
+    "account_disabled": "此账号已被停用。",
+    "internal_error": "我们这边出了点问题，请重试。",
+    "network_error": "无法连接到服务器。请检查网络连接后重试。",
+    "unknown_error": "出了点问题，请重试。",
+    "wrong_password": "密码错误。",
+    "webauthn_cancelled": "通行密钥请求已取消或超时。",
+    "webauthn_already_registered": "此设备上已有你账号的通行密钥。",
+    "webauthn_unsupported": "此浏览器不支持通行密钥。",
+    "too_many_attempts": "尝试次数过多，请重新登录。"
+  },
+  "notFound": {
+    "title": "页面不存在",
+    "description": "你要找的页面不存在或已被移动。",
+    "home": "前往首页"
+  },
+  "errorPage": {
+    "title": "出了点问题",
+    "retry": "重试"
+  },
+  "visibility": {
+    "public": {
+      "label": "公开",
+      "description": "任何服务器上的任何人"
+    },
+    "unlisted": {
+      "label": "不公开列出",
+      "description": "有链接的人都能看到；不出现在公共时间线中"
+    },
+    "followers": {
+      "label": "关注者",
+      "description": "仅关注你的人"
+    },
+    "limited": {
+      "label": "分组",
+      "description": "仅你所选分组中的人"
+    },
+    "direct": {
+      "label": "私信",
+      "description": "仅你提及的人"
+    }
+  },
+  "composer": {
+    "label": "新帖子",
+    "replyLabel": "回复",
+    "placeholder": "脑子里在想什么？支持 Markdown、#话题标签 和 @提及。",
+    "replyPlaceholder": "说说你的看法…",
+    "publish": "发布",
+    "reply": "回复",
+    "shortcut": "按 Ctrl+Enter 或 Cmd+Enter 发送",
+    "remaining_other": "还剩 {{count}} 个字符",
+    "privateReply": "对这条帖子的回复仅对原帖的受众可见。",
+    "directHint": "只有你 @提及 的人能看到这条帖子。",
+    "sensitive": "将媒体标记为敏感内容",
+    "warning": {
+      "toggle": "内容警告",
+      "label": "内容警告",
+      "placeholder": "在此写下你的警告"
+    },
+    "audience": {
+      "shareWith": "分享给：",
+      "legend": "谁可以看到这条帖子",
+      "aspectsLegend": "你的分组",
+      "chooseAspects": "选择分组",
+      "selectAll": "全选",
+      "selectNone": "全不选",
+      "noAspects": "你还没有分组。",
+      "createAspect": "创建一个",
+      "chosen": "已选分组",
+      "removeAspect": "移除 {{name}}"
+    },
+    "media": {
+      "add": "添加图片、视频或音频",
+      "list": "已添加的媒体",
+      "preview": "附件 {{number}}",
+      "uploading": "上传中…",
+      "remove": "移除 {{name}}",
+      "addAlt": "添加描述",
+      "altSet": "已添加描述",
+      "altLabel": "附件 {{number}} 的描述",
+      "altPlaceholder": "为看不到它的人描述一下",
+      "altHint": "会展示给屏幕阅读器用户，媒体无法加载时也会显示。",
+      "tooMany": "最多可添加 {{max}} 个文件。",
+      "unsupported": "{{name}} 不是支持的文件类型。",
+      "tooLarge": "{{name}} 超过了 {{size}} MB。"
+    },
+    "errors": {
+      "empty": "写点什么或添加媒体吧。",
+      "tooLong": "帖子最多 {{max}} 个字符。",
+      "aspectsRequired": "请至少选择一个分组。",
+      "mediaFailed": "请移除上传失败的附件。"
+    },
+    "mentionSuggestions": "可提及的人",
+    "inGroup": "只有 {{name}} 的成员能看到",
+    "inPublicGroup": "正在 {{name}} 中发帖：任何人都能阅读",
+    "needsApproval": "帖子需经审核员批准后，群组成员才能看到。",
+    "mentionAll": "你的所有互关联系人",
+    "format": {
+      "label": "格式",
+      "bold": "粗体（Ctrl+B）",
+      "italic": "斜体（Ctrl+I）",
+      "strike": "删除线",
+      "heading": "标题",
+      "quote": "引用",
+      "list": "项目符号列表",
+      "numbered": "编号列表",
+      "code": "代码（Ctrl+E）",
+      "link": "链接（Ctrl+K）",
+      "write": "编辑",
+      "preview": "预览",
+      "placeholder": "文本",
+      "empty": "还没有可预览的内容。"
+    }
+  },
+  "status": {
+    "reshared": "{{name}} 转发了",
+    "sharedWithAspects": "已分享给分组",
+    "showMore": "展开",
+    "showLess": "收起",
+    "reply": "回复",
+    "reshare": "转发",
+    "unreshare": "取消转发",
+    "reshareUnavailable": "这条帖子无法转发",
+    "like": "赞",
+    "unlike": "取消赞",
+    "bookmark": "加入书签",
+    "unbookmark": "移除书签",
+    "more": "更多操作",
+    "copyLink": "复制链接",
+    "linkCopied": "链接已复制",
+    "openOriginal": "在原服务器上打开",
+    "delete": "删除",
+    "deleteTitle": "要删除这条帖子吗？",
+    "deleteDescription": "它将对所有人删除。此操作无法撤销。",
+    "media": {
+      "sensitive": "敏感内容",
+      "reveal": "点击显示",
+      "open": "打开图片",
+      "openWithAlt": "打开图片：{{alt}}",
+      "viewer": "图片查看器",
+      "previous": "上一张",
+      "next": "下一张",
+      "position": "{{current}} / {{total}}"
+    },
+    "edit": "编辑",
+    "edited": "已编辑",
+    "editedAt": "编辑于 {{date}}",
+    "report": "举报 @{{acct}}",
+    "pin": "置顶到个人资料",
+    "unpin": "从个人资料取消置顶",
+    "pinned": "已置顶",
+    "pinLimit": "最多可置顶 5 条公开或不公开列出的帖子。请先取消置顶一条。",
+    "replyingTo": "回复 @{{acct}}",
+    "replyingToPost": "回复一条帖子",
+    "counts": {
+      "replies_other": "{{count}} 条回复",
+      "reshares_other": "{{count}} 次转发",
+      "likes_other": "{{count}} 个赞"
+    },
+    "inGroup": "在 {{name}} 中",
+    "sharedInGroup": "{{name}} 分享于",
+    "pendingApproval": "等待批准",
+    "translate": "翻译",
+    "translating": "翻译中…",
+    "translatedFrom": "译自{{language}}",
+    "showOriginal": "显示原文",
+    "interactions": {
+      "title": "赞和转发",
+      "likes": "赞",
+      "reshares": "转发",
+      "noLikes": "还没有赞。",
+      "noReshares": "还没有转发。"
+    },
+    "removeReply": "从你的帖子中移除",
+    "removeReplyTitle": "要从你的帖子中移除这条回复吗？",
+    "removeReplyDescription": "它会在 Disbigle 和 diaspora* 节点上消失。Mastodon 等服务器不接受他人的移除请求：在那里它可能仍然可见。",
+    "hide": "隐藏这条帖子",
+    "hideTagFrom": "隐藏 {{name}} 的 #{{tag}}",
+    "hidden": {
+      "post": "帖子已隐藏：你不会在时间线中看到它。",
+      "tag": "你不会在时间线中看到 {{name}} 带有 #{{tag}} 的帖子。",
+      "undo": "撤销"
+    }
+  },
+  "timeline": {
+    "loadMore": "加载更多",
+    "end": "全部看完啦，喝杯咖啡吧 ☕",
+    "empty": "这里很安静……暂时。",
+    "newPosts_other": "{{count}} 条新帖子",
+    "home": {
+      "title": "首页",
+      "emptyTitle": "你的首页时间线是空的",
+      "empty": "关注别人或把他们添加到你的分组，就能在这里看到他们的帖子。",
+      "explore": "浏览本站时间线",
+      "findPeople": "寻找要关注的人：试试",
+      "findButton": "找人"
+    },
+    "local": {
+      "title": "本站",
+      "description": "本服务器用户的公开帖子。"
+    },
+    "federated": {
+      "title": "联邦",
+      "description": "来自本服务器和联邦宇宙的公开帖子。"
+    },
+    "tag": {
+      "description": "带有 #{{tag}} 的公开帖子。",
+      "empty": "还没有带 #{{tag}} 的帖子。",
+      "postsCount_other": "{{count}} 条带 #{{tag}} 的公开帖子。"
+    },
+    "bookmarks": {
+      "title": "书签",
+      "description": "你保存起来稍后再看的帖子。只有你能看到此列表。",
+      "empty": "你还没有书签。"
+    },
+    "aspect": {
+      "description_other": "来自 {{name}} 中 {{count}} 个人的帖子。",
+      "empty": "{{name}} 还没有帖子。",
+      "manage": "管理分组"
+    }
+  },
+  "thread": {
+    "title": "帖子",
+    "ancestors": "对话中的较早内容",
+    "replies": "回复",
+    "noReplies": "还没有回复。"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "还没有通知。",
+    "accept": "接受",
+    "reject": "拒绝",
+    "accepted": "已接受关注申请。",
+    "rejected": "已拒绝关注申请。",
+    "mediaPost": "一条带媒体的帖子",
+    "types": {
+      "mention": "{{name}} 提及了你",
+      "reply": "{{name}} 回复了你",
+      "follow": "{{name}} 关注了你",
+      "follow_request": "{{name}} 想关注你",
+      "reblog": "{{name}} 转发了你的帖子",
+      "like": "{{name}} 赞了你的帖子",
+      "poll": "一项投票已结束"
+    },
+    "verbs": {
+      "mention": "提及了你",
+      "reply": "回复了你",
+      "follow": "关注了你",
+      "follow_request": "申请关注你",
+      "reblog": "转发了你的帖子",
+      "like": "赞了你的帖子",
+      "poll": "结束了一项投票",
+      "group_request": "申请加入 {{group}}",
+      "group_invite": "邀请你加入 {{group}}",
+      "group_accepted": "让你加入了 {{group}}",
+      "group_post_pending": "在 {{group}} 中发了帖：等待你的批准",
+      "group_post_approved": "批准了你在 {{group}} 中的帖子",
+      "group_post_rejected": "没有批准你在 {{group}} 中的帖子"
+    },
+    "pollEnded": "你参与的一项投票已结束",
+    "pollOwnEnded": "你的投票已结束",
+    "seeAll": "查看所有通知",
+    "openGroup": "打开 {{name}}"
+  },
+  "aspects": {
+    "title": "分组",
+    "description": "把你认识的人分组（diaspora* 中称为 aspects），然后为每条帖子选择哪些分组可以看到。",
+    "memberCount_other": "{{count}} 人",
+    "newName": "新分组",
+    "newPlaceholder": "例如：读书会",
+    "create": "创建分组",
+    "empty": "你还没有分组。",
+    "members": "成员",
+    "noMembers": "这个分组还没有人。可以从对方的个人资料中添加。",
+    "rename": "重命名",
+    "renameLabel": "重命名 {{name}}",
+    "delete": "删除",
+    "deleteLabel": "删除 {{name}}",
+    "deleteTitle": "要删除 {{name}} 吗？",
+    "deleteDescription": "其中的人仍会与你保持联系；已分享的帖子保持原来的受众。"
+  },
+  "tags": {
+    "follow": "关注话题标签",
+    "unfollow": "取消关注话题标签",
+    "followedTitle": "已关注的话题标签",
+    "followNew": "关注一个话题标签",
+    "followNewPlaceholder": "关注 #话题标签",
+    "hide": "隐藏",
+    "unhide": "重新显示",
+    "hiddenTitle": "已隐藏的话题标签",
+    "showAgain": "重新显示 #{{tag}}",
+    "showAgainFrom": "重新显示 @{{name}} 的 #{{tag}}"
+  },
+  "edit": {
+    "label": "编辑帖子",
+    "save": "保存",
+    "pollReset": "更改选项或投票类型会清除目前已投的票。"
+  },
+  "search": {
+    "title": "搜索",
+    "label": "搜索用户、帖子和话题标签",
+    "description": "在这里和整个联邦宇宙中找人。",
+    "placeholder": "名字、@用户@服务器、关键词或 #话题标签",
+    "shortPlaceholder": "搜索",
+    "people": "用户",
+    "searching": "搜索中…",
+    "noResults": "这里没有人匹配“{{query}}”。",
+    "noLocalMatchRemote": "本服务器上没有人匹配。请在上方的网络中查找。",
+    "remoteTitle": "{{query}}",
+    "remoteHint": "这看起来是其他服务器上的用户。",
+    "lookUp": "在网络中查找",
+    "lookingUp": "正在向其他服务器查询 {{query}}…可能需要几秒钟。",
+    "notFoundRemote": "在 {{query}} 没有找到任何内容。请检查地址后重试。",
+    "tryAgain": "重试",
+    "found": "找到：",
+    "signInToLookUp": "登录后即可查找其他服务器上的用户。",
+    "lookUpHandle": "在网络中查找 {{handle}}",
+    "followLabel": "{{action}} {{name}}",
+    "tips": {
+      "names": "按名字或用户名搜索本服务器上的用户。",
+      "remote": "要查找其他服务器（Mastodon、diaspora*、Friendica…）上的人，请输入对方的完整地址，例如",
+      "url": "你也可以粘贴对方个人资料页面的地址。"
+    },
+    "lookUpAccount": "查找账号",
+    "lookUpPost": "查找帖子",
+    "postTitle": "这是一条帖子的链接吗？",
+    "postHint": "把它拿到这里来回复、点赞或转发。",
+    "lookingUpPost": "正在获取帖子…可能需要几秒钟。",
+    "postNotFound": "在这个地址没有找到公开帖子。",
+    "tabs": {
+      "label": "搜索结果",
+      "accounts": "用户",
+      "posts": "帖子",
+      "hashtags": "话题标签"
+    },
+    "noPosts": "没有帖子匹配“{{query}}”。",
+    "noHashtags": "没有话题标签匹配“{{query}}”。",
+    "tagPosts_other": "{{count}} 条帖子",
+    "followedTag": "已关注",
+    "networkTitle": "不是你要找的人？在其他服务器上搜索“{{query}}”",
+    "networkHint": "我们会询问已经有往来的服务器（Mastodon、diaspora*、Hubzilla…）是否有这个名字的人。联邦宇宙没有统一的用户目录。",
+    "networkButton": "到外部搜索",
+    "networkSearching": "正在其他服务器上查找“{{query}}”…",
+    "networkNone_other": "在询问的 {{count}} 个服务器上都没有叫“{{query}}”的人。如果你知道对方的服务器，请搜索 名字@服务器。",
+    "networkFound_other": "在询问的 {{count}} 个服务器上找到："
+  },
+  "passwordReset": {
+    "forgotTitle": "重置密码",
+    "forgotHelp": "输入你账号的邮箱地址，我们会发送一个链接让你设置新密码。",
+    "send": "发送重置链接",
+    "sent": "如果有账号使用 {{email}}，重置链接已发出。链接很快会过期，请尽快使用。",
+    "backToSignIn": "返回登录",
+    "resetTitle": "设置新密码",
+    "save": "保存新密码",
+    "invalidLink": "此重置链接无效、已被使用或已过期。",
+    "requestNew": "重新获取链接",
+    "done": "你的密码已修改。请使用新密码登录。"
+  },
+  "report": {
+    "title": "举报 {{name}}",
+    "description": "本服务器的审核员会审核你的举报。被举报的人不会知道是谁举报了他们。",
+    "categoryLegend": "有什么问题？",
+    "categories": {
+      "spam": {
+        "label": "垃圾信息",
+        "description": "广告、重复的骚扰消息、诈骗。"
+      },
+      "illegal": {
+        "label": "违法内容",
+        "description": "违反法律的内容。"
+      },
+      "harassment": {
+        "label": "骚扰",
+        "description": "针对某人的辱骂、威胁或仇恨。"
+      },
+      "violation": {
+        "label": "违反服务器规则",
+        "description": "违背本服务器的规则。"
+      },
+      "other": {
+        "label": "其他问题",
+        "description": "请在备注中说明。"
+      }
+    },
+    "postsLegend": "附上的帖子",
+    "postsHint": "最多选择 {{max}} 条能说明问题的帖子。",
+    "noPosts": "没有可选的近期帖子。",
+    "comment": "备注（可选）",
+    "commentPlaceholder": "需要让审核员知道的任何情况",
+    "commentHint_other": "还剩 {{count}} 个字符",
+    "submit": "发送举报",
+    "doneTitle": "感谢你的举报",
+    "doneBody": "审核员会进行处理。你也可以在 {{name}} 的个人资料中隐藏或屏蔽对方。"
+  },
+  "admin": {
+    "title": "管理",
+    "roleAdmin": "你是管理员。",
+    "roleModerator": "你是审核员。",
+    "sections": "管理栏目",
+    "tabs": {
+      "dashboard": "概览",
+      "pending": "待审核",
+      "reports": "举报",
+      "accounts": "账号",
+      "domains": "域名屏蔽",
+      "instance": "实例",
+      "federation": "联邦",
+      "users": "用户",
+      "groups": "群组"
+    },
+    "roles": {
+      "user": "用户",
+      "moderator": "审核员",
+      "admin": "管理员"
+    },
+    "pending": {
+      "empty": "没有等待审核的注册申请。",
+      "email": "邮箱",
+      "reason": "加入理由",
+      "noReason": "未填写理由。",
+      "approve": "批准",
+      "reject": "拒绝",
+      "approveLabel": "批准 @{{acct}}",
+      "rejectLabel": "拒绝 @{{acct}}",
+      "rejectTitle": "要拒绝 @{{acct}} 吗？",
+      "rejectDescription": "该注册申请将被删除。对方之后可以重新注册。",
+      "approved": "@{{acct}} 已获批准，现在可以登录了。",
+      "rejected": "@{{acct}} 的注册申请已被拒绝。",
+      "verified": "已确认",
+      "notVerified": "尚未确认",
+      "moveFrom": "迁移自"
+    },
+    "reports": {
+      "filter": "显示举报",
+      "open": "未处理",
+      "resolved": "已处理",
+      "emptyOpen": "没有未处理的举报。",
+      "emptyResolved": "还没有已处理的举报。",
+      "target": "被举报者",
+      "reporter": "举报者",
+      "comment": "备注",
+      "noComment": "无备注。",
+      "unknownAccount": "账号已不可用",
+      "posts_other": "{{count}} 条被举报的帖子",
+      "postUnavailable": "这条帖子不可用：已被删除或你无权查看。",
+      "resolve": "标记为已处理",
+      "suspendTarget": "封禁账号",
+      "suspendAndResolve": "封禁并处理",
+      "resolvedAt": "处理于 {{date}}",
+      "publicNotice": "公开表单",
+      "remoteServer": "其他服务器",
+      "contentUrl": "被举报的地址",
+      "decision": "处理决定"
+    },
+    "suspend": {
+      "title": "要封禁 @{{acct}} 吗？",
+      "description": "该账号将在所有地方被隐藏、退出登录，其关注关系也会被移除。你之后可以撤销。",
+      "reason": "理由（记入管理日志）",
+      "reasonHint": "仅审核员可见。",
+      "confirm": "封禁"
+    },
+    "accounts": {
+      "search": "搜索",
+      "searchPlaceholder": "用户名、名字或域名",
+      "origin": "来源",
+      "status": "状态",
+      "all": "全部",
+      "local": "本站",
+      "remote": "外站",
+      "active": "正常",
+      "suspended": "已封禁",
+      "empty": "没有符合筛选条件的账号。",
+      "awaitingApproval": "等待批准",
+      "suspend": "封禁",
+      "unsuspend": "解除封禁",
+      "role": "角色",
+      "roleSaved": "角色已更改为{{role}}。"
+    },
+    "domains": {
+      "severity": {
+        "silence": {
+          "label": "限制",
+          "explain": "该服务器的帖子不会出现在公共时间线中；关注其账号的人仍能看到。"
+        },
+        "suspend": {
+          "label": "封禁",
+          "explain": "完全断开联邦：不向该服务器发送任何内容，也不接收其任何内容，其账号会被封禁。"
+        }
+      },
+      "adminOnly": "只有管理员可以添加或移除域名屏蔽。",
+      "addTitle": "屏蔽服务器",
+      "domain": "域名",
+      "severityLegend": "严重程度",
+      "publicComment": "公开备注",
+      "publicHint": "可能会作为理由展示给用户。",
+      "privateComment": "私密备注",
+      "privateHint": "仅审核员可见。",
+      "add": "屏蔽服务器",
+      "added": "该服务器已被屏蔽。",
+      "empty": "没有被屏蔽的服务器。",
+      "remove": "解除屏蔽",
+      "removeLabel": "解除对 {{domain}} 的屏蔽",
+      "removeTitle": "要解除对 {{domain}} 的屏蔽吗？",
+      "removeDescription": {
+        "silence": "其公开帖子将重新出现在公共时间线中。",
+        "suspend": "恢复联邦，其账号不再被封禁。"
+      },
+      "sharedNote": "标有 IFTAS DNI 的屏蔽来自 IFTAS 的“Do Not Interact”（勿互动）列表，每天同步更新。移除其中一项后，即使列表中仍有该服务器，它也会保持开放。",
+      "sharedHelp": "来自共享列表，每天更新"
+    },
+    "instance": {
+      "title": "服务器名称",
+      "description": "描述",
+      "descriptionHint": "显示在首页和关于页面上。",
+      "contactEmail": "联系邮箱",
+      "contactHint": "显示在关于页面上。留空则隐藏。",
+      "registration": "注册",
+      "modes": {
+        "open": {
+          "label": "开放",
+          "description": "任何人都可以注册账号并立即使用。"
+        },
+        "approval": {
+          "label": "审核",
+          "description": "申请者说明加入理由；由审核员逐一批准账号。"
+        },
+        "invite": {
+          "label": "仅限邀请",
+          "description": "只有持有成员邀请链接的人才能注册。"
+        },
+        "closed": {
+          "label": "关闭",
+          "description": "任何人都无法注册。现有账号可以继续使用。"
+        }
+      },
+      "rules": "规则",
+      "rulesHint": "在注册时和关于页面上显示。最多 {{max}} 条规则；空白规则会被忽略。",
+      "noRules": "还没有规则。",
+      "rule": "规则 {{number}}",
+      "addRule": "添加规则",
+      "removeRule": "移除规则 {{number}}",
+      "moveUp": "上移规则 {{number}}",
+      "moveDown": "下移规则 {{number}}",
+      "welcome": "新账号欢迎设置",
+      "welcomeHint": "账号激活后会关注欢迎账号，欢迎账号会回关、将其添加到分组并私下发送欢迎消息。账号留空即可关闭此功能。",
+      "welcomeAccount": "欢迎账号",
+      "welcomeAccountHint": "本站用户名，例如管理员。",
+      "welcomeAspect": "分组",
+      "welcomeAspectHint": "欢迎账号的某个分组名称。留空则跳过。",
+      "welcomeMessage": "欢迎消息",
+      "welcomeMessageHint": "以私信发送。留空则跳过。"
+    },
+    "federation": {
+      "description": "本服务器通过关注、提及和投递所知道的服务器。",
+      "search": "搜索服务器",
+      "empty": "还不知道其他服务器。",
+      "noMatch": "没有已知服务器匹配“{{query}}”。",
+      "accounts_other": "{{count}} 个账号",
+      "followers_other": "本站账号的 {{count}} 位关注者",
+      "lastSeen": "最近活动：{{time}}",
+      "blocked": {
+        "silence": "已限制",
+        "suspend": "已封禁"
+      },
+      "block": "屏蔽域名",
+      "changeBlock": "更改屏蔽",
+      "blockLabel": "屏蔽 {{domain}}",
+      "changeBlockLabel": "更改对 {{domain}} 的屏蔽"
+    },
+    "dashboard": {
+      "updated": "{{time}}更新",
+      "onDay": "{{day}}：{{value}}",
+      "inDays": "{{days}} 天内 {{value}}",
+      "chartLabel": "{{title}}：柱状图，最近 {{days}} 天共 {{value}}",
+      "charts": {
+        "signups": "新注册",
+        "localPosts": "在本站发布的帖子",
+        "remotePosts": "来自其他服务器的帖子",
+        "received": "从联邦宇宙收到的活动"
+      },
+      "users": "注册用户",
+      "newThisWeek_other": "本周新增 {{count}} 人",
+      "pending_other": "{{count}} 人等待中",
+      "activeWeek": "本周活跃",
+      "activeOther": "今天 {{day}} · 30 天内 {{month}}",
+      "localPosts": "在本站发布的帖子",
+      "remotePosts_other": "{{count}} 条来自其他服务器",
+      "instances": "已知服务器",
+      "remoteAccounts_other": "{{count}} 个外站账号",
+      "groups": "群组",
+      "remoteFollowers": "外站关注者",
+      "remoteFollowing": "对外站的关注",
+      "suspended": "已封禁账号",
+      "federationTitle": "联邦",
+      "federationHint": "最近 7 天其他服务器发给我们的内容，以及我们未能投递的内容。从此版本开始统计。",
+      "receivedWeek": "收到的活动",
+      "rejectedWeek": "已拒收",
+      "failedWeek": "投递失败",
+      "queues": "等待发送：{{activitypub}} 条 ActivityPub（{{activitypubRetry}} 条待重试），{{diaspora}} 条 diaspora*（{{diasporaRetry}} 条待重试，{{diasporaFailed}} 条已放弃）。",
+      "noTraffic": "还没有统计到联邦流量。",
+      "serversCaption": "最近 7 天最活跃的服务器",
+      "server": "服务器",
+      "received": "收到",
+      "rejected": "已拒收",
+      "failed": "投递失败",
+      "unknownServer": "（服务器无法访问）",
+      "unsigned": "（未签名）",
+      "usedOf": "{{used}} / {{total}}（{{percent}}）",
+      "level": {
+        "high": "快满了",
+        "critical": "几乎已满"
+      },
+      "load": "负载（1 · 5 · 15 分钟）",
+      "loadValue": "{{values}}（{{cpus}} 个 CPU）",
+      "process": "Disbigle 内存",
+      "database": "数据库",
+      "redis": "Redis",
+      "appUptime": "Disbigle 已运行",
+      "hostUptime": "机器已开机",
+      "node": "Node.js",
+      "serverTitle": "服务器",
+      "serverHint": "内存、磁盘和负载是整台机器的数据，与其他服务共享。",
+      "busy": "机器当前较忙",
+      "calm": "机器运行顺畅",
+      "memory": "内存",
+      "disk": "磁盘",
+      "latestUsers": "最新注册",
+      "allUsers_other": "查看所有人（{{count}}）",
+      "disbigleDisk": "Disbigle 磁盘",
+      "disbigleDiskDetail": "媒体 {{media}} · {{path}}",
+      "usedOfAvailable": "已用 {{used}} / 可用 {{total}}（{{percent}}）"
+    },
+    "users": {
+      "description": "本服务器上所有注册用户及其邮箱地址。只有管理员能看到此页面。",
+      "search": "搜索用户",
+      "searchPlaceholder": "名字、用户名或邮箱",
+      "export": "下载 CSV",
+      "noMatch": "没有人匹配“{{query}}”。",
+      "empty": "还没有人注册。",
+      "count_other": "{{count}} 人",
+      "person": "用户",
+      "email": "邮箱",
+      "status": "状态",
+      "joined": "注册时间",
+      "lastActive": "最近活跃",
+      "posts": "帖子",
+      "followers": "关注者",
+      "following": "正在关注",
+      "twoFactor": "两步验证",
+      "lastIp": "最近 IP",
+      "never": "从未",
+      "yes": "是",
+      "no": "否",
+      "statuses": {
+        "active": "正常",
+        "pending": "等待中",
+        "suspended": "已封禁",
+        "disabled": "已停用",
+        "deleting": "正在删除"
+      }
+    },
+    "groups": {
+      "description": "本服务器上的所有群组，包括秘密群组。秘密群组保持封闭：只有成员才能打开。",
+      "search": "搜索群组",
+      "searchPlaceholder": "名称或地址",
+      "noMatch": "没有群组匹配“{{query}}”。",
+      "empty": "还没有群组。",
+      "count_other": "{{count}} 个群组",
+      "created": "创建时间",
+      "creator": "创建者",
+      "members": "成员",
+      "membersSplit": "本站 {{local}} + 外站 {{remote}}",
+      "requests": "申请",
+      "invitations": "邀请",
+      "posts": "帖子",
+      "lastPost": "最近发帖",
+      "never": "从未"
+    },
+    "moderation": {
+      "ground": "依据",
+      "grounds": {
+        "rules": "违反服务器规则",
+        "illegal": "违法内容"
+      },
+      "reason": "说明",
+      "reasonHint": "将通过邮件发送给当事人，附上依据和申诉方式。",
+      "decisionHint": "如果举报者在本站有账号或留下了邮箱，他们会收到处理结果和这段说明。",
+      "decideTitle": "结束举报",
+      "decideDescription": "说明你的决定：它会保留在管理日志中。",
+      "decideConfirm": "按此决定结束",
+      "decisions": {
+        "no_violation": "未违规",
+        "removed": "内容已删除",
+        "suspended": "账号已封禁"
+      },
+      "removePost": "删除帖子",
+      "removeTitle": "要删除这条帖子吗？",
+      "removeDescription": "这条帖子将在所有地方被删除。作者会通过邮件收到删除依据和申诉方式。",
+      "removeConfirm": "删除"
+    }
+  },
+  "poll": {
+    "vote": "投票",
+    "results": "投票结果",
+    "legendSingle": "选择一个答案",
+    "legendMultiple": "选择一个或多个答案",
+    "multipleHint": "你可以选择多个答案。",
+    "voters_other": "{{count}} 人",
+    "optionVotes_other": "{{count}} 票",
+    "endsIn": "{{time}}结束",
+    "closed": "已结束",
+    "open": "进行中",
+    "refresh": "刷新",
+    "refreshing": "刷新中…",
+    "seeResults": "查看结果",
+    "backToVoting": "返回投票",
+    "yourChoice": "你的选择",
+    "errors": {
+      "alreadyVoted": "你已经在这项投票中投过票了。",
+      "closed": "这项投票已结束。",
+      "optionRequired": "请填写此选项或将其移除。",
+      "duplicate": "投票中已有此选项。",
+      "question": "请填写投票的问题。"
+    },
+    "editor": {
+      "legend": "投票",
+      "add": "添加投票",
+      "option": "选项 {{number}}",
+      "removeOption": "移除选项 {{number}}",
+      "addOption": "添加选项",
+      "duration": "结束时间",
+      "kind": "答案类型",
+      "single": "单选",
+      "multiple": "多选",
+      "noMediaWithPoll": "带投票的帖子不能添加附件",
+      "noPollWithMedia": "移除附件后才能添加投票"
+    },
+    "durations": {
+      "m5": "5 分钟",
+      "m30": "30 分钟",
+      "h1": "1 小时",
+      "h6": "6 小时",
+      "d1": "1 天",
+      "d3": "3 天",
+      "d7": "7 天"
+    }
+  },
+  "about": {
+    "rules": "规则",
+    "noRules": "本服务器还没有发布任何规则。",
+    "contact": "联系",
+    "contactText": "有问题或遇到困难？请写信至",
+    "noContact": "尚未公布联系地址。",
+    "join": "加入本服务器",
+    "software": "ActivityPub 和 diaspora*",
+    "version": "版本 {{version}}",
+    "registration": {
+      "open": "任何人都可以注册。",
+      "approval": "新账号需经审核员审核。",
+      "invite": "仅限受邀注册。",
+      "closed": "目前已关闭注册。"
+    },
+    "blocked": {
+      "title": "已屏蔽的服务器",
+      "intro": "本服务器不与这些服务器互通：它们的帖子不会到达这里，我们的帖子也不会发往那里，经由 diaspora* 桥接也不例外。大多数来自 IFTAS 的“Do Not Interact”（勿互动）列表，即有严重且有据可查危害的服务器；部分名称因含有侮辱性词语而被部分隐藏。",
+      "none": "没有被屏蔽的服务器。",
+      "show_other": "显示 {{count}} 个被屏蔽的服务器",
+      "severity": {
+        "suspend": "已封禁",
+        "silence": "已限制"
+      }
+    }
+  },
+  "invites": {
+    "tab": "邀请好友",
+    "title": "邀请好友",
+    "description": "分享链接，邀请别人加入 {{domain}}。在仅限邀请的服务器上，这是唯一的加入方式。",
+    "maxUses": "可使用次数",
+    "expiresIn": "有效期",
+    "unlimited": "不限次数",
+    "uses_other": "{{count}} 次",
+    "expiry": {
+      "h1": "1 小时",
+      "h6": "6 小时",
+      "d1": "1 天",
+      "d7": "7 天",
+      "d30": "30 天",
+      "never": "永不过期"
+    },
+    "create": "创建链接",
+    "created": "邀请链接已创建。",
+    "yourLinks": "你的邀请链接",
+    "empty": "你还没有邀请链接。",
+    "link": "邀请链接",
+    "copy": "复制链接",
+    "copied": "已复制",
+    "delete": "删除",
+    "deleteLabel": "删除邀请 {{code}}",
+    "deleteTitle": "要删除这个邀请链接吗？",
+    "deleteDescription": "链接将失效。已通过它注册的账号不受影响。",
+    "used_other": "已使用 {{count}} / {{max}} 次",
+    "usedUnlimited_other": "已使用 {{count}} 次，不限次数",
+    "expires": "{{time}}过期",
+    "expired": "已过期",
+    "neverExpires": "永不过期",
+    "inactive": "已失效"
+  },
+  "messages": {
+    "title": "私信",
+    "description": "私密对话：私信，以及分享给你分组的帖子。",
+    "new": "新私信",
+    "empty": "还没有对话。点击“新私信”开始一个吧。",
+    "you": "你",
+    "to": "收件人",
+    "searchPlaceholder": "按名字或 @用户@服务器 搜索",
+    "recipients": "收件人",
+    "removeRecipient": "移除 @{{acct}}",
+    "suggestions": "推荐",
+    "noMatches": "没有匹配的人。",
+    "back": "所有私信",
+    "onlyYou": "只有你",
+    "older": "更早的消息",
+    "seen": "已读",
+    "seenBy": "{{names}} 已读",
+    "typing": "{{names}} 正在输入…",
+    "write": "写一条消息",
+    "send": "发送",
+    "unread": "新消息",
+    "presence": {
+      "label": "你的状态",
+      "hidden": "隐藏",
+      "auto": "显示",
+      "busy": "忙碌",
+      "hiddenHelp": "没有人能看到你是否在线。",
+      "autoHelp": "和你聊天的人能看到你是在线还是离开。",
+      "busyHelp": "和你聊天的人能看到你正在忙。",
+      "state": {
+        "online": "在线",
+        "away": "离开",
+        "busy": "忙碌"
+      }
+    }
+  },
+  "filters": {
+    "tab": "屏蔽词",
+    "title": "屏蔽词",
+    "description": "隐藏包含你不想看到的词语或短语的帖子。",
+    "phrase": "词语或短语",
+    "phraseHint": "不区分大小写。",
+    "wholeWord": "仅匹配完整单词",
+    "wholeWordHint": "“cat”不会隐藏“category”。",
+    "contexts": "隐藏位置",
+    "contextsRequired": "请至少选择一个位置。",
+    "context": {
+      "home": "首页和列表",
+      "public": "公共时间线",
+      "notifications": "通知",
+      "thread": "对话"
+    },
+    "duration": "时长",
+    "durations": {
+      "forever": "永久",
+      "day": "1 天",
+      "week": "1 周",
+      "month": "1 个月"
+    },
+    "add": "屏蔽",
+    "added": "已屏蔽。",
+    "yourWords": "你的屏蔽词",
+    "empty": "你还没有屏蔽任何词语。",
+    "wholeWordShort": "完整单词",
+    "partialShort": "也匹配词语内部",
+    "forever": "永久",
+    "expires": "直到 {{time}}",
+    "expired": "已过期",
+    "remove": "取消屏蔽",
+    "removeLabel": "取消屏蔽“{{phrase}}”"
+  },
+  "apps": {
+    "tab": "已授权的应用",
+    "title": "已授权的应用",
+    "description": "Tusky、Ivory 或 Elk 等应用都可以配合 Disbigle 使用：用地址 {{domain}} 登录即可。你允许过的应用会列在这里。",
+    "empty": "没有应用可以访问你的账号。",
+    "unnamed": "未命名应用",
+    "permissions": "权限",
+    "scopes": {
+      "read": "读取",
+      "write": "写入",
+      "follow": "关注",
+      "push": "推送通知",
+      "admin": "管理"
+    },
+    "partial": "{{scope}}（部分）",
+    "authorized": "{{time}}授权",
+    "lastUsed": "上次使用：{{time}}",
+    "neverUsed": "从未使用",
+    "revoke": "撤销访问权限",
+    "revokeLabel": "撤销 {{name}} 的访问权限",
+    "revokeTitle": "要撤销 {{name}} 的访问权限吗？",
+    "revokeDescription": "{{name}} 将退出登录，需要再次获得你的许可才能使用你的账号。",
+    "passwordNote": "修改或重置密码也会让所有应用退出登录。"
+  },
+  "theme": {
+    "label": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
+    "black": "纯黑（OLED）"
+  },
+  "contacts": {
+    "title": "联系人",
+    "description": "你在各个网络上联系的人。",
+    "filters": "显示",
+    "all": "所有联系人",
+    "onlyFollowers": "仅关注你的人",
+    "empty": "这里还没有人。",
+    "emptyAll": "还没有联系人。搜索并关注别人，或把他们添加到分组吧。"
+  },
+  "emoji": {
+    "button": "表情",
+    "search": "搜索表情",
+    "categories": "分类",
+    "recent": "最近使用",
+    "results": "结果",
+    "noResults": "没有找到表情。",
+    "failed": "表情加载失败，请稍后再试。",
+    "skinTone": "肤色",
+    "tones": {
+      "0": "默认",
+      "1": "浅色",
+      "2": "中浅色",
+      "3": "中等",
+      "4": "中深色",
+      "5": "深色"
+    }
+  },
+  "youtube": {
+    "video": "YouTube 视频",
+    "play": "播放“{{title}}”（将加载 YouTube）",
+    "privacy": "只有在你点击播放后才会加载 YouTube",
+    "playing": "正在从 YouTube 播放"
+  },
+  "groups": {
+    "title": "群组",
+    "description": "和同样在乎的人，聊聊你在乎的事。",
+    "create": "创建群组",
+    "members_other": "{{count}} 位成员",
+    "mine": "你的群组",
+    "invitations": "邀请",
+    "discover": "发现群组",
+    "search": "搜索群组",
+    "noneYet": "你还没有加入任何群组。在下方加入一个，或创建你自己的群组。",
+    "noGroups": "还没有群组。来创建第一个吧！",
+    "noMatch": "没有群组匹配“{{query}}”。",
+    "accept": "接受",
+    "decline": "拒绝",
+    "join": "加入群组",
+    "askToJoin": "申请加入",
+    "cancelRequest": "撤回申请",
+    "leave": "退出群组",
+    "requestSent": "申请已发送：审核员会处理。",
+    "signInToJoin": "登录后加入",
+    "leaveTitle": "要退出 {{name}} 吗？",
+    "leavePrivate": "你将不再看到这个群组的帖子，除非重新加入。",
+    "fediverseHandle": "在联邦宇宙中：{{handle}}",
+    "privateNotice": "只有成员能看到这个群组的帖子。申请加入即可参与。",
+    "joinToWrite": "加入群组后才能在这里发帖和评论。",
+    "noPosts": "还没有帖子。来开启话题吧！",
+    "membersPrivate": "只有成员能看到群组里有谁。",
+    "roleOf": "{{name}} 的角色",
+    "roles": {
+      "admin": "管理员",
+      "moderator": "审核员",
+      "member": "成员"
+    },
+    "rolesHint": "要任命审核员，请在对方名字旁选择“审核员”。审核员负责批准申请、删除帖子和移除成员；管理员还可以更改设置。",
+    "rolesHintAlone": "有人加入后，你可以在此列表中把他们设为审核员。",
+    "remove": "移除",
+    "removeTitle": "要将 {{name}} 移出群组吗？",
+    "invite": "邀请成员",
+    "invitePlaceholder": "名字或用户名",
+    "inviteButton": "邀请",
+    "invited": "已邀请",
+    "requests": "加入申请",
+    "noRequests": "没有待处理的申请。",
+    "approve": "批准",
+    "pendingInvitations": "已发送的邀请",
+    "withdrawInvitation": "撤回",
+    "images": "图片",
+    "image": {
+      "avatar": "群组头像",
+      "header": "封面",
+      "change": "更换",
+      "choose": "选择",
+      "remove": "移除",
+      "edit": {
+        "header": "更换封面",
+        "avatar": "更换群组头像"
+      },
+      "avatarSize": "理想尺寸：400 × 400 像素，正方形。",
+      "headerSize": "理想尺寸：1500 × 500 像素（3:1）。"
+    },
+    "deleteTitle": "删除群组",
+    "deleteDescription": "群组及其所有帖子将被永久删除。",
+    "delete": "删除群组",
+    "deleteConfirmTitle": "要删除 {{name}} 吗？",
+    "privacyConfirmTitle": "要切换为“{{privacy}}”吗？",
+    "privacyConfirm": "群组可以变得更私密，但无法再改回来。联邦宇宙中其他服务器上的人会离开不再公开的群组。",
+    "joined": "你已加入该群组。",
+    "invitationDeclined": "已拒绝邀请。",
+    "tabs": {
+      "label": "群组栏目",
+      "posts": "讨论",
+      "members": "成员",
+      "requests": "申请",
+      "settings": "设置",
+      "pending": "待批准"
+    },
+    "privacy": {
+      "public": {
+        "label": "公开群组",
+        "description": "任何人都能看到帖子并加入。Mastodon 和其他服务器上的人也可以关注它。"
+      },
+      "private": {
+        "label": "私密群组",
+        "description": "任何人都能找到它，但只有成员能看到帖子。由审核员批准谁可以加入。"
+      },
+      "secret": {
+        "label": "秘密群组",
+        "description": "只有成员能找到它并看到帖子。需受邀才能加入。"
+      }
+    },
+    "form": {
+      "title": "新群组",
+      "name": "名称",
+      "handle": "地址",
+      "handleHint": "可使用字母、数字和下划线：群组地址将是 /groups/{{handle}}。",
+      "handleInvalid": "请使用 1 到 30 个字母、数字或下划线。",
+      "description": "这个群组是关于什么的？",
+      "privacy": "谁可以看到",
+      "submit": "创建群组",
+      "privacyOneWay": "群组可以变得更私密，但不能变得更公开。",
+      "saved": "已保存。",
+      "approval": "审核",
+      "joinApproval": "新成员需经批准",
+      "joinApprovalHint": "任何人仍可阅读群组；加入则变为申请，由审核员批准。",
+      "postApproval": "帖子和评论需经批准",
+      "postApprovalHint": "成员发布的内容需经审核员批准后才会显示在群组中。管理员和审核员无需等待。"
+    },
+    "badge": "群组",
+    "open": "打开",
+    "pendingComment": "对帖子的评论",
+    "approvePost": "批准",
+    "rejectPost": "不批准",
+    "noPending": "没有待批准的内容。"
+  },
+  "shareToGroup": {
+    "menu": "分享到群组",
+    "title": "分享到群组",
+    "description": "帖子会显示在群组和群组成员的首页中，而不是你的个人资料上。",
+    "noGroups": "加入群组后即可在其中分享帖子。",
+    "share": "分享",
+    "shared": "已分享",
+    "shareIn": "分享到 {{name}}",
+    "undoIn": "已分享到 {{name}}：点击撤回"
+  },
+  "albums": {
+    "new": "新相册",
+    "edit": "编辑相册",
+    "save": "保存",
+    "create": "创建",
+    "name": "名称",
+    "description": "描述（可选）",
+    "hint": "在“媒体”标签中打开一张照片，即可把它添加到你的相册。",
+    "addTo": "添加到相册",
+    "inAlbums": "所在相册",
+    "noneYet": "还没有相册。",
+    "none": "没有可显示的相册。",
+    "noMedia": "还没有照片或视频。",
+    "empty": "这个相册是空的。",
+    "openPost": "打开帖子",
+    "count_other": "{{count}} 项",
+    "delete": "删除相册",
+    "deleteTitle": "要删除“{{name}}”吗？",
+    "deleteDescription": "照片仍保留在原帖子中：只会删除相册。"
+  },
+  "activity": {
+    "title": "我的动态",
+    "description": "你赞过、回复过、转发过和保存过的内容，最新的在前。只有你能看到此页面。",
+    "tabs": {
+      "all": "全部",
+      "like": "赞",
+      "reply": "评论",
+      "reblog": "转发",
+      "bookmark": "已保存"
+    },
+    "did": {
+      "like": "你赞了",
+      "reply": "你评论了",
+      "reblog": "你转发了",
+      "bookmark": "你保存了"
+    },
+    "empty": {
+      "all": "这里还什么都没有：点赞、评论、转发或保存一条帖子，它就会出现在这里。",
+      "like": "你还没有赞过任何帖子。",
+      "reply": "你还没有评论过任何帖子。",
+      "reblog": "你还没有转发过任何帖子。",
+      "bookmark": "你还没有保存过任何帖子。"
+    }
+  },
+  "share": {
+    "title": "分享到 Disbigle",
+    "description": "想说点什么就写下来，选择谁可以阅读，然后发布。"
+  },
+  "move": {
+    "tab": "迁移",
+    "register": {
+      "title": "带上你的账号",
+      "subtitle": "从 Mastodon 或联邦宇宙的其他服务器迁移过来：在 {{domain}} 上选一个新名字，你的关注者就可以在这里关注你。",
+      "instead": "改为从头开始",
+      "cta": "已经在用 Mastodon 或其他平台？带上你的账号吧",
+      "from": "你当前的账号",
+      "fromHint": "完整地址，例如 name@mastodon.social。那边暂时不会有任何变化。",
+      "newName": "你在这里的新名字",
+      "agreement": "我已阅读账号迁移的方式、哪些内容会迁移、哪些不会，并了解任何数据丢失的风险由我自行承担：",
+      "infoLink": "关于账号迁移的页面",
+      "mustRead": "请先阅读关于迁移的页面"
+    },
+    "settings": {
+      "title": "把你的账号迁移到这里",
+      "description": "从 Mastodon 和联邦宇宙的其他服务器带来你的关注者。",
+      "risk": "开始之前，请下载旧服务器提供的所有导出数据：任何数据丢失的风险由你自行承担。请阅读",
+      "step1": "1. 关联你的旧账号",
+      "step1Help": "旧服务器只会把你迁移到一个将其列为旧账号的账号。",
+      "linked": "已关联的账号",
+      "unlink": "移除",
+      "link": "关联",
+      "step2": "2. 在旧服务器上开始迁移",
+      "step2Help": "在你的旧服务器上，打开迁移到其他账号的页面，并输入你的新地址 {{address}}。你的关注者会自动在这里关注你。",
+      "openOld": "在 {{domain}} 上打开迁移页面",
+      "linkFirst": "请先关联你的旧账号。",
+      "otherSoftware": "在 Mastodon 上，该页面位于“账号 → 迁移到其他账号”；在其他软件中，请在设置里查找“migration”或“move”。",
+      "step3": "3. 你关注的人"
+    },
+    "imports": {
+      "help": "在旧服务器上导出列表（在 Mastodon 上：设置 → 导入和导出 → 数据导出），然后逐个在这里导入。系统会在后台关注、屏蔽或隐藏这些人；找不到的地址会列出来。",
+      "kind": "列表",
+      "kinds": {
+        "following": "你关注的人",
+        "blocks": "已屏蔽的账号",
+        "mutes": "已隐藏的账号"
+      },
+      "file": "文件（CSV）",
+      "start": "导入",
+      "list": "导入记录",
+      "progress": "{{handled}} / {{total}}…",
+      "finished": "已完成 {{done}} 个，{{failed}} 个未找到",
+      "notFound": "未找到"
+    },
+    "diaspora": {
+      "title": "从 diaspora* 过来？",
+      "help": "在你的节点上，通过“设置 → 账号 → 下载我的个人资料数据”可以得到一个文件（.json.gz）。在这里选择它：文件会在这台电脑上读取，只会发送你的个人资料名称和描述、分组、与你分享的人、话题标签和屏蔽列表。你的帖子和存档的私钥都留在你手里。",
+      "file": "diaspora* 导出文件（.json.gz）",
+      "unreadable": "这看起来不是 diaspora* 的导出文件。",
+      "found": "找到：{{contacts}} 个联系人、{{aspects}} 个分组、{{tags}} 个话题标签、{{blocks}} 个已屏蔽的人。",
+      "useProfile": "在这里使用旧个人资料的名称（{{name}}）和描述",
+      "notIncluded": "你的联系人会在这里被重新关注，并分批放回原来的分组；diaspora* 联系人会看到来自你新地址的关注。帖子和照片不会导入。",
+      "start": "从 diaspora* 导入",
+      "done": "完成：分组和话题标签已经导入，联系人和屏蔽列表正在上方导入中。"
+    }
+  },
+  "verifyEmail": {
+    "checking": "正在确认你的邮箱…",
+    "doneTitle": "邮箱已确认",
+    "done": "你的账号已激活：请登录。",
+    "donePending": "谢谢！接下来审核员会审核你的账号，届时你会收到邮件。",
+    "brokenTitle": "此链接无效",
+    "broken": "它可能已过期或已被使用。登录即可获取新链接。",
+    "signIn": "登录"
+  },
+  "appearance": {
+    "tab": "外观",
+    "title": "外观",
+    "description": "Disbigle 在本设备上的外观。",
+    "mode": "模式",
+    "color": "颜色",
+    "more": "更多颜色…",
+    "blackHelp": "纯黑（OLED）使用纯黑色：在手机和笔记本电脑的 OLED 屏幕上，这些像素会关闭，从而节省电量。",
+    "colors": {
+      "orange": "Disbigle",
+      "red": "红色",
+      "pink": "粉色",
+      "purple": "紫色",
+      "blue": "蓝色",
+      "teal": "青色",
+      "green": "绿色",
+      "grey": "灰色"
+    }
+  },
+  "notice": {
+    "title": "举报违法内容",
+    "description": "任何人都可以使用，无论是否有账号：如果你认为本服务器上的某条帖子或某个个人资料违法，请告知审核员。我们通常会在 24 到 48 小时内回复。",
+    "url": "内容地址",
+    "urlHint": "帖子或个人资料的链接，例如 https://app.disbigle.com/@name/…",
+    "explanation": "为什么它违法或违反规则",
+    "explanationHint": "请具体说明其中包含什么内容，以及违反了哪条法律或规则（至少 10 个字符）。",
+    "name": "你的名字（可选）",
+    "email": "你的邮箱（可选）",
+    "contactHint": "如果你留下邮箱，我们会确认已收到举报，并写信告知处理结果。举报儿童性虐待内容无需提供名字和邮箱。",
+    "goodFaith": "我善意声明，本举报中的信息准确且完整。",
+    "submit": "发送举报",
+    "childAbuse": "如涉及儿童性虐待内容，请同时向警方举报（在意大利：www.commissariatodips.it）。",
+    "doneTitle": "举报已收到",
+    "done": "谢谢：审核员会尽快处理。",
+    "doneEmail": "谢谢：审核员会尽快处理。我们已向你发送确认邮件，并会写信告知处理结果。"
+  },
+  "deleteInfo": {
+    "title": "注销你的 Disbigle 账号",
+    "lead": "你可以随时通过 Android 和 iPhone 上的 Disbigle 应用或网站，注销你在 app.disbigle.com 上的账号以及与之关联的数据。",
+    "appTitle": "在应用中",
+    "appSteps": [
+      "轻点底部栏中的“个人资料”，然后轻点设置图标。",
+      "在“安全与账号”中，轻点“注销账号”：会打开你所在服务器的页面。",
+      "输入密码并确认：账号会立即关闭。"
+    ],
+    "webTitle": "在网站上",
+    "web": "登录并打开账号页面，选择“注销账号”，输入密码并确认。你也可以先在同一页面导出你的数据：",
+    "noAccessTitle": "如果你无法登录",
+    "noAccess": "请用你账号的邮箱地址来信，并注明你的用户名：我们会在 30 天内为你注销账号。",
+    "deletedTitle": "哪些内容会被删除",
+    "deleted": [
+      "立即：账号被关闭、隐藏并在所有地方退出登录，同时我们会请求其他服务器删除你的个人资料和帖子。",
+      "约 24 小时内：个人资料、帖子、评论、私信、照片和其他媒体、关注关系、分组、设置和邮箱地址都会从服务器上清除。",
+      "备份会在 14 天内被覆盖。"
+    ],
+    "keptTitle": "哪些内容可能保留",
+    "kept": [
+      "联邦宇宙其他服务器上的副本：我们会请求它们删除，但这些服务器由第三方运营，我们无法保证。",
+      "与该账号相关的举报和管理决定，为履行法律义务（《数字服务法》）保留 2 年，之后删除。"
+    ],
+    "partialTitle": "只删除部分数据",
+    "partial": "删除数据不一定要注销账号：你可以通过菜单删除单条帖子、评论、照片和私信，从相册中移除照片，并在个人资料设置中修改或移除你的名字、简介、头像和封面图。"
+  },
+  "childSafety": {
+    "title": "儿童安全标准",
+    "lead": "Disbigle（app.disbigle.com 以及 Android 和 iPhone 上的 Disbigle 应用）由 Serafino Christian Varazze 运营，对儿童性虐待和性剥削（CSAE）以及儿童性虐待材料（CSAM）零容忍。",
+    "bannedTitle": "禁止的内容",
+    "banned": [
+      "任何展示未成年人或将未成年人性化的材料，包括手绘、电脑生成或人工智能制作的内容。",
+      "诱骗、向未成年人索要图片或要求见面、性勒索和贩卖人口。",
+      "在其他地方查找此类材料的链接、交换或指引。",
+      "未满 16 周岁的人使用本服务。"
+    ],
+    "reportTitle": "如何举报",
+    "report": [
+      "在应用和网站上：帖子或个人资料的“…”菜单 → 举报 →“违法内容”。",
+      "没有账号：使用下方的公开表单，或发邮件至本页底部的联系方式。",
+      "在意大利，你也可以向邮政警察举报：www.commissariatodips.it。"
+    ],
+    "actionTitle": "我们的做法",
+    "action": [
+      "我们会立即优先处理儿童虐待相关的举报。",
+      "我们会删除内容并封禁账号；如果内容来自其他服务器，我们会屏蔽该服务器并通知其管理员。",
+      "我们会按照法律要求，保留调查所需的数据并向主管机关报告（在意大利为邮政警察下属的国家打击网络儿童性虐待中心）。",
+      "我们配合执法部门，并执行主管机关的命令。"
+    ],
+    "preventionTitle": "预防措施",
+    "prevention": [
+      "app.disbigle.com 的注册需经审核员批准，且须年满 16 周岁。",
+      "用户可以屏蔽、隐藏和举报任何人；敏感媒体会隐藏在警告之后。",
+      "我们屏蔽已知传播违法内容的服务器，也使用共享的 IFTAS DNI 列表。"
+    ],
+    "contactTitle": "联系方式",
+    "contact": "儿童安全及主管机关联络人："
+  }
+}

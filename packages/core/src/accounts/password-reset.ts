@@ -26,6 +26,21 @@ const texts = {
     body: (link: string, domain: string) =>
       `Alguien ha pedido restablecer la contraseña de tu cuenta en ${domain}.\n\nAbre este enlace antes de una hora para elegir una nueva contraseña:\n${link}\n\nSi no has sido tú, ignora este correo: tu contraseña sigue siendo la misma.`,
   },
+  fr: {
+    subject: 'Réinitialise ton mot de passe',
+    body: (link: string, domain: string) =>
+      `Quelqu'un a demandé à réinitialiser le mot de passe de ton compte sur ${domain}.\n\nOuvre ce lien dans l'heure pour choisir un nouveau mot de passe :\n${link}\n\nSi ce n'était pas toi, ignore cet e-mail : ton mot de passe reste le même.`,
+  },
+  de: {
+    subject: 'Setze dein Passwort zurück',
+    body: (link: string, domain: string) =>
+      `Jemand möchte das Passwort deines Kontos auf ${domain} zurücksetzen.\n\nÖffne diesen Link innerhalb einer Stunde, um ein neues Passwort zu wählen:\n${link}\n\nWenn du das nicht warst, ignoriere diese E-Mail: Dein Passwort bleibt, wie es ist.`,
+  },
+  zh: {
+    subject: '重置你的密码',
+    body: (link: string, domain: string) =>
+      `有人申请重置你在 ${domain} 上的账号密码。\n\n请在一小时内打开此链接，设置新密码：\n${link}\n\n如果这不是你本人操作，请忽略这封邮件：你的密码不会改变。`,
+  },
 } as const;
 
 /**
@@ -85,6 +100,21 @@ const warningTexts = {
     subject: 'Alguien está probando tu contraseña',
     body: (domain: string, link: string) =>
       `Se acaban de probar varias contraseñas incorrectas en tu cuenta de ${domain}, así que el inicio de sesión con contraseña queda en pausa unos minutos.\n\nSi has sido tú, espera un poco y vuelve a intentarlo. Si no, tu cuenta está a salvo mientras tu contraseña sea robusta; puedes cambiarla y activar el inicio en dos pasos o una passkey aquí:\n${link}`,
+  },
+  fr: {
+    subject: "Quelqu'un essaie ton mot de passe",
+    body: (domain: string, link: string) =>
+      `Plusieurs mots de passe erronés viennent d'être essayés sur ton compte de ${domain}, donc la connexion par mot de passe est suspendue pendant quelques minutes.\n\nSi c'était toi, attends un peu et réessaie. Sinon, ton compte est en sécurité tant que ton mot de passe est solide ; tu peux le changer, et activer la connexion en deux étapes ou une clé d'accès, ici :\n${link}`,
+  },
+  de: {
+    subject: 'Jemand probiert dein Passwort aus',
+    body: (domain: string, link: string) =>
+      `Bei deinem Konto auf ${domain} wurden gerade mehrere falsche Passwörter probiert, deshalb ist die Anmeldung mit Passwort für ein paar Minuten pausiert.\n\nWenn du das warst, warte kurz und versuch es noch einmal. Wenn nicht, ist dein Konto sicher, solange dein Passwort stark ist; du kannst es hier ändern und die Zwei-Faktor-Anmeldung oder einen Passkey einschalten:\n${link}`,
+  },
+  zh: {
+    subject: '有人在尝试你的密码',
+    body: (domain: string, link: string) =>
+      `刚才有人在你 ${domain} 上的账号中多次输错密码，因此密码登录已暂停几分钟。\n\n如果是你本人，请稍等片刻再试。如果不是，只要你的密码足够强，账号就是安全的；你可以在这里修改密码，并开启两步验证或通行密钥：\n${link}`,
   },
 } as const;
 

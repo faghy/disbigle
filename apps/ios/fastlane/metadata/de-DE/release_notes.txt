@@ -1,0 +1,1 @@
+Erste Version im App Store: Chat in den Nachrichten, Designs und Farben, Formatierung von Beiträgen, Linkvorschauen, Meldungen an die Moderation.

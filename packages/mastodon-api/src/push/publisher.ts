@@ -80,6 +80,33 @@ const titles: Record<string, Record<string, string>> = {
     like: '{name} le ha dado me gusta a tu publicación',
     poll: 'Ha terminado una encuesta de {name}',
   },
+  fr: {
+    mention: "{name} t'a mentionné",
+    reply: "{name} t'a mentionné",
+    reblog: '{name} a repartagé ta publication',
+    follow: '{name} te suit',
+    follow_request: "Demande d'abonnement : {name}",
+    like: '{name} a aimé ta publication',
+    poll: 'Un sondage de {name} est terminé',
+  },
+  de: {
+    mention: '{name} hat dich erwähnt',
+    reply: '{name} hat dich erwähnt',
+    reblog: '{name} hat deinen Beitrag geteilt',
+    follow: '{name} folgt dir jetzt',
+    follow_request: 'Folgeanfrage: {name}',
+    like: '{name} gefällt dein Beitrag',
+    poll: 'Eine Umfrage von {name} ist beendet',
+  },
+  zh: {
+    mention: '{name} 提及了你',
+    reply: '{name} 提及了你',
+    reblog: '{name} 转发了你的帖子',
+    follow: '{name} 关注了你',
+    follow_request: '关注申请：{name}',
+    like: '{name} 赞了你的帖子',
+    poll: '{name} 发起的投票已结束',
+  },
 };
 
 export const plainText = (html: string) =>

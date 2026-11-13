@@ -46,7 +46,7 @@ targets:
     info:
       path: Disbigle/Info.plist
       properties:
-        CFBundleLocalizations: [en, it, es]
+        CFBundleLocalizations: [en, it, es, fr, de, zh-Hans]
         CFBundleDevelopmentRegion: en
         # Plain http only to this machine's network (a development server); https everywhere else.
         NSAppTransportSecurity:

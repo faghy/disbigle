@@ -102,8 +102,10 @@ export function splitHandle(handle: string): { username: string; domain: string 
   return { username: handle.slice(0, at), domain: handle.slice(at + 1).toLowerCase() };
 }
 
-/** `en`, `it` or `es`, the languages Disbigle ships; anything else becomes `en`. */
-export function mapLocale(language: string | null): 'en' | 'it' | 'es' {
+/** One of the languages Disbigle ships; anything else becomes `en`. */
+export function mapLocale(language: string | null): 'en' | 'it' | 'es' | 'fr' | 'de' | 'zh' {
   const base = language?.toLowerCase().slice(0, 2);
-  return base === 'it' || base === 'es' ? base : 'en';
+  return base === 'it' || base === 'es' || base === 'fr' || base === 'de' || base === 'zh'
+    ? base
+    : 'en';
 }

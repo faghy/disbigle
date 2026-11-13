@@ -1,0 +1,1 @@
+Première version sur l'App Store : chat dans les messages, thèmes et couleurs, mise en forme des publications, aperçus des liens, signalements aux modérateurs.

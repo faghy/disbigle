@@ -17,6 +17,7 @@ import {
   updateProfile,
 } from '@disbigle/core';
 import { createDatabase, schema } from '@disbigle/db';
+import type { Locale } from '@disbigle/shared';
 import { eq } from 'drizzle-orm';
 
 const { values, positionals } = parseArgs({
@@ -43,7 +44,7 @@ try {
     username,
     email,
     password,
-    locale: values.locale as 'en' | 'it' | 'es',
+    locale: values.locale as Locale,
     agreement: true,
   });
   await db

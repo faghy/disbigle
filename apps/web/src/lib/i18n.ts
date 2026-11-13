@@ -1,10 +1,13 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import de from '../locales/de.json';
 import en from '../locales/en.json';
 import es from '../locales/es.json';
+import fr from '../locales/fr.json';
 import it from '../locales/it.json';
+import zh from '../locales/zh.json';
 
-export const languages = ['en', 'it', 'es'] as const;
+export const languages = ['en', 'it', 'es', 'fr', 'de', 'zh'] as const;
 export type Language = (typeof languages)[number];
 
 const STORAGE_KEY = 'disbigle.language';
@@ -67,7 +70,14 @@ i18n.on('languageChanged', (language) => {
 });
 
 void i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, it: { translation: it }, es: { translation: es } },
+  resources: {
+    en: { translation: en },
+    it: { translation: it },
+    es: { translation: es },
+    fr: { translation: fr },
+    de: { translation: de },
+    zh: { translation: zh },
+  },
   lng: detectLanguage(),
   fallbackLng: 'en',
   supportedLngs: languages,

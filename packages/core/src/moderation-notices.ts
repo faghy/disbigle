@@ -21,9 +21,11 @@ export type ModerationDecision = 'removed' | 'suspended' | 'no_violation';
 /** Why: against the law, or against the server rules (terms of service). */
 export type ModerationGround = 'illegal' | 'rules';
 
-type Locale = 'it' | 'en' | 'es';
+type Locale = 'it' | 'en' | 'es' | 'fr' | 'de' | 'zh';
 const locale = (value: string | null | undefined): Locale =>
-  value === 'it' || value === 'es' ? value : 'en';
+  value === 'it' || value === 'es' || value === 'fr' || value === 'de' || value === 'zh'
+    ? value
+    : 'en';
 
 const CONTACT = 'disbin@disbigle.com';
 
@@ -105,12 +107,95 @@ const texts = {
     received: (domain: string, url: string) =>
       `Hemos recibido tu denuncia a ${domain} sobre:\n${url}\n\nLa revisaremos lo antes posible, normalmente en 24-48 horas, y te escribiremos con el resultado.`,
   },
+  fr: {
+    removedSubject: 'Un de tes contenus a été supprimé',
+    suspendedSubject: 'Ton compte a été suspendu',
+    removed: (domain: string) =>
+      `La modération de ${domain} a supprimé ce contenu que tu as publié :`,
+    suspended: (domain: string) => `La modération de ${domain} a suspendu ton compte.`,
+    ground: { illegal: 'contenu illégal', rules: 'contraire aux règles du serveur' },
+    groundLabel: 'Motif',
+    reasonLabel: 'Explication',
+    noReason: "(pas d'autre explication)",
+    how: "La décision a été prise par une personne de l'équipe de modération, après un signalement ou une vérification, sans moyens automatisés.",
+    appeal: (rules: string, terms: string) =>
+      `Si tu penses que c'est une erreur, tu peux contester la décision dans un délai de 6 mois en répondant à cet e-mail ou en écrivant à ${CONTACT} : nous la réexaminerons. Tu peux aussi t'adresser à un organisme de règlement extrajudiciaire des litiges ou à la justice.\n\nRègles : ${rules}\nConditions d'utilisation : ${terms}`,
+    noticeSubject: 'Résultat de ton signalement',
+    notice: (domain: string) =>
+      `Merci pour ton signalement à ${domain}. La modération l'a examiné et a décidé :`,
+    decisions: {
+      removed: 'le contenu a été supprimé.',
+      suspended: 'le compte signalé a été suspendu.',
+      no_violation:
+        "nous n'avons trouvé aucune infraction à la loi ni aux règles : le contenu reste en ligne.",
+    },
+    noticeAppeal: `Si tu n'es pas d'accord, tu peux nous écrire à ${CONTACT}.`,
+    receivedSubject: 'Nous avons reçu ton signalement',
+    received: (domain: string, url: string) =>
+      `Nous avons reçu ton signalement à ${domain} concernant :\n${url}\n\nNous l'examinerons dès que possible, en général sous 24 à 48 heures, et nous t'écrirons pour te donner le résultat.`,
+  },
+  de: {
+    removedSubject: 'Ein Inhalt von dir wurde entfernt',
+    suspendedSubject: 'Dein Konto wurde gesperrt',
+    removed: (domain: string) => `Die Moderation von ${domain} hat diesen Inhalt von dir entfernt:`,
+    suspended: (domain: string) => `Die Moderation von ${domain} hat dein Konto gesperrt.`,
+    ground: { illegal: 'illegaler Inhalt', rules: 'Verstoß gegen die Serverregeln' },
+    groundLabel: 'Grund',
+    reasonLabel: 'Begründung',
+    noReason: '(keine weitere Begründung)',
+    how: 'Die Entscheidung hat eine Person aus dem Moderationsteam getroffen, nach einer Meldung oder einer Prüfung, ohne automatisierte Mittel.',
+    appeal: (rules: string, terms: string) =>
+      `Wenn du glaubst, dass das ein Fehler ist, kannst du die Entscheidung innerhalb von 6 Monaten anfechten, indem du auf diese E-Mail antwortest oder an ${CONTACT} schreibst: Wir prüfen sie dann noch einmal. Du kannst dich auch an eine außergerichtliche Streitbeilegungsstelle oder an die Gerichte wenden.\n\nRegeln: ${rules}\nNutzungsbedingungen: ${terms}`,
+    noticeSubject: 'Ergebnis deiner Meldung',
+    notice: (domain: string) =>
+      `Danke für deine Meldung an ${domain}. Die Moderation hat sie geprüft und entschieden:`,
+    decisions: {
+      removed: 'Der Inhalt wurde entfernt.',
+      suspended: 'Das gemeldete Konto wurde gesperrt.',
+      no_violation:
+        'Wir haben keinen Verstoß gegen das Gesetz oder die Regeln gefunden: Der Inhalt bleibt.',
+    },
+    noticeAppeal: `Wenn du nicht einverstanden bist, kannst du uns an ${CONTACT} schreiben.`,
+    receivedSubject: 'Wir haben deine Meldung erhalten',
+    received: (domain: string, url: string) =>
+      `Wir haben deine Meldung an ${domain} erhalten zu:\n${url}\n\nWir schauen sie uns so bald wie möglich an, normalerweise innerhalb von 24–48 Stunden, und schreiben dir das Ergebnis.`,
+  },
+  zh: {
+    removedSubject: '你的部分内容已被删除',
+    suspendedSubject: '你的账号已被封禁',
+    removed: (domain: string) => `${domain} 的审核员删除了你的以下内容：`,
+    suspended: (domain: string) => `${domain} 的审核员封禁了你的账号。`,
+    ground: { illegal: '违法内容', rules: '违反服务器规则' },
+    groundLabel: '依据',
+    reasonLabel: '说明',
+    noReason: '（无更多说明）',
+    how: '该决定由审核团队的工作人员在收到举报或进行检查后作出，未使用自动化手段。',
+    appeal: (rules: string, terms: string) =>
+      `如果你认为这是一个错误，可以在 6 个月内回复这封邮件或写信至 ${CONTACT} 提出申诉：我们会重新审查。你也可以求助于庭外争议解决机构或向法院起诉。\n\n规则：${rules}\n服务条款：${terms}`,
+    noticeSubject: '你的举报处理结果',
+    notice: (domain: string) => `感谢你向 ${domain} 提交举报。审核员已经查看并作出如下决定：`,
+    decisions: {
+      removed: '该内容已被删除。',
+      suspended: '被举报的账号已被封禁。',
+      no_violation: '我们没有发现违反法律或规则的情况：该内容将保留。',
+    },
+    noticeAppeal: `如果你不同意，可以写信至 ${CONTACT}。`,
+    receivedSubject: '我们已收到你的举报',
+    received: (domain: string, url: string) =>
+      `我们已收到你向 ${domain} 提交的举报，涉及：\n${url}\n\n我们会尽快处理，通常在 24 到 48 小时内，并写信告知你处理结果。`,
+  },
 } as const;
 
 const pages = {
   it: { rules: 'https://disbigle.com/it/regole', terms: 'https://disbigle.com/it/termini' },
   en: { rules: 'https://disbigle.com/rules', terms: 'https://disbigle.com/terms' },
   es: { rules: 'https://disbigle.com/es/normas', terms: 'https://disbigle.com/es/terminos' },
+  fr: { rules: 'https://disbigle.com/fr/regles', terms: 'https://disbigle.com/fr/conditions' },
+  de: {
+    rules: 'https://disbigle.com/de/regeln',
+    terms: 'https://disbigle.com/de/nutzungsbedingungen',
+  },
+  zh: { rules: 'https://disbigle.com/rules', terms: 'https://disbigle.com/terms' },
 } as const;
 
 const plain = (html: string) =>

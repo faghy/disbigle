@@ -8,7 +8,7 @@ const escapeHtml = (text: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-type Lang = 'en' | 'it' | 'es';
+type Lang = 'en' | 'it' | 'es' | 'fr' | 'de' | 'zh';
 
 const strings = {
   en: {
@@ -44,6 +44,39 @@ const strings = {
     codeHelp: 'Copia este código y pégalo en la aplicación:',
     notYou: '¿No eres tú? Cierra la sesión e inicia sesión con otra cuenta.',
   },
+  fr: {
+    authorize: 'Autoriser',
+    deny: 'Refuser',
+    wantsAccess: 'veut utiliser ton compte',
+    signedInAs: 'Connecté en tant que',
+    permissions: 'Cette application pourra :',
+    error: "Erreur d'autorisation",
+    codeTitle: "Code d'autorisation",
+    codeHelp: "Copie ce code et colle-le dans l'application :",
+    notYou: "Ce n'est pas toi ? Déconnecte-toi et connecte-toi avec un autre compte.",
+  },
+  de: {
+    authorize: 'Autorisieren',
+    deny: 'Ablehnen',
+    wantsAccess: 'möchte dein Konto nutzen',
+    signedInAs: 'Angemeldet als',
+    permissions: 'Diese Anwendung kann dann:',
+    error: 'Autorisierungsfehler',
+    codeTitle: 'Autorisierungscode',
+    codeHelp: 'Kopiere diesen Code und füge ihn in die Anwendung ein:',
+    notYou: 'Nicht du? Melde dich ab und mit einem anderen Konto an.',
+  },
+  zh: {
+    authorize: '授权',
+    deny: '拒绝',
+    wantsAccess: '想要使用你的账号',
+    signedInAs: '当前登录账号',
+    permissions: '此应用将能够：',
+    error: '授权错误',
+    codeTitle: '授权码',
+    codeHelp: '复制此授权码并粘贴到应用中：',
+    notYou: '不是你？请退出登录，再用其他账号登录。',
+  },
 } as const;
 
 const scopeLabels: Record<Lang, Record<string, string>> = {
@@ -68,12 +101,41 @@ const scopeLabels: Record<Lang, Record<string, string>> = {
     push: 'recibir notificaciones push',
     profile: 'leer la información básica de tu perfil',
   },
+  fr: {
+    read: 'lire les données de ton compte, tes publications, tes notifications et tes listes',
+    write: 'publier, modifier et supprimer des publications, et changer ton profil',
+    follow: 'suivre, bloquer et masquer des comptes',
+    push: 'recevoir des notifications push',
+    profile: 'lire les informations de base de ton profil',
+  },
+  de: {
+    read: 'deine Kontodaten, Beiträge, Mitteilungen und Listen lesen',
+    write: 'Beiträge veröffentlichen, bearbeiten und löschen und dein Profil ändern',
+    follow: 'Konten folgen, sie blockieren und stummschalten',
+    push: 'Push-Mitteilungen empfangen',
+    profile: 'die grundlegenden Informationen deines Profils lesen',
+  },
+  zh: {
+    read: '读取你的账号数据、帖子、通知和列表',
+    write: '发布、编辑和删除帖子，以及修改你的个人资料',
+    follow: '关注、屏蔽和隐藏账号',
+    push: '接收推送通知',
+    profile: '读取你的基本个人资料信息',
+  },
 };
 
 export function pickLang(...candidates: (string | undefined | null)[]): Lang {
   for (const c of candidates) {
     const base = c?.toLowerCase().slice(0, 2);
-    if (base === 'it' || base === 'en' || base === 'es') return base;
+    if (
+      base === 'it' ||
+      base === 'en' ||
+      base === 'es' ||
+      base === 'fr' ||
+      base === 'de' ||
+      base === 'zh'
+    )
+      return base;
   }
   return 'en';
 }

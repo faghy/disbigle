@@ -1,0 +1,28 @@
+Disbigle ist ein freies Open-Source-Netzwerk, das dich von einer einzigen Timeline aus mit dem ganzen Fediverse verbindet: Folge Leuten auf Mastodon, diaspora*, Friendica, Hubzilla, Pixelfed, Misskey und vielen mehr und unterhalte dich mit ihnen.
+
+KEINE WERBUNG, KEIN ALGORITHMUS
+Deine Timeline zeigt die Beiträge der Leute, denen du folgst, das Neueste zuerst. Niemand entscheidet, was du siehst, und niemand verkauft deine Aufmerksamkeit.
+
+DEINE PRIVATSPHÄRE, DEINE REGELN
+• Aspekte: Ordne Leute in Gruppen (Familie, Freunde, Arbeit…) und wähle bei jedem Beitrag, wer ihn sieht, wie auf diaspora*.
+• Öffentliche Beiträge, nur für Follower oder privat.
+• Inhaltswarnungen und unscharf gestellte heikle Medien.
+• Kein Tracking: Die App spricht nur mit deinem eigenen Server.
+
+ALLES, WAS DU BRAUCHST
+• Beiträge mit Fotos, Umfragen, Erwähnungen und Hashtags, mit Knöpfen für Fett, Überschriften und Listen und einer Vorschau vor dem Veröffentlichen.
+• Private Nachrichten als Chat, mit „Gesehen“ und dem Status der Leute, mit denen du schreibst, wenn sie ihn teilen.
+• Fotoalben und ein Tab Medien in jedem Profil.
+• Übersetzung von Beiträgen auf dem Server, ohne Texte an fremde Dienste zu schicken.
+• Linkvorschauen ohne Tracking.
+• Mitteilungen, Lesezeichen, gelikte Beiträge, „Meine Aktivität“.
+• Beiträge und Hashtags ausblenden, Leute stummschalten oder blockieren, Inhalte der Moderation melden.
+• Helles und dunkles Design und acht Farben zur Auswahl.
+
+BRING DEIN KONTO MIT
+Du kommst von Mastodon oder diaspora*? Zieh über die Website hierher um: Deine Follower finden dich von selbst.
+
+WIRKLICH OFFEN
+Disbigle ist freie Software (Lizenz AGPL-3.0): Der Code ist öffentlich auf GitHub, und alle können ihren eigenen Server betreiben. Die App funktioniert mit app.disbigle.com und anderen Disbigle-Servern.
+
+Registrierungen auf app.disbigle.com werden von der Moderation freigegeben, um Spam und Fake-Konten fernzuhalten.

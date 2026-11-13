@@ -10,7 +10,10 @@
   "languages": {
     "en": "English",
     "it": "Italiano",
-    "es": "Español"
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "zh": "简体中文"
   },
   "nav": {
     "skipToContent": "Vai al contenuto",

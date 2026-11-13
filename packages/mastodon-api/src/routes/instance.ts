@@ -114,7 +114,7 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
         domain_count: info.stats.domains,
       },
       thumbnail,
-      languages: ['en', 'it', 'es'],
+      languages: ['en', 'it', 'es', 'fr', 'de', 'zh'],
       registrations: info.mode !== 'closed',
       approval_required: info.mode === 'approval',
       invites_enabled: info.mode === 'invite',
@@ -140,7 +140,7 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
       usage: { users: { active_month: info.stats.users } },
       thumbnail: { url: thumbnail },
       icon: [{ src: thumbnail, size: '512x512' }],
-      languages: ['en', 'it', 'es'],
+      languages: ['en', 'it', 'es', 'fr', 'de', 'zh'],
       configuration: {
         urls: { streaming, status: null },
         vapid: { public_key: info.vapid },

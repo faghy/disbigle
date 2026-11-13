@@ -24,6 +24,21 @@ const texts = {
     body: (link: string, domain: string) =>
       `¡Bienvenido a ${domain}!\n\nAbre este enlace antes de tres días para confirmar tu dirección de correo y activar tu cuenta:\n${link}\n\nSi no te has registrado, ignora este correo: sin la confirmación no pasa nada.`,
   },
+  fr: {
+    subject: 'Confirme ton adresse e-mail',
+    body: (link: string, domain: string) =>
+      `Bienvenue sur ${domain} !\n\nOuvre ce lien dans les trois jours pour confirmer ton adresse e-mail et activer ton compte :\n${link}\n\nSi tu ne t'es pas inscrit, ignore cet e-mail : rien ne se passe sans la confirmation.`,
+  },
+  de: {
+    subject: 'Bestätige deine E-Mail-Adresse',
+    body: (link: string, domain: string) =>
+      `Willkommen bei ${domain}!\n\nÖffne diesen Link innerhalb von drei Tagen, um deine E-Mail-Adresse zu bestätigen und dein Konto zu aktivieren:\n${link}\n\nWenn du dich nicht registriert hast, ignoriere diese E-Mail: Ohne Bestätigung passiert nichts.`,
+  },
+  zh: {
+    subject: '确认你的邮箱地址',
+    body: (link: string, domain: string) =>
+      `欢迎来到 ${domain}！\n\n请在三天内打开此链接，确认你的邮箱地址并激活账号：\n${link}\n\n如果你没有注册过，请忽略这封邮件：未经确认不会有任何操作。`,
+  },
 } as const;
 
 export { emailVerificationRequired };

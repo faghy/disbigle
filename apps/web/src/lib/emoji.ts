@@ -50,6 +50,21 @@ const sources: Record<Language, () => Promise<[CompactEmoji[], Messages]>> = {
       import('emojibase-data/es/compact.json').then((m) => m.default as CompactEmoji[]),
       import('emojibase-data/es/messages.json').then((m) => m.default as Messages),
     ]),
+  fr: () =>
+    Promise.all([
+      import('emojibase-data/fr/compact.json').then((m) => m.default as CompactEmoji[]),
+      import('emojibase-data/fr/messages.json').then((m) => m.default as Messages),
+    ]),
+  de: () =>
+    Promise.all([
+      import('emojibase-data/de/compact.json').then((m) => m.default as CompactEmoji[]),
+      import('emojibase-data/de/messages.json').then((m) => m.default as Messages),
+    ]),
+  zh: () =>
+    Promise.all([
+      import('emojibase-data/zh/compact.json').then((m) => m.default as CompactEmoji[]),
+      import('emojibase-data/zh/messages.json').then((m) => m.default as Messages),
+    ]),
 };
 
 /** Group 2 holds the skin-tone and hair components: not emoji to pick on their own. */

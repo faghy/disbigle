@@ -33,6 +33,8 @@ export function moveInfoUrl(): string {
   const language = currentLanguage();
   if (language === 'it') return 'https://disbigle.com/it/porta-il-tuo-account';
   if (language === 'es') return 'https://disbigle.com/es/trae-tu-cuenta';
+  if (language === 'fr') return 'https://disbigle.com/fr/apportez-votre-compte';
+  if (language === 'de') return 'https://disbigle.com/de/konto-mitbringen';
   return 'https://disbigle.com/bring-your-account';
 }
 
