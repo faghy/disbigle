@@ -195,7 +195,7 @@ const pages = {
     rules: 'https://disbigle.com/de/regeln',
     terms: 'https://disbigle.com/de/nutzungsbedingungen',
   },
-  zh: { rules: 'https://disbigle.com/rules', terms: 'https://disbigle.com/terms' },
+  zh: { rules: 'https://disbigle.com/zh/rules', terms: 'https://disbigle.com/zh/terms' },
 } as const;
 
 const plain = (html: string) =>
