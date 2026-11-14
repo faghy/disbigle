@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   diasporaMentionsToMarkdown,
+  extractMarkdownImages,
   guidFromId,
   htmlToText,
   mentionsToDiaspora,
@@ -45,5 +46,33 @@ describe('helpers', () => {
     expect(guidFromId('0190f5b2-1c2d-7e3f-8a9b-0c1d2e3f4a5b')).toBe(
       '0190f5b21c2d7e3f8a9b0c1d2e3f4a5b',
     );
+  });
+});
+
+describe('inline images', () => {
+  it('takes markdown images out of the text', () => {
+    expect(
+      extractMarkdownImages('![pet training](https://img.example/a/b.webp "pet training")'),
+    ).toEqual({ text: '', images: [{ url: 'https://img.example/a/b.webp', alt: 'pet training' }] });
+  });
+
+  it('keeps the text around and the target of linked images', () => {
+    expect(
+      extractMarkdownImages(
+        'Look:\n\n![](https://a.example/1.png)\n\n[![a \\] b](https://a.example/2.jpg)](https://a.example/page) end',
+      ),
+    ).toEqual({
+      text: 'Look:\n\nhttps://a.example/page end',
+      images: [
+        { url: 'https://a.example/1.png', alt: '' },
+        { url: 'https://a.example/2.jpg', alt: 'a ] b' },
+      ],
+    });
+  });
+
+  it('leaves code, plain links and non-http images alone', () => {
+    const text =
+      '`![x](https://a.example/1.png)` [link](https://a.example) ![y](data:image/png;base64,AA)';
+    expect(extractMarkdownImages(text)).toEqual({ text, images: [] });
   });
 });

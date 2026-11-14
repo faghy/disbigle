@@ -66,6 +66,48 @@ export function mentionsToDiaspora(
     .join('');
 }
 
+export interface MarkdownImage {
+  url: string;
+  /** Alt text, if any. */
+  alt: string;
+}
+
+/** `![alt](url "title")`, optionally wrapped in a link: `[![alt](url)](target)`. */
+const MARKDOWN_IMAGE =
+  /(\[)?!\[((?:\\.|[^\]\\])*)\]\(\s*<?(https?:\/\/[^\s)>]+)>?(?:\s+"[^"]*")?\s*\)(?:\]\(\s*<?(https?:\/\/[^\s)>]+)>?(?:\s+"[^"]*")?\s*\))?/g;
+
+/**
+ * Takes the inline images out of a diaspora* text: diaspora* shows `![alt](url)` as a picture,
+ * while our posts carry pictures as attachments. A linked image leaves its link target behind.
+ * Code spans and blocks are left untouched.
+ */
+export function extractMarkdownImages(text: string): { text: string; images: MarkdownImage[] } {
+  const images: MarkdownImage[] = [];
+  const rest = text
+    .split(/(```[\s\S]*?```|`[^`\n]*`)/g)
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(
+            MARKDOWN_IMAGE,
+            (
+              _match,
+              open: string | undefined,
+              alt: string,
+              url: string,
+              target: string | undefined,
+            ) => {
+              images.push({ url, alt: alt.replace(/\\(.)/g, '$1').trim() });
+              // A linked image leaves its target; a lone `[` before an image stays.
+              if (target) return target;
+              return open ?? '';
+            },
+          ),
+    )
+    .join('');
+  return { text: rest.replace(/\n{3,}/g, '\n\n').trim(), images };
+}
+
 /** Very small HTML → text conversion, for posts that have no markdown source (e.g. received over ActivityPub). */
 export function htmlToText(html: string): string {
   return html

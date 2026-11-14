@@ -60,7 +60,12 @@ import type { DiasporaBridge } from './bridge.ts';
 import { moveVerified } from './moves.ts';
 import { recipientsFor, sendToRecipients, signerFor } from './outgoing.ts';
 import { answerGuids, pollByGuid, pollOfPost, storeAnswerGuids } from './polls.ts';
-import { diasporaMentionsToMarkdown, mimeTypeFromName, parseDiasporaMentions } from './text.ts';
+import {
+  diasporaMentionsToMarkdown,
+  extractMarkdownImages,
+  mimeTypeFromName,
+  parseDiasporaMentions,
+} from './text.ts';
 
 const { postAudiences, likes } = schema;
 
@@ -83,11 +88,21 @@ export interface RenderedText {
   html: string;
   mentionIds: string[];
   tags: string[];
+  /** Inline images of the text, taken out of it: they become attachments. */
+  images: RemoteAttachment[];
 }
 
 /** Renders diaspora* markdown (with `@{Name; id}` mentions) to sanitised HTML. */
-export async function renderDiasporaText(ctx: CoreContext, text: string): Promise<RenderedText> {
+export async function renderDiasporaText(
+  ctx: CoreContext,
+  source: string,
+  options: { keepImages?: boolean } = {},
+): Promise<RenderedText> {
   const base = ctx.config.PUBLIC_URL;
+  // Profiles have no attachments: there inline images stay as links.
+  const { text, images } = options.keepImages
+    ? { text: source, images: [] }
+    : extractMarkdownImages(source);
   const known = new Map<string, ActorRow>();
   for (const mention of parseDiasporaMentions(text)) {
     const actor = await knownActor(ctx, mention.id);
@@ -103,7 +118,16 @@ export async function renderDiasporaText(ctx: CoreContext, text: string): Promis
     tagUrl: (tag) => `${base}/tags/${encodeURIComponent(tag)}`,
     localOrigin: new URL(base).origin,
   } as Parameters<typeof renderMarkdown>[1]);
-  return { html, mentionIds: [...known.values()].map((a) => a.id), tags: extractTags(text) };
+  return {
+    html,
+    mentionIds: [...known.values()].map((a) => a.id),
+    tags: extractTags(text),
+    images: images.map((image) => ({
+      url: image.url,
+      mimeType: mimeTypeFromName(new URL(image.url).pathname),
+      ...(image.alt ? { description: image.alt } : {}),
+    })),
+  };
 }
 
 async function audienceOf(ctx: CoreContext, postId: string): Promise<string[]> {
@@ -231,6 +255,7 @@ async function statusMessage(
     width: photo.width ?? null,
     height: photo.height ?? null,
   }));
+  attachments.push(...rendered.images);
   const audience = [...rendered.mentionIds, ...(recipient ? [recipient.id] : [])];
   const groupActorId = entity.public
     ? await memberGroupNamed(ctx, author.id, rendered.mentionIds)
@@ -316,6 +341,7 @@ async function comment(
     mentionActorIds: rendered.mentionIds,
     tags: rendered.tags,
     inReplyTo: { postId: parent.id },
+    attachments: rendered.images,
     ...(entity.createdAt ? { publishedAt: entity.createdAt } : {}),
   });
   if (id && recipient && !isPublicVisibility(visibility))
@@ -409,7 +435,7 @@ async function profile(bridge: DiasporaBridge, entity: Profile, author: ActorRow
     protocol: 'diaspora',
     ...(name ? { displayName: name } : {}),
     ...(entity.bio !== undefined
-      ? { summaryHtml: (await renderDiasporaText(ctx, entity.bio)).html }
+      ? { summaryHtml: (await renderDiasporaText(ctx, entity.bio, { keepImages: true })).html }
       : {}),
     ...(entity.imageUrl
       ? { avatarUrl: new URL(entity.imageUrl, `https://${author.domain}/`).href }
@@ -444,6 +470,7 @@ async function conversation(
     audienceActorIds: [...participants, ...rendered.mentionIds],
     mentionActorIds: rendered.mentionIds,
     tags: rendered.tags,
+    attachments: rendered.images,
     ...(entity.createdAt ? { publishedAt: entity.createdAt } : {}),
   });
   if (!id) return;
