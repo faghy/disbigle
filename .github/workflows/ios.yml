@@ -51,6 +51,28 @@ jobs:
           for b in get('/builds', **{'filter[app]': app['id'], 'sort': '-uploadedDate', 'limit': 5})['data']:
               a = b['attributes']
               print('Build', a['version'], a.get('processingState'), a.get('uploadedDate'), 'expired' if a.get('expired') else '')
+          # Where the app is sold, and why not elsewhere (contentStatuses).
+          availability = get(f"/apps/{app['id']}/appAvailabilityV2")
+          if 'data' not in availability:
+              print('Availability', availability)
+          else:
+              print('Availability in new territories:', availability['data']['attributes'].get('availableInNewTerritories'))
+              url = f"https://api.appstoreconnect.apple.com/v2/appAvailabilities/{availability['data']['id']}/territoryAvailabilities"
+              params = {'include': 'territory', 'limit': 200}
+              groups = {}
+              while url:
+                  page = requests.get(url, params=params, headers={'Authorization': f'Bearer {token}'}).json()
+                  params = None
+                  for t in page.get('data', []):
+                      a = t['attributes']
+                      territory = t['relationships']['territory']['data']['id']
+                      key = (a.get('available'), ','.join(a.get('contentStatuses') or []))
+                      groups.setdefault(key, []).append(territory)
+                      if territory in ('ITA', 'USA', 'DEU', 'FRA', 'ESP', 'GBR', 'CHE'):
+                          print('Territory', territory, a)
+                  url = page.get('links', {}).get('next')
+              for (available, statuses), territories in sorted(groups.items(), key=lambda g: -len(g[1])):
+                  print('available' if available else 'NOT available', statuses or '-', len(territories), ' '.join(sorted(territories)[:60]))
           PY
 
   build:
