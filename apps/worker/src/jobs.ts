@@ -29,8 +29,16 @@ export interface Job {
 
 const HOUR = 60 * 60 * 1000;
 
-/** Remote images that failed to download in this process; not retried until restart. */
-const failedMedia = new Set<string>();
+/** Remote images that failed to download, with the time of the failure. */
+const failedMedia = new Map<string, number>();
+/** A failed remote image is tried again after this long (the remote server may come back). */
+const RETRY_FAILED_MS = 6 * HOUR;
+
+/** Failures still waiting for their retry; older ones are forgotten. */
+function recentFailures(now = Date.now()): Set<string> {
+  for (const [key, at] of failedMedia) if (now - at >= RETRY_FAILED_MS) failedMedia.delete(key);
+  return new Set(failedMedia.keys());
+}
 
 export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job[] {
   return [
@@ -47,18 +55,23 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
       every: 60 * 1000 + 1000,
       run: async () => {
         if (process.env.CACHE_REMOTE_MEDIA === 'false') return 'disabled';
-        const pending = await listUncachedRemoteMedia(ctx, 25);
+        const failed = recentFailures();
+        const pending = await listUncachedRemoteMedia(
+          ctx,
+          25,
+          [...failed].filter((key) => !key.includes(':')),
+        );
         let cached = 0;
-        for (const media of pending.filter((m) => !failedMedia.has(m.id))) {
+        for (const media of pending) {
           try {
             const { data, type } = await safeFetch(media.remoteUrl ?? '', {
               maxBytes: MAX_IMAGE_BYTES,
             });
             if (type.startsWith('image/') && (await storeCachedRemoteImage(ctx, media.id, data)))
               cached += 1;
-            else failedMedia.add(media.id);
+            else failedMedia.set(media.id, Date.now());
           } catch {
-            failedMedia.add(media.id);
+            failedMedia.set(media.id, Date.now());
             // Unreachable or invalid: readers keep loading the remote URL.
           }
         }
@@ -67,7 +80,7 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
             const remote = kind === 'avatar' ? actor.avatarRemoteUrl : actor.headerRemoteUrl;
             const current = kind === 'avatar' ? actor.avatarUrl : actor.headerUrl;
             const key = `${actor.id}:${kind}:${remote}`;
-            if (!remote || current !== remote || failedMedia.has(key)) continue;
+            if (!remote || current !== remote || failed.has(key)) continue;
             try {
               const { data, type } = await safeFetch(remote, { maxBytes: MAX_IMAGE_BYTES });
               if (
@@ -75,9 +88,9 @@ export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job
                 (await storeCachedProfileImage(ctx, actor.id, kind, data))
               )
                 cached += 1;
-              else failedMedia.add(key);
+              else failedMedia.set(key, Date.now());
             } catch {
-              failedMedia.add(key);
+              failedMedia.set(key, Date.now());
             }
           }
         }

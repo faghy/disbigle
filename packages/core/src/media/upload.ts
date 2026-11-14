@@ -1,6 +1,6 @@
 import { schema, uuidv7 } from '@disbigle/db';
 import type { MediaAttachment } from '@disbigle/shared';
-import { and, eq, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, lt, notInArray, sql } from 'drizzle-orm';
 import sharp, { type Metadata, type Sharp } from 'sharp';
 import { type CoreContext, emit } from '../context.ts';
 import { DomainError } from '../errors.ts';
@@ -247,8 +247,15 @@ export async function removeProfileImage(
   await emit(ctx, { type: 'profile.updated', actorId });
 }
 
-/** Remote image attachments not cached yet, oldest first. */
-export async function listUncachedRemoteMedia(ctx: CoreContext, limit: number) {
+/**
+ * Remote image attachments not cached yet, newest first. `skip` lists attachments whose download
+ * failed recently: without it they would fill every batch and keep newer images waiting.
+ */
+export async function listUncachedRemoteMedia(
+  ctx: CoreContext,
+  limit: number,
+  skip: string[] = [],
+) {
   const { mediaAttachments } = schema;
   return ctx.db
     .select()
@@ -259,9 +266,10 @@ export async function listUncachedRemoteMedia(ctx: CoreContext, limit: number) {
         sql`${mediaAttachments.remoteUrl} is not null`,
         eq(mediaAttachments.type, 'image'),
         sql`${mediaAttachments.createdAt} > now() - interval '7 days'`,
+        ...(skip.length > 0 ? [notInArray(mediaAttachments.id, skip)] : []),
       ),
     )
-    .orderBy(mediaAttachments.createdAt)
+    .orderBy(desc(mediaAttachments.createdAt))
     .limit(limit);
 }
 

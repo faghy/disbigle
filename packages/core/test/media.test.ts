@@ -136,6 +136,9 @@ describe('remote media cache', () => {
       rows.filter((r) => r.postId === postId),
     );
     expect(pending?.remoteUrl).toBe('https://remote.example/photo.jpg');
+    // A recent failure is left out, so it cannot hold newer images back.
+    const skipped = await listUncachedRemoteMedia(base(), 100, [pending?.id ?? '']);
+    expect(skipped.some((r) => r.id === pending?.id)).toBe(false);
     expect(
       await storeCachedRemoteImage(ctx(), pending?.id ?? '', await photoWithGps(1200, 800)),
     ).toBe(true);
