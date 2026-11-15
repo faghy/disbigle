@@ -26,7 +26,12 @@ describe('articles from a website (Cleitext "disbigle" plugin)', () => {
       '/api/v1/disbigle/articles',
       {
         translations,
-        mentions: [`@${ersel.username}@disbigle.test`, `${bob.username}@disbigle.test`],
+        mentions: [
+          `@${ersel.username}@disbigle.test`,
+          `${bob.username}@disbigle.test`,
+          // The site's own account, named in the article: never mentioned.
+          `${site.username}@disbigle.test`,
+        ],
         tags: ['news'],
       },
       { 'idempotency-key': 'article-1' },
@@ -44,6 +49,7 @@ describe('articles from a website (Cleitext "disbigle" plugin)', () => {
     const mentioned = (s: { mentions: { username: string }[] }) =>
       s.mentions.map((m) => m.username);
     expect(mentioned(status)).toEqual([bob.username]);
+    expect(status.content).not.toContain(`@${site.username}@`);
 
     // Ersel reads Disbigle in Spanish: a quiet reply in Spanish, mentioning only her.
     expect(replies).toHaveLength(1);

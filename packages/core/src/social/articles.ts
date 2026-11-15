@@ -119,6 +119,11 @@ export async function publishArticle(
 
   // Mentioned people of this server whose language the site has get the article in it.
   const groups = new Map<Locale, string[]>();
+  // The account that posts never mentions itself (an article about it names it, too).
+  const [author] = await ctx.db
+    .select({ username: actors.username })
+    .from(actors)
+    .where(eq(actors.id, authorActorId));
   const seen = new Set<string>();
   for (const raw of input.mentions) {
     const handle = raw.replace(/^@/, '');
@@ -126,6 +131,12 @@ export async function publishArticle(
     if (seen.has(key)) continue;
     seen.add(key);
     const [username = '', domain = ''] = handle.split('@');
+    if (
+      author &&
+      username.toLowerCase() === author.username.toLowerCase() &&
+      isLocalDomain(ctx.config, domain)
+    )
+      continue;
     const language = await localLanguage(ctx, username, domain);
     const target =
       language && language !== main && input.translations[language as Locale]
