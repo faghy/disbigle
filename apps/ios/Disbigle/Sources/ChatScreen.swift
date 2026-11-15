@@ -178,6 +178,7 @@ struct ChatScreen: View {
 }
 
 private struct ChatBubble: View {
+  @Environment(AppModel.self) private var model
   @Environment(Router.self) private var router
   let status: Status
   let mine: Bool
@@ -190,8 +191,12 @@ private struct ChatBubble: View {
           .padding(.leading, 12).padding(.top, 6)
       }
       VStack(alignment: .leading, spacing: 6) {
-        if !status.spoilerText.isEmpty { Text(status.spoilerText).fontWeight(.semibold) }
-        let text = RichText.attributed(RichText.withoutLeadingMentions(status.content))
+        // Messages from others can be translated, as posts (the server checks you are in the chat).
+        let translation = mine ? nil : model.shownTranslation(of: status)
+        let spoiler = translation?.spoilerText.flatMap { $0.isEmpty ? nil : $0 } ?? status.spoilerText
+        if !spoiler.isEmpty { Text(spoiler).fontWeight(.semibold) }
+        let text = RichText.attributed(
+          RichText.withoutLeadingMentions(translation?.content ?? status.content))
         if !text.characters.isEmpty { Text(text) }
         if !status.mediaAttachments.isEmpty {
           MediaGrid(media: status.mediaAttachments, sensitive: status.sensitive)
@@ -206,6 +211,9 @@ private struct ChatBubble: View {
         in: UnevenRoundedRectangle(
           topLeadingRadius: 18, bottomLeadingRadius: mine ? 18 : 4,
           bottomTrailingRadius: mine ? 4 : 18, topTrailingRadius: 18))
+      if !mine {
+        TranslationControls(status: status).padding(.horizontal, 6)
+      }
       Button {
         router.go(.status(status))
       } label: {

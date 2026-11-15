@@ -17,8 +17,6 @@ struct StatusRow: View {
   @State private var confirmReshare = false
   @State private var reshareBlocked = false
   @State private var actionError: String?
-  @State private var translating = false
-  @State private var translationFailed = false
   /** Who liked or reshared one of your posts, shown in a sheet. */
   @State private var reactions: Client.Reaction?
   /** What was just hidden in place of the post, to say so and offer to undo it. */
@@ -169,48 +167,11 @@ struct StatusRow: View {
         .textSelection(.enabled)
         .fixedSize(horizontal: false, vertical: true)
     }
-    translationControls
+    TranslationControls(status: shown)
   }
 
   /** The translation on show, if the person asked for it. */
-  private var translation: StatusTranslation? {
-    model.showingTranslation.contains(shown.id) ? model.translations[shown.id] : nil
-  }
-
-  @ViewBuilder private var translationControls: some View {
-    if let translation {
-      HStack(spacing: 8) {
-        Text("Translated from \(languageName(translation.detectedSourceLanguage ?? shown.language))")
-          .foregroundStyle(.secondary)
-        Button("Show original") { _ = model.showingTranslation.remove(shown.id) }
-      }
-      .font(.footnote)
-      .buttonStyle(.borderless)
-    } else if model.canTranslate(shown) {
-      HStack(spacing: 8) {
-        if translating {
-          ProgressView().controlSize(.small)
-          Text("Translating…").foregroundStyle(.secondary)
-        } else {
-          Button {
-            Task { await translate() }
-          } label: {
-            Label("Translate", systemImage: "character.bubble")
-          }
-          if translationFailed {
-            Text("Translation is not available right now").foregroundStyle(.secondary)
-          }
-        }
-      }
-      .font(.footnote)
-      .buttonStyle(.borderless)
-    }
-  }
-
-  private func languageName(_ code: String?) -> String {
-    guard let code = Translations.baseLanguage(code) else { return "" }
-    return Locale.current.localizedString(forLanguageCode: code) ?? code
-  }
+  private var translation: StatusTranslation? { model.shownTranslation(of: shown) }
 
   private var details: some View {
     HStack(spacing: 6) {
@@ -364,17 +325,6 @@ struct StatusRow: View {
       hidden = nil
     } catch {
       actionError = error.localizedDescription
-    }
-  }
-
-  private func translate() async {
-    translating = true
-    translationFailed = false
-    defer { translating = false }
-    do {
-      try await model.translate(shown)
-    } catch {
-      translationFailed = true
     }
   }
 
@@ -792,6 +742,60 @@ struct PollView: View {
     defer { sending = false }
     if let updated = try? await client.vote(in: poll.id, choices: choices.sorted()) {
       onVote(updated)
+    }
+  }
+}
+
+/** "Translate" under a post or message others wrote in another language; the translation replaces the text. */
+struct TranslationControls: View {
+  @Environment(AppModel.self) private var model
+  let status: Status
+  @State private var translating = false
+  @State private var failed = false
+
+  var body: some View {
+    if let translation = model.shownTranslation(of: status) {
+      HStack(spacing: 8) {
+        Text("Translated from \(languageName(translation.detectedSourceLanguage ?? status.language))")
+          .foregroundStyle(.secondary)
+        Button("Show original") { _ = model.showingTranslation.remove(status.id) }
+      }
+      .font(.footnote)
+      .buttonStyle(.borderless)
+    } else if model.canTranslate(status) {
+      HStack(spacing: 8) {
+        if translating {
+          ProgressView().controlSize(.small)
+          Text("Translating…").foregroundStyle(.secondary)
+        } else {
+          Button {
+            Task { await translate() }
+          } label: {
+            Label("Translate", systemImage: "character.bubble")
+          }
+          if failed {
+            Text("Translation is not available right now").foregroundStyle(.secondary)
+          }
+        }
+      }
+      .font(.footnote)
+      .buttonStyle(.borderless)
+    }
+  }
+
+  private func languageName(_ code: String?) -> String {
+    guard let code = Translations.baseLanguage(code) else { return "" }
+    return Locale.current.localizedString(forLanguageCode: code) ?? code
+  }
+
+  private func translate() async {
+    translating = true
+    failed = false
+    defer { translating = false }
+    do {
+      try await model.translate(status)
+    } catch {
+      failed = true
     }
   }
 }

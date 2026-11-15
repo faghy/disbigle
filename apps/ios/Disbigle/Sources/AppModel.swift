@@ -147,6 +147,11 @@ final class AppModel {
     return Translations.canTranslate(from: status.language, to: readerLanguage, languages: languages)
   }
 
+  /** The translation of a post on show, if the person asked for it. */
+  func shownTranslation(of status: Status) -> StatusTranslation? {
+    showingTranslation.contains(status.id) ? translations[status.id] : nil
+  }
+
   /** Translates a post (or reuses its translation) and shows it translated. */
   func translate(_ status: Status) async throws {
     if translations[status.id] == nil {
