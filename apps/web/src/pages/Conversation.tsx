@@ -30,6 +30,8 @@ import {
   profilePath,
   StatusContent,
   statusPath,
+  TranslationControl,
+  useStatusTranslation,
 } from '../components/StatusCard.tsx';
 import { useStream } from '../components/StreamingProvider.tsx';
 import { Alert, Button, cx, LoadingState } from '../components/ui.tsx';
@@ -294,7 +296,10 @@ function Bubble({
   showAuthor: boolean;
 }) {
   const { i18n } = useTranslation();
-  const html = withoutLeadingMentions(status.content);
+  // Messages from others can be translated, as posts (the server checks you are in the chat).
+  const translation = useStatusTranslation(status, mine);
+  const shown = translation.translation;
+  const html = withoutLeadingMentions(shown?.content ?? status.content);
   return (
     <div className={cx('flex max-w-[85%] flex-col', mine ? 'self-end items-end' : 'self-start')}>
       {showAuthor && !mine && (
@@ -308,7 +313,9 @@ function Bubble({
           mine ? 'rounded-br-md bg-accent text-accent-fg' : 'rounded-bl-md bg-surface-muted',
         )}
       >
-        {status.summary && <p className="mb-1 font-semibold">{status.summary}</p>}
+        {(shown?.summary || status.summary) && (
+          <p className="mb-1 font-semibold">{shown?.summary || status.summary}</p>
+        )}
         <StatusContent
           html={html}
           mentions={status.mentions}
@@ -320,6 +327,11 @@ function Bubble({
           </div>
         )}
       </div>
+      {translation.offered && (
+        <div className="px-2">
+          <TranslationControl translation={translation} />
+        </div>
+      )}
       <Link
         {...statusPath(status)}
         className="px-2 pt-0.5 text-[11px] text-fg-muted hover:underline focus-ring"

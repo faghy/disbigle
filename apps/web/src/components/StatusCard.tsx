@@ -756,7 +756,7 @@ function languageName(code: string, locale: string) {
  * "Translate" under a post written in a language other than the reader's, when the server
  * has a translation service. The translation replaces the text until "Show original".
  */
-function useStatusTranslation(status: Status, isAuthor: boolean) {
+export function useStatusTranslation(status: Status, isAuthor: boolean) {
   const { i18n } = useTranslation();
   const instance = useInstance();
   const signedIn = Boolean(useCurrentUser());
@@ -788,7 +788,7 @@ function useStatusTranslation(status: Status, isAuthor: boolean) {
   };
 }
 
-function TranslationControl({
+export function TranslationControl({
   translation,
 }: {
   translation: ReturnType<typeof useStatusTranslation>;
