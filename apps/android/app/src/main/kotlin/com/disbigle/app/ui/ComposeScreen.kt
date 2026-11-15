@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -458,7 +457,12 @@ fun readImage(context: Context, uri: Uri): Pair<Bitmap, ByteArray> {
   return bitmap to out.toByteArray()
 }
 
-/** Buttons that write Markdown (as diaspora* reads it), and the switch to a preview of the post. */
+/**
+ * Buttons that write Markdown (as diaspora* reads it), and the switch to a preview of the post.
+ * The buttons wrap onto a second line on narrow screens, so none is hidden off the edge, and the
+ * preview switch always stays in sight.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun FormattingBar(previewing: Boolean, onPreview: (Boolean) -> Unit, onFormat: (com.disbigle.kit.Format) -> Unit) {
   val buttons = listOf(
@@ -472,28 +476,26 @@ private fun FormattingBar(previewing: Boolean, onPreview: (Boolean) -> Unit, onF
     com.disbigle.kit.Format.CODE to ("</>" to R.string.format_code),
     com.disbigle.kit.Format.LINK to ("🔗" to R.string.format_link),
   )
-  Row(
-    Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    for ((format, look) in buttons) {
-      val (glyph, label) = look
-      val description = stringResource(label)
-      androidx.compose.material3.TextButton(
-        onClick = { onFormat(format) },
-        enabled = !previewing,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
-        modifier = Modifier.semantics { contentDescription = description },
-      ) {
-        Text(
-          glyph,
-          fontWeight = if (format == com.disbigle.kit.Format.BOLD) FontWeight.Bold else null,
-          fontStyle = if (format == com.disbigle.kit.Format.ITALIC) androidx.compose.ui.text.font.FontStyle.Italic else null,
-          textDecoration = if (format == com.disbigle.kit.Format.STRIKE) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
-        )
+  Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    androidx.compose.foundation.layout.FlowRow(Modifier.weight(1f)) {
+      for ((format, look) in buttons) {
+        val (glyph, label) = look
+        val description = stringResource(label)
+        androidx.compose.material3.TextButton(
+          onClick = { onFormat(format) },
+          enabled = !previewing,
+          contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
+          modifier = Modifier.semantics { contentDescription = description },
+        ) {
+          Text(
+            glyph,
+            fontWeight = if (format == com.disbigle.kit.Format.BOLD) FontWeight.Bold else null,
+            fontStyle = if (format == com.disbigle.kit.Format.ITALIC) androidx.compose.ui.text.font.FontStyle.Italic else null,
+            textDecoration = if (format == com.disbigle.kit.Format.STRIKE) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+          )
+        }
       }
     }
-    Spacer(Modifier.weight(1f))
     androidx.compose.material3.FilterChip(
       selected = previewing,
       onClick = { onPreview(!previewing) },
