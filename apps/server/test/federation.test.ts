@@ -356,6 +356,8 @@ describe('federation between two instances', () => {
         (await alice.client.get(`/api/v1/accounts/relationships?id[]=${remoteBob.id}`)).json()[0]
           ?.following,
     );
+    // Bob answers someone Alice doesn't follow: by default such replies stay off her home.
+    await alice.client.patch('/api/v1/me/settings', { homeReplies: 'all' });
 
     // Alice's server knows nothing about Dave or his post.
     const davePost = (
