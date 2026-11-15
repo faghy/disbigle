@@ -472,6 +472,10 @@
       "preview": "Anteprima",
       "placeholder": "testo",
       "empty": "Ancora niente da vedere."
+    },
+    "draft": {
+      "restored": "Bozza ripresa da dove l'avevi lasciata.",
+      "discard": "Elimina"
     }
   },
   "status": {

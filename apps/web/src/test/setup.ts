@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+import { clearDrafts } from '../lib/drafts.ts';
 import i18n from '../lib/i18n.ts';
 import { MockWebSocket } from './mockWebSocket.ts';
 
@@ -21,6 +22,8 @@ globalThis.WebSocket = MockWebSocket as unknown as typeof WebSocket;
 afterEach(async () => {
   cleanup();
   MockWebSocket.reset();
+  // Composer drafts live in localStorage: each test starts with an empty composer.
+  clearDrafts();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   await i18n.changeLanguage('en');

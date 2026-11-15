@@ -17,6 +17,7 @@ import {
   useUnreadCount,
 } from '../api/socialQueries.ts';
 import { useDismiss } from '../lib/dismiss.ts';
+import { clearDrafts } from '../lib/drafts.ts';
 import { currentLanguage, isLanguage, type Language, languages, setLanguage } from '../lib/i18n.ts';
 import { usePresenceHeartbeat } from '../lib/presence.ts';
 import { setTheme, themes, useTheme } from '../lib/theme.ts';
@@ -64,6 +65,7 @@ export function useSignOut() {
       await navigate({ to: '/' });
       queryClient.setQueryData(queryKeys.me, null);
       clearUserData(queryClient);
+      clearDrafts();
     },
   });
 }

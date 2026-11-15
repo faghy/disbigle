@@ -464,6 +464,10 @@
       "preview": "预览",
       "placeholder": "文本",
       "empty": "还没有可预览的内容。"
+    },
+    "draft": {
+      "restored": "已恢复你上次未发送的草稿。",
+      "discard": "丢弃"
     }
   },
   "status": {

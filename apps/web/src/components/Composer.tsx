@@ -15,6 +15,7 @@ import { useCreateStatus } from '../api/mutations.ts';
 import { useCurrentUser, useLimits } from '../api/queries.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { useAutoGrow } from '../lib/autoGrow.ts';
+import { draftKey, loadDraft, removeDraft, saveDraft } from '../lib/drafts.ts';
 import { applyFormat, type Format, shortcutFormat } from '../lib/markdownFormat.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
@@ -85,7 +86,14 @@ export function Composer({
   const mention =
     replyTo && replyTo.account.id !== user?.account.id ? `@${replyTo.account.acct} ` : '';
 
-  const [content, setContent] = useState(mention + initialText);
+  // What was being written here last time, unless the composer opens with a given text.
+  const draftId = user
+    ? draftKey(user.account.id, { replyToId: replyTo?.id, groupId: groupProp?.id })
+    : null;
+  const [restored] = useState(() => (draftId && !initialText ? loadDraft(draftId) : null));
+  const [draftNotice, setDraftNotice] = useState(restored !== null);
+
+  const [content, setContent] = useState(restored?.content ?? mention + initialText);
   useEffect(() => {
     if (editContentRef) editContentRef.current = (edit) => setContent(edit);
   }, [editContentRef]);
@@ -94,8 +102,8 @@ export function Composer({
       ? { visibility: initialReplyVisibility(replyTo), aspectIds: [] }
       : (initialAudience ?? { visibility: 'public', aspectIds: [] }),
   );
-  const [warningOpen, setWarningOpen] = useState(false);
-  const [summary, setSummary] = useState('');
+  const [warningOpen, setWarningOpen] = useState(Boolean(restored?.summary));
+  const [summary, setSummary] = useState(restored?.summary ?? '');
   const [sensitive, setSensitive] = useState(false);
   const [poll, setPoll] = useState<PollDraft | null>(null);
   const mediaItems = useMediaItems();
@@ -115,6 +123,15 @@ export function Composer({
 
   const [previewing, setPreviewing] = useState(false);
 
+  // Keeps the draft at every change, so closing the page loses nothing; an empty composer
+  // leaves no draft behind.
+  useEffect(() => {
+    if (!draftId) return;
+    const kept = warningOpen ? summary : '';
+    if ((content.trim() === '' || content === mention) && !kept.trim()) removeDraft(draftId);
+    else saveDraft(draftId, { content, summary: kept });
+  }, [draftId, content, summary, warningOpen, mention]);
+
   if (!user) return null;
 
   const length = content.length;
@@ -123,6 +140,8 @@ export function Composer({
   const allErrors = { ...serverErrors, ...errors };
 
   const reset = () => {
+    if (draftId) removeDraft(draftId);
+    setDraftNotice(false);
     setPreviewing(false);
     mediaItems.reset();
     setContent('');
@@ -266,6 +285,25 @@ export function Composer({
                 {t('composer.privateReply')}
               </p>
             )
+          )}
+
+          {draftNotice && (
+            <p className="flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
+              {t('composer.draft.restored')}
+              <button
+                type="button"
+                className="font-semibold text-accent hover:underline focus-ring rounded"
+                onClick={() => {
+                  if (draftId) removeDraft(draftId);
+                  setDraftNotice(false);
+                  setContent(mention);
+                  setSummary('');
+                  setWarningOpen(false);
+                }}
+              >
+                {t('composer.draft.discard')}
+              </button>
+            </p>
           )}
 
           {warningOpen && (

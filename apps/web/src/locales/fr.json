@@ -480,6 +480,10 @@
       "preview": "Aperçu",
       "placeholder": "texte",
       "empty": "Rien à prévisualiser pour l'instant."
+    },
+    "draft": {
+      "restored": "Brouillon restauré depuis votre dernière visite.",
+      "discard": "Supprimer"
     }
   },
   "status": {

@@ -472,6 +472,10 @@
       "preview": "Preview",
       "placeholder": "text",
       "empty": "Nothing to preview yet."
+    },
+    "draft": {
+      "restored": "Draft restored from your last visit.",
+      "discard": "Discard"
     }
   },
   "status": {

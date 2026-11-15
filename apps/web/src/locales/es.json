@@ -479,6 +479,10 @@
       "preview": "Vista previa",
       "placeholder": "texto",
       "empty": "Aún no hay nada que ver."
+    },
+    "draft": {
+      "restored": "Borrador recuperado de tu última visita.",
+      "discard": "Descartar"
     }
   },
   "status": {

@@ -472,6 +472,10 @@
       "preview": "Vorschau",
       "placeholder": "Text",
       "empty": "Noch nichts für die Vorschau."
+    },
+    "draft": {
+      "restored": "Entwurf von deinem letzten Besuch wiederhergestellt.",
+      "discard": "Verwerfen"
     }
   },
   "status": {

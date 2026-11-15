@@ -23,6 +23,44 @@ const postCalls = (fetchMock: ReturnType<typeof mockApi>) =>
   );
 
 describe('composer', () => {
+  it('keeps what was written as a draft and brings it back', async () => {
+    const fetchMock = signedInApi({
+      'POST /statuses': (body) => ({
+        status: 201,
+        body: makeStatus({ ...(body as object), content: '<p>Long text</p>' }),
+      }),
+    });
+    const first = renderApp('/');
+    const user = userEvent.setup();
+    await user.type(await screen.findByRole('textbox', { name: 'New post' }), 'Long text');
+    await waitFor(() =>
+      expect(
+        Object.keys(localStorage).filter((key) => key.startsWith('disbigle:draft:')),
+      ).toHaveLength(1),
+    );
+    first.unmount();
+
+    // The page was closed: the text is back, and can be thrown away.
+    const second = renderApp('/');
+    const textbox = await screen.findByRole('textbox', { name: 'New post' });
+    expect(textbox).toHaveValue('Long text');
+    expect(screen.getByText('Draft restored from your last visit.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(textbox).toHaveValue('');
+    expect(screen.queryByText('Draft restored from your last visit.')).not.toBeInTheDocument();
+    second.unmount();
+
+    // Once posted, the draft is gone.
+    renderApp('/');
+    const again = await screen.findByRole('textbox', { name: 'New post' });
+    expect(again).toHaveValue('');
+    await user.type(again, 'Long text');
+    await user.click(screen.getByRole('button', { name: 'Post' }));
+    await waitFor(() => expect(postCalls(fetchMock)).toHaveLength(1));
+    await waitFor(() => expect(again).toHaveValue(''));
+    expect(Object.keys(localStorage).some((key) => key.startsWith('disbigle:draft:'))).toBe(false);
+  });
+
   it('suggests people to mention and inserts their handle', async () => {
     const carol = makeAccount({
       username: 'carol',
