@@ -28,6 +28,19 @@ describe('language of posts', () => {
     expect(guessLanguage('<p>Quick reminder: the meetup moved to Thursday evening</p>')).toBe('en');
     expect(guessLanguage('<p>Grazie!</p>')).toBeNull();
   });
+
+  it('knows short messages in Chinese, Japanese and Korean by their script', () => {
+    expect(guessLanguage('<p>@alice 你好，最近怎么样？</p>')).toBe('zh');
+    expect(guessLanguage('<p>谢谢你的帮助</p>')).toBe('zh');
+    expect(guessLanguage('<p>ありがとうございます</p>')).toBe('ja');
+    expect(guessLanguage('<p>今日は雨です</p>')).toBe('ja');
+    expect(guessLanguage('<p>안녕하세요 반갑습니다</p>')).toBe('ko');
+    // Too short, or a few characters in a text in another language.
+    expect(guessLanguage('<p>好的</p>')).toBeNull();
+    expect(
+      guessLanguage('<p>Oggi ho imparato a scrivere 你好 in cinese, che bello davvero</p>'),
+    ).toBe('it');
+  });
 });
 
 describe('placeholders for translation', () => {

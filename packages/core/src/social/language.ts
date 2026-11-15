@@ -2,6 +2,23 @@ import type { eld as Eld } from 'eld/extrasmall';
 
 /** Below this many letters a guess is not worth much ("ok", "grazie!"). */
 const MIN_LETTERS = 20;
+/** Chinese, Japanese and Korean say a lot in few characters: "你好，最近怎么样？" is a sentence. */
+const MIN_CJK = 4;
+
+/**
+ * Chinese, Japanese or Korean, told apart by their scripts, for texts mostly written in them:
+ * the letter count that guards other languages would leave most of their messages unknown.
+ */
+function cjkLanguage(text: string, letters: number): string | null {
+  const han = text.match(/\p{Script=Han}/gu)?.length ?? 0;
+  const kana = text.match(/[\p{Script=Hiragana}\p{Script=Katakana}]/gu)?.length ?? 0;
+  const hangul = text.match(/\p{Script=Hangul}/gu)?.length ?? 0;
+  const cjk = han + kana + hangul;
+  if (cjk < MIN_CJK || cjk * 2 < letters) return null;
+  if (hangul > han + kana) return 'ko';
+  if (kana > 0) return 'ja';
+  return 'zh';
+}
 
 let detector: typeof Eld | null = null;
 let loading: Promise<typeof Eld> | null = null;
@@ -40,7 +57,10 @@ export function plainTextForLanguage(html: string): string {
 export function guessLanguage(html: string, summary = ''): string | null {
   if (!detector) return null;
   const text = `${plainTextForLanguage(summary)} ${plainTextForLanguage(html)}`.trim();
-  if ((text.match(/\p{L}/gu)?.length ?? 0) < MIN_LETTERS) return null;
+  const letters = text.match(/\p{L}/gu)?.length ?? 0;
+  const script = cjkLanguage(text, letters);
+  if (script) return script;
+  if (letters < MIN_LETTERS) return null;
   const result = detector.detect(text);
   return result.language && result.isReliable() ? result.language : null;
 }
