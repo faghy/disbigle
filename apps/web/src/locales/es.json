@@ -954,7 +954,21 @@
       "welcomeAspect": "Aspecto",
       "welcomeAspectHint": "El nombre de un aspecto de la cuenta de bienvenida. Déjalo vacío para omitirlo.",
       "welcomeMessage": "Mensaje de bienvenida",
-      "welcomeMessageHint": "Se envía como mensaje privado. Déjalo vacío para omitirlo."
+      "welcomeMessageHint": "Se envía como mensaje privado. Déjalo vacío para omitirlo.",
+      "welcomeFollowBack": "La cuenta de bienvenida sigue de vuelta a los nuevos",
+      "welcomeFollowBackHint": "Desactívalo para una cuenta oficial de novedades: los nuevos la siguen, ella no los sigue ni los pone en un aspecto.",
+      "welcomeMessageLanguage": "Versión del mensaje",
+      "welcomeMessageEvery": "Todos los idiomas (si no hay traducción)",
+      "welcomeMessageIn": "Mensaje de bienvenida en {{language}}",
+      "welcomeMessageInHint": "Se envía a quien usa Disbigle en este idioma. Si está vacío, recibe el mensaje para todos los idiomas.",
+      "welcomeForAll": "Quienes se registraron antes",
+      "welcomeForAllHint": "Los nuevos siguen a @{{account}} por su cuenta. Quienes se registraron antes también pueden empezar a seguirla: solo en un sentido, y pueden dejar de seguirla como cualquier cuenta.",
+      "welcomeForAllDone_one": "Hecho: ahora {{count}} persona más sigue a @{{account}}.",
+      "welcomeForAllDone_other": "Hecho: ahora {{count}} personas más siguen a @{{account}}.",
+      "welcomeForAllButton": "Que todos sigan a @{{account}}",
+      "welcomeForAllTitle": "¿Hacer que todos sigan a @{{account}}?",
+      "welcomeForAllDescription": "Cada cuenta activa de este servidor que aún no sigue a @{{account}} empieza a seguirla. Quienes ya la siguen no cambian.",
+      "welcomeForAllConfirm": "Seguir"
     },
     "federation": {
       "description": "Servidores que este conoce, gracias a seguimientos, menciones y entregas.",
@@ -1157,7 +1171,8 @@
         "set_role": "Rol cambiado",
         "suspend_account": "Suspendida",
         "unsuspend_account": "Suspensión levantada",
-        "approve_user": "Registro aprobado"
+        "approve_user": "Registro aprobado",
+        "follow_welcome_account": "Cuenta de bienvenida seguida por todos"
       },
       "done": {
         "resend_confirmation": "Enlace de confirmación enviado a {{email}}.",

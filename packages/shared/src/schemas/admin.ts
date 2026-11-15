@@ -1,4 +1,5 @@
 import type { Account, CurrentUser } from './accounts.ts';
+import type { Locale } from './auth.ts';
 import type { Status } from './social.ts';
 
 /** Settings an administrator can change at run time. */
@@ -14,6 +15,13 @@ export interface InstanceSettings {
   welcomeAspect: string;
   /** Private message sent to newcomers by the welcome account ('' = none). */
   welcomeMessage: string;
+  /**
+   * Whether the welcome account follows newcomers back and puts them in its aspect. Off: the
+   * newcomer only follows it (an official account that announces news).
+   */
+  welcomeFollowBack: boolean;
+  /** The welcome message in the newcomer's language; `welcomeMessage` when missing. */
+  welcomeMessages: Partial<Record<Locale, string>>;
 }
 
 /** A server known to this instance (admin federation view). */

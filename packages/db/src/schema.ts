@@ -973,6 +973,10 @@ export type InstanceSettingsData = {
   welcomeAccount?: string;
   welcomeAspect?: string;
   welcomeMessage?: string;
+  /** Whether the welcome account follows newcomers back (default true). */
+  welcomeFollowBack?: boolean;
+  /** Welcome message per language of the newcomer; `welcomeMessage` is the fallback. */
+  welcomeMessages?: Partial<Record<string, string>>;
 };
 
 /** Settings an administrator can change at run time (one row); environment values are the defaults. */

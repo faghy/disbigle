@@ -13,6 +13,8 @@ const settings = {
   welcomeAccount: '',
   welcomeAspect: '',
   welcomeMessage: '',
+  welcomeFollowBack: true,
+  welcomeMessages: {},
 };
 
 describe('instance settings', () => {
@@ -42,6 +44,12 @@ describe('instance settings', () => {
     await user.type(screen.getByRole('textbox', { name: 'Welcome account' }), '@faghy');
     await user.type(screen.getByRole('textbox', { name: 'Aspect' }), 'Fediverso');
     await user.type(screen.getByRole('textbox', { name: 'Welcome message' }), 'Benvenuto!');
+    // The same message in Spanish, for people who use Disbigle in Spanish.
+    await user.selectOptions(screen.getByLabelText('Version of the message'), 'es');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Welcome message in Español' }),
+      '¡Bienvenido!',
+    );
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('Your changes have been saved.')).toBeInTheDocument();
@@ -55,7 +63,46 @@ describe('instance settings', () => {
       welcomeAccount: 'faghy',
       welcomeAspect: 'Fediverso',
       welcomeMessage: 'Benvenuto!',
+      welcomeFollowBack: true,
+      welcomeMessages: { es: '¡Bienvenido!' },
     });
+  });
+
+  it('turns the welcome account into a one-way follow and adds it to earlier members', async () => {
+    let saved: Record<string, unknown> = {};
+    let followedByAll = false;
+    mockApi({
+      'GET /me': { body: withRole('admin') },
+      'GET /instance': instance(),
+      'GET /admin/summary': { body: { pendingUsers: 0, openReports: 0 } },
+      'GET /admin/settings': { body: { ...settings, welcomeAccount: 'disbigle' } },
+      'PUT /admin/settings': (body) => {
+        saved = body as Record<string, unknown>;
+        return { body: { ...settings, ...(body as object) } };
+      },
+      'POST /admin/welcome/follow_all': () => {
+        followedByAll = true;
+        return { body: { added: 42 } };
+      },
+    });
+    renderApp('/admin/instance');
+    const user = userEvent.setup();
+    const followBack = await screen.findByRole('checkbox', {
+      name: /The welcome account follows newcomers back/,
+    });
+    await user.click(followBack);
+    // Without the follow back there is no aspect to choose.
+    expect(screen.queryByRole('textbox', { name: 'Aspect' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => expect(saved.welcomeFollowBack).toBe(false));
+
+    await user.click(screen.getByRole('button', { name: 'Make everyone follow @disbigle' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Follow' }));
+    expect(
+      await screen.findByText('Done: 42 more people now follow @disbigle.'),
+    ).toBeInTheDocument();
+    expect(followedByAll).toBe(true);
   });
 
   it('checks the contact address before saving', async () => {

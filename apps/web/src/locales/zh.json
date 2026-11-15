@@ -915,7 +915,20 @@
       "welcomeAspect": "分组",
       "welcomeAspectHint": "欢迎账号的某个分组名称。留空则跳过。",
       "welcomeMessage": "欢迎消息",
-      "welcomeMessageHint": "以私信发送。留空则跳过。"
+      "welcomeMessageHint": "以私信发送。留空则跳过。",
+      "welcomeFollowBack": "欢迎账号回关新用户",
+      "welcomeFollowBackHint": "官方资讯账号请关闭：新用户关注它，它不回关，也不把他们加入方面。",
+      "welcomeMessageLanguage": "消息版本",
+      "welcomeMessageEvery": "所有语言（没有翻译时使用）",
+      "welcomeMessageIn": "{{language}}欢迎消息",
+      "welcomeMessageInHint": "发送给使用该语言的用户。留空时，他们会收到所有语言通用的消息。",
+      "welcomeForAll": "之前注册的用户",
+      "welcomeForAllHint": "新用户会自动关注 @{{account}}。之前注册的用户也可以开始关注它：仅单向关注，并且可以像其他账号一样取消关注。",
+      "welcomeForAllDone_other": "完成：又有 {{count}} 人关注了 @{{account}}。",
+      "welcomeForAllButton": "让所有人关注 @{{account}}",
+      "welcomeForAllTitle": "让所有成员关注 @{{account}}？",
+      "welcomeForAllDescription": "本服务器上每个尚未关注 @{{account}} 的活跃账号都会开始关注它。已关注的人保持不变。",
+      "welcomeForAllConfirm": "关注"
     },
     "federation": {
       "description": "本服务器通过关注、提及和投递所知道的服务器。",
@@ -1106,7 +1119,8 @@
         "set_role": "角色已更改",
         "suspend_account": "已封禁",
         "unsuspend_account": "已解除封禁",
-        "approve_user": "注册已批准"
+        "approve_user": "注册已批准",
+        "follow_welcome_account": "已让所有人关注欢迎账号"
       },
       "done": {
         "resend_confirmation": "确认链接已发送至 {{email}}。",

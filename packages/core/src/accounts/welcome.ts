@@ -1,6 +1,9 @@
 import { schema } from '@disbigle/db';
-import { eq } from 'drizzle-orm';
+import type { Locale } from '@disbigle/shared';
+import { and, eq, isNull, ne, notExists, sql } from 'drizzle-orm';
 import type { CoreContext } from '../context.ts';
+import { DomainError } from '../errors.ts';
+import { logAdminAction } from '../moderation.ts';
 import { getInstanceSettings } from '../settings.ts';
 import { createPost } from '../social/posts.ts';
 import { follow } from '../social/relationships.ts';
@@ -8,8 +11,10 @@ import { findLocalActorByUsername } from './profile.ts';
 
 /**
  * Welcomes a newly active account, as diaspora*'s "autofollow on join" and welcome message:
- * the newcomer follows the welcome account (usually the admin), the welcome account follows
- * back and puts them in the chosen aspect, then sends them the welcome message privately.
+ * the newcomer follows the welcome account; unless the admin turned it off, the welcome account
+ * follows back and puts them in the chosen aspect (an official news account only gets
+ * followed); then it sends them the welcome message privately, in their language when there is
+ * one.
  * Nothing happens unless an admin has chosen a welcome account. Never throws: a failed
  * welcome must not block a sign-up.
  */
@@ -23,9 +28,11 @@ export async function welcomeNewAccount(ctx: CoreContext, actorId: string): Prom
     if (!newcomer) return;
 
     await follow(ctx, actorId, host.id).catch(() => undefined);
-    await follow(ctx, host.id, actorId).catch(() => undefined);
+    if (settings.welcomeFollowBack) await follow(ctx, host.id, actorId).catch(() => undefined);
 
-    const aspectName = settings.welcomeAspect.trim().toLowerCase();
+    const aspectName = settings.welcomeFollowBack
+      ? settings.welcomeAspect.trim().toLowerCase()
+      : '';
     if (aspectName) {
       const aspects = await ctx.db
         .select({ id: schema.aspects.id, name: schema.aspects.name })
@@ -40,7 +47,9 @@ export async function welcomeNewAccount(ctx: CoreContext, actorId: string): Prom
       }
     }
 
-    const message = settings.welcomeMessage.trim();
+    const message = (
+      settings.welcomeMessages[newcomer.locale as Locale] || settings.welcomeMessage
+    ).trim();
     if (message) {
       await createPost(ctx, host.id, {
         content: `@${newcomer.username}\n\n${message}`,
@@ -54,8 +63,68 @@ export async function welcomeNewAccount(ctx: CoreContext, actorId: string): Prom
 
 async function findLocalActorById(ctx: CoreContext, actorId: string) {
   const [actor] = await ctx.db
-    .select({ id: schema.actors.id, username: schema.actors.username })
+    .select({
+      id: schema.actors.id,
+      username: schema.actors.username,
+      locale: sql<string>`coalesce(${schema.users.locale}, 'en')`,
+    })
     .from(schema.actors)
+    .leftJoin(schema.users, eq(schema.users.actorId, schema.actors.id))
     .where(eq(schema.actors.id, actorId));
   return actor ?? null;
+}
+
+/**
+ * Makes every active local account follow the welcome account, for people who joined before it
+ * was chosen. One way only: the welcome account does not follow back. People can unfollow it
+ * as any other account; those who already follow it are left alone. Returns how many now do.
+ */
+export async function followWelcomeAccountForAll(
+  ctx: CoreContext,
+  adminUserId: string,
+): Promise<number> {
+  const settings = await getInstanceSettings(ctx);
+  const host = settings.welcomeAccount
+    ? await findLocalActorByUsername(ctx, settings.welcomeAccount)
+    : null;
+  if (!host || host.suspendedAt)
+    throw new DomainError('bad_request', 'Choose a welcome account first');
+  const { users, actors, follows } = schema;
+  const people = await ctx.db
+    .select({ actorId: actors.id })
+    .from(users)
+    .innerJoin(actors, eq(actors.id, users.actorId))
+    .where(
+      and(
+        ne(actors.id, host.id),
+        eq(actors.isGroup, false),
+        isNull(actors.suspendedAt),
+        isNull(users.disabledAt),
+        isNull(users.deletionRequestedAt),
+        eq(users.approved, true),
+        notExists(
+          ctx.db
+            .select({ one: sql`1` })
+            .from(follows)
+            .where(and(eq(follows.actorId, actors.id), eq(follows.targetActorId, host.id))),
+        ),
+      ),
+    );
+  let added = 0;
+  for (const person of people) {
+    const done = await follow(ctx, person.actorId, host.id)
+      .then(() => true)
+      .catch(() => false);
+    if (done) added += 1;
+  }
+  await logAdminAction(
+    ctx,
+    adminUserId,
+    'follow_welcome_account',
+    { type: 'actor', id: host.id },
+    {
+      added,
+    },
+  );
+  return added;
 }

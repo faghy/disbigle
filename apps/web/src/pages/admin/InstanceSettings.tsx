@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { admin, adminKeys, type InstanceSettings, type RegistrationMode } from '../../api/admin.ts';
 import { errorMessage, type FieldErrors, fieldErrorsFrom } from '../../api/errors.ts';
 import { queryKeys } from '../../api/queries.ts';
+import { ConfirmDialog } from '../../components/Dialog.tsx';
 import { ArrowUpIcon, CloseIcon } from '../../components/icons.tsx';
 import {
   Alert,
@@ -15,6 +16,7 @@ import {
   TextField,
 } from '../../components/ui.tsx';
 import { useFocusFirstError } from '../../lib/forms.ts';
+import { type Language, languages } from '../../lib/i18n.ts';
 
 export const MAX_RULES = 30;
 export const MAX_RULE_LENGTH = 500;
@@ -26,7 +28,51 @@ export function InstanceSettingsPage() {
   const settings = useQuery({ queryKey: adminKeys.settings, queryFn: admin.settings });
   if (settings.isPending) return <LoadingState label={t('common.loading')} />;
   if (settings.isError) return <Alert>{errorMessage(settings.error)}</Alert>;
-  return <SettingsForm initial={settings.data} />;
+  return (
+    <>
+      <SettingsForm initial={settings.data} />
+      <WelcomeForAll account={settings.data.welcomeAccount} />
+    </>
+  );
+}
+
+/** For people who joined before the welcome account was chosen: they start following it. */
+function WelcomeForAll({ account }: { account: string }) {
+  const { t } = useTranslation();
+  const [confirming, setConfirming] = useState(false);
+  const run = useMutation({
+    mutationFn: admin.followWelcomeForAll,
+    onSuccess: () => setConfirming(false),
+  });
+  if (!account) return null;
+  return (
+    <Card className="mt-4 space-y-3">
+      <div>
+        <h2 className="font-semibold">{t('admin.instance.welcomeForAll')}</h2>
+        <p className="text-sm text-fg-muted">
+          {t('admin.instance.welcomeForAllHint', { account })}
+        </p>
+      </div>
+      <p role="status" className="text-sm text-success empty:hidden">
+        {run.data ? t('admin.instance.welcomeForAllDone', { count: run.data.added, account }) : ''}
+      </p>
+      <Alert>{run.error ? errorMessage(run.error) : null}</Alert>
+      <Button variant="secondary" onClick={() => setConfirming(true)}>
+        {t('admin.instance.welcomeForAllButton', { account })}
+      </Button>
+      {confirming && (
+        <ConfirmDialog
+          title={t('admin.instance.welcomeForAllTitle', { account })}
+          description={t('admin.instance.welcomeForAllDescription', { account })}
+          confirmLabel={t('admin.instance.welcomeForAllConfirm')}
+          danger={false}
+          pending={run.isPending}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => run.mutate()}
+        />
+      )}
+    </Card>
+  );
 }
 
 let ruleKey = 0;
@@ -48,6 +94,13 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
   const [welcomeAccount, setWelcomeAccount] = useState(initial.welcomeAccount ?? '');
   const [welcomeAspect, setWelcomeAspect] = useState(initial.welcomeAspect ?? '');
   const [welcomeMessage, setWelcomeMessage] = useState(initial.welcomeMessage ?? '');
+  const [welcomeFollowBack, setWelcomeFollowBack] = useState(initial.welcomeFollowBack ?? true);
+  const [welcomeMessages, setWelcomeMessages] = useState<Partial<Record<Language, string>>>(
+    initial.welcomeMessages ?? {},
+  );
+  // Which version of the welcome message is being edited: '' is the one for every language.
+  const [messageLanguage, setMessageLanguage] = useState<Language | ''>('');
+  const messageLanguageId = useId();
   const [clientErrors, setClientErrors] = useState<FieldErrors>({});
   useFocusFirstError(formRef, clientErrors);
 
@@ -82,6 +135,12 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
       welcomeAccount: welcomeAccount.trim().replace(/^@/, ''),
       welcomeAspect: welcomeAspect.trim(),
       welcomeMessage: welcomeMessage.trim(),
+      welcomeFollowBack,
+      welcomeMessages: Object.fromEntries(
+        Object.entries(welcomeMessages)
+          .map(([language, text]) => [language, (text ?? '').trim()])
+          .filter(([, text]) => text),
+      ),
     });
   };
 
@@ -174,21 +233,69 @@ function SettingsForm({ initial }: { initial: InstanceSettings }) {
           onChange={(event) => setWelcomeAccount(event.target.value)}
           error={errors.welcomeAccount}
         />
-        <TextField
-          label={t('admin.instance.welcomeAspect')}
-          hint={t('admin.instance.welcomeAspectHint')}
-          maxLength={100}
-          value={welcomeAspect}
-          onChange={(event) => setWelcomeAspect(event.target.value)}
-          error={errors.welcomeAspect}
-        />
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 accent-accent"
+            checked={welcomeFollowBack}
+            onChange={(event) => setWelcomeFollowBack(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium">{t('admin.instance.welcomeFollowBack')}</span>
+            <span className="block text-fg-muted">{t('admin.instance.welcomeFollowBackHint')}</span>
+          </span>
+        </label>
+        {welcomeFollowBack && (
+          <TextField
+            label={t('admin.instance.welcomeAspect')}
+            hint={t('admin.instance.welcomeAspectHint')}
+            maxLength={100}
+            value={welcomeAspect}
+            onChange={(event) => setWelcomeAspect(event.target.value)}
+            error={errors.welcomeAspect}
+          />
+        )}
+        <div className="space-y-1">
+          <label htmlFor={messageLanguageId} className="block text-sm font-medium">
+            {t('admin.instance.welcomeMessageLanguage')}
+          </label>
+          <select
+            id={messageLanguageId}
+            className="input-base"
+            value={messageLanguage}
+            onChange={(event) => setMessageLanguage(event.target.value as Language | '')}
+          >
+            <option value="">{t('admin.instance.welcomeMessageEvery')}</option>
+            {languages.map((language) => (
+              <option key={language} value={language}>
+                {t(`languages.${language}`)}
+                {welcomeMessages[language]?.trim() ? ' ✓' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
         <TextAreaField
-          label={t('admin.instance.welcomeMessage')}
-          hint={t('admin.instance.welcomeMessageHint')}
+          label={
+            messageLanguage
+              ? t('admin.instance.welcomeMessageIn', {
+                  language: t(`languages.${messageLanguage}`),
+                })
+              : t('admin.instance.welcomeMessage')
+          }
+          hint={
+            messageLanguage
+              ? t('admin.instance.welcomeMessageInHint')
+              : t('admin.instance.welcomeMessageHint')
+          }
           rows={8}
           maxLength={5000}
-          value={welcomeMessage}
-          onChange={(event) => setWelcomeMessage(event.target.value)}
+          value={messageLanguage ? (welcomeMessages[messageLanguage] ?? '') : welcomeMessage}
+          onChange={(event) => {
+            const text = event.target.value;
+            if (messageLanguage)
+              setWelcomeMessages((current) => ({ ...current, [messageLanguage]: text }));
+            else setWelcomeMessage(text);
+          }}
           error={errors.welcomeMessage}
         />
       </Card>

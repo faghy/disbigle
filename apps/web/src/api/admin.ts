@@ -212,6 +212,7 @@ export const admin = {
   instances: (q?: string) =>
     api.get<KnownInstance[]>(`/admin/instances${queryString({ q: q || undefined })}`),
   settings: () => api.get<InstanceSettings>('/admin/settings'),
+  followWelcomeForAll: () => api.post<{ added: number }>('/admin/welcome/follow_all'),
   updateSettings: (patch: Partial<InstanceSettings>) =>
     api.put<InstanceSettings>('/admin/settings', patch),
   domainBlocks: () => api.get<DomainBlock[]>('/admin/domain_blocks'),

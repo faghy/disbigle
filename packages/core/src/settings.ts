@@ -1,5 +1,5 @@
 import { schema } from '@disbigle/db';
-import type { InstanceSettings } from '@disbigle/shared';
+import { type InstanceSettings, supportedLocales } from '@disbigle/shared';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import type { CoreContext } from './context.ts';
@@ -21,6 +21,10 @@ export const instanceSettingsPatchSchema = z.object({
     .optional(),
   welcomeAspect: z.string().trim().max(100).optional(),
   welcomeMessage: z.string().trim().max(5000).optional(),
+  welcomeFollowBack: z.boolean().optional(),
+  welcomeMessages: z
+    .partialRecord(z.enum(supportedLocales), z.string().trim().max(5000))
+    .optional(),
 });
 export type InstanceSettingsPatch = z.infer<typeof instanceSettingsPatchSchema>;
 
@@ -40,6 +44,8 @@ export async function getInstanceSettings(ctx: CoreContext): Promise<InstanceSet
     welcomeAccount: data.welcomeAccount ?? '',
     welcomeAspect: data.welcomeAspect ?? '',
     welcomeMessage: data.welcomeMessage ?? '',
+    welcomeFollowBack: data.welcomeFollowBack ?? true,
+    welcomeMessages: data.welcomeMessages ?? {},
   };
 }
 

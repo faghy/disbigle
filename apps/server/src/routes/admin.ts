@@ -10,6 +10,7 @@ import {
   decideReport,
   deleteUnconfirmedUser,
   federationTraffic,
+  followWelcomeAccountForAll,
   getInstanceSettings,
   getUserForAdmin,
   instanceSettingsPatchSchema,
@@ -241,6 +242,12 @@ export async function adminRoutes(
     );
     await setUserRole(ctx, requireAdmin(request).userId, parse(idParams, request.params).id, role);
     return { status: 'ok' };
+  });
+
+  // People who joined before the welcome account was chosen start following it too.
+  app.post('/welcome/follow_all', async (request) => {
+    const added = await followWelcomeAccountForAll(ctx, requireAdmin(request).userId);
+    return { added };
   });
 
   app.get('/settings', async (request) => {

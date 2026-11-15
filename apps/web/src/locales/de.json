@@ -935,7 +935,21 @@
       "welcomeAspect": "Aspekt",
       "welcomeAspectHint": "Der Name eines Aspekts des Willkommenskontos. Leer lassen, um es zu überspringen.",
       "welcomeMessage": "Willkommensnachricht",
-      "welcomeMessageHint": "Wird als private Nachricht gesendet. Leer lassen, um es zu überspringen."
+      "welcomeMessageHint": "Wird als private Nachricht gesendet. Leer lassen, um es zu überspringen.",
+      "welcomeFollowBack": "Das Willkommenskonto folgt Neuen zurück",
+      "welcomeFollowBackHint": "Aus für ein offizielles Nachrichtenkonto: Neue folgen ihm, es folgt ihnen nicht und ordnet sie keinem Aspekt zu.",
+      "welcomeMessageLanguage": "Fassung der Nachricht",
+      "welcomeMessageEvery": "Alle Sprachen (wenn es keine Übersetzung gibt)",
+      "welcomeMessageIn": "Willkommensnachricht auf {{language}}",
+      "welcomeMessageInHint": "Geht an alle, die Disbigle in dieser Sprache nutzen. Leer: Sie bekommen die Nachricht für alle Sprachen.",
+      "welcomeForAll": "Wer sich früher angemeldet hat",
+      "welcomeForAllHint": "Neue folgen @{{account}} von selbst. Wer sich früher angemeldet hat, kann ihm auch folgen: nur in eine Richtung, und man kann wie bei jedem Konto wieder entfolgen.",
+      "welcomeForAllDone_one": "Erledigt: {{count}} weitere Person folgt jetzt @{{account}}.",
+      "welcomeForAllDone_other": "Erledigt: {{count}} weitere Personen folgen jetzt @{{account}}.",
+      "welcomeForAllButton": "Alle @{{account}} folgen lassen",
+      "welcomeForAllTitle": "Alle Mitglieder @{{account}} folgen lassen?",
+      "welcomeForAllDescription": "Jedes aktive Konto dieses Servers, das @{{account}} noch nicht folgt, folgt ihm ab jetzt. Wer schon folgt, bleibt unverändert.",
+      "welcomeForAllConfirm": "Folgen"
     },
     "federation": {
       "description": "Server, die dieser kennt, über Folgen, Erwähnungen und Zustellungen.",
@@ -1136,7 +1150,8 @@
         "set_role": "Rolle geändert",
         "suspend_account": "Gesperrt",
         "unsuspend_account": "Sperre aufgehoben",
-        "approve_user": "Registrierung genehmigt"
+        "approve_user": "Registrierung genehmigt",
+        "follow_welcome_account": "Willkommenskonto von allen gefolgt"
       },
       "done": {
         "resend_confirmation": "Bestätigungslink an {{email}} gesendet.",

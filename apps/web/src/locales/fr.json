@@ -955,7 +955,21 @@
       "welcomeAspect": "Aspect",
       "welcomeAspectHint": "Le nom d'un aspect du compte d'accueil. Laisse vide pour ignorer.",
       "welcomeMessage": "Message de bienvenue",
-      "welcomeMessageHint": "Envoyé en message privé. Laisse vide pour ignorer."
+      "welcomeMessageHint": "Envoyé en message privé. Laisse vide pour ignorer.",
+      "welcomeFollowBack": "Le compte d'accueil suit les nouveaux en retour",
+      "welcomeFollowBackHint": "Désactivé pour un compte officiel d'actualités : les nouveaux le suivent, lui ne les suit pas et ne les met dans aucun aspect.",
+      "welcomeMessageLanguage": "Version du message",
+      "welcomeMessageEvery": "Toutes les langues (s'il n'y a pas de traduction)",
+      "welcomeMessageIn": "Message d'accueil en {{language}}",
+      "welcomeMessageInHint": "Envoyé à qui utilise Disbigle dans cette langue. Vide : la personne reçoit le message pour toutes les langues.",
+      "welcomeForAll": "Les personnes inscrites avant",
+      "welcomeForAllHint": "Les nouveaux suivent @{{account}} d'eux-mêmes. Les personnes inscrites avant peuvent aussi commencer à le suivre : dans un seul sens, et elles peuvent arrêter comme pour n'importe quel compte.",
+      "welcomeForAllDone_one": "Fait : {{count}} personne de plus suit @{{account}}.",
+      "welcomeForAllDone_other": "Fait : {{count}} personnes de plus suivent @{{account}}.",
+      "welcomeForAllButton": "Faire suivre @{{account}} à tout le monde",
+      "welcomeForAllTitle": "Faire suivre @{{account}} à tous les membres ?",
+      "welcomeForAllDescription": "Chaque compte actif de ce serveur qui ne suit pas encore @{{account}} commence à le suivre. Ceux qui le suivent déjà ne changent pas.",
+      "welcomeForAllConfirm": "Suivre"
     },
     "federation": {
       "description": "Les serveurs que celui-ci connaît, grâce aux abonnements, aux mentions et aux livraisons.",
@@ -1165,7 +1179,8 @@
         "set_role": "Rôle modifié",
         "suspend_account": "Suspendu",
         "unsuspend_account": "Suspension levée",
-        "approve_user": "Inscription approuvée"
+        "approve_user": "Inscription approuvée",
+        "follow_welcome_account": "Compte d'accueil suivi par tous"
       },
       "done": {
         "resend_confirmation": "Lien de confirmation envoyé à {{email}}.",

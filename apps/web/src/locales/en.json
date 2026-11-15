@@ -935,7 +935,21 @@
       "welcomeAspect": "Aspect",
       "welcomeAspectHint": "The name of an aspect of the welcome account. Leave empty to skip.",
       "welcomeMessage": "Welcome message",
-      "welcomeMessageHint": "Sent as a private message. Leave empty to skip."
+      "welcomeMessageHint": "Sent as a private message. Leave empty to skip.",
+      "welcomeFollowBack": "The welcome account follows newcomers back",
+      "welcomeFollowBackHint": "Off for an official news account: newcomers follow it, it does not follow them or put them in an aspect.",
+      "welcomeMessageLanguage": "Version of the message",
+      "welcomeMessageEvery": "Every language (when there is no translation)",
+      "welcomeMessageIn": "Welcome message in {{language}}",
+      "welcomeMessageInHint": "Sent to newcomers who use Disbigle in this language. Empty: they get the message for every language.",
+      "welcomeForAll": "People who joined earlier",
+      "welcomeForAllHint": "Newcomers follow @{{account}} on their own. People who joined before can start following it too: one way only, and they can unfollow it like any other account.",
+      "welcomeForAllDone_one": "Done: {{count}} more person now follows @{{account}}.",
+      "welcomeForAllDone_other": "Done: {{count}} more people now follow @{{account}}.",
+      "welcomeForAllButton": "Make everyone follow @{{account}}",
+      "welcomeForAllTitle": "Make every member follow @{{account}}?",
+      "welcomeForAllDescription": "Every active account of this server that does not follow @{{account}} yet starts following it. Those who already do are left alone.",
+      "welcomeForAllConfirm": "Follow"
     },
     "federation": {
       "description": "Servers this one knows about, through follows, mentions and deliveries.",
@@ -1136,7 +1150,8 @@
         "set_role": "Role changed",
         "suspend_account": "Suspended",
         "unsuspend_account": "Suspension lifted",
-        "approve_user": "Registration approved"
+        "approve_user": "Registration approved",
+        "follow_welcome_account": "Everyone made to follow the welcome account"
       },
       "done": {
         "resend_confirmation": "Confirmation link sent to {{email}}.",
