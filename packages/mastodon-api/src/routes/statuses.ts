@@ -20,6 +20,8 @@ import {
   presenceOf,
   previewPostContent,
   publicTimeline,
+  publishArticle,
+  publishArticleSchema,
   reblog,
   recordPresence,
   serializeAccount,
@@ -165,6 +167,49 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
       const status = await createPost(ctx, user.actorId, toCreateRequest(fields));
       if (idempotencyKey) await ctx.kv.set(idempotencyKey, status.id, IDEMPOTENCY_TTL_SECONDS);
       return reply.status(200).send(await presenter.status(status));
+    },
+  );
+
+  /**
+   * Disbigle extension, for websites (the Cleitext "disbigle" plugin): announces an article in
+   * all its languages. The public post is in the main language; mentioned people of this server
+   * get a reply in their own language when the site has it. JSON body, see `publishArticle`.
+   */
+  app.post(
+    '/api/v1/disbigle/articles',
+    { config: { rateLimit: { max: 20, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const user = requireUser(request, 'write:statuses');
+      const presenter = new Presenter(ctx, user.actorId);
+      const key = request.headers['idempotency-key'];
+      const idempotencyKey =
+        typeof key === 'string' && key
+          ? `disbigle:article:${user.userId}:${key.slice(0, 200)}`
+          : null;
+      if (idempotencyKey) {
+        const previous = await ctx.kv.get(idempotencyKey);
+        if (previous) return reply.status(200).send(JSON.parse(previous));
+      }
+      const parsed = publishArticleSchema.safeParse(request.body);
+      if (!parsed.success) {
+        throw new MastodonError(
+          422,
+          `Validation failed: ${parsed.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join(', ')}`,
+        );
+      }
+      const published = await publishArticle(ctx, user.actorId, parsed.data);
+      const result = {
+        status: await presenter.status(published.status),
+        replies: await Promise.all(
+          published.replies.map(async (r) => ({
+            language: r.language,
+            status: await presenter.status(r.status),
+          })),
+        ),
+      };
+      if (idempotencyKey)
+        await ctx.kv.set(idempotencyKey, JSON.stringify(result), IDEMPOTENCY_TTL_SECONDS);
+      return reply.status(200).send(result);
     },
   );
 
