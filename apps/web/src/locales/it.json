@@ -550,7 +550,8 @@
       "post": "Post nascosto: non lo vedrai più nelle tue timeline.",
       "tag": "Non vedrai più nelle tue timeline i post di {{name}} con #{{tag}}.",
       "undo": "Annulla"
-    }
+    },
+    "showAll": "Mostra tutto"
   },
   "timeline": {
     "loadMore": "Carica altri",
@@ -564,7 +565,14 @@
       "empty": "Segui delle persone o aggiungile ai tuoi aspetti per vedere qui i loro post.",
       "explore": "Esplora la timeline locale",
       "findPeople": "Trova persone da seguire: prova",
-      "findButton": "Trova persone"
+      "findButton": "Trova persone",
+      "replies": {
+        "label": "Risposte",
+        "help": "Quali risposte delle persone che segui compaiono qui",
+        "all": "Tutte",
+        "following": "A chi seguo",
+        "none": "Nessuna"
+      }
     },
     "local": {
       "title": "Locale",

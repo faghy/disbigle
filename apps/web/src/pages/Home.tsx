@@ -1,7 +1,11 @@
+import { type HomeRepliesSetting, homeRepliesSettings } from '@disbigle/shared';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { socialKeys } from '../api/cache.ts';
-import { useInstance, useMe } from '../api/queries.ts';
+import { endpoints } from '../api/endpoints.ts';
+import { queryKeys, useCurrentUser, useInstance, useMe } from '../api/queries.ts';
 import { social } from '../api/social.ts';
 import { Composer } from '../components/Composer.tsx';
 import { FeedHeader, FeedSection } from '../components/FeedSection.tsx';
@@ -51,7 +55,7 @@ function HomeTimeline() {
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      <FeedHeader title={t('timeline.home.title')} icon={HomeIcon} />
+      <FeedHeader title={t('timeline.home.title')} icon={HomeIcon} actions={<RepliesChoice />} />
       {/* On small screens the floating button opens the composer instead. */}
       <div className="hidden md:block">
         <Composer />
@@ -88,6 +92,43 @@ function HomeTimeline() {
           }
         />
       </FeedSection>
+    </div>
+  );
+}
+
+/** Which replies the home shows: all, only those to people you follow (the default), or none. */
+function RepliesChoice() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const user = useCurrentUser();
+  const id = useId();
+  const update = useMutation({
+    mutationFn: (homeReplies: HomeRepliesSetting) => endpoints.updateSettings({ homeReplies }),
+    onSuccess: (me) => {
+      queryClient.setQueryData(queryKeys.me, me);
+      void queryClient.resetQueries({ queryKey: socialKeys.timeline('home') });
+    },
+  });
+  if (!user) return null;
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <label htmlFor={id} className="text-fg-muted max-sm:sr-only">
+        {t('timeline.home.replies.label')}
+      </label>
+      <select
+        id={id}
+        value={user.homeReplies}
+        disabled={update.isPending}
+        onChange={(event) => update.mutate(event.target.value as HomeRepliesSetting)}
+        title={t('timeline.home.replies.help')}
+        className="rounded-lg border border-border bg-surface py-1 pr-8 pl-2 text-sm focus-ring"
+      >
+        {homeRepliesSettings.map((value) => (
+          <option key={value} value={value}>
+            {t(`timeline.home.replies.${value}`)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   type ChangePasswordRequest,
   type CurrentUser,
   changePasswordRequestSchema,
+  type HomeRepliesSetting,
   type PresenceSetting,
   type UpdateProfileRequest,
   type UpdateSettingsRequest,
@@ -52,6 +53,7 @@ export async function getCurrentUser(ctx: CoreContext, userId: string): Promise<
     totpEnabled: row.user.totpEnabledAt !== null,
     passkeyCount: row.passkeyCount,
     presence: (row.user.presence as PresenceSetting | undefined) ?? 'hidden',
+    homeReplies: (row.user.homeReplies as HomeRepliesSetting | undefined) ?? 'following',
     moveFrom: row.user.moveFrom ?? null,
     aliases,
   };
@@ -87,12 +89,13 @@ export async function updateSettings(
   request: UpdateSettingsRequest,
 ) {
   const input = updateSettingsRequestSchema.parse(request);
-  if (input.locale || input.presence) {
+  if (input.locale || input.presence || input.homeReplies) {
     await ctx.db
       .update(schema.users)
       .set({
         ...(input.locale ? { locale: input.locale } : {}),
         ...(input.presence ? { presence: input.presence } : {}),
+        ...(input.homeReplies ? { homeReplies: input.homeReplies } : {}),
         updatedAt: new Date(),
       })
       .where(eq(schema.users.id, userId));

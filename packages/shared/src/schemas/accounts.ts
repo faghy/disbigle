@@ -22,9 +22,14 @@ export type PresenceSetting = (typeof presenceSettings)[number];
 /** Shown next to someone who shares it: online, away (idle or another tab), or busy. */
 export type PresenceState = 'online' | 'away' | 'busy';
 
+/** Replies on the home timeline: all of them, only those to people you follow, or none. */
+export const homeRepliesSettings = ['all', 'following', 'none'] as const;
+export type HomeRepliesSetting = (typeof homeRepliesSettings)[number];
+
 export const updateSettingsRequestSchema = z.object({
   locale: z.enum(supportedLocales).optional(),
   presence: z.enum(presenceSettings).optional(),
+  homeReplies: z.enum(homeRepliesSettings).optional(),
 });
 export type UpdateSettingsRequest = z.infer<typeof updateSettingsRequestSchema>;
 
@@ -65,6 +70,7 @@ export interface CurrentUser {
   totpEnabled: boolean;
   passkeyCount: number;
   presence: PresenceSetting;
+  homeReplies: HomeRepliesSetting;
   /** The account given at sign-up as the one this person moves from. */
   moveFrom: string | null;
   /** Former accounts linked to this one (`alsoKnownAs`), as addresses. */

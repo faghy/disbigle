@@ -24,7 +24,30 @@ const {
   domainBlocks,
   tagFollows,
   groupMembers,
+  users,
+  mentions,
 } = schema;
+
+/**
+ * Which replies reach a viewer's home (their `homeReplies` setting). Always: posts that are not
+ * replies, the viewer's own replies, and replies addressed to them. With `following` (the
+ * default, as on Mastodon) also replies to themselves and to people the viewer follows, so a
+ * reply shows only when its context is in the home too; with `all`, every reply.
+ */
+function homeRepliesFor(viewerActorId: string): SQL {
+  const mode = sql`(select ${users.homeReplies} from ${users} where ${users.actorId} = ${viewerActorId})`;
+  return sql`(
+    ${posts.inReplyToId} is null
+    or ${posts.actorId} = ${viewerActorId}
+    or ${posts.inReplyToActorId} = ${viewerActorId}
+    or exists (select 1 from ${mentions} where ${mentions.postId} = ${posts.id} and ${mentions.actorId} = ${viewerActorId})
+    or ${mode} = 'all'
+    or (${mode} = 'following' and (
+      ${posts.inReplyToActorId} = ${posts.actorId}
+      or exists (select 1 from ${follows} where ${follows.actorId} = ${viewerActorId} and ${follows.targetActorId} = ${posts.inReplyToActorId})
+    ))
+  )`;
+}
 
 /** Excludes posts from servers the admins silenced or suspended (public and tag timelines). */
 const notFromBlockedDomain = sql`not exists (
@@ -62,6 +85,7 @@ export async function streamableTo(
         notFilteredFor(viewerActorId, context),
         notHiddenFor(viewerActorId),
         context === 'public' ? notFromBlockedDomain : undefined,
+        context === 'home' && viewerActorId ? homeRepliesFor(viewerActorId) : undefined,
       ),
     );
   return Boolean(row);
@@ -118,7 +142,7 @@ export function homeTimeline(ctx: CoreContext, viewerActorId: string, query: Pag
         select 1 from ${postTags} inner join ${tagFollows} on ${tagFollows.tagId} = ${postTags.tagId}
         where ${postTags.postId} = ${posts.id} and ${tagFollows.actorId} = ${viewerActorId}
       ))
-    )`,
+    ) and ${homeRepliesFor(viewerActorId)}`,
     query,
     'home',
   );

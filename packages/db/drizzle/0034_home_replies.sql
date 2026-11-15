@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "home_replies" text DEFAULT 'following' NOT NULL;

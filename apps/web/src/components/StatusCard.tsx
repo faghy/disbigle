@@ -43,6 +43,7 @@ import {
 } from './icons.tsx';
 import { Lightbox } from './Lightbox.tsx';
 import { LinkCard } from './LinkCard.tsx';
+import { LongText } from './LongText.tsx';
 import { PollView } from './PollView.tsx';
 import { ReportDialog } from './ReportDialog.tsx';
 import { ShareToGroupDialog } from './ShareToGroupDialog.tsx';
@@ -848,6 +849,7 @@ export function StatusCard({
   const [interactions, setInteractions] = useState<InteractionKind | null>(null);
   const toggle = useToggleStatus();
   const contentId = useId();
+  const textId = useId();
   const headingId = useId();
   const hasWarning = status.summary.length > 0;
   const signedIn = Boolean(user);
@@ -994,11 +996,21 @@ export function StatusCard({
                 className={highlighted ? undefined : 'cursor-pointer'}
                 onClick={highlighted ? undefined : openFromText}
               >
-                <StatusContent
-                  html={shown?.content ?? status.content}
-                  mentions={status.mentions}
-                  className={cx('mt-2', highlighted ? 'text-lg' : 'text-[0.95rem]')}
-                />
+                {highlighted ? (
+                  <StatusContent
+                    html={shown?.content ?? status.content}
+                    mentions={status.mentions}
+                    className="mt-2 text-lg"
+                  />
+                ) : (
+                  <LongText id={textId}>
+                    <StatusContent
+                      html={shown?.content ?? status.content}
+                      mentions={status.mentions}
+                      className="mt-2 text-[0.95rem]"
+                    />
+                  </LongText>
+                )}
               </div>
             )}
             {translation.offered && <TranslationControl translation={translation} />}

@@ -560,7 +560,8 @@
       "post": "Publicación oculta: ya no la verás en tus cronologías.",
       "tag": "Ya no verás en tus cronologías las publicaciones de {{name}} con #{{tag}}.",
       "undo": "Deshacer"
-    }
+    },
+    "showAll": "Ver todo"
   },
   "timeline": {
     "loadMore": "Cargar más",
@@ -575,7 +576,14 @@
       "empty": "Sigue a personas o añádelas a tus aspectos para ver aquí sus publicaciones.",
       "explore": "Explora la cronología local",
       "findPeople": "Encuentra personas a las que seguir: prueba",
-      "findButton": "Buscar personas"
+      "findButton": "Buscar personas",
+      "replies": {
+        "label": "Respuestas",
+        "help": "Qué respuestas de las personas que sigues aparecen aquí",
+        "all": "Todas",
+        "following": "A quien sigo",
+        "none": "Ninguna"
+      }
     },
     "local": {
       "title": "Local",

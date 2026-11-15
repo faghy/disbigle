@@ -144,6 +144,11 @@ export const users = pgTable(
      * default), `auto` (online or away, from their activity) or `busy`.
      */
     presence: text('presence').notNull().default('hidden'),
+    /**
+     * Replies shown on the home timeline: `following` (the default: replies to people you follow,
+     * to yourself, and threads of their own), `all`, or `none` (only posts and reshares).
+     */
+    homeReplies: text('home_replies').notNull().default('following'),
     /** The account this person said they come from at sign-up, to link it later (Move). */
     moveFrom: text('move_from'),
     approved: boolean('approved').notNull().default(true),

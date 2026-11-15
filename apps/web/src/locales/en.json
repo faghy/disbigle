@@ -550,7 +550,8 @@
       "post": "Post hidden: you won't see it in your timelines.",
       "tag": "You won't see {{name}}'s posts with #{{tag}} in your timelines.",
       "undo": "Undo"
-    }
+    },
+    "showAll": "Show all"
   },
   "timeline": {
     "loadMore": "Load more",
@@ -564,7 +565,14 @@
       "empty": "Follow people or add them to your aspects to see their posts here.",
       "explore": "Explore the local timeline",
       "findPeople": "Find people to follow: try",
-      "findButton": "Find people"
+      "findButton": "Find people",
+      "replies": {
+        "label": "Replies",
+        "help": "Which replies from people you follow appear here",
+        "all": "All",
+        "following": "To people I follow",
+        "none": "None"
+      }
     },
     "local": {
       "title": "Local",

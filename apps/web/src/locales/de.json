@@ -550,7 +550,8 @@
       "post": "Beitrag ausgeblendet: Du siehst ihn nicht mehr in deinen Timelines.",
       "tag": "Du siehst die Beiträge von {{name}} mit #{{tag}} nicht mehr in deinen Timelines.",
       "undo": "Rückgängig"
-    }
+    },
+    "showAll": "Alles anzeigen"
   },
   "timeline": {
     "loadMore": "Mehr laden",
@@ -564,7 +565,14 @@
       "empty": "Folge Leuten oder füge sie deinen Aspekten hinzu, um ihre Beiträge hier zu sehen.",
       "explore": "Lokale Timeline erkunden",
       "findPeople": "Finde Leute zum Folgen: Probier",
-      "findButton": "Leute finden"
+      "findButton": "Leute finden",
+      "replies": {
+        "label": "Antworten",
+        "help": "Welche Antworten von Leuten, denen du folgst, hier erscheinen",
+        "all": "Alle",
+        "following": "An Leute, denen ich folge",
+        "none": "Keine"
+      }
     },
     "local": {
       "title": "Lokal",

@@ -39,6 +39,7 @@ export const aliceUser: CurrentUser = {
   totpEnabled: false,
   passkeyCount: 0,
   presence: 'hidden',
+  homeReplies: 'following',
   moveFrom: null,
   aliases: [],
 };

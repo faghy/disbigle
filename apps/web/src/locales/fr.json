@@ -561,7 +561,8 @@
       "post": "Publication masquée : tu ne la verras plus dans tes fils.",
       "tag": "Tu ne verras plus les publications de {{name}} avec #{{tag}} dans tes fils.",
       "undo": "Annuler"
-    }
+    },
+    "showAll": "Tout afficher"
   },
   "timeline": {
     "loadMore": "Charger plus",
@@ -576,7 +577,14 @@
       "empty": "Suis des personnes ou ajoute-les à tes aspects pour voir leurs publications ici.",
       "explore": "Explorer le fil local",
       "findPeople": "Trouve des personnes à suivre : essaie",
-      "findButton": "Trouver des personnes"
+      "findButton": "Trouver des personnes",
+      "replies": {
+        "label": "Réponses",
+        "help": "Quelles réponses des personnes que tu suis apparaissent ici",
+        "all": "Toutes",
+        "following": "À qui je suis",
+        "none": "Aucune"
+      }
     },
     "local": {
       "title": "Local",

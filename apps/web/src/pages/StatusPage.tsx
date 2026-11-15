@@ -9,6 +9,7 @@ import { contextQueryOptions, statusQueryOptions } from '../api/socialQueries.ts
 import { Composer } from '../components/Composer.tsx';
 import { FeedSection } from '../components/FeedSection.tsx';
 import { ChevronLeftIcon } from '../components/icons.tsx';
+import { ShortenLongTextsContext } from '../components/LongText.tsx';
 import { StatusCard } from '../components/StatusCard.tsx';
 import { Alert, LoadingState } from '../components/ui.tsx';
 import { NotFoundPage } from './ErrorPages.tsx';
@@ -47,44 +48,47 @@ export function StatusPage() {
         <h1 className="text-lg font-semibold">{t('thread.title')}</h1>
       </div>
 
-      <FeedSection>
-        {ancestors.length > 0 && (
-          <section aria-label={t('thread.ancestors')}>
-            {ancestors.map((ancestor) => (
-              <StatusCard key={ancestor.id} status={ancestor} />
-            ))}
-          </section>
-        )}
+      {/* On a thread's own page every post is shown whole. */}
+      <ShortenLongTextsContext.Provider value={false}>
+        <FeedSection>
+          {ancestors.length > 0 && (
+            <section aria-label={t('thread.ancestors')}>
+              {ancestors.map((ancestor) => (
+                <StatusCard key={ancestor.id} status={ancestor} />
+              ))}
+            </section>
+          )}
 
-        <div aria-current="page">
-          <StatusCard
-            status={main}
-            highlighted
-            onReply={user ? () => replyRef.current?.focus() : undefined}
-          />
-        </div>
-
-        {user && (
-          <div className="border-b border-border p-3 sm:p-4">
-            <Composer replyTo={main.reblog ?? main} compact textareaRef={replyRef} />
+          <div aria-current="page">
+            <StatusCard
+              status={main}
+              highlighted
+              onReply={user ? () => replyRef.current?.focus() : undefined}
+            />
           </div>
-        )}
 
-        {context.isError && <Alert className="m-4">{errorMessage(context.error)}</Alert>}
-        {descendants.length > 0 && (
-          <section
-            aria-label={t('thread.replies')}
-            className="ml-4 border-l-2 border-border sm:ml-8"
-          >
-            {descendants.map((reply) => (
-              <StatusCard key={reply.id} status={reply} />
-            ))}
-          </section>
-        )}
-        {context.isSuccess && descendants.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-fg-muted">{t('thread.noReplies')}</p>
-        )}
-      </FeedSection>
+          {user && (
+            <div className="border-b border-border p-3 sm:p-4">
+              <Composer replyTo={main.reblog ?? main} compact textareaRef={replyRef} />
+            </div>
+          )}
+
+          {context.isError && <Alert className="m-4">{errorMessage(context.error)}</Alert>}
+          {descendants.length > 0 && (
+            <section
+              aria-label={t('thread.replies')}
+              className="ml-4 border-l-2 border-border sm:ml-8"
+            >
+              {descendants.map((reply) => (
+                <StatusCard key={reply.id} status={reply} />
+              ))}
+            </section>
+          )}
+          {context.isSuccess && descendants.length === 0 && (
+            <p className="px-4 py-8 text-center text-sm text-fg-muted">{t('thread.noReplies')}</p>
+          )}
+        </FeedSection>
+      </ShortenLongTextsContext.Provider>
     </div>
   );
 }
