@@ -6,7 +6,7 @@ import { useFocusTrap } from './Dialog.tsx';
 import { CloseIcon, PenIcon } from './icons.tsx';
 
 /** Pages where a floating compose button would be in the way. */
-const hiddenOn = ['/settings', '/admin', '/messages'];
+const hiddenOn = ['/settings', '/moderation', '/admin', '/messages'];
 
 /**
  * Mobile only: a floating "new post" button above the bottom bar, opening the composer in a

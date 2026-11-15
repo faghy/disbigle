@@ -47,7 +47,8 @@
     "backToTop": "Retour en haut",
     "unreadMessages_one": "{{count}} conversation avec de nouveaux messages",
     "unreadMessages_other": "{{count}} conversations avec de nouveaux messages",
-    "unreadMessages_many": "{{count}} conversations avec de nouveaux messages"
+    "unreadMessages_many": "{{count}} conversations avec de nouveaux messages",
+    "admin": "Administration"
   },
   "footer": {
     "tagline": "Disbigle · un réseau social fédéré",
@@ -1070,8 +1071,15 @@
         "pending": "En attente",
         "suspended": "Suspendu",
         "disabled": "Désactivé",
-        "deleting": "En cours de suppression"
-      }
+        "deleting": "En cours de suppression",
+        "unconfirmed": "E-mail non confirmé"
+      },
+      "filter": "Afficher",
+      "filterAll": "Tout le monde",
+      "filterUnconfirmed": "E-mail non confirmé",
+      "noneUnconfirmed": "Tout le monde a confirmé son adresse e-mail.",
+      "manage": "Gérer",
+      "manageNamed": "Gérer {{name}}"
     },
     "groups": {
       "description": "Tous les groupes de ce serveur, secrets compris. Les groupes secrets restent fermés : seuls leurs membres peuvent les ouvrir.",
@@ -1113,6 +1121,67 @@
       "removeTitle": "Supprimer la publication ?",
       "removeDescription": "La publication est supprimée partout. L'auteur reçoit par e-mail le motif et la façon de contester.",
       "removeConfirm": "Supprimer"
+    },
+    "userDetail": {
+      "back": "Tous les membres",
+      "lastSignIn": "Dernière connexion",
+      "role": "Rôle",
+      "emailState": "E-mail",
+      "twoFactor": "Validation en deux étapes",
+      "totp": "Application d'authentification",
+      "passkeys_one": "{{count}} clé d’accès",
+      "passkeys_other": "{{count}} clés d’accès",
+      "saved": "Modifications enregistrées.",
+      "access": "Accès",
+      "resendConfirmation": "Renvoyer la confirmation",
+      "confirmEmail": "Confirmer l'e-mail à la main",
+      "passwordReset": "Envoyer un lien pour le mot de passe",
+      "resetTwoFactor": "Désactiver la validation en deux étapes",
+      "deleteUnconfirmed": "Supprimer le compte",
+      "accessHint": "Les e-mails partent à l'adresse ci-dessus, dans la langue du compte. Tu ne vois ni ne choisis jamais le mot de passe.",
+      "log": "Ce que les administrateurs ont fait",
+      "logEmpty": "Rien pour le moment.",
+      "data": "Données",
+      "email": "Adresse e-mail",
+      "emailHint": "La modifier conserve l'état de confirmation : renvoie la confirmation si besoin. Si l'ancienne adresse était confirmée, elle est prévenue.",
+      "displayName": "Nom d'affichage",
+      "language": "Langue des e-mails et notifications",
+      "username": "Le nom d'utilisateur @{{username}} ne peut pas changer : c'est l'adresse du compte dans le fédivers.",
+      "actions": {
+        "update_user": "Données modifiées",
+        "resend_confirmation": "Confirmation renvoyée",
+        "confirm_email": "E-mail confirmé à la main",
+        "send_password_reset": "Lien de mot de passe envoyé",
+        "reset_two_factor": "Validation en deux étapes désactivée",
+        "delete_unconfirmed_user": "Compte non confirmé supprimé",
+        "set_role": "Rôle modifié",
+        "suspend_account": "Suspendu",
+        "unsuspend_account": "Suspension levée",
+        "approve_user": "Inscription approuvée"
+      },
+      "done": {
+        "resend_confirmation": "Lien de confirmation envoyé à {{email}}.",
+        "confirm_email": "Adresse confirmée : le compte peut se connecter.",
+        "password_reset": "Lien de réinitialisation envoyé à {{email}}.",
+        "reset_two_factor": "Validation en deux étapes désactivée : le compte se connecte avec le mot de passe seul."
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "Confirmer l'e-mail de {{name}} ?",
+          "description": "{{email}} sera marquée comme confirmée sans le lien envoyé par e-mail. Fais-le seulement si tu es sûr que l'adresse est juste.",
+          "button": "Confirmer"
+        },
+        "reset_two_factor": {
+          "title": "Désactiver la validation en deux étapes de {{name}} ?",
+          "description": "L'application d'authentification, les codes de récupération et les clés d'accès sont supprimés. Fais-le seulement après avoir vérifié que la demande vient bien du titulaire.",
+          "button": "Désactiver"
+        },
+        "delete_unconfirmed": {
+          "title": "Supprimer le compte de {{name}} ?",
+          "description": "Le compte n'a jamais confirmé {{email}} ni ne s'est jamais connecté. Il est supprimé définitivement.",
+          "button": "Supprimer"
+        }
+      }
     }
   },
   "poll": {
@@ -1704,5 +1773,12 @@
     ],
     "contactTitle": "Contact",
     "contact": "Point de contact pour la sécurité des enfants et pour les autorités :"
+  },
+  "moderation": {
+    "title": "Modération"
+  },
+  "administration": {
+    "title": "Administration",
+    "description": "Le serveur, ses membres et ses groupes. Réservé aux administrateurs."
   }
 }

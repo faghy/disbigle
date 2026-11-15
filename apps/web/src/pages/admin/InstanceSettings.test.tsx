@@ -83,7 +83,7 @@ describe('instance settings', () => {
       'GET /admin/pending': { body: [] },
     });
     const { router } = renderApp('/admin/instance');
-    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/pending'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/moderation/pending'));
     const nav = screen.getByRole('navigation', { name: 'Moderation sections' });
     expect(within(nav).queryByRole('link', { name: 'Instance' })).not.toBeInTheDocument();
   });

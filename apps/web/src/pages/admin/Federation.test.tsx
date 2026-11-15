@@ -36,7 +36,7 @@ const routes = (role: 'admin' | 'moderator') => ({
 describe('federation tab', () => {
   it('lists known servers and opens the block form prefilled', async () => {
     mockApi(routes('admin'));
-    const { router } = renderApp('/admin/federation');
+    const { router } = renderApp('/moderation/federation');
     const user = userEvent.setup();
 
     const list = await within(await screen.findByRole('main')).findByRole('list');
@@ -54,13 +54,13 @@ describe('federation tab', () => {
 
     await user.clear(screen.getByRole('searchbox', { name: 'Search servers' }));
     await user.click(await screen.findByRole('link', { name: 'Block mastodon.example' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/domains'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/moderation/domains'));
     expect(await screen.findByRole('textbox', { name: 'Domain' })).toHaveValue('mastodon.example');
   });
 
   it('shows moderators the list without block actions', async () => {
     mockApi(routes('moderator'));
-    renderApp('/admin/federation');
+    renderApp('/moderation/federation');
     expect(await screen.findByText('mastodon.example')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Block / })).not.toBeInTheDocument();
   });

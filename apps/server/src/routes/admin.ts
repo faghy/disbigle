@@ -3,12 +3,15 @@ import {
   approveUser,
   blockDomain,
   type CoreContext,
+  confirmEmailByAdmin,
   countOpenModerationItems,
   createPublicNotice,
   createReport,
   decideReport,
+  deleteUnconfirmedUser,
   federationTraffic,
   getInstanceSettings,
+  getUserForAdmin,
   instanceSettingsPatchSchema,
   listAccountsForAdmin,
   listDomainBlocks,
@@ -20,13 +23,18 @@ import {
   type Mailer,
   rejectUser,
   removePostAsModerator,
+  resendConfirmationByAdmin,
+  resetTwoFactorByAdmin,
   resolveReport,
+  sendPasswordResetByAdmin,
   setUserRole,
   suspendAccountWithReasons,
   unblockDomain,
   unsuspendAccount,
   updateInstanceSettings,
+  updateUserByAdmin,
 } from '@disbigle/core';
+import { supportedLocales } from '@disbigle/shared';
 import type { FastifyInstance } from 'fastify';
 import type { Redis } from 'ioredis';
 import { z } from 'zod';
@@ -118,6 +126,7 @@ export async function adminRoutes(
     const query = parse(
       z.object({
         q: z.string().trim().max(200).optional(),
+        status: z.enum(['unconfirmed']).optional(),
         limit: z.coerce.number().int().min(1).max(500).default(100),
         offset: z.coerce.number().int().min(0).max(1_000_000).default(0),
       }),
@@ -125,6 +134,44 @@ export async function adminRoutes(
     );
     return listUsersForAdmin(ctx, { ...query, ...(query.q ? { query: query.q } : {}) });
   });
+
+  // One person's account: correct their data, look after their address and second factor.
+  app.get('/users/:id', async (request) => {
+    requireAdmin(request);
+    return getUserForAdmin(ctx, parse(idParams, request.params).id);
+  });
+  app.patch('/users/:id', async (request) => {
+    const adminUserId = requireAdmin(request).userId;
+    const patch = parse(
+      z.object({
+        email: z.email().max(320).optional(),
+        displayName: z.string().trim().max(100).optional(),
+        locale: z.enum(supportedLocales).optional(),
+      }),
+      request.body,
+    );
+    await updateUserByAdmin(ctx, adminUserId, parse(idParams, request.params).id, patch);
+    return getUserForAdmin(ctx, parse(idParams, request.params).id);
+  });
+  const userAction = (
+    path: string,
+    action: (
+      ctx: typeof baseCtx & { mailer?: Mailer | undefined },
+      adminUserId: string,
+      userId: string,
+    ) => Promise<void>,
+  ) =>
+    app.post(path, async (request) => {
+      const adminUserId = requireAdmin(request).userId;
+      const { id } = parse(idParams, request.params);
+      await action(ctx, adminUserId, id);
+      return { status: 'ok' };
+    });
+  userAction('/users/:id/resend_confirmation', resendConfirmationByAdmin);
+  userAction('/users/:id/confirm_email', confirmEmailByAdmin);
+  userAction('/users/:id/password_reset', sendPasswordResetByAdmin);
+  userAction('/users/:id/reset_two_factor', resetTwoFactorByAdmin);
+  userAction('/users/:id/delete_unconfirmed', deleteUnconfirmedUser);
   app.get('/groups', async (request) => {
     requireAdmin(request);
     const { q } = parse(z.object({ q: z.string().trim().max(200).optional() }), request.query);
@@ -213,6 +260,7 @@ export async function adminRoutes(
     const { q, limit } = parse(
       z.object({
         q: z.string().trim().max(200).optional(),
+        status: z.enum(['unconfirmed']).optional(),
         limit: z.coerce.number().int().min(1).max(500).default(100),
       }),
       request.query,

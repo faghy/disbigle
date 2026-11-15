@@ -24,7 +24,9 @@ describe('moderation area', () => {
     });
     renderApp('/');
     const links = await screen.findAllByRole('link', { name: /Moderation/ });
-    expect(links[0]).toHaveAttribute('href', '/admin');
+    expect(links[0]).toHaveAttribute('href', '/moderation');
+    // Administration is a separate item, for administrators only.
+    expect(screen.queryByRole('link', { name: 'Administration' })).not.toBeInTheDocument();
     expect((await screen.findAllByText('3 items waiting for moderators')).length).toBeGreaterThan(
       0,
     );
@@ -56,7 +58,7 @@ describe('moderation area', () => {
         return { body: { status: 'ok' } };
       },
     });
-    renderApp('/admin/pending');
+    renderApp('/moderation/pending');
     const user = userEvent.setup();
 
     expect(await screen.findByText('I run a diaspora pod')).toBeInTheDocument();
@@ -101,7 +103,7 @@ describe('moderation area', () => {
       },
       'GET /admin/domain_blocks': { body: [] },
     });
-    renderApp('/admin/accounts');
+    renderApp('/moderation/accounts');
     const user = userEvent.setup();
     const list = await within(await screen.findByRole('main')).findByRole('list');
     expect(within(list).getByRole('button', { name: 'Suspend' })).toBeInTheDocument();

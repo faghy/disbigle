@@ -70,6 +70,7 @@ const carol: AdminUser = {
   avatarUrl: null,
   email: 'carol@example.com',
   role: 'user',
+  emailVerified: true,
   approved: true,
   locale: 'en',
   createdAt: '2026-10-01T10:00:00.000Z',
@@ -104,7 +105,7 @@ describe('admin dashboard', () => {
     );
     expect(screen.getByRole('link', { name: '2 waiting' })).toHaveAttribute(
       'href',
-      '/admin/pending',
+      '/moderation/pending',
     );
     expect(screen.getByRole('img', { name: /New sign-ups: bar chart, 6 in the last 5 days/ }));
     const servers = screen.getByRole('table', { name: 'Busiest servers in the last 7 days' });
@@ -153,7 +154,7 @@ describe('admin dashboard', () => {
     });
     const { router } = renderApp('/admin/users');
     await screen.findByRole('navigation', { name: /Moderation sections/ });
-    expect(router.state.location.pathname).toBe('/admin/pending');
+    expect(router.state.location.pathname).toBe('/moderation/pending');
     expect(screen.queryByRole('link', { name: 'Overview' })).not.toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/admin/users'))).toBe(false);
   });

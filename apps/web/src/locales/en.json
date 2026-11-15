@@ -44,7 +44,8 @@
     "groups": "Groups",
     "backToTop": "Back to top",
     "unreadMessages_one": "{{count}} conversation with new messages",
-    "unreadMessages_other": "{{count}} conversations with new messages"
+    "unreadMessages_other": "{{count}} conversations with new messages",
+    "admin": "Administration"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -1042,8 +1043,15 @@
         "pending": "Waiting",
         "suspended": "Suspended",
         "disabled": "Disabled",
-        "deleting": "Being deleted"
-      }
+        "deleting": "Being deleted",
+        "unconfirmed": "Email not confirmed"
+      },
+      "filter": "Show",
+      "filterAll": "Everyone",
+      "filterUnconfirmed": "Email not confirmed",
+      "noneUnconfirmed": "Everyone has confirmed their email address.",
+      "manage": "Manage",
+      "manageNamed": "Manage {{name}}"
     },
     "groups": {
       "description": "Every group on this server, secret ones included. Secret groups stay closed: only their members can open them.",
@@ -1084,6 +1092,67 @@
       "removeTitle": "Remove the post?",
       "removeDescription": "The post is deleted everywhere. The author receives the ground and how to contest by email.",
       "removeConfirm": "Remove"
+    },
+    "userDetail": {
+      "back": "All people",
+      "lastSignIn": "Last sign-in",
+      "role": "Role",
+      "emailState": "Email",
+      "twoFactor": "Two-step verification",
+      "totp": "Authenticator app",
+      "passkeys_one": "{{count}} passkey",
+      "passkeys_other": "{{count}} passkeys",
+      "saved": "Changes saved.",
+      "access": "Access",
+      "resendConfirmation": "Send the confirmation again",
+      "confirmEmail": "Confirm the email by hand",
+      "passwordReset": "Send a password reset link",
+      "resetTwoFactor": "Clear two-step verification",
+      "deleteUnconfirmed": "Delete account",
+      "accessHint": "Emails go to the address above, in the language of the account. You never see or choose the password.",
+      "log": "What administrators did",
+      "logEmpty": "Nothing yet.",
+      "data": "Data",
+      "email": "Email address",
+      "emailHint": "Changing it keeps the confirmation state: send the confirmation again if needed. A confirmed old address is told about the change.",
+      "displayName": "Display name",
+      "language": "Language of emails and notifications",
+      "username": "The username @{{username}} cannot be changed: it is the address of the account in the fediverse.",
+      "actions": {
+        "update_user": "Data changed",
+        "resend_confirmation": "Confirmation sent again",
+        "confirm_email": "Email confirmed by hand",
+        "send_password_reset": "Password reset link sent",
+        "reset_two_factor": "Two-step verification cleared",
+        "delete_unconfirmed_user": "Unconfirmed account deleted",
+        "set_role": "Role changed",
+        "suspend_account": "Suspended",
+        "unsuspend_account": "Suspension lifted",
+        "approve_user": "Registration approved"
+      },
+      "done": {
+        "resend_confirmation": "Confirmation link sent to {{email}}.",
+        "confirm_email": "Email address confirmed: the account can sign in.",
+        "password_reset": "Password reset link sent to {{email}}.",
+        "reset_two_factor": "Two-step verification cleared: the account signs in with the password only."
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "Confirm the email of {{name}}?",
+          "description": "{{email}} is marked as confirmed without the emailed link. Do it only if you are sure the address is right.",
+          "button": "Confirm"
+        },
+        "reset_two_factor": {
+          "title": "Clear two-step verification for {{name}}?",
+          "description": "The authenticator app, the recovery codes and the passkeys are removed. Do it only after checking that the request really comes from the owner.",
+          "button": "Clear"
+        },
+        "delete_unconfirmed": {
+          "title": "Delete the account of {{name}}?",
+          "description": "The account never confirmed {{email}} and never signed in. It is deleted for good.",
+          "button": "Delete"
+        }
+      }
     }
   },
   "poll": {
@@ -1667,5 +1736,12 @@
     ],
     "contactTitle": "Contact",
     "contact": "Point of contact for child safety and for the authorities:"
+  },
+  "moderation": {
+    "title": "Moderation"
+  },
+  "administration": {
+    "title": "Administration",
+    "description": "The server, its people and its groups. For administrators only."
   }
 }

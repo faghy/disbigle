@@ -132,7 +132,7 @@ function InstanceItem({ server }: { server: KnownInstance }) {
       </div>
       {isAdmin(user) && (
         <Link
-          to="/admin/domains"
+          to="/moderation/domains"
           search={{ domain: server.domain }}
           className={buttonClass(
             server.block ? 'secondary' : 'danger',

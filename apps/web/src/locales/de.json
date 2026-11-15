@@ -44,7 +44,8 @@
     "groups": "Gruppen",
     "backToTop": "Nach oben",
     "unreadMessages_one": "{{count}} Unterhaltung mit neuen Nachrichten",
-    "unreadMessages_other": "{{count}} Unterhaltungen mit neuen Nachrichten"
+    "unreadMessages_other": "{{count}} Unterhaltungen mit neuen Nachrichten",
+    "admin": "Administration"
   },
   "footer": {
     "tagline": "Disbigle · ein föderiertes soziales Netzwerk",
@@ -1042,8 +1043,15 @@
         "pending": "Wartet",
         "suspended": "Gesperrt",
         "disabled": "Deaktiviert",
-        "deleting": "Wird gelöscht"
-      }
+        "deleting": "Wird gelöscht",
+        "unconfirmed": "E-Mail nicht bestätigt"
+      },
+      "filter": "Anzeigen",
+      "filterAll": "Alle",
+      "filterUnconfirmed": "E-Mail nicht bestätigt",
+      "noneUnconfirmed": "Alle haben ihre E-Mail-Adresse bestätigt.",
+      "manage": "Verwalten",
+      "manageNamed": "{{name}} verwalten"
     },
     "groups": {
       "description": "Alle Gruppen auf diesem Server, auch die geheimen. Geheime Gruppen bleiben geschlossen: Nur ihre Mitglieder können sie öffnen.",
@@ -1084,6 +1092,67 @@
       "removeTitle": "Beitrag entfernen?",
       "removeDescription": "Der Beitrag wird überall gelöscht. Die Person, die ihn geschrieben hat, erhält per E-Mail den Grund und wie sie widersprechen kann.",
       "removeConfirm": "Entfernen"
+    },
+    "userDetail": {
+      "back": "Alle Mitglieder",
+      "lastSignIn": "Letzte Anmeldung",
+      "role": "Rolle",
+      "emailState": "E-Mail",
+      "twoFactor": "Zwei-Faktor-Anmeldung",
+      "totp": "Authenticator-App",
+      "passkeys_one": "{{count}} Passkey",
+      "passkeys_other": "{{count}} Passkeys",
+      "saved": "Änderungen gespeichert.",
+      "access": "Zugang",
+      "resendConfirmation": "Bestätigung erneut senden",
+      "confirmEmail": "E-Mail von Hand bestätigen",
+      "passwordReset": "Link zum Zurücksetzen senden",
+      "resetTwoFactor": "Zwei-Faktor-Anmeldung entfernen",
+      "deleteUnconfirmed": "Konto löschen",
+      "accessHint": "E-Mails gehen an die Adresse oben, in der Sprache des Kontos. Das Passwort siehst oder wählst du nie.",
+      "log": "Was Administratoren getan haben",
+      "logEmpty": "Noch nichts.",
+      "data": "Daten",
+      "email": "E-Mail-Adresse",
+      "emailHint": "Beim Ändern bleibt der Bestätigungsstatus erhalten: Sende bei Bedarf die Bestätigung erneut. War die alte Adresse bestätigt, wird sie benachrichtigt.",
+      "displayName": "Anzeigename",
+      "language": "Sprache von E-Mails und Benachrichtigungen",
+      "username": "Der Benutzername @{{username}} lässt sich nicht ändern: Er ist die Adresse des Kontos im Fediverse.",
+      "actions": {
+        "update_user": "Daten geändert",
+        "resend_confirmation": "Bestätigung erneut gesendet",
+        "confirm_email": "E-Mail von Hand bestätigt",
+        "send_password_reset": "Passwort-Link gesendet",
+        "reset_two_factor": "Zwei-Faktor-Anmeldung entfernt",
+        "delete_unconfirmed_user": "Unbestätigtes Konto gelöscht",
+        "set_role": "Rolle geändert",
+        "suspend_account": "Gesperrt",
+        "unsuspend_account": "Sperre aufgehoben",
+        "approve_user": "Registrierung genehmigt"
+      },
+      "done": {
+        "resend_confirmation": "Bestätigungslink an {{email}} gesendet.",
+        "confirm_email": "Adresse bestätigt: Das Konto kann sich anmelden.",
+        "password_reset": "Link zum Zurücksetzen des Passworts an {{email}} gesendet.",
+        "reset_two_factor": "Zwei-Faktor-Anmeldung entfernt: Das Konto meldet sich nur mit dem Passwort an."
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "E-Mail von {{name}} bestätigen?",
+          "description": "{{email}} gilt dann ohne den Link per E-Mail als bestätigt. Tu das nur, wenn du sicher bist, dass die Adresse stimmt.",
+          "button": "Bestätigen"
+        },
+        "reset_two_factor": {
+          "title": "Zwei-Faktor-Anmeldung von {{name}} entfernen?",
+          "description": "Authenticator-App, Wiederherstellungscodes und Passkeys werden entfernt. Tu das nur, wenn du geprüft hast, dass die Anfrage wirklich vom Inhaber kommt.",
+          "button": "Entfernen"
+        },
+        "delete_unconfirmed": {
+          "title": "Konto von {{name}} löschen?",
+          "description": "Das Konto hat {{email}} nie bestätigt und sich nie angemeldet. Es wird endgültig gelöscht.",
+          "button": "Löschen"
+        }
+      }
     }
   },
   "poll": {
@@ -1667,5 +1736,12 @@
     ],
     "contactTitle": "Kontakt",
     "contact": "Ansprechpartner für Kinderschutz und für Behörden:"
+  },
+  "moderation": {
+    "title": "Moderation"
+  },
+  "administration": {
+    "title": "Administration",
+    "description": "Der Server, seine Mitglieder und Gruppen. Nur für Administratoren."
   }
 }

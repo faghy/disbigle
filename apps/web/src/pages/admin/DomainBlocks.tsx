@@ -79,7 +79,7 @@ function AddDomainBlock() {
   const queryClient = useQueryClient();
   const group = useId();
   // The Federation tab links here with ?domain= to block a server quickly.
-  const { domain: prefill } = useSearch({ from: '/admin/domains' });
+  const { domain: prefill } = useSearch({ from: '/moderation/domains' });
   const [domain, setDomain] = useState(prefill ?? '');
   const [severity, setSeverity] = useState<DomainBlockSeverity>('silence');
   const [publicComment, setPublicComment] = useState('');

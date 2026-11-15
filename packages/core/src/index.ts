@@ -16,6 +16,7 @@ export * from './accounts/totp.ts';
 export * from './accounts/urls.ts';
 export * from './accounts/welcome.ts';
 export * from './admin-dashboard.ts';
+export * from './admin-users.ts';
 export * from './context.ts';
 export * from './crypto/keys.ts';
 export * from './crypto/passwords.ts';

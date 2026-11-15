@@ -21,8 +21,10 @@ import { DashboardPage } from './pages/admin/Dashboard.tsx';
 import { DomainBlocksPage } from './pages/admin/DomainBlocks.tsx';
 import { FederationPage } from './pages/admin/Federation.tsx';
 import { InstanceSettingsPage } from './pages/admin/InstanceSettings.tsx';
+import { ModerationLayout } from './pages/admin/ModerationLayout.tsx';
 import { PendingPage } from './pages/admin/Pending.tsx';
 import { ReportsPage } from './pages/admin/Reports.tsx';
+import { UserDetailPage } from './pages/admin/UserDetail.tsx';
 import { UsersPage } from './pages/admin/Users.tsx';
 import { ChildSafetyPage } from './pages/ChildSafety.tsx';
 import { ContactsPage } from './pages/Contacts.tsx';
@@ -366,90 +368,128 @@ const searchRoute = createRoute({
   component: SearchPage,
 });
 
+async function adminsOnly({ context }: { context: RouterContext }) {
+  const me = await context.queryClient.ensureQueryData(meQueryOptions);
+  if (!me) throw redirect({ to: '/login' });
+  if (!isAdmin(me)) throw redirect({ to: isModerator(me) ? '/moderation' : '/' });
+}
+
+/** Moderation: registrations, reports, accounts and federation (moderators and administrators). */
+const moderationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/moderation',
+  beforeLoad: moderatorsOnly,
+  component: ModerationLayout,
+});
+
+const moderationIndexRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/moderation/pending' });
+  },
+});
+
+const moderationPendingRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/pending',
+  component: PendingPage,
+});
+
+const moderationReportsRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/reports',
+  component: ReportsPage,
+});
+
+const moderationAccountsRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/accounts',
+  component: AccountsPage,
+});
+
+const moderationFederationRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/federation',
+  component: FederationPage,
+});
+
+const domainSearch = (search: Record<string, unknown>): { domain?: string | undefined } => ({
+  domain: typeof search.domain === 'string' ? search.domain.slice(0, 253) : undefined,
+});
+
+const moderationDomainsRoute = createRoute({
+  getParentRoute: () => moderationRoute,
+  path: '/domains',
+  validateSearch: domainSearch,
+  component: DomainBlocksPage,
+});
+
+/** Administration: the server, its people and its groups (administrators only). */
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
-  beforeLoad: moderatorsOnly,
+  beforeLoad: adminsOnly,
   component: AdminLayout,
 });
 
 const adminIndexRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/',
-  // Administrators start from the overview, moderators from the waiting list.
-  beforeLoad: async ({ context }) => {
-    const me = await context.queryClient.ensureQueryData(meQueryOptions);
-    throw redirect({ to: isAdmin(me) ? '/admin/dashboard' : '/admin/pending' });
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/dashboard' });
   },
 });
-
-const adminsOnly = async ({ context }: { context: { queryClient: QueryClient } }) => {
-  const me = await context.queryClient.ensureQueryData(meQueryOptions);
-  if (!isAdmin(me)) throw redirect({ to: '/admin/pending' });
-};
 
 const adminDashboardRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/dashboard',
-  beforeLoad: adminsOnly,
   component: DashboardPage,
 });
 
 const adminGroupsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/groups',
-  beforeLoad: adminsOnly,
   component: AdminGroupsPage,
 });
 
 const adminUsersRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/users',
-  beforeLoad: adminsOnly,
   component: UsersPage,
 });
 
-const adminPendingRoute = createRoute({
+const adminUserRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/pending',
-  component: PendingPage,
-});
-
-const adminReportsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/reports',
-  component: ReportsPage,
-});
-
-const adminAccountsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/accounts',
-  component: AccountsPage,
+  path: '/users/$userId',
+  component: UserDetailPage,
 });
 
 const adminInstanceRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/instance',
-  beforeLoad: async ({ context }) => {
-    const me = await context.queryClient.ensureQueryData(meQueryOptions);
-    if (!isAdmin(me)) throw redirect({ to: '/admin/pending' });
-  },
   component: InstanceSettingsPage,
 });
 
-const adminFederationRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/federation',
-  component: FederationPage,
-});
+/** Moderation pages used to live under /admin: old links and bookmarks still work. */
+const movedModerationRoutes = (['pending', 'reports', 'accounts', 'federation'] as const).map(
+  (page) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: `/admin/${page}`,
+      beforeLoad: () => {
+        throw redirect({ to: `/moderation/${page}` });
+      },
+    }),
+);
 
-const adminDomainsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/domains',
-  validateSearch: (search: Record<string, unknown>): { domain?: string | undefined } => ({
-    domain: typeof search.domain === 'string' ? search.domain.slice(0, 253) : undefined,
-  }),
-  component: DomainBlocksPage,
+const movedDomainsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/domains',
+  validateSearch: domainSearch,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: '/moderation/domains', search });
+  },
 });
 
 const forgotPasswordRoute = createRoute({
@@ -542,18 +582,24 @@ export const routeTree = rootRoute.addChildren([
   deleteAccountInfoRoute,
   childSafetyRoute,
   resetPasswordRoute,
+  moderationRoute.addChildren([
+    moderationIndexRoute,
+    moderationPendingRoute,
+    moderationReportsRoute,
+    moderationAccountsRoute,
+    moderationFederationRoute,
+    moderationDomainsRoute,
+  ]),
   adminRoute.addChildren([
     adminIndexRoute,
     adminDashboardRoute,
     adminUsersRoute,
+    adminUserRoute,
     adminGroupsRoute,
-    adminPendingRoute,
-    adminReportsRoute,
-    adminAccountsRoute,
-    adminDomainsRoute,
-    adminFederationRoute,
     adminInstanceRoute,
   ]),
+  ...movedModerationRoutes,
+  movedDomainsRoute,
 ]);
 
 export function createAppRouter(queryClient: QueryClient, history?: RouterHistory) {

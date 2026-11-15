@@ -46,7 +46,8 @@
     "groups": "Grupos",
     "backToTop": "Volver arriba",
     "unreadMessages_one": "{{count}} conversación con mensajes nuevos",
-    "unreadMessages_other": "{{count}} conversaciones con mensajes nuevos"
+    "unreadMessages_other": "{{count}} conversaciones con mensajes nuevos",
+    "admin": "Administración"
   },
   "footer": {
     "tagline": "Disbigle · una red social federada",
@@ -1063,8 +1064,15 @@
         "pending": "En espera",
         "suspended": "Suspendida",
         "disabled": "Desactivada",
-        "deleting": "Borrándose"
-      }
+        "deleting": "Borrándose",
+        "unconfirmed": "Correo sin confirmar"
+      },
+      "filter": "Mostrar",
+      "filterAll": "Todos",
+      "filterUnconfirmed": "Correo sin confirmar",
+      "noneUnconfirmed": "Todos han confirmado su dirección de correo.",
+      "manage": "Gestionar",
+      "manageNamed": "Gestionar a {{name}}"
     },
     "groups": {
       "description": "Todos los grupos de este servidor, también los secretos. Los grupos secretos siguen cerrados: solo los abren sus miembros.",
@@ -1105,6 +1113,67 @@
       "removeTitle": "¿Retirar la publicación?",
       "removeDescription": "La publicación se elimina en todas partes. La autora o el autor recibe por correo el motivo y cómo impugnarlo.",
       "removeConfirm": "Retirar"
+    },
+    "userDetail": {
+      "back": "Todas las personas",
+      "lastSignIn": "Último acceso",
+      "role": "Rol",
+      "emailState": "Correo",
+      "twoFactor": "Verificación en dos pasos",
+      "totp": "App de autenticación",
+      "passkeys_one": "{{count}} llave de acceso",
+      "passkeys_other": "{{count}} llaves de acceso",
+      "saved": "Cambios guardados.",
+      "access": "Acceso",
+      "resendConfirmation": "Reenviar la confirmación",
+      "confirmEmail": "Confirmar el correo a mano",
+      "passwordReset": "Enviar enlace para la contraseña",
+      "resetTwoFactor": "Quitar la verificación en dos pasos",
+      "deleteUnconfirmed": "Eliminar la cuenta",
+      "accessHint": "Los correos llegan a la dirección de arriba, en el idioma de la cuenta. Nunca ves ni eliges la contraseña.",
+      "log": "Lo que hicieron los administradores",
+      "logEmpty": "Nada todavía.",
+      "data": "Datos",
+      "email": "Dirección de correo",
+      "emailHint": "Al cambiarla se mantiene el estado de confirmación: reenvía la confirmación si hace falta. Si la dirección anterior estaba confirmada, recibe un aviso.",
+      "displayName": "Nombre visible",
+      "language": "Idioma de correos y notificaciones",
+      "username": "El nombre de usuario @{{username}} no se puede cambiar: es la dirección de la cuenta en el fediverso.",
+      "actions": {
+        "update_user": "Datos modificados",
+        "resend_confirmation": "Confirmación reenviada",
+        "confirm_email": "Correo confirmado a mano",
+        "send_password_reset": "Enlace de contraseña enviado",
+        "reset_two_factor": "Verificación en dos pasos quitada",
+        "delete_unconfirmed_user": "Cuenta sin confirmar eliminada",
+        "set_role": "Rol cambiado",
+        "suspend_account": "Suspendida",
+        "unsuspend_account": "Suspensión levantada",
+        "approve_user": "Registro aprobado"
+      },
+      "done": {
+        "resend_confirmation": "Enlace de confirmación enviado a {{email}}.",
+        "confirm_email": "Dirección confirmada: la cuenta ya puede entrar.",
+        "password_reset": "Enlace para restablecer la contraseña enviado a {{email}}.",
+        "reset_two_factor": "Verificación en dos pasos quitada: la cuenta entra solo con la contraseña."
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "¿Confirmar el correo de {{name}}?",
+          "description": "{{email}} quedará confirmado sin el enlace por correo. Hazlo solo si estás seguro de que la dirección es correcta.",
+          "button": "Confirmar"
+        },
+        "reset_two_factor": {
+          "title": "¿Quitar la verificación en dos pasos de {{name}}?",
+          "description": "Se eliminan la app de autenticación, los códigos de recuperación y las llaves de acceso. Hazlo solo tras comprobar que la petición viene de verdad del titular.",
+          "button": "Quitar"
+        },
+        "delete_unconfirmed": {
+          "title": "¿Eliminar la cuenta de {{name}}?",
+          "description": "La cuenta nunca confirmó {{email}} ni inició sesión. Se elimina para siempre.",
+          "button": "Eliminar"
+        }
+      }
     }
   },
   "poll": {
@@ -1693,5 +1762,12 @@
     ],
     "contactTitle": "Contacto",
     "contact": "Punto de contacto para la seguridad infantil y para las autoridades:"
+  },
+  "moderation": {
+    "title": "Moderación"
+  },
+  "administration": {
+    "title": "Administración",
+    "description": "El servidor, sus personas y sus grupos. Solo para administradores."
   }
 }

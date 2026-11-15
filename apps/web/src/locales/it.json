@@ -44,7 +44,8 @@
     "groups": "Gruppi",
     "backToTop": "Torna su",
     "unreadMessages_one": "{{count}} conversazione con messaggi nuovi",
-    "unreadMessages_other": "{{count}} conversazioni con messaggi nuovi"
+    "unreadMessages_other": "{{count}} conversazioni con messaggi nuovi",
+    "admin": "Amministrazione"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -1042,8 +1043,15 @@
         "pending": "In attesa",
         "suspended": "Sospeso",
         "disabled": "Disattivato",
-        "deleting": "In cancellazione"
-      }
+        "deleting": "In cancellazione",
+        "unconfirmed": "Email da confermare"
+      },
+      "filter": "Mostra",
+      "filterAll": "Tutti",
+      "filterUnconfirmed": "Email da confermare",
+      "noneUnconfirmed": "Tutti hanno confermato l'indirizzo email.",
+      "manage": "Gestisci",
+      "manageNamed": "Gestisci {{name}}"
     },
     "groups": {
       "description": "Tutti i gruppi di questo server, compresi quelli segreti. I gruppi segreti restano chiusi: li aprono solo i loro membri.",
@@ -1084,6 +1092,67 @@
       "removeTitle": "Rimuovere il post?",
       "removeDescription": "Il post viene eliminato ovunque. L'autore riceve via email il motivo e come contestare.",
       "removeConfirm": "Rimuovi"
+    },
+    "userDetail": {
+      "back": "Tutte le persone",
+      "lastSignIn": "Ultimo accesso",
+      "role": "Ruolo",
+      "emailState": "Email",
+      "twoFactor": "Verifica in due passaggi",
+      "totp": "App di autenticazione",
+      "passkeys_one": "{{count}} passkey",
+      "passkeys_other": "{{count}} passkey",
+      "saved": "Modifiche salvate.",
+      "access": "Accesso",
+      "resendConfirmation": "Rimanda la conferma",
+      "confirmEmail": "Conferma l'email a mano",
+      "passwordReset": "Manda il link per la password",
+      "resetTwoFactor": "Azzera la verifica in due passaggi",
+      "deleteUnconfirmed": "Elimina l'account",
+      "accessHint": "Le email arrivano all'indirizzo qui sopra, nella lingua dell'account. La password non la vedi né la scegli mai.",
+      "log": "Cosa hanno fatto gli amministratori",
+      "logEmpty": "Ancora niente.",
+      "data": "Dati",
+      "email": "Indirizzo email",
+      "emailHint": "Cambiandolo, lo stato di conferma resta com'è: se serve, rimanda la conferma. Se il vecchio indirizzo era confermato, riceve un avviso.",
+      "displayName": "Nome visualizzato",
+      "language": "Lingua di email e notifiche",
+      "username": "Il nome utente @{{username}} non si può cambiare: è l'indirizzo dell'account nel fediverso.",
+      "actions": {
+        "update_user": "Dati modificati",
+        "resend_confirmation": "Conferma rimandata",
+        "confirm_email": "Email confermata a mano",
+        "send_password_reset": "Link per la password inviato",
+        "reset_two_factor": "Verifica in due passaggi azzerata",
+        "delete_unconfirmed_user": "Account non confermato eliminato",
+        "set_role": "Ruolo cambiato",
+        "suspend_account": "Sospeso",
+        "unsuspend_account": "Sospensione revocata",
+        "approve_user": "Registrazione approvata"
+      },
+      "done": {
+        "resend_confirmation": "Link di conferma inviato a {{email}}.",
+        "confirm_email": "Indirizzo email confermato: l'account può accedere.",
+        "password_reset": "Link per reimpostare la password inviato a {{email}}.",
+        "reset_two_factor": "Verifica in due passaggi azzerata: l'account accede solo con la password."
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "Confermare l'email di {{name}}?",
+          "description": "{{email}} risulterà confermata senza il link via email. Fallo solo se sei sicuro che l'indirizzo sia giusto.",
+          "button": "Conferma"
+        },
+        "reset_two_factor": {
+          "title": "Azzerare la verifica in due passaggi di {{name}}?",
+          "description": "Vengono tolti l'app di autenticazione, i codici di recupero e le passkey. Fallo solo dopo aver verificato che la richiesta arrivi davvero dal titolare.",
+          "button": "Azzera"
+        },
+        "delete_unconfirmed": {
+          "title": "Eliminare l'account di {{name}}?",
+          "description": "L'account non ha mai confermato {{email}} e non ha mai fatto l'accesso. Viene eliminato definitivamente.",
+          "button": "Elimina"
+        }
+      }
     }
   },
   "poll": {
@@ -1667,5 +1736,12 @@
     ],
     "contactTitle": "Contatto",
     "contact": "Referente per la sicurezza dei minori e per le autorità:"
+  },
+  "moderation": {
+    "title": "Moderazione"
+  },
+  "administration": {
+    "title": "Amministrazione",
+    "description": "Il server, le persone e i gruppi. Solo per gli amministratori."
   }
 }

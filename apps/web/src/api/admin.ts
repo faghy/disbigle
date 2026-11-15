@@ -1,4 +1,5 @@
 import type {
+  Account,
   AdminAccount,
   CurrentUser,
   DomainBlock,
@@ -102,6 +103,7 @@ export interface AdminUser {
   email: string;
   role: Role;
   approved: boolean;
+  emailVerified: boolean;
   locale: string;
   createdAt: string;
   lastSignInAt: string | null;
@@ -115,6 +117,44 @@ export interface AdminUser {
   disabled: boolean;
   deletionRequested: boolean;
 }
+
+/** `GET /admin/users/:id`: one person's account, with the log of what administrators did to it. */
+export interface AdminUserDetail {
+  userId: string;
+  account: Account;
+  email: string;
+  emailVerifiedAt: string | null;
+  approved: boolean;
+  role: Role;
+  locale: string;
+  totp: boolean;
+  passkeys: number;
+  createdAt: string;
+  lastSignInAt: string | null;
+  suspended: boolean;
+  disabled: boolean;
+  deletionRequested: boolean;
+  log: {
+    id: string;
+    action: string;
+    details: Record<string, unknown>;
+    createdAt: string;
+    byUsername: string | null;
+  }[];
+}
+
+export interface AdminUserPatch {
+  email?: string;
+  displayName?: string;
+  locale?: string;
+}
+
+export type AdminUserAction =
+  | 'resend_confirmation'
+  | 'confirm_email'
+  | 'password_reset'
+  | 'reset_two_factor'
+  | 'delete_unconfirmed';
 
 /** `GET /admin/groups`: a group of this server, as administrators see it. */
 export interface AdminGroup {
@@ -143,8 +183,13 @@ export const admin = {
   dashboard: () => api.get<AdminDashboard>('/admin/dashboard'),
   groups: (q?: string) =>
     api.get<AdminGroup[]>(`/admin/groups${queryString({ q: q || undefined })}`),
-  users: (q?: string) =>
-    api.get<AdminUser[]>(`/admin/users${queryString({ q: q || undefined, limit: 500 })}`),
+  users: (q?: string, status?: 'unconfirmed') =>
+    api.get<AdminUser[]>(`/admin/users${queryString({ q: q || undefined, status, limit: 500 })}`),
+  user: (userId: string) => api.get<AdminUserDetail>(`/admin/users/${id(userId)}`),
+  updateUser: (userId: string, patch: AdminUserPatch) =>
+    api.patch<AdminUserDetail>(`/admin/users/${id(userId)}`, patch),
+  userAction: (userId: string, action: AdminUserAction) =>
+    api.post<Ok>(`/admin/users/${id(userId)}/${action}`),
   summary: () => api.get<ModerationSummary>('/admin/summary'),
   pending: () => api.get<PendingUser[]>('/admin/pending'),
   approve: (userId: string) => api.post<Ok>(`/admin/pending/${id(userId)}/approve`),
@@ -178,7 +223,8 @@ export const adminKeys = {
   all: ['admin'] as const,
   summary: ['admin', 'summary'] as const,
   dashboard: ['admin', 'dashboard'] as const,
-  users: (q: string) => ['admin', 'users', q] as const,
+  users: (q: string, status = '') => ['admin', 'users', q, status] as const,
+  user: (userId: string) => ['admin', 'user', userId] as const,
   groups: (q: string) => ['admin', 'groups', q] as const,
   pending: ['admin', 'pending'] as const,
   reports: (resolved: boolean) => ['admin', 'reports', resolved] as const,

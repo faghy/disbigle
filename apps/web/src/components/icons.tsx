@@ -189,6 +189,12 @@ export const ShieldIcon = (p: IconProps) => (
     <path d="M9 12l2 2 4-4" />
   </Icon>
 );
+/** A wrench: the administration of the server. */
+export const WrenchIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14.7 6.3a4 4 0 0 0 5 5L21 13a6 6 0 0 1-7.6 1.7L6.5 21.5a2.1 2.1 0 0 1-3-3l6.8-6.9A6 6 0 0 1 12 4l1.7 1.3z" />
+  </Icon>
+);
 export const CameraIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M4 8h3l2-3h6l2 3h3v11H4z" />

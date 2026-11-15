@@ -48,7 +48,7 @@ describe('mobile navigation', () => {
       '/activity',
       '/bookmarks',
       '/settings',
-      '/admin',
+      '/moderation',
       '/about',
     ]);
 

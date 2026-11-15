@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { type ComponentType, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { isModerator, summaryQueryOptions } from '../api/admin.ts';
+import { isAdmin, isModerator, summaryQueryOptions } from '../api/admin.ts';
 import { unreadConversationsKey } from '../api/cache.ts';
 import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
@@ -42,6 +42,7 @@ import {
   SearchIcon,
   SettingsIcon,
   ShieldIcon,
+  WrenchIcon,
 } from './icons.tsx';
 import { Logo } from './Logo.tsx';
 import { NotificationBell } from './NotificationBell.tsx';
@@ -119,6 +120,7 @@ interface NavItem {
     | '/activity'
     | '/bookmarks'
     | '/settings'
+    | '/moderation'
     | '/admin';
   label: string;
   icon: ComponentType<{ size?: number }>;
@@ -179,7 +181,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     ...(moderator
       ? [
           {
-            to: '/admin' as const,
+            to: '/moderation' as const,
             label: t('nav.moderation'),
             icon: ShieldIcon,
             badge: (summary.data?.pendingUsers ?? 0) + (summary.data?.openReports ?? 0),
@@ -187,6 +189,8 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
           },
         ]
       : []),
+    // Administration comes last, for administrators only.
+    ...(isAdmin(user) ? [{ to: '/admin' as const, label: t('nav.admin'), icon: WrenchIcon }] : []),
   ];
 }
 
@@ -435,6 +439,7 @@ const morePaths = [
   '/activity',
   '/bookmarks',
   '/settings',
+  '/moderation',
   '/admin',
 ];
 

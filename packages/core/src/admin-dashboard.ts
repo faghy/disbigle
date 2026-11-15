@@ -205,7 +205,13 @@ export async function federationTraffic(ctx: CoreContext) {
 /** Local people with what an administrator needs to look after them. */
 export async function listUsersForAdmin(
   ctx: CoreContext,
-  options: { query?: string; limit?: number; offset?: number } = {},
+  options: {
+    query?: string;
+    /** `unconfirmed`: only accounts whose email address is not confirmed yet. */
+    status?: 'unconfirmed' | undefined;
+    limit?: number;
+    offset?: number;
+  } = {},
 ) {
   const term = options.query ? `%${options.query.replace(/[%_\\]/g, (c) => `\\${c}`)}%` : null;
   const rows = await ctx.db
@@ -218,6 +224,7 @@ export async function listUsersForAdmin(
       email: users.email,
       role: users.role,
       approved: users.approved,
+      emailVerifiedAt: users.emailVerifiedAt,
       locale: users.locale,
       createdAt: users.createdAt,
       lastSignInAt: users.lastSignInAt,
@@ -241,6 +248,7 @@ export async function listUsersForAdmin(
     .where(
       and(
         eq(actors.isGroup, false),
+        options.status === 'unconfirmed' ? isNull(users.emailVerifiedAt) : undefined,
         term
           ? or(
               ilike(actors.username, term),
@@ -254,8 +262,9 @@ export async function listUsersForAdmin(
     .limit(Math.min(options.limit ?? 100, 500))
     .offset(options.offset ?? 0);
   const iso = (value: Date | string | null) => (value ? new Date(value).toISOString() : null);
-  return rows.map(({ suspendedAt, disabledAt, deletionRequestedAt, ...row }) => ({
+  return rows.map(({ suspendedAt, disabledAt, deletionRequestedAt, emailVerifiedAt, ...row }) => ({
     ...row,
+    emailVerified: emailVerifiedAt !== null,
     createdAt: iso(row.createdAt) as string,
     lastSignInAt: iso(row.lastSignInAt),
     lastActiveAt: iso(row.lastActiveAt),

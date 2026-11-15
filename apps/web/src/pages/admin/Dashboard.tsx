@@ -130,7 +130,7 @@ function Numbers({ data }: { data: AdminDashboard }) {
             {users.pending > 0 && (
               <>
                 {' · '}
-                <Link to="/admin/pending" className="text-accent hover:underline">
+                <Link to="/moderation/pending" className="text-accent hover:underline">
                   {t('admin.dashboard.pending', { count: users.pending })}
                 </Link>
               </>

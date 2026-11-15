@@ -8,13 +8,14 @@ import { Avatar } from '../../components/Avatar.tsx';
 import { Alert, Button, Card, cx, LoadingState } from '../../components/ui.tsx';
 import { fullDateTime, relativeTime } from '../../lib/time.ts';
 
-type Status = 'active' | 'pending' | 'suspended' | 'disabled' | 'deleting';
+type Status = 'active' | 'pending' | 'unconfirmed' | 'suspended' | 'disabled' | 'deleting';
 
 function statusOf(user: AdminUser): Status {
   if (user.deletionRequested) return 'deleting';
   if (user.suspended) return 'suspended';
   if (user.disabled) return 'disabled';
   if (!user.approved) return 'pending';
+  if (!user.emailVerified) return 'unconfirmed';
   return 'active';
 }
 
@@ -50,15 +51,17 @@ function downloadCsv(users: AdminUser[]) {
 export function UsersPage() {
   const { t } = useTranslation();
   const id = useId();
+  const filterId = useId();
   const [text, setText] = useState('');
+  const [unconfirmed, setUnconfirmed] = useState(false);
   const [query, setQuery] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setQuery(text.trim()), 300);
     return () => clearTimeout(timer);
   }, [text]);
   const users = useQuery({
-    queryKey: adminKeys.users(query),
-    queryFn: () => admin.users(query),
+    queryKey: adminKeys.users(query, unconfirmed ? 'unconfirmed' : ''),
+    queryFn: () => admin.users(query, unconfirmed ? 'unconfirmed' : undefined),
     placeholderData: (previous) => previous,
   });
 
@@ -82,6 +85,20 @@ export function UsersPage() {
             onChange={(event) => setText(event.target.value)}
           />
         </div>
+        <div className="space-y-1">
+          <label htmlFor={filterId} className="block text-xs font-medium text-fg-muted">
+            {t('admin.users.filter')}
+          </label>
+          <select
+            id={filterId}
+            className="input-base"
+            value={unconfirmed ? 'unconfirmed' : 'all'}
+            onChange={(event) => setUnconfirmed(event.target.value === 'unconfirmed')}
+          >
+            <option value="all">{t('admin.users.filterAll')}</option>
+            <option value="unconfirmed">{t('admin.users.filterUnconfirmed')}</option>
+          </select>
+        </div>
         <Button
           variant="secondary"
           disabled={!users.data?.length}
@@ -96,7 +113,11 @@ export function UsersPage() {
         <Alert>{errorMessage(users.error)}</Alert>
       ) : users.data.length === 0 ? (
         <Card className="text-center text-fg-muted">
-          {query ? t('admin.users.noMatch', { query }) : t('admin.users.empty')}
+          {query
+            ? t('admin.users.noMatch', { query })
+            : unconfirmed
+              ? t('admin.users.noneUnconfirmed')
+              : t('admin.users.empty')}
         </Card>
       ) : (
         <>
@@ -194,13 +215,21 @@ export function UserRow({ user }: { user: AdminUser }) {
             'rounded-full px-2 py-0.5 text-xs font-medium',
             status === 'active'
               ? 'bg-success-soft text-success'
-              : status === 'pending'
+              : status === 'pending' || status === 'unconfirmed'
                 ? 'bg-accent-soft text-accent'
                 : 'bg-danger-soft text-danger',
           )}
         >
           {t(`admin.users.statuses.${status}`)}
         </span>
+        <Link
+          to="/admin/users/$userId"
+          params={{ userId: user.userId }}
+          className="rounded-full border border-border px-3 py-0.5 text-xs font-medium hover:bg-surface-muted focus-ring"
+          aria-label={t('admin.users.manageNamed', { name: user.displayName || user.username })}
+        >
+          {t('admin.users.manage')}
+        </Link>
       </div>
       <a href={`mailto:${user.email}`} className="block text-sm break-all hover:underline">
         {user.email}

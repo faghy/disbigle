@@ -32,7 +32,7 @@
     "activity": "我的动态",
     "bookmarks": "书签",
     "unread_other": "{{count}} 条未读通知",
-    "moderation": "管理",
+    "moderation": "审核",
     "moderationPending_other": "{{count}} 项待审核员处理",
     "messages": "私信",
     "more": "更多",
@@ -41,7 +41,8 @@
     "contacts": "联系人",
     "groups": "群组",
     "backToTop": "回到顶部",
-    "unreadMessages_other": "{{count}} 个对话有新消息"
+    "unreadMessages_other": "{{count}} 个对话有新消息",
+    "admin": "管理"
   },
   "footer": {
     "tagline": "Disbigle · 联邦式社交网络",
@@ -1014,8 +1015,15 @@
         "pending": "等待中",
         "suspended": "已封禁",
         "disabled": "已停用",
-        "deleting": "正在删除"
-      }
+        "deleting": "正在删除",
+        "unconfirmed": "邮箱未确认"
+      },
+      "filter": "显示",
+      "filterAll": "全部",
+      "filterUnconfirmed": "邮箱未确认",
+      "noneUnconfirmed": "所有人都已确认邮箱地址。",
+      "manage": "管理",
+      "manageNamed": "管理 {{name}}"
     },
     "groups": {
       "description": "本服务器上的所有群组，包括秘密群组。秘密群组保持封闭：只有成员才能打开。",
@@ -1055,6 +1063,66 @@
       "removeTitle": "要删除这条帖子吗？",
       "removeDescription": "这条帖子将在所有地方被删除。作者会通过邮件收到删除依据和申诉方式。",
       "removeConfirm": "删除"
+    },
+    "userDetail": {
+      "back": "全部用户",
+      "lastSignIn": "上次登录",
+      "role": "角色",
+      "emailState": "邮箱",
+      "twoFactor": "两步验证",
+      "totp": "身份验证器应用",
+      "passkeys_other": "{{count}} 个通行密钥",
+      "saved": "更改已保存。",
+      "access": "访问",
+      "resendConfirmation": "重新发送确认邮件",
+      "confirmEmail": "手动确认邮箱",
+      "passwordReset": "发送重置密码链接",
+      "resetTwoFactor": "清除两步验证",
+      "deleteUnconfirmed": "删除账号",
+      "accessHint": "邮件会以账号的语言发送到上面的地址。你永远不会看到或设定密码。",
+      "log": "管理员的操作记录",
+      "logEmpty": "暂无记录。",
+      "data": "资料",
+      "email": "邮箱地址",
+      "emailHint": "更改后确认状态保持不变：如有需要请重新发送确认邮件。如果旧地址已确认，会收到通知。",
+      "displayName": "显示名称",
+      "language": "邮件和通知的语言",
+      "username": "用户名 @{{username}} 无法更改：它是该账号在联邦宇宙中的地址。",
+      "actions": {
+        "update_user": "资料已修改",
+        "resend_confirmation": "已重新发送确认",
+        "confirm_email": "已手动确认邮箱",
+        "send_password_reset": "已发送密码链接",
+        "reset_two_factor": "已清除两步验证",
+        "delete_unconfirmed_user": "已删除未确认账号",
+        "set_role": "角色已更改",
+        "suspend_account": "已封禁",
+        "unsuspend_account": "已解除封禁",
+        "approve_user": "注册已批准"
+      },
+      "done": {
+        "resend_confirmation": "确认链接已发送至 {{email}}。",
+        "confirm_email": "邮箱地址已确认：该账号现在可以登录。",
+        "password_reset": "重置密码链接已发送至 {{email}}。",
+        "reset_two_factor": "两步验证已清除：该账号仅需密码即可登录。"
+      },
+      "confirm": {
+        "confirm_email": {
+          "title": "确认 {{name}} 的邮箱？",
+          "description": "{{email}} 将在未点击邮件链接的情况下标记为已确认。请仅在确定地址正确时操作。",
+          "button": "确认"
+        },
+        "reset_two_factor": {
+          "title": "清除 {{name}} 的两步验证？",
+          "description": "身份验证器应用、恢复码和通行密钥都将被移除。请在核实请求确实来自账号本人后再操作。",
+          "button": "清除"
+        },
+        "delete_unconfirmed": {
+          "title": "删除 {{name}} 的账号？",
+          "description": "该账号从未确认 {{email}}，也从未登录。账号将被永久删除。",
+          "button": "删除"
+        }
+      }
     }
   },
   "poll": {
@@ -1630,5 +1698,12 @@
     ],
     "contactTitle": "联系方式",
     "contact": "儿童安全及主管机关联络人："
+  },
+  "moderation": {
+    "title": "审核"
+  },
+  "administration": {
+    "title": "管理",
+    "description": "服务器、用户和群组。仅限管理员。"
   }
 }
