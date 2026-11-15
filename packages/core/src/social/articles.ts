@@ -23,7 +23,7 @@ const translationSchema = z.object({
 export const publishArticleSchema = z.object({
   /** One version per language; `en` (or the first one) is the main post. */
   translations: z
-    .record(z.enum(supportedLocales), translationSchema)
+    .partialRecord(z.enum(supportedLocales), translationSchema)
     .refine((t) => Object.keys(t).length > 0, 'At least one language'),
   /** Main language, when not English. */
   language: z.enum(supportedLocales).optional(),
