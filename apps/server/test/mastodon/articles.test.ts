@@ -3,14 +3,15 @@ import { mastodonUser, signUp, useMastodonApp } from './helpers.ts';
 
 const { app } = useMastodonApp();
 
+// Sent out of order on purpose: the links always come in the same order.
 const translations = {
+  es: { title: 'Borradores guardados', url: 'https://site.example/es/2026/borradores' },
   en: {
     title: 'Drafts saved while you write',
     summary: 'The composer keeps what you write.',
     url: 'https://site.example/2026/drafts',
   },
   it: { title: 'Bozze salvate mentre scrivi', url: 'https://site.example/it/2026/bozze' },
-  es: { title: 'Borradores guardados', url: 'https://site.example/es/2026/borradores' },
 };
 
 type Notification = { type: string; status: { id: string } | null };
@@ -45,6 +46,9 @@ describe('articles from a website (Cleitext "disbigle" plugin)', () => {
     expect(status.content).toContain('https://site.example/2026/drafts');
     expect(status.content).toContain('https://site.example/it/2026/bozze');
     expect(status.content).toContain('https://site.example/es/2026/borradores');
+    expect(status.content.indexOf('/it/2026/bozze')).toBeLessThan(
+      status.content.indexOf('/es/2026/borradores'),
+    );
     expect(status.tags.map((t: { name: string }) => t.name)).toEqual(['news']);
     const mentioned = (s: { mentions: { username: string }[] }) =>
       s.mentions.map((m) => m.username);

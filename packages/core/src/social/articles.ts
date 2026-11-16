@@ -68,6 +68,9 @@ const languageNames: Record<Locale, string> = {
 };
 
 /** Markdown link text cannot hold brackets unescaped. */
+/** The order of the links to the other languages, whatever order the site sends them in. */
+const linkOrder: Locale[] = ['en', 'it', 'es', 'zh', 'fr', 'de'];
+
 const linkText = (text: string) => text.replace(/([\\[\]])/g, '\\$1');
 
 function body(
@@ -145,7 +148,7 @@ export async function publishArticle(
     groups.set(target, [...(groups.get(target) ?? []), handle]);
   }
 
-  const others = languages
+  const others = [...linkOrder, ...supportedLocales.filter((l) => !linkOrder.includes(l))]
     .filter((language) => language !== main)
     .map((language) => {
       const translation = input.translations[language];
