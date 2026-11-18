@@ -244,7 +244,9 @@ private fun Bubble(status: Status, nav: Nav, mine: Boolean, showAuthor: Boolean)
   val context = LocalContext.current
   val bubbleColor = if (mine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
   val textColor = if (mine) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-  val html = remember(status.content) { withoutLeadingMentions(status.content) }
+  val translator = rememberTranslator(status, mine)
+  val content = translator.translation?.content ?: status.content
+  val html = remember(content) { withoutLeadingMentions(content) }
   val text = remember(html, textColor) { richText(html, textColor) { nav.link(status, it, context) } }
   Column(Modifier.fillMaxWidth(), horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
     if (showAuthor && !mine) {
@@ -260,10 +262,13 @@ private fun Bubble(status: Status, nav: Nav, mine: Boolean, showAuthor: Boolean)
         .background(bubbleColor)
         .padding(horizontal = 14.dp, vertical = 8.dp),
     ) {
-      if (status.spoilerText.isNotEmpty()) Text(status.spoilerText, color = textColor, fontWeight = FontWeight.SemiBold)
+      if (status.spoilerText.isNotEmpty()) {
+        Text(translator.translation?.spoilerText?.takeIf { it.isNotEmpty() } ?: status.spoilerText, color = textColor, fontWeight = FontWeight.SemiBold)
+      }
       if (text.isNotEmpty()) Text(text, color = textColor, style = MaterialTheme.typography.bodyLarge)
       if (status.mediaAttachments.isNotEmpty()) MediaGrid(status.mediaAttachments, status.sensitive)
     }
+    if (translator.canTranslate) Box(Modifier.padding(horizontal = 8.dp)) { TranslationControls(translator) }
     Text(
       relative(status.created), style = MaterialTheme.typography.labelSmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -150,33 +150,10 @@ fun StatusRow(
   var hidden by remember(status.id) { mutableStateOf<HiddenNote?>(null) }
   var reporting by remember { mutableStateOf(false) }
   val linkColor = MaterialTheme.colorScheme.primary
-  // Translation: offered for other people's posts in another language the server can translate.
   val appLocale = LocalConfiguration.current.locales[0]
-  val source = shown.baseLanguage
-  val canTranslate = !isMine && source != null && source != appLocale.language &&
-    model.instance?.translationEnabled == true && model.translationLanguages?.get(source)?.contains(appLocale.language) == true
-  val translation = model.translations[shown.id]?.takeIf { canTranslate && model.showingOriginal[shown.id] != true }
-  var translating by remember(shown.id) { mutableStateOf(false) }
-  var translateError by remember(shown.id) { mutableStateOf<String?>(null) }
-
-  fun translate() {
-    if (model.translations.containsKey(shown.id)) {
-      model.showingOriginal.remove(shown.id)
-      return
-    }
-    val client = model.client ?: return
-    translating = true
-    translateError = null
-    scope.launch {
-      try {
-        model.translations[shown.id] = client.translate(shown.id, appLocale.language)
-      } catch (e: Exception) {
-        translateError = context.getString(R.string.translation_unavailable)
-      } finally {
-        translating = false
-      }
-    }
-  }
+  val translator = rememberTranslator(shown, isMine)
+  val canTranslate = translator.canTranslate
+  val translation = translator.translation
 
   fun act(action: StatusAction) {
     val client = model.client ?: return
@@ -258,15 +235,14 @@ fun StatusRow(
           val content = translation?.content ?: shown.content
           val text = remember(content, linkColor) { richText(content, linkColor) { nav.link(shown, it, context) } }
           if (text.isNotEmpty()) {
-            Text(text, style = if (focused) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal) else MaterialTheme.typography.bodyLarge)
+            if (focused) {
+              Text(text, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal))
+            } else {
+              LongText(text, key = shown.id)
+            }
           }
         }
-        if (canTranslate) {
-          TranslationLine(
-            translating, translation?.let { languageName(it.detectedSourceLanguage.ifEmpty { source!! }, appLocale) }, translateError,
-            onTranslate = { translate() }, onShowOriginal = { model.showingOriginal[shown.id] = true },
-          )
-        }
+        if (canTranslate) TranslationControls(translator)
         if (shown.mediaAttachments.isNotEmpty()) MediaGrid(shown.mediaAttachments, shown.sensitive)
         if (shown.mediaAttachments.isEmpty() && shown.poll == null) {
           // YouTube links get no server card (the web plays them in place): a thumbnail with ▶︎.
@@ -414,6 +390,65 @@ private fun HiddenPlaceholder(note: HiddenNote, modifier: Modifier, onUndo: () -
 }
 
 /** "Translate", "Translating…", or where the translation comes from with the way back to the original. */
+/** A post's translation: whether it can be translated, the shown translation and the action. */
+class Translator(
+  val canTranslate: Boolean,
+  val translation: com.disbigle.kit.Translation?,
+  val translatedFrom: String?,
+  val translating: Boolean,
+  val error: String?,
+  val translate: () -> Unit,
+  val showOriginal: () -> Unit,
+)
+
+/** Offered for other people's posts and messages in another language the server can translate. */
+@Composable
+fun rememberTranslator(shown: Status, isMine: Boolean): Translator {
+  val model = LocalApp.current
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+  val appLocale = LocalConfiguration.current.locales[0]
+  val source = shown.baseLanguage
+  val canTranslate = !isMine && source != null && source != appLocale.language &&
+    model.instance?.translationEnabled == true && model.translationLanguages?.get(source)?.contains(appLocale.language) == true
+  val translation = model.translations[shown.id]?.takeIf { canTranslate && model.showingOriginal[shown.id] != true }
+  var translating by remember(shown.id) { mutableStateOf(false) }
+  var translateError by remember(shown.id) { mutableStateOf<String?>(null) }
+  return Translator(
+    canTranslate = canTranslate,
+    translation = translation,
+    translatedFrom = translation?.let { languageName(it.detectedSourceLanguage.ifEmpty { source ?: "" }, appLocale) },
+    translating = translating,
+    error = translateError,
+    translate = translate@{
+      if (model.translations.containsKey(shown.id)) {
+        model.showingOriginal.remove(shown.id)
+        return@translate
+      }
+      val client = model.client ?: return@translate
+      translating = true
+      translateError = null
+      scope.launch {
+        try {
+          model.translations[shown.id] = client.translate(shown.id, appLocale.language)
+        } catch (e: Exception) {
+          translateError = context.getString(R.string.translation_unavailable)
+        } finally {
+          translating = false
+        }
+      }
+    },
+    showOriginal = { model.showingOriginal[shown.id] = true },
+  )
+}
+
+/** "Translate", or "Translated from …" with "Show original". */
+@Composable
+fun TranslationControls(translator: Translator) = TranslationLine(
+  translator.translating, translator.translatedFrom, translator.error,
+  onTranslate = translator.translate, onShowOriginal = translator.showOriginal,
+)
+
 @Composable
 private fun TranslationLine(translating: Boolean, translatedFrom: String?, error: String?, onTranslate: () -> Unit, onShowOriginal: () -> Unit) {
   val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -871,6 +906,42 @@ private fun CardText(card: com.disbigle.kit.Card) {
     Text(card.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
     if (card.description.isNotEmpty()) {
       Text(card.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
+  }
+}
+
+/** About 14 lines: longer texts are shortened in lists, with "Show more" (issue #31). */
+private const val LONG_TEXT_LINES = 14
+
+/** The start of a long post with a fade and a button to read the rest; short texts as they are. */
+@Composable
+private fun LongText(text: androidx.compose.ui.text.AnnotatedString, key: String) {
+  var open by androidx.compose.runtime.saveable.rememberSaveable(key) { mutableStateOf(false) }
+  var long by remember(text) { mutableStateOf(false) }
+  val background = MaterialTheme.colorScheme.surface
+  Box {
+    Text(
+      text,
+      style = MaterialTheme.typography.bodyLarge,
+      maxLines = if (open) Int.MAX_VALUE else LONG_TEXT_LINES,
+      onTextLayout = { if (!open) long = it.hasVisualOverflow },
+    )
+    if (long && !open) {
+      Box(
+        Modifier.matchParentSize().background(
+          androidx.compose.ui.graphics.Brush.verticalGradient(
+            0.7f to androidx.compose.ui.graphics.Color.Transparent, 1f to background,
+          ),
+        ),
+      )
+    }
+  }
+  if (long) {
+    androidx.compose.material3.TextButton(
+      onClick = { open = !open },
+      contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+    ) {
+      Text(stringResource(if (open) R.string.show_less else R.string.show_more))
     }
   }
 }

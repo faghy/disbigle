@@ -162,10 +162,15 @@ struct StatusRow: View {
       }
     }
     if shown.spoilerText.isEmpty || revealed {
-      Text(RichText.attributed(translation?.content ?? shown.content))
-        .font(focused ? .title3 : .body)
-        .textSelection(.enabled)
-        .fixedSize(horizontal: false, vertical: true)
+      if focused {
+        Text(RichText.attributed(translation?.content ?? shown.content))
+          .font(.title3)
+          .textSelection(.enabled)
+          .fixedSize(horizontal: false, vertical: true)
+      } else {
+        LongText(text: RichText.attributed(translation?.content ?? shown.content))
+          .id(shown.id)
+      }
     }
     TranslationControls(status: shown)
   }
@@ -796,6 +801,50 @@ struct TranslationControls: View {
       try await model.translate(status)
     } catch {
       failed = true
+    }
+  }
+}
+
+/// The start of a long post in a list, with a fade and "Show more"; short texts as they are (issue #31).
+struct LongText: View {
+  let text: AttributedString
+  /// About 14 lines, as on the web.
+  static let lines = 14
+
+  @State private var open = false
+  @State private var fullHeight: CGFloat = 0
+  @State private var shownHeight: CGFloat = 0
+
+  private var long: Bool { fullHeight > shownHeight + 1 }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Text(text)
+        .font(.body)
+        .textSelection(.enabled)
+        .lineLimit(open ? nil : Self.lines)
+        .fixedSize(horizontal: false, vertical: true)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shownHeight = $0 }
+        .background(alignment: .topLeading) {
+          // The whole text, unseen, to know whether the shown one was cut.
+          Text(text)
+            .font(.body)
+            .fixedSize(horizontal: false, vertical: true)
+            .hidden()
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { fullHeight = $0 }
+        }
+        .mask {
+          LinearGradient(
+            stops: [.init(color: .black, location: 0), .init(color: .black, location: long && !open ? 0.75 : 1),
+                    .init(color: .black.opacity(long && !open ? 0 : 1), location: 1)],
+            startPoint: .top, endPoint: .bottom
+          )
+        }
+      if long || open {
+        Button(open ? LocalizedStringKey("Show less") : "Show more") { open.toggle() }
+          .font(.subheadline.weight(.medium))
+          .buttonStyle(.borderless)
+      }
     }
   }
 }
