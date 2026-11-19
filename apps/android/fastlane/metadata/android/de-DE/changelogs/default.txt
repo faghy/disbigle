@@ -1,4 +1,4 @@
-• Die App spricht jetzt Französisch, Deutsch und Chinesisch
 • Lange Beiträge werden gekürzt, mit „Mehr anzeigen“
 • Auch private Nachrichten übersetzen
+• Die App gibt es jetzt in 6 Sprachen: Englisch, Italienisch, Spanisch, Französisch, Chinesisch und Deutsch
 • Die Formatierungsleiste passt auch auf kleine Bildschirme

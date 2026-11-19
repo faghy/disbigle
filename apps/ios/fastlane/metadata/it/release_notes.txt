@@ -1,4 +1,4 @@
-• L'app ora parla francese, tedesco e cinese
 • I post lunghi si accorciano, con “Mostra di più”
 • Traduci anche i messaggi privati
+• L'app ora è in 6 lingue: inglese, italiano, spagnolo, francese, cinese e tedesco
 • Ricondividi chiede conferma e dice chi vedrà il post

@@ -1,4 +1,4 @@
-• La app ahora habla francés, alemán y chino
 • Las publicaciones largas se acortan, con «Mostrar más»
 • Traduce también los mensajes privados
+• La app ahora está en 6 idiomas: inglés, italiano, español, francés, chino y alemán
 • La barra de formato cabe en pantallas pequeñas

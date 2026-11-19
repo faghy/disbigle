@@ -1,4 +1,4 @@
-• The app now speaks French, German and Chinese
 • Long posts are shortened, with “Show more”
 • Translate private messages too
+• The app is now in 6 languages: English, Italian, Spanish, French, Chinese and German
 • The formatting bar fits on small screens

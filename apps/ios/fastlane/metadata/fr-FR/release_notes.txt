@@ -1,4 +1,4 @@
-• L'app parle maintenant français, allemand et chinois
 • Les longues publications sont raccourcies, avec « Afficher plus »
 • Traduis aussi les messages privés
+• L'app est maintenant en 6 langues : anglais, italien, espagnol, français, chinois et allemand
 • Repartager demande d'abord et indique qui verra la publication
