@@ -1,3 +1,4 @@
-• Pinch and double-tap to zoom photos
-• Link preview while you write, and YouTube thumbnails with ▶
-• Reshare asks first and tells who will see the post
+• The app now speaks French, German and Chinese
+• Long posts are shortened, with “Show more”
+• Translate private messages too
+• The formatting bar fits on small screens

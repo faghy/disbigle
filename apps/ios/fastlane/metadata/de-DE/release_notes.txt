@@ -1,1 +1,4 @@
-Erste Version im App Store: Chat in den Nachrichten, Designs und Farben, Formatierung von Beiträgen, Linkvorschauen, Meldungen an die Moderation.
+• Die App spricht jetzt Französisch, Deutsch und Chinesisch
+• Lange Beiträge werden gekürzt, mit „Mehr anzeigen“
+• Auch private Nachrichten übersetzen
+• Teilen fragt vorher nach und sagt, wer den Beitrag sehen wird

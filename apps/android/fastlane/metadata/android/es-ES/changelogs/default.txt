@@ -1,3 +1,4 @@
-• Zoom de las fotos con dos dedos y doble toque
-• Vista previa de los enlaces mientras escribes y miniaturas de YouTube con ▶
-• Compartir pide confirmación y dice quién verá la publicación
+• La app ahora habla francés, alemán y chino
+• Las publicaciones largas se acortan, con «Mostrar más»
+• Traduce también los mensajes privados
+• La barra de formato cabe en pantallas pequeñas

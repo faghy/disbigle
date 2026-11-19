@@ -1,1 +1,4 @@
-Primera versión en la App Store: chat en los mensajes, temas y colores, formato de publicaciones, vistas previas de enlaces, denuncias a los moderadores.
+• La app ahora habla francés, alemán y chino
+• Las publicaciones largas se acortan, con «Mostrar más»
+• Traduce también los mensajes privados
+• Compartir pide confirmación y dice quién verá la publicación

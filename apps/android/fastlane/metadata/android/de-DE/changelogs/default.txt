@@ -1,3 +1,4 @@
-• Fotos mit zwei Fingern oder Doppeltippen zoomen
-• Linkvorschau beim Schreiben und YouTube-Vorschaubilder mit ▶
-• Teilen fragt vorher nach und sagt, wer den Beitrag sehen wird
+• Die App spricht jetzt Französisch, Deutsch und Chinesisch
+• Lange Beiträge werden gekürzt, mit „Mehr anzeigen“
+• Auch private Nachrichten übersetzen
+• Die Formatierungsleiste passt auch auf kleine Bildschirme

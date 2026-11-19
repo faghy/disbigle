@@ -1,3 +1,4 @@
-• Zoom delle foto con due dita e doppio tocco
-• Anteprima dei link mentre scrivi e miniature dei video YouTube con ▶
-• Ricondividi chiede conferma e dice chi vedrà il post
+• L'app ora parla francese, tedesco e cinese
+• I post lunghi si accorciano, con “Mostra di più”
+• Traduci anche i messaggi privati
+• La barra di formattazione sta anche sugli schermi piccoli

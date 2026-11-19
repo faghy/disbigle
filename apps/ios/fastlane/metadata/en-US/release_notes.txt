@@ -1,1 +1,4 @@
-First App Store version: chat in messages, themes and colours, post formatting, link previews, reports to the moderators.
+• The app now speaks French, German and Chinese
+• Long posts are shortened, with “Show more”
+• Translate private messages too
+• Reshare asks first and tells who will see the post

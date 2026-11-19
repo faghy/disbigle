@@ -1,1 +1,4 @@
-Prima versione sull'App Store: chat nei messaggi, temi e colori, formattazione dei post, anteprime dei link, segnalazioni ai moderatori.
+• L'app ora parla francese, tedesco e cinese
+• I post lunghi si accorciano, con “Mostra di più”
+• Traduci anche i messaggi privati
+• Ricondividi chiede conferma e dice chi vedrà il post

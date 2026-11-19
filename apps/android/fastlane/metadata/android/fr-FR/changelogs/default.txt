@@ -1,3 +1,4 @@
-• Pince et touche deux fois pour zoomer sur les photos
-• Aperçu des liens pendant que tu écris, et miniatures YouTube avec ▶
-• Repartager demande d'abord et indique qui verra la publication
+• L'app parle maintenant français, allemand et chinois
+• Les longues publications sont raccourcies, avec « Afficher plus »
+• Traduis aussi les messages privés
+• La barre de mise en forme tient sur les petits écrans
