@@ -852,29 +852,22 @@ fun AccountRow(
   }
 }
 
-/** Preview of the page a post links to; the image comes from our server, the page opens on tap. */
+/**
+ * Preview of the page a post links to; the image comes from our server, the page opens on tap.
+ * Always compact, a small picture beside the text, so it does not look like a photo of the post (#32).
+ */
 @Composable
 fun LinkCard(card: com.disbigle.kit.Card, onClick: () -> Unit) {
-  val wide = card.image != null && card.width > 0 && card.height > 0 && card.width.toFloat() / card.height >= 1.3f
   androidx.compose.material3.OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-    if (wide) {
-      coil3.compose.AsyncImage(
-        model = card.image, contentDescription = null,
-        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.91f),
-      )
-      CardText(card)
-    } else {
-      Row {
-        card.image?.let {
-          coil3.compose.AsyncImage(
-            model = it, contentDescription = null,
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            modifier = Modifier.size(96.dp),
-          )
-        }
-        CardText(card)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      card.image?.let {
+        coil3.compose.AsyncImage(
+          model = it, contentDescription = null,
+          contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+          modifier = Modifier.size(96.dp),
+        )
       }
+      CardText(card)
     }
   }
 }

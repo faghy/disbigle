@@ -228,32 +228,21 @@ private struct ChatBubble: View {
   }
 }
 
-/** Preview of the page a post links to; the image comes from our server, the page opens on tap. */
+/**
+ * Preview of the page a post links to; the image comes from our server, the page opens on tap.
+ * Always compact, a small picture beside the text, so it does not look like a photo of the post (#32).
+ */
 struct LinkCardView: View {
   @Environment(\.openURL) private var openURL
   let card: Card
-
-  private var wide: Bool {
-    guard card.image != nil, let w = card.width, let h = card.height, w > 0, h > 0 else { return false }
-    return Double(w) / Double(h) >= 1.3
-  }
 
   var body: some View {
     Button {
       if let url = URL(string: card.url) { openURL(url) }
     } label: {
-      Group {
-        if wide {
-          VStack(alignment: .leading, spacing: 0) {
-            image.frame(maxWidth: .infinity).aspectRatio(1.91, contentMode: .fill).frame(height: 150).clipped()
-            texts
-          }
-        } else {
-          HStack(spacing: 0) {
-            if card.image != nil { image.frame(width: 88, height: 88).clipped() }
-            texts
-          }
-        }
+      HStack(spacing: 0) {
+        if card.image != nil { image.frame(width: 88, height: 88).clipped() }
+        texts
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator)))
