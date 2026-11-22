@@ -862,7 +862,8 @@
       "suspend": "Suspend",
       "unsuspend": "Lift suspension",
       "role": "Role",
-      "roleSaved": "Role changed to {{role}}."
+      "roleSaved": "Role changed to {{role}}.",
+      "reason": "Why they signed up"
     },
     "domains": {
       "severity": {

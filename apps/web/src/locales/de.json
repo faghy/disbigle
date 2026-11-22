@@ -862,7 +862,8 @@
       "suspend": "Sperren",
       "unsuspend": "Sperre aufheben",
       "role": "Rolle",
-      "roleSaved": "Rolle geändert zu {{role}}."
+      "roleSaved": "Rolle geändert zu {{role}}.",
+      "reason": "Grund der Anmeldung"
     },
     "domains": {
       "severity": {

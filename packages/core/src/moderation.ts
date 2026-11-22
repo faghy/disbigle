@@ -146,6 +146,7 @@ export async function listAccountsForAdmin(
           role: user.role,
           approved: user.approved,
           lastSignInAt: user.lastSignInAt?.toISOString() ?? null,
+          reason: user.registrationReason ?? '',
         }
       : null,
   }));

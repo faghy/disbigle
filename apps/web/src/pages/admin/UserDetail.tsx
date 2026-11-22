@@ -106,6 +106,18 @@ function UserDetail({ user }: { user: AdminUserDetail }) {
               : t('admin.users.no')}
           </Fact>
         </dl>
+        <figure className="mx-2 rounded-xl border border-border bg-surface-muted px-4 py-3">
+          <figcaption className="text-xs font-semibold tracking-wide text-fg-muted uppercase">
+            {t('admin.accounts.reason')}
+          </figcaption>
+          {user.reason ? (
+            <blockquote className="mt-1 text-sm whitespace-pre-wrap break-words">
+              {user.reason}
+            </blockquote>
+          ) : (
+            <p className="mt-1 text-sm text-fg-muted italic">{t('admin.pending.noReason')}</p>
+          )}
+        </figure>
       </Card>
 
       <p role="status" className="text-sm text-success empty:hidden">

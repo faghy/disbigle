@@ -842,7 +842,8 @@
       "suspend": "封禁",
       "unsuspend": "解除封禁",
       "role": "角色",
-      "roleSaved": "角色已更改为{{role}}。"
+      "roleSaved": "角色已更改为{{role}}。",
+      "reason": "注册原因"
     },
     "domains": {
       "severity": {

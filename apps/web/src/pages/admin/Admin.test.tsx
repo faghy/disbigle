@@ -97,6 +97,7 @@ describe('moderation area', () => {
               role: 'user',
               approved: true,
               lastSignInAt: null,
+              reason: '',
             },
           },
         ],

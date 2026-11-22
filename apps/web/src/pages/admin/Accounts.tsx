@@ -189,6 +189,16 @@ function AccountItem({ item }: { item: AdminAccount }) {
         </div>
       </div>
       {user && <p className="px-2 text-xs text-fg-muted">{user.email}</p>}
+      {user?.reason && (
+        <details className="mx-2 rounded-xl border border-border bg-surface-muted px-4 py-2">
+          <summary className="cursor-pointer text-xs font-semibold tracking-wide text-fg-muted uppercase">
+            {t('admin.accounts.reason')}
+          </summary>
+          <blockquote className="mt-1 text-sm whitespace-pre-wrap break-words">
+            {user.reason}
+          </blockquote>
+        </details>
+      )}
       <div className="flex flex-wrap items-end gap-2 px-2">
         {item.suspended ? (
           <Button

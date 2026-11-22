@@ -131,6 +131,8 @@ export interface AdminUserDetail {
   passkeys: number;
   createdAt: string;
   lastSignInAt: string | null;
+  /** What they wrote when signing up, on registrations with approval (empty otherwise). */
+  reason: string;
   suspended: boolean;
   disabled: boolean;
   deletionRequested: boolean;

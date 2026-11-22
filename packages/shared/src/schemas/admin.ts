@@ -77,6 +77,8 @@ export interface AdminAccount {
     role: CurrentUser['role'];
     approved: boolean;
     lastSignInAt: string | null;
+    /** What they wrote when signing up, on registrations with approval (empty otherwise). */
+    reason: string;
   } | null;
 }
 

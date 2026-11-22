@@ -43,6 +43,7 @@ const renDetail: AdminUserDetail = {
   passkeys: 0,
   createdAt: '2026-11-14T08:00:00.000Z',
   lastSignInAt: null,
+  reason: 'I write about video games and want to follow other players.',
   suspended: false,
   disabled: false,
   deletionRequested: false,
@@ -104,6 +105,10 @@ describe('administration', () => {
     await user.selectOptions(await screen.findByLabelText('Show'), 'unconfirmed');
     await user.click(await screen.findByRole('link', { name: 'Manage Ren' }));
 
+    expect(
+      await screen.findByText('I write about video games and want to follow other players.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Why they signed up')).toBeInTheDocument();
     const email = await screen.findByLabelText('Email address');
     await user.clear(email);
     await user.type(email, '798682951@qq.com');

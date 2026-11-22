@@ -72,6 +72,7 @@ export async function getUserForAdmin(ctx: CoreContext, userId: string) {
     passkeys: passkeys?.count ?? 0,
     createdAt: user.createdAt.toISOString(),
     lastSignInAt: iso(user.lastSignInAt),
+    reason: user.registrationReason ?? '',
     suspended: actor.suspendedAt !== null,
     disabled: user.disabledAt !== null,
     deletionRequested: user.deletionRequestedAt !== null,

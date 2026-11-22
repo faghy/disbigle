@@ -882,7 +882,8 @@
       "suspend": "Suspendre",
       "unsuspend": "Lever la suspension",
       "role": "Rôle",
-      "roleSaved": "Rôle changé en {{role}}."
+      "roleSaved": "Rôle changé en {{role}}.",
+      "reason": "Motif de l'inscription"
     },
     "domains": {
       "severity": {
