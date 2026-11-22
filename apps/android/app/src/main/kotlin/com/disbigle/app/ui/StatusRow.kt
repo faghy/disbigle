@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PlayCircle
@@ -683,6 +684,12 @@ fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit, a
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopStart).padding(top = 32.dp, start = 8.dp)) {
           Icon(Icons.Filled.Close, stringResource(R.string.close))
         }
+        IconButton(
+          onClick = { media.getOrNull(pager.currentPage)?.let { saveMedia(context, it) } },
+          modifier = Modifier.align(Alignment.TopEnd).padding(top = 32.dp, end = 8.dp),
+        ) {
+          Icon(Icons.Filled.Download, stringResource(R.string.save_picture))
+        }
         if (actions != null) {
           Row(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color.Black.copy(alpha = 0.6f))
@@ -693,6 +700,31 @@ fun MediaViewer(media: List<MediaAttachment>, start: Int, onClose: () -> Unit, a
         }
       }
     }
+  }
+}
+
+/**
+ * Saves a picture (or video) to Pictures/Disbigle with the system downloader, whoever posted or
+ * sent it. Android 9 would need the storage permission for that: there it opens in the browser.
+ */
+private fun saveMedia(context: android.content.Context, item: MediaAttachment) {
+  if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+    openInBrowser(context, item.url)
+    return
+  }
+  val uri = android.net.Uri.parse(item.url)
+  val last = uri.lastPathSegment.orEmpty()
+  val name = if (Regex("""\.[A-Za-z0-9]{2,5}$""").containsMatchIn(last)) last else "disbigle-${System.currentTimeMillis()}.jpg"
+  runCatching {
+    val request = android.app.DownloadManager.Request(uri)
+      .setTitle(name)
+      .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+      .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_PICTURES, "Disbigle/$name")
+    context.getSystemService(android.app.DownloadManager::class.java).enqueue(request)
+  }.onSuccess {
+    android.widget.Toast.makeText(context, R.string.saving_picture, android.widget.Toast.LENGTH_SHORT).show()
+  }.onFailure {
+    android.widget.Toast.makeText(context, R.string.save_picture_failed, android.widget.Toast.LENGTH_SHORT).show()
   }
 }
 

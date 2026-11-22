@@ -1,4 +1,5 @@
 import DisbigleKit
+import Photos
 import SwiftUI
 
 /** One post in a list: tap to open its thread. */
@@ -602,6 +603,7 @@ struct MediaViewer: View {
   /** Set on your own pictures: they can go into your albums. */
   var albumOwnerId: String? = nil
   @State private var choosingAlbums = false
+  @State private var saved: LocalizedStringKey?
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -637,6 +639,13 @@ struct MediaViewer: View {
             }
           }
           Spacer()
+          if let item = media.first(where: { $0.id == selection }), item.type == .image || item.type == .gifv {
+            Button {
+              Task { saved = await save(item) ? "Picture saved" : "Couldn't save the picture" }
+            } label: {
+              Label("Save picture", systemImage: "square.and.arrow.down")
+            }
+          }
           if albumOwnerId != nil {
             Button("Add to album") { choosingAlbums = true }
           }
@@ -644,12 +653,32 @@ struct MediaViewer: View {
       }
       .toolbarBackground(.black, for: .navigationBar)
       .toolbarColorScheme(.dark, for: .navigationBar)
-      .toolbar(openPost != nil || albumOwnerId != nil ? .visible : .hidden, for: .bottomBar)
+      .toolbar(.visible, for: .bottomBar)
       .toolbarBackground(.black, for: .bottomBar)
       .toolbarColorScheme(.dark, for: .bottomBar)
       .sheet(isPresented: $choosingAlbums) {
         AlbumPicker(mediaId: selection)
       }
+      .alert(saved ?? "", isPresented: Binding(get: { saved != nil }, set: { if !$0 { saved = nil } })) {
+        Button("OK") {}
+      }
+    }
+  }
+
+  /** Adds the picture to the photo library, whoever posted or sent it (asks once for permission). */
+  private func save(_ item: MediaAttachment) async -> Bool {
+    guard let url = URL(string: item.url),
+      await PHPhotoLibrary.requestAuthorization(for: .addOnly) == .authorized,
+      let (data, response) = try? await URLSession.shared.data(from: url)
+    else { return false }
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) { return false }
+    do {
+      try await PHPhotoLibrary.shared().performChanges {
+        PHAssetCreationRequest.forAsset().addResource(with: .photo, data: data, options: nil)
+      }
+      return true
+    } catch {
+      return false
     }
   }
 }

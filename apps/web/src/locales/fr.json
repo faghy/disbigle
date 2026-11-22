@@ -515,7 +515,8 @@
       "viewer": "Visionneuse d'images",
       "previous": "Image précédente",
       "next": "Image suivante",
-      "position": "{{current}} sur {{total}}"
+      "position": "{{current}} sur {{total}}",
+      "save": "Enregistrer l'image"
     },
     "edit": "Modifier",
     "edited": "modifié",

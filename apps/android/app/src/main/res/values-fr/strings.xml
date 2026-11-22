@@ -333,4 +333,7 @@
   <string name="reshare_unavailable">Cette publication ne peut pas être repartagée</string>
   <string name="reshare_unavailable_text">Son auteur ne l\'a partagée qu\'avec certaines personnes (abonnés, un aspect ou un message direct), donc elle reste entre eux : seules les publications publiques peuvent être repartagées.</string>
   <string name="play_video">Lire la vidéo</string>
+  <string name="save_picture">Enregistrer l\'image</string>
+  <string name="saving_picture">Enregistrement dans Images/Disbigle…</string>
+  <string name="save_picture_failed">Impossible d\'enregistrer l\'image</string>
 </resources>

@@ -499,7 +499,8 @@
       "viewer": "图片查看器",
       "previous": "上一张",
       "next": "下一张",
-      "position": "{{current}} / {{total}}"
+      "position": "{{current}} / {{total}}",
+      "save": "保存图片"
     },
     "edit": "编辑",
     "edited": "已编辑",

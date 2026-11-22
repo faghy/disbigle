@@ -507,7 +507,8 @@
       "viewer": "Bildbetrachter",
       "previous": "Vorheriges Bild",
       "next": "Nächstes Bild",
-      "position": "{{current}} von {{total}}"
+      "position": "{{current}} von {{total}}",
+      "save": "Bild speichern"
     },
     "edit": "Bearbeiten",
     "edited": "bearbeitet",

@@ -507,7 +507,8 @@
       "viewer": "Image viewer",
       "previous": "Previous image",
       "next": "Next image",
-      "position": "{{current}} of {{total}}"
+      "position": "{{current}} of {{total}}",
+      "save": "Save picture"
     },
     "edit": "Edit",
     "edited": "edited",

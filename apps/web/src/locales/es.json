@@ -514,7 +514,8 @@
       "viewer": "Visor de imágenes",
       "previous": "Imagen anterior",
       "next": "Imagen siguiente",
-      "position": "{{current}} de {{total}}"
+      "position": "{{current}} de {{total}}",
+      "save": "Guardar imagen"
     },
     "edit": "Editar",
     "edited": "editada",

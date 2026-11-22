@@ -321,4 +321,7 @@
   <string name="reshare_unavailable">这条帖子无法转发</string>
   <string name="reshare_unavailable_text">作者只把它分享给了部分人（关注者、某个分组或私信），所以它只留在这些人中间：只有公开帖子可以转发。</string>
   <string name="play_video">播放视频</string>
+  <string name="save_picture">保存图片</string>
+  <string name="saving_picture">正在保存到 图片/Disbigle…</string>
+  <string name="save_picture_failed">无法保存图片</string>
 </resources>

@@ -135,6 +135,11 @@ export const CloseIcon = (p: IconProps) => (
     <path d="M18 6L6 18M6 6l12 12" />
   </Icon>
 );
+export const DownloadIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3v12m-5-5 5 5 5-5M5 21h14" />
+  </Icon>
+);
 export const CheckIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M20 6L9 17l-5-5" />

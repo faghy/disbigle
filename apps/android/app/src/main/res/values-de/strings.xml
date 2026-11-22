@@ -327,4 +327,7 @@
   <string name="reshare_unavailable">Dieser Beitrag kann nicht geteilt werden</string>
   <string name="reshare_unavailable_text">Die Person hat ihn nur mit einigen Leuten geteilt (Follower, ein Aspekt oder eine Direktnachricht), also bleibt er bei ihnen: Nur öffentliche Beiträge können geteilt werden.</string>
   <string name="play_video">Video abspielen</string>
+  <string name="save_picture">Bild speichern</string>
+  <string name="saving_picture">Wird in Bilder/Disbigle gespeichert…</string>
+  <string name="save_picture_failed">Bild konnte nicht gespeichert werden</string>
 </resources>

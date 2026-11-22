@@ -2,7 +2,7 @@ import type { MediaAttachment } from '@disbigle/shared';
 import { type ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFocusTrap } from './Dialog.tsx';
-import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from './icons.tsx';
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, DownloadIcon } from './icons.tsx';
 
 const navButton =
   'inline-flex size-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 focus-ring';
@@ -52,7 +52,16 @@ export function Lightbox({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="flex justify-end p-3">
+      <div className="flex justify-end gap-2 p-3">
+        <button
+          type="button"
+          className={navButton}
+          onClick={() => void save(item)}
+          aria-label={t('status.media.save')}
+          title={t('status.media.save')}
+        >
+          <DownloadIcon />
+        </button>
         <button
           type="button"
           data-close
@@ -116,6 +125,32 @@ export function Lightbox({
       {footer && <div className="px-3 pb-4">{footer(item, index)}</div>}
     </div>
   );
+}
+
+/**
+ * Downloads a picture or video, whoever posted it or sent it. Files on another site may refuse
+ * to be read from here: then they open in a new tab, where the browser can save them.
+ */
+async function save(item: MediaAttachment) {
+  try {
+    const response = await fetch(item.url);
+    if (!response.ok) throw new Error(String(response.status));
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName(item.url, blob.type);
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+  } catch {
+    window.open(item.url, '_blank', 'noopener,noreferrer');
+  }
+}
+
+/** The file's own name from its address, or a generic one with the right extension. */
+function fileName(url: string, type: string) {
+  const last = new URL(url, location.href).pathname.split('/').pop() ?? '';
+  if (/\.[a-z0-9]{2,5}$/i.test(last)) return last;
+  return `disbigle-${Date.now()}.${type.split('/')[1]?.split('+')[0] || 'jpg'}`;
 }
 
 const isTyping = (target: EventTarget) =>

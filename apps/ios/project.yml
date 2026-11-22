@@ -48,6 +48,8 @@ targets:
       properties:
         CFBundleLocalizations: [en, it, es, fr, de, zh-Hans]
         CFBundleDevelopmentRegion: en
+        # "Save picture" in the image viewer adds to the photo library (it never reads it).
+        NSPhotoLibraryAddUsageDescription: Disbigle saves the pictures you choose to your photo library.
         # Plain http only to this machine's network (a development server); https everywhere else.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

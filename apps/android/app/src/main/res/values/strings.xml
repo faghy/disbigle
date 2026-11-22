@@ -329,4 +329,7 @@
   <string name="reshare_unavailable">This post can\'t be reshared</string>
   <string name="reshare_unavailable_text">Its author shared it only with some people (followers, an aspect or a direct message), so it stays with them: only public posts can be reshared.</string>
   <string name="play_video">Play the video</string>
+  <string name="save_picture">Save picture</string>
+  <string name="saving_picture">Saving to Pictures/Disbigle…</string>
+  <string name="save_picture_failed">Couldn\'t save the picture</string>
 </resources>

@@ -333,4 +333,7 @@
   <string name="reshare_unavailable">Questo post non si può ricondividere</string>
   <string name="reshare_unavailable_text">L\'autore l\'ha condiviso solo con alcune persone (chi lo segue, un aspetto o un messaggio diretto), quindi resta tra loro: si possono ricondividere solo i post pubblici.</string>
   <string name="play_video">Guarda il video</string>
+  <string name="save_picture">Salva immagine</string>
+  <string name="saving_picture">Salvataggio in Immagini/Disbigle…</string>
+  <string name="save_picture_failed">Impossibile salvare l\'immagine</string>
 </resources>

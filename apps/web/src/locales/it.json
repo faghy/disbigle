@@ -507,7 +507,8 @@
       "viewer": "Visualizzatore immagini",
       "previous": "Immagine precedente",
       "next": "Immagine successiva",
-      "position": "{{current}} di {{total}}"
+      "position": "{{current}} di {{total}}",
+      "save": "Salva immagine"
     },
     "edit": "Modifica",
     "edited": "modificato",
