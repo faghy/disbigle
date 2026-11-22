@@ -12,11 +12,15 @@ import { StreamingClient, type StreamListener } from '../lib/streaming.ts';
 
 const StreamingContext = createContext<StreamingClient | null>(null);
 
-/** Adds a pushed notification to the cached list and bumps the unread badge. */
+/**
+ * Adds a pushed notification to the cached list and bumps the unread badge. Private messages
+ * only count under Messages, so their mentions are left out, as the server does.
+ */
 function addNotification(
   queryClient: ReturnType<typeof useQueryClient>,
   notification: Notification,
 ) {
+  if (notification.type === 'mention' && notification.status?.visibility === 'direct') return;
   queryClient.setQueryData<number>(socialKeys.unreadCount, (count) => (count ?? 0) + 1);
   queryClient.setQueryData<NotificationPages>(socialKeys.notifications, (data) => {
     if (!data) return data;

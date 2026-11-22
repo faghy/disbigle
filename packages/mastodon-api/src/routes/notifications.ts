@@ -82,7 +82,7 @@ export async function notificationRoutes(app: FastifyInstance, deps: Deps) {
 
   app.get('/api/v1/notifications/unread_count', async (request) => {
     const user = requireUser(request, 'read:notifications');
-    return { count: await countUnreadNotifications(ctx, user.actorId) };
+    return { count: await countUnreadNotifications(ctx, user.actorId, { withMessages: true }) };
   });
 
   app.post('/api/v1/notifications/clear', async (request) => {

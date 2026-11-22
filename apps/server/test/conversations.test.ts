@@ -26,6 +26,23 @@ const unread = async (user: User) =>
   (await user.client.get('/api/v1/timelines/conversations/unread_count')).json().count;
 
 describe('conversations as a chat', () => {
+  it('leaves private messages out of the notifications, which count only real ones', async () => {
+    const alice = await signedIn();
+    const bruno = await signedIn();
+    await write(alice, `segreto @${bruno.account.username}`);
+    await alice.client.post('/api/v1/statuses', {
+      content: `pubblico @${bruno.account.username}`,
+      visibility: 'public',
+    });
+
+    const notifications = (await bruno.client.get('/api/v1/notifications')).json();
+    expect(notifications.map((n: { status: { content: string } }) => n.status.content)).toEqual([
+      expect.stringContaining('pubblico'),
+    ]);
+    expect((await bruno.client.get('/api/v1/notifications/unread_count')).json().count).toBe(1);
+    expect(await unread(bruno)).toBe(1);
+  });
+
   it('pages messages, counts unread ones and says who has seen what', async () => {
     const alice = await signedIn();
     const bruno = await signedIn();

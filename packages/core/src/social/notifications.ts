@@ -58,6 +58,15 @@ export async function createNotification(
   return id;
 }
 
+/**
+ * Private messages are counted and listed under Messages only: their mentions stay out of the
+ * web's notification list and bell count (the rows remain, for push and the apps' API).
+ */
+const notAMessage = sql`not (${notifications.type} = 'mention' and exists (
+  select 1 from ${schema.posts} where ${schema.posts.id} = ${notifications.postId}
+  and ${schema.posts.visibility} = 'direct'
+))`;
+
 export async function listNotificationRows(
   ctx: CoreContext,
   actorId: string,
@@ -71,6 +80,7 @@ export async function listNotificationRows(
         eq(notifications.actorId, actorId),
         options.maxId ? lt(notifications.id, options.maxId) : undefined,
         options.minId ? gt(notifications.id, options.minId) : undefined,
+        notAMessage,
         sql`(${notifications.postId} is null or exists (
           select 1 from ${schema.posts} where ${schema.posts.id} = ${notifications.postId}
           and ${notFilteredFor(actorId, 'notifications')}
@@ -83,11 +93,22 @@ export async function listNotificationRows(
   return rows;
 }
 
-export async function countUnreadNotifications(ctx: CoreContext, actorId: string): Promise<number> {
+/** Unread notifications; the web leaves private messages out, Mastodon clients count them. */
+export async function countUnreadNotifications(
+  ctx: CoreContext,
+  actorId: string,
+  { withMessages = false }: { withMessages?: boolean } = {},
+): Promise<number> {
   const [row] = await ctx.db
     .select({ count: sql<number>`count(*)::int` })
     .from(notifications)
-    .where(and(eq(notifications.actorId, actorId), isNull(notifications.readAt)));
+    .where(
+      and(
+        eq(notifications.actorId, actorId),
+        isNull(notifications.readAt),
+        withMessages ? undefined : notAMessage,
+      ),
+    );
   return row?.count ?? 0;
 }
 
