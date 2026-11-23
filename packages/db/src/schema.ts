@@ -675,6 +675,30 @@ export const bookmarks = pgTable(
   (t) => [primaryKey({ columns: [t.actorId, t.postId] })],
 );
 
+/**
+ * Posts written now and published later by the worker (issue #28). `params` is the request a
+ * post is created from; nothing here is visible to anyone but its author until it is published.
+ */
+export const scheduledPosts = pgTable(
+  'scheduled_posts',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: actorRef('actor_id'),
+    scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
+    params: jsonb('params').$type<Record<string, unknown>>().notNull(),
+    /** Set while the worker publishes it; a claim left behind means it was interrupted. */
+    claimedAt: timestamp('claimed_at', { withTimezone: true }),
+    /** It could not be published (the reason is in `error`); it waits for its author. */
+    failedAt: timestamp('failed_at', { withTimezone: true }),
+    error: text('error').notNull().default(''),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('scheduled_posts_due_idx').on(t.scheduledAt).where(sql`${t.failedAt} is null`),
+    index('scheduled_posts_actor_idx').on(t.actorId, t.scheduledAt),
+  ],
+);
+
 export const mediaAttachments = pgTable(
   'media_attachments',
   {

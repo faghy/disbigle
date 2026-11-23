@@ -46,6 +46,7 @@ import { notificationRoutes } from './routes/notifications.ts';
 import { pollRoutes } from './routes/polls.ts';
 import { publicRoutes } from './routes/public.ts';
 import { pushRoutes } from './routes/push.ts';
+import { scheduledRoutes } from './routes/scheduled.ts';
 import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
@@ -262,6 +263,7 @@ export async function buildApp(options: AppOptions) {
       await api.register(meRoutes, { ctx, mediaCtx, prefix: '/me' });
       await api.register(statusRoutes, { ctx, prefix: '/statuses' });
       await api.register(timelineRoutes, { ctx, prefix: '/timelines' });
+      await api.register(scheduledRoutes, { ctx, prefix: '/scheduled_statuses' });
       await api.register(conversationRoutes, { ctx, hub, prefix: '/timelines/conversations' });
       await api.register(accountRoutes, {
         ctx,

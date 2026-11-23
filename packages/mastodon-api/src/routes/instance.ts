@@ -13,7 +13,6 @@ import { schema } from '@disbigle/db';
 import { MAX_POLL_OPTIONS, MAX_POST_LENGTH } from '@disbigle/shared';
 import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
-import { requireUser } from '../auth.ts';
 import { Presenter } from '../entities/presenter.ts';
 import type { MAccount } from '../entities/types.ts';
 import { type Deps, MASTODON_COMPAT_VERSION } from '../options.ts';
@@ -194,10 +193,6 @@ export async function instanceRoutes(app: FastifyInstance, deps: Deps) {
   app.get('/api/v1/trends', async () => []);
 
   // Features we do not have: answered with empty collections so clients degrade gracefully.
-  app.get('/api/v1/scheduled_statuses', async (request) => {
-    requireUser(request, 'read:statuses');
-    return [];
-  });
 
   app.get('/api/mastodon/missing-header.png', anyFlavour, async (_request, reply) =>
     reply

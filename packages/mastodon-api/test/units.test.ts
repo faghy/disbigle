@@ -44,7 +44,6 @@ describe('bracket-notation forms', () => {
       // Clamped to our minimum of five minutes.
       poll: { options: ['yes', 'no'], expiresIn: 300, multiple: true },
     });
-    expect(() => toCreateRequest({ status: 'x', scheduled_at: '2030-01-01' })).toThrow(/scheduled/);
     expect(() => toCreateRequest({ status: 'x', media_ids: ['nope'] })).toThrow(/media/);
   });
 });

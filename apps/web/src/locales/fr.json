@@ -48,7 +48,10 @@
     "unreadMessages_one": "{{count}} conversation avec de nouveaux messages",
     "unreadMessages_other": "{{count}} conversations avec de nouveaux messages",
     "unreadMessages_many": "{{count}} conversations avec de nouveaux messages",
-    "admin": "Administration"
+    "admin": "Administration",
+    "scheduled": "Programmés",
+    "scheduledFailed_one": "{{count}} message programmé non publié",
+    "scheduledFailed_other": "{{count}} messages programmés non publiés"
   },
   "footer": {
     "tagline": "Disbigle · un réseau social fédéré",
@@ -1805,5 +1808,33 @@
   "administration": {
     "title": "Administration",
     "description": "Le serveur, ses membres et ses groupes. Réservé aux administrateurs."
+  },
+  "scheduled": {
+    "title": "Messages programmés",
+    "description": "Les messages que vous avez écrits pour les publier plus tard. Vous seul voyez cette liste.",
+    "empty": "Aucun message programmé. Écrivez-en un ci-dessus et choisissez quand il paraît.",
+    "toggle": "Publier plus tard",
+    "publishAt": "Publier le",
+    "hint": "Votre heure locale. De 5 minutes à 90 jours à partir de maintenant.",
+    "schedule": "Programmer",
+    "done": "Programmé pour le {{date}}.",
+    "seeAll": "Voir les messages programmés",
+    "reply": "Réponse",
+    "poll_one": "Sondage à {{count}} option",
+    "poll_other": "Sondage à {{count}} options",
+    "notPublished": "Non publié :",
+    "failed": "un problème est survenu.",
+    "interrupted": "la publication a été interrompue. Vérifiez votre profil avant de réessayer, pour qu'il ne paraisse pas deux fois.",
+    "move": "Changer l'heure",
+    "retry": "Réessayer à une autre heure",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer ce message programmé ?",
+    "deleteDescription": "Il ne sera pas publié. Action irréversible.",
+    "errors": {
+      "chooseTime": "Choisissez quand le publier.",
+      "tooSoon": "Choisissez une heure dans au moins 5 minutes.",
+      "tooLate": "Choisissez une heure dans les 90 jours."
+    }
   }
 }

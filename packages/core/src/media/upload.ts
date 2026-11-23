@@ -173,10 +173,18 @@ export async function cleanupUnattachedMedia(
   ctx: CoreContext & { storage: MediaStorage },
   olderThan: Date,
 ): Promise<number> {
-  const { mediaAttachments } = schema;
+  const { mediaAttachments, scheduledPosts } = schema;
   const stale = await ctx.db
     .delete(mediaAttachments)
-    .where(and(isNull(mediaAttachments.postId), lt(mediaAttachments.createdAt, olderThan)))
+    .where(
+      and(
+        isNull(mediaAttachments.postId),
+        lt(mediaAttachments.createdAt, olderThan),
+        // Kept for a scheduled post, published later.
+        sql`not exists (select 1 from ${scheduledPosts}
+          where jsonb_exists(${scheduledPosts.params}->'mediaIds', ${mediaAttachments.id}::text))`,
+      ),
+    )
     .returning();
   for (const media of stale) {
     if (media.filePath) await ctx.storage.delete(media.filePath);

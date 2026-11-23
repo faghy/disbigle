@@ -45,7 +45,10 @@
     "backToTop": "Nach oben",
     "unreadMessages_one": "{{count}} Unterhaltung mit neuen Nachrichten",
     "unreadMessages_other": "{{count}} Unterhaltungen mit neuen Nachrichten",
-    "admin": "Administration"
+    "admin": "Administration",
+    "scheduled": "Geplant",
+    "scheduledFailed_one": "{{count}} geplanter Beitrag nicht veröffentlicht",
+    "scheduledFailed_other": "{{count}} geplante Beiträge nicht veröffentlicht"
   },
   "footer": {
     "tagline": "Disbigle · ein föderiertes soziales Netzwerk",
@@ -1768,5 +1771,33 @@
   "administration": {
     "title": "Administration",
     "description": "Der Server, seine Mitglieder und Gruppen. Nur für Administratoren."
+  },
+  "scheduled": {
+    "title": "Geplante Beiträge",
+    "description": "Beiträge, die du geschrieben hast, um sie später zu veröffentlichen. Nur du siehst diese Liste.",
+    "empty": "Keine geplanten Beiträge. Schreib oben einen und wähle, wann er erscheint.",
+    "toggle": "Später veröffentlichen",
+    "publishAt": "Veröffentlichen am",
+    "hint": "Deine Ortszeit. Von 5 Minuten bis 90 Tage ab jetzt.",
+    "schedule": "Planen",
+    "done": "Geplant für {{date}}.",
+    "seeAll": "Geplante Beiträge ansehen",
+    "reply": "Antwort",
+    "poll_one": "Umfrage mit {{count}} Option",
+    "poll_other": "Umfrage mit {{count}} Optionen",
+    "notPublished": "Nicht veröffentlicht:",
+    "failed": "etwas ist schiefgelaufen.",
+    "interrupted": "die Veröffentlichung wurde unterbrochen. Prüfe dein Profil, bevor du es erneut versuchst, damit er nicht doppelt erscheint.",
+    "move": "Zeit ändern",
+    "retry": "Zu einer neuen Zeit erneut versuchen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "deleteTitle": "Diesen geplanten Beitrag löschen?",
+    "deleteDescription": "Er wird nicht veröffentlicht. Das lässt sich nicht rückgängig machen.",
+    "errors": {
+      "chooseTime": "Wähle, wann er veröffentlicht wird.",
+      "tooSoon": "Wähle eine Zeit mindestens 5 Minuten ab jetzt.",
+      "tooLate": "Wähle eine Zeit innerhalb von 90 Tagen."
+    }
   }
 }

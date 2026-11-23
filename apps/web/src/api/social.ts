@@ -17,6 +17,7 @@ import type {
   PreviewCard,
   ProfileMedia,
   Relationship,
+  ScheduledPost,
   Status,
   StatusContext,
   Translation,
@@ -76,6 +77,14 @@ export type AccountAction = 'follow' | 'unfollow' | 'block' | 'unblock' | 'mute'
 export const social = {
   // Statuses
   createStatus: (body: CreatePostRequest) => api.post<Status>('/statuses', body),
+
+  // Scheduled posts (issue #28)
+  scheduledPosts: () => api.get<ScheduledPost[]>('/scheduled_statuses'),
+  schedulePost: (body: CreatePostRequest & { scheduledAt: string }) =>
+    api.post<ScheduledPost>('/scheduled_statuses', body),
+  reschedulePost: (postId: string, scheduledAt: string) =>
+    api.patch<ScheduledPost>(`/scheduled_statuses/${id(postId)}`, { scheduledAt }),
+  deleteScheduledPost: (postId: string) => api.delete<Ok>(`/scheduled_statuses/${id(postId)}`),
   status: (statusId: string) => api.get<Status>(`/statuses/${id(statusId)}`),
   context: (statusId: string) => api.get<StatusContext>(`/statuses/${id(statusId)}/context`),
   likedBy: (statusId: string, page: OffsetPage = {}) =>

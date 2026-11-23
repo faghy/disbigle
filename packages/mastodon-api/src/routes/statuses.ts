@@ -24,6 +24,7 @@ import {
   publishArticleSchema,
   reblog,
   recordPresence,
+  schedulePost,
   serializeAccount,
   tagTimeline,
   translatePost,
@@ -63,6 +64,7 @@ import { readInput } from '../multipart.ts';
 import type { Deps } from '../options.ts';
 import { corePage, cursorOrder, cursorsOf, cursorWhere, newestFirst } from '../paging.ts';
 import { idList, sendAccountPage } from './accounts.ts';
+import { mapScheduledStatus } from './scheduled.ts';
 
 const { posts, likes, actors } = schema;
 
@@ -96,9 +98,6 @@ function pollOf(fields: FormObject): CreatePostRequest['poll'] {
 }
 
 export function toCreateRequest(fields: FormObject): CreatePostRequest {
-  if (str(fields.scheduled_at)) {
-    throw new MastodonError(422, 'Validation failed: scheduled posts are not supported');
-  }
   const request: CreatePostRequest = {
     content: str(fields.status) ?? '',
     summary: str(fields.spoiler_text) ?? '',
@@ -164,6 +163,15 @@ export async function statusRoutes(app: FastifyInstance, deps: Deps) {
         }
       }
       const { fields } = await readInput(request);
+      // `scheduled_at`: kept and published later, answered with a ScheduledStatus.
+      const scheduledAt = str(fields.scheduled_at);
+      if (scheduledAt) {
+        const when = new Date(scheduledAt);
+        if (Number.isNaN(when.getTime()))
+          throw new MastodonError(422, 'Validation failed: scheduled_at is invalid');
+        const scheduled = await schedulePost(ctx, user.actorId, toCreateRequest(fields), when);
+        return reply.status(200).send(mapScheduledStatus(scheduled));
+      }
       const status = await createPost(ctx, user.actorId, toCreateRequest(fields));
       if (idempotencyKey) await ctx.kv.set(idempotencyKey, status.id, IDEMPOTENCY_TTL_SECONDS);
       return reply.status(200).send(await presenter.status(status));

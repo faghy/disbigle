@@ -170,3 +170,39 @@ describe('Mastodon API: link preview while writing (Disbigle extension)', () => 
     expect(local.json()).toEqual({ card: null });
   });
 });
+
+describe('Mastodon API: scheduled statuses', () => {
+  it('schedules with scheduled_at, lists, moves and cancels', async () => {
+    const alice = await mastodonUser(app);
+    const when = new Date(Date.now() + 3600_000).toISOString();
+    const created = await alice.api.post('/api/v1/statuses', {
+      status: 'Più tardi',
+      visibility: 'unlisted',
+      scheduled_at: when,
+    });
+    expect(created.statusCode).toBe(200);
+    const scheduled = created.json();
+    expect(scheduled).toMatchObject({
+      params: { text: 'Più tardi', visibility: 'unlisted' },
+      media_attachments: [],
+    });
+    expect(new Date(scheduled.scheduled_at).getTime()).toBe(new Date(when).getTime());
+    expect((await alice.api.get('/api/v1/scheduled_statuses')).json()).toHaveLength(1);
+
+    const later = new Date(Date.now() + 7200_000).toISOString();
+    const moved = await alice.api.put(`/api/v1/scheduled_statuses/${scheduled.id}`, {
+      scheduled_at: later,
+    });
+    expect(new Date(moved.json().scheduled_at).getTime()).toBe(new Date(later).getTime());
+    expect((await alice.api.delete(`/api/v1/scheduled_statuses/${scheduled.id}`)).json()).toEqual(
+      {},
+    );
+    expect((await alice.api.get('/api/v1/scheduled_statuses')).json()).toEqual([]);
+
+    const soon = await alice.api.post('/api/v1/statuses', {
+      status: 'Troppo presto',
+      scheduled_at: new Date(Date.now() + 60_000).toISOString(),
+    });
+    expect(soon.statusCode).toBe(422);
+  });
+});

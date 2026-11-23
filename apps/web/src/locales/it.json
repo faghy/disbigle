@@ -45,7 +45,10 @@
     "backToTop": "Torna su",
     "unreadMessages_one": "{{count}} conversazione con messaggi nuovi",
     "unreadMessages_other": "{{count}} conversazioni con messaggi nuovi",
-    "admin": "Amministrazione"
+    "admin": "Amministrazione",
+    "scheduled": "Programmati",
+    "scheduledFailed_one": "{{count}} post programmato non pubblicato",
+    "scheduledFailed_other": "{{count}} post programmati non pubblicati"
   },
   "footer": {
     "tagline": "Disbigle · un social network federato",
@@ -1768,5 +1771,33 @@
   "administration": {
     "title": "Amministrazione",
     "description": "Il server, le persone e i gruppi. Solo per gli amministratori."
+  },
+  "scheduled": {
+    "title": "Post programmati",
+    "description": "I post che hai scritto per pubblicarli più tardi. Solo tu vedi questo elenco.",
+    "empty": "Nessun post programmato. Scrivine uno qui sopra e scegli quando farlo uscire.",
+    "toggle": "Pubblica più tardi",
+    "publishAt": "Pubblica il",
+    "hint": "Ora locale. Da 5 minuti a 90 giorni da adesso.",
+    "schedule": "Programma",
+    "done": "Programmato per il {{date}}.",
+    "seeAll": "Vedi i post programmati",
+    "reply": "Risposta",
+    "poll_one": "Sondaggio con {{count}} opzione",
+    "poll_other": "Sondaggio con {{count}} opzioni",
+    "notPublished": "Non pubblicato:",
+    "failed": "qualcosa è andato storto.",
+    "interrupted": "la pubblicazione si è interrotta. Controlla il tuo profilo prima di riprovare, così non esce due volte.",
+    "move": "Cambia orario",
+    "retry": "Riprova a un nuovo orario",
+    "save": "Salva",
+    "delete": "Elimina",
+    "deleteTitle": "Eliminare questo post programmato?",
+    "deleteDescription": "Non verrà pubblicato. Non si può annullare.",
+    "errors": {
+      "chooseTime": "Scegli quando pubblicarlo.",
+      "tooSoon": "Scegli un orario fra almeno 5 minuti.",
+      "tooLate": "Scegli un orario entro 90 giorni."
+    }
   }
 }

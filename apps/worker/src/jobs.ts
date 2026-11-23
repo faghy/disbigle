@@ -9,6 +9,7 @@ import {
   type MediaStorage,
   notifyEndedPolls,
   parseBlocklistCsv,
+  publishDueScheduledPosts,
   purgeDeletedAccounts,
   purgeOldModerationRecords,
   storeCachedProfileImage,
@@ -42,6 +43,16 @@ function recentFailures(now = Date.now()): Set<string> {
 
 export function scheduledJobs(ctx: CoreContext & { storage: MediaStorage }): Job[] {
   return [
+    {
+      // Posts scheduled by their authors (issue #28): one indexed query a minute, 100 at most
+      // per run, so a crowd choosing the same minute is spread over a few runs.
+      name: 'publish-scheduled-posts',
+      every: 60 * 1000,
+      run: async () => {
+        const { published, failed } = await publishDueScheduledPosts(ctx);
+        return `published ${published} scheduled posts, ${failed} failed`;
+      },
+    },
     {
       name: 'cleanup-unattached-media',
       every: HOUR,

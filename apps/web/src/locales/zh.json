@@ -42,7 +42,9 @@
     "groups": "群组",
     "backToTop": "回到顶部",
     "unreadMessages_other": "{{count}} 个对话有新消息",
-    "admin": "管理"
+    "admin": "管理",
+    "scheduled": "定时",
+    "scheduledFailed_other": "{{count}} 条定时帖子未发布"
   },
   "footer": {
     "tagline": "Disbigle · 联邦式社交网络",
@@ -1729,5 +1731,32 @@
   "administration": {
     "title": "管理",
     "description": "服务器、用户和群组。仅限管理员。"
+  },
+  "scheduled": {
+    "title": "定时帖子",
+    "description": "你写好、稍后发布的帖子。只有你能看到这个列表。",
+    "empty": "没有定时帖子。在上面写一条，并选择发布时间。",
+    "toggle": "稍后发布",
+    "publishAt": "发布时间",
+    "hint": "你的本地时间。从现在起 5 分钟到 90 天之内。",
+    "schedule": "定时发布",
+    "done": "已定于 {{date}} 发布。",
+    "seeAll": "查看定时帖子",
+    "reply": "回复",
+    "poll_other": "包含 {{count}} 个选项的投票",
+    "notPublished": "未发布：",
+    "failed": "出了点问题。",
+    "interrupted": "发布中断了。再试之前请先查看你的主页，以免发布两次。",
+    "move": "更改时间",
+    "retry": "换个时间重试",
+    "save": "保存",
+    "delete": "删除",
+    "deleteTitle": "删除这条定时帖子？",
+    "deleteDescription": "它将不会被发布。此操作无法撤销。",
+    "errors": {
+      "chooseTime": "请选择发布时间。",
+      "tooSoon": "请选择至少 5 分钟之后的时间。",
+      "tooLate": "请选择 90 天之内的时间。"
+    }
   }
 }

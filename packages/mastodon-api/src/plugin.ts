@@ -15,6 +15,7 @@ import { listRoutes } from './routes/lists.ts';
 import { mediaRoutes } from './routes/media.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { pushRoutes } from './routes/push.ts';
+import { scheduledRoutes } from './routes/scheduled.ts';
 import { searchRoutes } from './routes/search.ts';
 import { statusRoutes } from './routes/statuses.ts';
 import { streamingRoutes } from './routes/streaming.ts';
@@ -105,6 +106,7 @@ export async function mastodonApi(app: FastifyInstance, opts: MastodonApiOptions
   await accountRoutes(app, deps);
   await albumRoutes(app, deps);
   await statusRoutes(app, deps);
+  await scheduledRoutes(app, deps);
   await notificationRoutes(app, deps);
   await listRoutes(app, deps);
   await mediaRoutes(app, deps);

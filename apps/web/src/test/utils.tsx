@@ -21,6 +21,7 @@ const defaultRoutes: Record<string, Handler | MockResponse> = {
   'GET /timelines/home': { body: [] },
   'GET /aspects': { body: [] },
   'GET /notifications/unread_count': { body: { count: 0 } },
+  'GET /scheduled_statuses': { body: [] },
 };
 
 export function mockApi(routes: Record<string, Handler | MockResponse>) {

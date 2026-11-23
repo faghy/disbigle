@@ -47,6 +47,7 @@ describe('mobile navigation', () => {
       '/contacts',
       '/activity',
       '/bookmarks',
+      '/scheduled',
       '/settings',
       '/moderation',
       '/about',

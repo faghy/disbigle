@@ -41,6 +41,31 @@ export const createPostRequestSchema = z
   });
 export type CreatePostRequest = z.input<typeof createPostRequestSchema>;
 
+/** Scheduled posts (issue #28): at least 5 minutes ahead, at most 90 days. */
+export const SCHEDULE_MIN_LEAD_SECONDS = 5 * 60;
+export const SCHEDULE_MAX_DAYS = 90;
+/** Posts one person can have waiting, and how many of them can fall on the same day (UTC). */
+export const MAX_SCHEDULED_POSTS = 300;
+export const MAX_SCHEDULED_POSTS_PER_DAY = 25;
+
+export const scheduleRequestSchema = z.object({
+  /** When to publish: an ISO 8601 time with its offset (sent in UTC by the web). */
+  scheduledAt: z.iso.datetime({ offset: true }),
+});
+
+/** A post waiting to be published; only its author sees it. */
+export interface ScheduledPost {
+  id: string;
+  scheduledAt: string;
+  /** What the post will be created from, as it was sent. */
+  params: z.output<typeof createPostRequestSchema>;
+  media: MediaAttachment[];
+  /** Publishing failed: `error` says why, and the author decides (new time or delete). */
+  failed: boolean;
+  error: string;
+  createdAt: string;
+}
+
 export const editPostRequestSchema = z.object({
   content: z.string().max(MAX_POST_LENGTH),
   summary: z.string().trim().max(500).default(''),

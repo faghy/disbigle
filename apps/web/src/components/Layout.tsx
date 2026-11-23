@@ -8,6 +8,7 @@ import { unreadConversationsKey } from '../api/cache.ts';
 import { endpoints } from '../api/endpoints.ts';
 import { errorMessage } from '../api/errors.ts';
 import { clearUserData, queryKeys, useInstance, useMe } from '../api/queries.ts';
+import { useScheduledPosts } from '../api/scheduled.ts';
 import { social } from '../api/social.ts';
 import {
   useFollowedTags,
@@ -30,6 +31,7 @@ import {
   AspectsIcon,
   BellIcon,
   BookmarkIcon,
+  ClockIcon,
   CloseIcon,
   ContactsIcon,
   GlobeIcon,
@@ -119,6 +121,7 @@ interface NavItem {
     | '/contacts'
     | '/activity'
     | '/bookmarks'
+    | '/scheduled'
     | '/settings'
     | '/moderation'
     | '/admin';
@@ -149,6 +152,7 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
       void queryClient.invalidateQueries({ queryKey: unreadConversationsKey });
   });
   const unreadNotifications = useUnreadCount().data ?? 0;
+  const scheduled = useScheduledPosts();
   const items: NavItem[] = [
     { to: '/', label: t('nav.home'), icon: HomeIcon, exact: true },
     { to: '/public/local', label: t('nav.local'), icon: LocalIcon },
@@ -177,6 +181,14 @@ function useNavItems(user: CurrentUser | null): NavItem[] {
     { to: '/contacts', label: t('nav.contacts'), icon: ContactsIcon },
     { to: '/activity', label: t('nav.activity'), icon: ActivityIcon },
     { to: '/bookmarks', label: t('nav.bookmarks'), icon: BookmarkIcon },
+    {
+      to: '/scheduled',
+      label: t('nav.scheduled'),
+      icon: ClockIcon,
+      // Posts that could not be published wait for their author.
+      badge: scheduled.data?.filter((post) => post.failed).length ?? 0,
+      badgeKey: 'nav.scheduledFailed',
+    },
     { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
     ...(moderator
       ? [
@@ -438,6 +450,7 @@ const morePaths = [
   '/contacts',
   '/activity',
   '/bookmarks',
+  '/scheduled',
   '/settings',
   '/moderation',
   '/admin',

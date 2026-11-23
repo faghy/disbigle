@@ -47,7 +47,10 @@
     "backToTop": "Volver arriba",
     "unreadMessages_one": "{{count}} conversación con mensajes nuevos",
     "unreadMessages_other": "{{count}} conversaciones con mensajes nuevos",
-    "admin": "Administración"
+    "admin": "Administración",
+    "scheduled": "Programados",
+    "scheduledFailed_one": "{{count}} publicación programada sin publicar",
+    "scheduledFailed_other": "{{count}} publicaciones programadas sin publicar"
   },
   "footer": {
     "tagline": "Disbigle · una red social federada",
@@ -1794,5 +1797,33 @@
   "administration": {
     "title": "Administración",
     "description": "El servidor, sus personas y sus grupos. Solo para administradores."
+  },
+  "scheduled": {
+    "title": "Publicaciones programadas",
+    "description": "Las publicaciones que escribiste para publicarlas más tarde. Solo tú ves esta lista.",
+    "empty": "No hay publicaciones programadas. Escribe una arriba y elige cuándo sale.",
+    "toggle": "Publicar más tarde",
+    "publishAt": "Publicar el",
+    "hint": "Tu hora local. De 5 minutos a 90 días desde ahora.",
+    "schedule": "Programar",
+    "done": "Programada para el {{date}}.",
+    "seeAll": "Ver publicaciones programadas",
+    "reply": "Respuesta",
+    "poll_one": "Encuesta con {{count}} opción",
+    "poll_other": "Encuesta con {{count}} opciones",
+    "notPublished": "No publicada:",
+    "failed": "algo salió mal.",
+    "interrupted": "la publicación se interrumpió. Revisa tu perfil antes de volver a intentarlo, para que no salga dos veces.",
+    "move": "Cambiar hora",
+    "retry": "Reintentar a otra hora",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar esta publicación programada?",
+    "deleteDescription": "No se publicará. No se puede deshacer.",
+    "errors": {
+      "chooseTime": "Elige cuándo publicarla.",
+      "tooSoon": "Elige una hora dentro de al menos 5 minutos.",
+      "tooLate": "Elige una hora dentro de 90 días."
+    }
   }
 }

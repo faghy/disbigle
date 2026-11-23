@@ -45,7 +45,10 @@
     "backToTop": "Back to top",
     "unreadMessages_one": "{{count}} conversation with new messages",
     "unreadMessages_other": "{{count}} conversations with new messages",
-    "admin": "Administration"
+    "admin": "Administration",
+    "scheduled": "Scheduled",
+    "scheduledFailed_one": "{{count}} scheduled post not published",
+    "scheduledFailed_other": "{{count}} scheduled posts not published"
   },
   "footer": {
     "tagline": "Disbigle · a federated social network",
@@ -1768,5 +1771,33 @@
   "administration": {
     "title": "Administration",
     "description": "The server, its people and its groups. For administrators only."
+  },
+  "scheduled": {
+    "title": "Scheduled posts",
+    "description": "Posts you wrote to be published later. Only you can see this list.",
+    "empty": "No scheduled posts. Write one above and choose when it comes out.",
+    "toggle": "Publish later",
+    "publishAt": "Publish on",
+    "hint": "Your local time. From 5 minutes to 90 days from now.",
+    "schedule": "Schedule",
+    "done": "Scheduled for {{date}}.",
+    "seeAll": "See scheduled posts",
+    "reply": "Reply",
+    "poll_one": "Poll with {{count}} option",
+    "poll_other": "Poll with {{count}} options",
+    "notPublished": "Not published:",
+    "failed": "something went wrong.",
+    "interrupted": "publishing was interrupted. Check your profile before trying again, so it does not come out twice.",
+    "move": "Change time",
+    "retry": "Try again at a new time",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteTitle": "Delete this scheduled post?",
+    "deleteDescription": "It will not be published. This cannot be undone.",
+    "errors": {
+      "chooseTime": "Choose when to publish it.",
+      "tooSoon": "Choose a time at least 5 minutes from now.",
+      "tooLate": "Choose a time within 90 days."
+    }
   }
 }

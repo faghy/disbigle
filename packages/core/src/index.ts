@@ -53,6 +53,7 @@ export * from './social/polls.ts';
 export * from './social/posts.ts';
 export * from './social/presence.ts';
 export * from './social/relationships.ts';
+export * from './social/scheduled.ts';
 export * from './social/statuses.ts';
 export * from './social/tags.ts';
 export * from './social/timelines.ts';

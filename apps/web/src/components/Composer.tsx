@@ -1,4 +1,5 @@
 import type { CreatePostRequest, Group, GroupSummary, Status, Visibility } from '@disbigle/shared';
+import { Link } from '@tanstack/react-router';
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -13,17 +14,19 @@ import { useTranslation } from 'react-i18next';
 import { errorMessage, fieldErrorsFrom, isFieldError } from '../api/errors.ts';
 import { useCreateStatus } from '../api/mutations.ts';
 import { useCurrentUser, useLimits } from '../api/queries.ts';
+import { scheduleBounds, useSchedulePost } from '../api/scheduled.ts';
 import { useAspects } from '../api/socialQueries.ts';
 import { useAutoGrow } from '../lib/autoGrow.ts';
 import { draftKey, loadDraft, removeDraft, saveDraft } from '../lib/drafts.ts';
 import { applyFormat, type Format, shortcutFormat } from '../lib/markdownFormat.ts';
+import { fullDateTime } from '../lib/time.ts';
 import { isPrivateConversation } from '../lib/visibility.tsx';
 import { AudiencePicker, type AudienceValue } from './AudiencePicker.tsx';
 import { Avatar } from './Avatar.tsx';
 import { ComposerLinkPreview } from './ComposerLinkPreview.tsx';
 import { EmojiButton } from './EmojiPicker.tsx';
 import { FormattingToolbar, PostPreview } from './FormattingToolbar.tsx';
-import { GroupIcon, PollIcon, WarningIcon } from './icons.tsx';
+import { ClockIcon, GroupIcon, PollIcon, WarningIcon } from './icons.tsx';
 import { AddMediaButton, MediaList, useMediaItems } from './MediaEditor.tsx';
 import { useMentionSuggestions } from './MentionSuggestions.tsx';
 import { emptyPoll, type PollDraft, PollEditor, validatePoll } from './PollEditor.tsx';
@@ -51,6 +54,8 @@ export interface ComposerProps {
   group?: GroupSummary | Group;
   /** Text to start with, e.g. a link shared from another site. */
   initialText?: string;
+  /** Opens with the time picker shown, as on the page of scheduled posts. */
+  startScheduling?: boolean;
 }
 
 /** Posts of plain members wait for a moderator in groups that approve them. */
@@ -69,14 +74,23 @@ export function Composer({
   header,
   group: groupProp,
   initialText = '',
+  startScheduling = false,
 }: ComposerProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useCurrentUser();
   const aspects = useAspects();
   const create = useCreateStatus();
+  const schedule = useSchedulePost();
   const limits = useLimits();
   const maxLength = limits.maxPostLength;
-  const ids = { text: useId(), counter: useId(), warning: useId(), error: useId() };
+  const ids = {
+    text: useId(),
+    counter: useId(),
+    warning: useId(),
+    error: useId(),
+    when: useId(),
+    whenError: useId(),
+  };
   const ownTextarea = useRef<HTMLTextAreaElement>(null);
   const textarea = textareaRef ?? ownTextarea;
 
@@ -122,6 +136,10 @@ export function Composer({
   }, [autoFocus, textarea]);
 
   const [previewing, setPreviewing] = useState(false);
+  // Publishing later (issue #28): the chosen local time, and the last post scheduled.
+  const [scheduling, setScheduling] = useState(startScheduling);
+  const [scheduleAt, setScheduleAt] = useState('');
+  const [scheduledFor, setScheduledFor] = useState<string | null>(null);
 
   // Keeps the draft at every change, so closing the page loses nothing; an empty composer
   // leaves no draft behind.
@@ -136,7 +154,8 @@ export function Composer({
 
   const length = content.length;
   const remaining = maxLength - length;
-  const serverErrors = fieldErrorsFrom(create.error);
+  const mutationError = scheduling ? schedule.error : create.error;
+  const serverErrors = fieldErrorsFrom(mutationError);
   const allErrors = { ...serverErrors, ...errors };
 
   const reset = () => {
@@ -150,6 +169,8 @@ export function Composer({
     setSensitive(false);
     setErrors({});
     setPoll(null);
+    setScheduling(startScheduling);
+    setScheduleAt('');
   };
 
   const validate = (): Record<string, string> => {
@@ -166,15 +187,23 @@ export function Composer({
     )
       found.aspectIds = t('composer.errors.aspectsRequired');
     if (mediaItems.failed) found.media = t('composer.errors.mediaFailed');
+    if (scheduling) {
+      const when = new Date(scheduleAt).getTime();
+      if (!scheduleAt || Number.isNaN(when)) found.scheduledAt = t('scheduled.errors.chooseTime');
+      else if (when < Date.now() + 5 * 60_000) found.scheduledAt = t('scheduled.errors.tooSoon');
+      else if (when > Date.now() + 90 * 24 * 3600_000)
+        found.scheduledAt = t('scheduled.errors.tooLate');
+    }
     return found;
   };
 
   const submit = async () => {
-    if (create.isPending || preparing || uploading) return;
+    if (create.isPending || schedule.isPending || preparing || uploading) return;
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length > 0) {
       create.reset();
+      schedule.reset();
       if (found.content) textarea.current?.focus();
       return;
     }
@@ -203,6 +232,19 @@ export function Composer({
       ...(replyTo ? { inReplyToId: replyTo.id } : {}),
       ...(group && !replyTo ? { groupId: group.id } : {}),
     };
+    if (scheduling) {
+      schedule.mutate(
+        { ...body, scheduledAt: new Date(scheduleAt).toISOString() },
+        {
+          onSuccess: (post) => {
+            reset();
+            setScheduledFor(post.scheduledAt);
+          },
+        },
+      );
+      return;
+    }
+    setScheduledFor(null);
     create.mutate(body, {
       onSuccess: (status) => {
         reset();
@@ -245,8 +287,9 @@ export function Composer({
   };
 
   const generalError =
-    create.error && !isFieldError(create.error) ? errorMessage(create.error) : null;
-  const busy = create.isPending || preparing;
+    mutationError && !isFieldError(mutationError) ? errorMessage(mutationError) : null;
+  const busy = create.isPending || schedule.isPending || preparing;
+  const bounds = scheduleBounds();
   const counterTone =
     remaining < 0
       ? 'text-danger font-semibold'
@@ -396,6 +439,45 @@ export function Composer({
             <p className="text-xs text-fg-muted">{t('composer.directHint')}</p>
           )}
 
+          {scheduling && (
+            <div className="space-y-1 rounded-lg bg-surface-muted px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <label htmlFor={ids.when} className="text-sm font-semibold">
+                  {t('scheduled.publishAt')}
+                </label>
+                <input
+                  id={ids.when}
+                  type="datetime-local"
+                  className="input-base w-auto py-1.5"
+                  min={bounds.min}
+                  max={bounds.max}
+                  value={scheduleAt}
+                  onChange={(event) => {
+                    setScheduleAt(event.target.value);
+                    setErrors(({ scheduledAt: _removed, ...rest }) => rest);
+                  }}
+                  aria-invalid={allErrors.scheduledAt ? true : undefined}
+                  aria-describedby={allErrors.scheduledAt ? ids.whenError : undefined}
+                />
+              </div>
+              <p className="text-xs text-fg-muted">{t('scheduled.hint')}</p>
+              {allErrors.scheduledAt && (
+                <p id={ids.whenError} className="text-sm text-danger">
+                  {allErrors.scheduledAt}
+                </p>
+              )}
+            </div>
+          )}
+
+          {scheduledFor && (
+            <p role="status" className="text-sm text-success">
+              {t('scheduled.done', { date: fullDateTime(scheduledFor, i18n.language) })}{' '}
+              <Link to="/scheduled" className="font-semibold underline focus-ring rounded">
+                {t('scheduled.seeAll')}
+              </Link>
+            </p>
+          )}
+
           <Alert>{generalError}</Alert>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
@@ -435,6 +517,25 @@ export function Composer({
               <span aria-hidden="true">CW</span>
               <span className="sr-only">{t('composer.warning.toggle')}</span>
             </button>
+            <button
+              type="button"
+              aria-pressed={scheduling}
+              onClick={() => {
+                setScheduling((value) => !value);
+                setErrors(({ scheduledAt: _removed, ...rest }) => rest);
+                schedule.reset();
+              }}
+              aria-label={t('scheduled.toggle')}
+              title={t('scheduled.toggle')}
+              className={cx(
+                'inline-flex size-9 items-center justify-center rounded-full focus-ring',
+                scheduling
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-fg-muted hover:bg-surface-muted hover:text-fg',
+              )}
+            >
+              <ClockIcon />
+            </button>
             {media.length > 0 && (
               <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-fg-muted">
                 <input
@@ -464,7 +565,11 @@ export function Composer({
                 disabled={remaining < 0 || uploading}
                 title={t('composer.shortcut')}
               >
-                {replyTo ? t('composer.reply') : t('composer.publish')}
+                {scheduling
+                  ? t('scheduled.schedule')
+                  : replyTo
+                    ? t('composer.reply')
+                    : t('composer.publish')}
               </Button>
             </div>
           </div>

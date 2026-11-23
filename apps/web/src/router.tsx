@@ -41,6 +41,7 @@ import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordReset.tsx
 import { ProfilePage } from './pages/Profile.tsx';
 import { RegisterPage } from './pages/Register.tsx';
 import { ReportContentPage } from './pages/ReportContent.tsx';
+import { ScheduledPage } from './pages/Scheduled.tsx';
 import { isSearchType, SearchPage, type SearchType } from './pages/Search.tsx';
 import { SharePage } from './pages/Share.tsx';
 import { StatusPage } from './pages/StatusPage.tsx';
@@ -280,6 +281,13 @@ const bookmarksRoute = createRoute({
   path: '/bookmarks',
   beforeLoad: signedInOnly,
   component: BookmarksPage,
+});
+
+const scheduledRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/scheduled',
+  beforeLoad: signedInOnly,
+  component: ScheduledPage,
 });
 
 const notificationsRoute = createRoute({
@@ -566,6 +574,7 @@ export const routeTree = rootRoute.addChildren([
   activityRoute,
   shareRoute,
   bookmarksRoute,
+  scheduledRoute,
   notificationsRoute,
   groupsRoute,
   groupRoute,
